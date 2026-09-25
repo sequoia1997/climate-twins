@@ -99,9 +99,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .sigma-note{font-size:.88rem;background:var(--chip);border-radius:10px;padding:8px 12px;margin:0 0 14px}
 .sigma-note p{margin:0 0 4px} .sigma-note p:last-child{margin:0}
 #tip{position:absolute;z-index:3;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:5px 8px;font-size:.82rem;display:none;max-width:240px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
-#zoom{position:absolute;right:10px;top:84px;display:flex;flex-direction:column;gap:6px;z-index:2}
-#zoom #zreset{margin-top:6px}
-#zoom button{min-width:29px;padding:0 4px;height:29px;font-size:.72rem;border-radius:8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+#zoom{position:absolute;right:10px;top:84px;display:flex;flex-direction:column;z-index:2;background:var(--panel);border-radius:4px;box-shadow:0 0 0 2px rgba(0,0,0,.1);overflow:hidden}
+:root[data-theme="dark"] #zoom{box-shadow:0 0 0 1px var(--rule)}
+#zoom button{display:block;width:54px;height:29px;padding:0;margin:0;border:0;background:transparent;color:var(--ink);font:600 .74rem/1 var(--font-body);letter-spacing:.01em;cursor:pointer}
+#zoom button+button{border-top:1px solid var(--rule)}
+#zoom button:hover{background:var(--chip)}
 #loading{position:absolute;z-index:4;background:var(--ocean);inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1rem}
 .muted{color:var(--muted)}
 .cmp{--cNow:#b4bcc3;--cFut:var(--ink);--cMat:var(--accent);margin:22px 0 10px}
@@ -138,7 +140,7 @@ table.ex .sw{display:inline-block;width:8px;height:8px;border-radius:2px;backgro
 #themebtn svg{width:20px;height:20px;display:block;transition:transform .35s ease,opacity .35s ease}
 #themebtn.spin svg{transform:rotate(-90deg) scale(.6);opacity:0}
 #themebtn:hover{border-color:var(--line)}
-#themebtn:focus-visible,#zoom button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#themebtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px} #zoom button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 :root[data-theme="dark"] .maplibregl-ctrl-group{background:var(--panel);box-shadow:0 0 0 1px var(--rule)}
 :root[data-theme="dark"] .maplibregl-ctrl-group button+button{border-top-color:var(--rule)}
 :root[data-theme="dark"] .maplibregl-ctrl-icon{filter:invert(1) brightness(.92)}
@@ -165,7 +167,7 @@ aside a:hover{text-decoration-thickness:2px}
     <div id="map" aria-label="World map with climate-analog arrows. Use the search box to choose a place."></div>
     <canvas id="ov" aria-hidden="true"></canvas>
     <button id="themebtn" type="button" aria-pressed="false" aria-label="Dark map" title="Dark map"></button>
-    <div id="zoom"><button id="zfit" aria-label="Show the United States" title="United States">US</button><button id="zworld" aria-label="Show the whole world" title="World">world</button><button id="zreset" aria-label="Back to the starting view" title="Back to the starting view (Esc)">reset</button></div>
+    <div id="zoom"><button id="zfit" aria-label="Show the United States" title="United States">US</button><button id="zworld" aria-label="Show the whole world" title="World">World</button><button id="zreset" aria-label="Back to the starting view" title="Back to the starting view (Esc)">Reset</button></div>
     <div id="legend"></div>
     <div id="tip" role="status"></div>
     <div id="attrib"></div>
