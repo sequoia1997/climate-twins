@@ -1,0 +1,103 @@
+# Climate Twins pipeline configuration. Everything the build decides lives here.
+# Change a value, run the "Rebuild data" workflow, review the pull request it opens.
+
+[release]
+title = "Climate Twins: present-day climate analogs for projected 2050 and 2100 climates"
+author_family = "Schweitzer"
+author_given = "Forest Meyer"
+author_initials = "F. M."
+# Bump the method version when the method changes. The data version is the build date.
+method_version = "10.0"
+# Public address of this repository, shown on the methods page (e.g. "https://github.com/yourname/climate-twins").
+repo_url = ""
+
+[baseline]
+years = [1991, 2020]            # present-day normals; switch to [2001, 2030] once those normals exist
+
+[periods]
+keys = ["2050", "2100"]
+years = [[2041, 2060], [2081, 2100]]
+
+[scenarios]
+ids = ["ssp126", "ssp245", "ssp370", "ssp585"]
+labels = ["SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5"]
+
+[models]
+# Transient climate response (°C), IPCC AR6 WG1 Table 7.SM.5 as compiled by Hausfather et al. (2022).
+# The default ensemble keeps models whose TCR lies in the AR6 likely range. tcr = -1 means no published value.
+tcr_likely = [1.4, 2.2]
+list = [
+  { name = "ACCESS-CM2",       member = "r1i1p1f1", grid = "gn", tcr = 2.10 },
+  { name = "AWI-CM-1-1-MR",    member = "r1i1p1f1", grid = "gn", tcr = 2.06 },
+  { name = "BCC-CSM2-MR",      member = "r1i1p1f1", grid = "gn", tcr = 1.72 },
+  { name = "CNRM-CM6-1-HR",    member = "r1i1p1f2", grid = "gr", tcr = 2.48 },
+  { name = "CNRM-CM6-1",       member = "r1i1p1f2", grid = "gr", tcr = 2.14 },
+  { name = "CNRM-ESM2-1",      member = "r1i1p1f2", grid = "gr", tcr = 1.86 },
+  { name = "CanESM5-CanOE",    member = "r1i1p2f1", grid = "gn", tcr = 2.74 },
+  { name = "CanESM5",          member = "r1i1p2f1", grid = "gn", tcr = 2.74 },
+  { name = "EC-Earth3-Veg-LR", member = "r1i1p1f1", grid = "gr", tcr = -1 },
+  { name = "EC-Earth3-Veg",    member = "r4i1p1f1", grid = "gr", tcr = 2.62 },
+  { name = "EC-Earth3",        member = "r4i1p1f1", grid = "gr", tcr = 2.30 },
+  { name = "FGOALS-g3",        member = "r1i1p1f1", grid = "gn", tcr = 1.54 },
+  { name = "GFDL-ESM4",        member = "r1i1p1f1", grid = "gr1", tcr = 1.63 },
+  { name = "GISS-E2-1-G",      member = "r1i1p3f1", grid = "gn", tcr = 1.80 },
+  { name = "INM-CM4-8",        member = "r1i1p1f1", grid = "gr1", tcr = 1.33 },
+  { name = "INM-CM5-0",        member = "r1i1p1f1", grid = "gr1", tcr = 1.41 },
+  { name = "IPSL-CM6A-LR",     member = "r1i1p1f1", grid = "gr", tcr = 2.32 },
+  { name = "KACE-1-0-G",       member = "r1i1p1f1", grid = "gr", tcr = 2.04 },
+  { name = "MIROC-ES2L",       member = "r4i1p1f2", grid = "gn", tcr = 1.55 },
+  { name = "MIROC6",           member = "r1i1p1f1", grid = "gn", tcr = 1.55 },
+  { name = "MPI-ESM1-2-HR",    member = "r1i1p1f1", grid = "gn", tcr = 1.66 },
+  { name = "MPI-ESM1-2-LR",    member = "r1i1p1f1", grid = "gn", tcr = 1.84 },
+  { name = "MRI-ESM2-0",       member = "r1i1p1f1", grid = "gn", tcr = 1.64 },
+  { name = "UKESM1-0-LL",      member = "r1i1p1f2", grid = "gn", tcr = 2.79 },
+]
+
+[matching]
+# 12 temperature and precipitation measures (seasonal mean daily high, low, total precipitation),
+# plus dewpoint in Dec–Feb and Jun–Aug (the warm season in each hemisphere) when humidity = true.
+humidity = true
+min_var_frac = 0.01            # second method: drop principal components under 1% of variance
+floor = 0.10                   # minimum year-to-year SD (°C, or log(mm+1)) so dry seasons stay defined
+ppt_ratio = [0.2, 5.0]         # limits on model precipitation change ratios
+vap_ratio = [0.5, 3.0]         # limits on model humidity change ratios
+sites = 5
+sep_km_na = 150
+sep_km_world = 300
+agree_km = 500
+agree_km_world = 1000
+glob_trigger_sigma = 2.0       # search worldwide for a North American place when its best match is this poor
+
+[grids]
+na_crs = "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+na_x0 = -4352000.0
+na_y0 = 4276000.0
+na_cell_m = 15000.0
+na_nx = 512
+na_ny = 507
+na_landfrac_min = 0.25
+world_res = 0.5
+world_landfrac_min = 0.25
+world_lat_min = -60.0
+
+[recent]
+years = 10                     # "already happening": the latest N complete years vs the baseline
+end = "auto"                   # latest complete TerraClimate year, or a year number
+
+[sources]
+terraclimate = "https://climate.northwestknowledge.net/TERRACLIMATE-DATA/TerraClimate_{v}_{y}.nc"
+adaptwest = "https://s3-us-west-2.amazonaws.com/www.cacpd.org/CMIP6v73/normals/Normal_1991_2020_monthly.zip"
+prism = "https://data.prism.oregonstate.edu/time_series/us/an/4km/{v}/monthly/{y}/prism_{v}_us_25m_{y}{m:02d}.zip"
+pangeo_catalog = "https://storage.googleapis.com/cmip6/pangeo-cmip6.csv"
+geonames = "https://download.geonames.org/export/dump/cities500.zip"
+geonames_admin1 = "https://download.geonames.org/export/dump/admin1CodesASCII.txt"
+natural_earth = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries_lakes.geojson"
+sealevel_zip = "https://zenodo.org/records/5914710/files/ar6-regional-confidence.zip?download=1"
+esgf_search = "https://esgf.ceda.ac.uk/esg-search/search"
+
+[gates]
+# The yearly rebuild opens a pull request. These thresholds decide whether it is labelled "routine"
+# (safe to merge after a glance) or "needs review" (read the report first).
+moved_km = 500                 # a best match "moved" if it is this far from last release's
+max_moved_share = 0.10         # routine if at most this share of best matches moved
+max_median_dsigma = 0.25       # routine if the median change in best sigma is at most this

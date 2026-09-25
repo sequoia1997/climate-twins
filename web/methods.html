@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Climate Twins: methods, data and references</title>
+<meta name="description" content="How Climate Twins finds present-day climate analogs for projected 2050 and 2100 climates: data, method, validation, limitations and full references.">
+<script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f6; --panel:#ffffff; --ink:#1d2730; --muted:#5b6670; --rule:#d8dde1; --line:#8b949c;
+  --accent:#d6412c; --chip:#eef1f3; --warn:#b36b00;
+  --r0:#ffd23f; --r1:#ffa630; --r2:#f26b3a; --r3:#d1435b; --r4:#9c3f7c; --r5:#6c4585; --r6:#4f4f7d;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-head:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943; --line:#56626c;
+    --accent:#ff6b4a; --chip:#1d2831; --warn:#f0b04a;
+    --r2:#f47a45; --r3:#e0566c; --r4:#c05c9e; --r5:#9a6cc4; --r6:#7a7fc0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943; --line:#56626c;
+  --accent:#ff6b4a; --chip:#1d2831; --warn:#f0b04a;
+  --r2:#f47a45; --r3:#e0566c; --r4:#c05c9e; --r5:#9a6cc4; --r6:#7a7fc0;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.62 var(--font-body)}
+a{color:var(--ink);text-decoration-color:var(--accent);text-underline-offset:2px}
+a:hover{text-decoration-thickness:2px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* header: title over the sigma scale, which runs edge to edge as the page's one bold element */
+.top{background:var(--panel);border-bottom:1px solid var(--rule)}
+.bar{max-width:1180px;margin:0 auto;padding:14px 24px 0;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.back{font-size:.95rem;font-weight:700}
+#themebtn{width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--rule);background:var(--panel);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+#themebtn svg{width:20px;height:20px;display:block;transition:transform .35s ease,opacity .35s ease}
+#themebtn.spin svg{transform:rotate(-90deg) scale(.6);opacity:0}
+.head{max-width:1180px;margin:0 auto;padding:30px 24px 26px}
+.head h1{font:700 clamp(2rem,5vw,3.3rem)/1.02 var(--font-head);letter-spacing:-.025em;margin:0 0 14px;max-width:18ch}
+.head .sub{color:var(--muted);margin:0;max-width:62ch;font-size:1.05rem}
+.head .meta{margin:14px 0 0;font-size:.9rem;color:var(--muted)}
+.scale{display:grid;grid-template-columns:1fr 1fr 2fr 2fr 4fr;height:14px}
+.scale span:nth-child(1){background:var(--r0)} .scale span:nth-child(2){background:var(--r1)}
+.scale span:nth-child(3){background:linear-gradient(90deg,var(--r2),var(--r3))}
+.scale span:nth-child(4){background:linear-gradient(90deg,var(--r4),var(--r5))}
+.scale span:nth-child(5){background:linear-gradient(90deg,var(--r6),transparent)}
+
+/* body: contents rail + article */
+.wrap{max-width:1180px;margin:0 auto;padding:36px 24px 80px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:56px}
+nav.toc{position:sticky;top:20px;align-self:start;font-size:.9rem;max-height:calc(100vh - 40px);overflow-x:hidden;overflow-y:auto}
+nav.toc h2{font:700 1rem/1.2 var(--font-head);margin:0 0 10px}
+nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:t}
+nav.toc li{margin:0;counter-increment:t}
+nav.toc li.un{counter-increment:none}
+nav.toc a{display:block;padding:4px 0 4px 12px;border-left:2px solid var(--rule);text-decoration:none;color:var(--muted)}
+nav.toc a::before{content:counter(t) ". ";font-variant-numeric:tabular-nums}
+nav.toc li.un a::before{content:""}
+nav.toc a:hover{color:var(--ink);border-left-color:var(--line)}
+nav.toc a.on{color:var(--ink);border-left-color:var(--accent);font-weight:700}
+article{max-width:70ch;min-width:0}
+article>section{counter-increment:sec;margin:0 0 44px}
+article>section.un{counter-increment:none}
+article{counter-reset:sec}
+article h2{font:700 1.6rem/1.15 var(--font-head);letter-spacing:-.012em;margin:0 0 14px}
+article section:not(.un)>h2::before{content:counter(sec) " ";color:var(--accent);font-variant-numeric:tabular-nums;margin-right:.15em}
+article h3{font:700 1.12rem/1.3 var(--font-head);margin:26px 0 8px}
+article p{margin:0 0 14px}
+article ul,article ol{padding-left:1.25em;margin:0 0 14px} article li{margin:0 0 6px}
+.abstract{font-size:1.08rem;border-left:4px solid var(--accent);padding:2px 0 2px 18px;margin:0 0 40px}
+.abstract p{margin:0 0 10px}
+.cite{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:16px 18px;margin:0 0 44px}
+.cite h2{font:700 1.1rem/1.2 var(--font-head);margin:0 0 8px}
+.cite p{margin:0 0 10px}
+.cite .ref{font-size:.98rem}
+.cite pre{margin:8px 0 0;padding:12px;background:var(--chip);border-radius:8px;font-size:.8rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-size:.88rem;border:1px solid var(--rule);background:var(--chip);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.btn:hover{border-color:var(--line)}
+.copied{font-size:.85rem;color:var(--muted)}
+details summary{cursor:pointer;font-size:.92rem;color:var(--muted);margin-top:6px}
+figure{margin:24px 0 26px}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:10px;max-width:66ch}
+figcaption strong{color:var(--ink)}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:12px 10px;align-items:stretch}
+.flow .box{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:10px 12px;font-size:.88rem;line-height:1.4}
+.flow .box b{display:block;font-family:var(--font-head);font-size:.95rem;margin-bottom:3px}
+.flow .op{align-self:center;font:700 1.3rem/1 var(--font-head);color:var(--accent);text-align:center}
+.flow .box.out{border-color:var(--accent);border-width:1.5px}
+.sig{margin-top:6px}
+.sig .band{display:grid;grid-template-columns:1fr 1fr 2fr 4fr;height:26px;border-radius:6px;overflow:hidden}
+.sig .band span{display:flex;align-items:center;padding:0 8px;font-size:.78rem;font-weight:700;color:#1d2730;white-space:nowrap}
+.sig .band span:nth-child(1){background:var(--r0)} .sig .band span:nth-child(2){background:var(--r1)}
+.sig .band span:nth-child(3){background:linear-gradient(90deg,var(--r2),var(--r3))}
+.sig .band span:nth-child(4){background:linear-gradient(90deg,var(--r4),var(--r6));color:#fff}
+.sig .ticks{display:grid;grid-template-columns:1fr 1fr 2fr 4fr;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:3px}
+.sig .ticks span:last-child{display:flex;justify-content:space-between}
+.tw{margin:10px 0 18px}
+table{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+thead th{font-weight:700;color:var(--muted);font-size:.8rem;border-bottom:1.5px solid var(--ink)}
+td.n,th.n{text-align:right}
+@media (max-width:640px){
+  table.res thead{display:none}
+  table.res,table.res tbody{display:block;width:100%}
+  table.res tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.35fr);gap:4px 8px;padding:10px 0;border-bottom:1px solid var(--rule)}
+  table.res td{border:0;padding:0;text-align:left}
+  table.res td:nth-child(1){grid-column:1/-1;font-size:0}
+  table.res td:nth-child(1)::before{content:attr(data-t);font-size:.9rem;font-weight:700}
+  table.res td:nth-child(2),table.res td:nth-child(3){display:none}
+  table.res td.n::before{content:attr(data-l);display:block;font-size:.7rem;color:var(--muted);line-height:1.2;margin-bottom:2px}
+  table.res caption{display:block}
+  .tw table:not(.res) th,.tw table:not(.res) td{padding:5px 4px}
+  .tw table:not(.res){font-size:.82rem}
+  .tw td:first-child{overflow-wrap:anywhere}
+}
+@media (max-width:480px){
+  table.stack thead{display:none}
+  table.stack,table.stack tbody,table.stack tr,table.stack td{display:block;width:100%}
+  table.stack tr{padding:10px 0;border-bottom:1px solid var(--rule)}
+  table.stack td{border:0;padding:1px 0}
+  table.stack td:first-child{font-weight:700;font-size:.9rem;margin-bottom:2px}
+  table.stack td:not(:first-child)::before{content:attr(data-l) ": ";color:var(--muted)}
+}
+caption{caption-side:bottom;text-align:left;font-size:.85rem;color:var(--muted);padding-top:8px}
+.tag{display:inline-block;font-size:.76rem;font-weight:700;padding:1px 8px;border-radius:999px;border:1.5px solid currentColor}
+.tag.in{color:var(--ink)} .tag.out{color:var(--muted);border-style:dashed}
+math{font-size:1.08em}
+.eq{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin:14px 0 16px;padding:10px 14px;background:var(--panel);border:1px solid var(--rule);border-radius:10px}
+.eq .m{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 2em;min-width:0}
+.eq .m math{margin:0}
+.eq .no{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.note{font-size:.93rem;border-left:3px solid var(--warn);padding:6px 12px;margin:14px 0;background:var(--chip);border-radius:0 8px 8px 0}
+ol.refs{list-style:none;padding:0} ol.refs a,.cite a{overflow-wrap:anywhere} ol.refs li{padding-left:1.6em;text-indent:-1.6em;margin:0 0 10px;font-size:.95rem}
+.small{font-size:.88rem;color:var(--muted)}
+footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;color:var(--muted)}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:24px}
+  nav.toc{min-width:0}
+  nav.toc{position:static;max-height:none;margin:0 0 30px;padding:14px 16px;background:var(--panel);border:1px solid var(--rule);border-radius:12px}
+  nav.toc ol{columns:2;column-gap:18px} nav.toc a{border-left:0;padding-left:0}
+  .flow{grid-template-columns:1fr}
+  .flow .op{justify-self:center;font-size:1.1rem}
+}
+@media (max-width:520px){.eq{grid-template-columns:minmax(0,1fr);padding:10px 8px;gap:4px} .eq .no{justify-self:end} .eq math{font-size:.9em} nav.toc ol{columns:1} body{font-size:16.5px} .sig .band span{font-size:.7rem;padding:0 4px}}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important}}
+@media print{
+  :root,:root[data-theme="dark"]{--bg:#fff;--panel:#fff;--ink:#000;--muted:#333;--rule:#bbb;--chip:#f3f3f3}
+  .bar,nav.toc,.btnrow,details summary{display:none!important} .wrap{display:block;padding:0} article{max-width:none}
+  a{text-decoration:none} section{break-inside:avoid-page}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <a class="back" href="./">Back to the map</a>
+    <button id="themebtn" type="button" aria-pressed="false" aria-label="Dark mode" title="Dark mode"></button>
+  </div>
+  <div class="head">
+    <h1>How Climate Twins finds a place's future climate today</h1>
+    <p class="sub">Methods, data, validation and references for an interactive map of present-day climate analogs, for 789 places in North America and 823 cities worldwide, under four CMIP6 emissions scenarios.</p>
+    <p class="meta"><span id="m-author"></span>. Version <span class="v-rel"></span>, data version <span class="v-data"></span>.</p>
+  </div>
+  <div class="scale" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <h2>Contents</h2>
+  <ol>
+    <li class="un"><a href="#summary">Summary</a></li>
+    <li><a href="#question">The question</a></li>
+    <li><a href="#places">Places</a></li>
+    <li><a href="#present">Present-day climate</a></li>
+    <li><a href="#humidity">Humidity</a></li>
+    <li><a href="#future">Projected climate</a></li>
+    <li><a href="#models">Climate models</a></li>
+    <li><a href="#distance">Measuring similarity</a></li>
+    <li><a href="#matches">Choosing matches</a></li>
+    <li><a href="#validation">Checks and results</a></li>
+    <li><a href="#features">Climate type, zone and season</a></li>
+    <li><a href="#recent">Already happening</a></li>
+    <li><a href="#sealevel">Sea level</a></li>
+    <li><a href="#updates">Updates and versions</a></li>
+    <li><a href="#limits">Limitations</a></li>
+    <li><a href="#software">Software</a></li>
+    <li><a href="#data">Data and attribution</a></li>
+    <li><a href="#refs">References</a></li>
+  </ol>
+</nav>
+
+<article>
+  <section id="summary" class="un">
+    <div class="abstract">
+      <p>For any of 1,612 places, Climate Twins asks where on Earth today's climate most resembles the climate that place is projected to have around 2050 (2041–2060) or 2100 (2081–2100). Projected climates are built by adding changes simulated by 24 CMIP6 global climate models to observed 1991–2020 climate. Each projection is compared with present-day climate in every land grid cell, 97,488 cells of 15 km across the United States, Canada and Mexico and 64,958 cells of 0.5° worldwide, using seasonal measures of temperature, precipitation and humidity. Each place also shows its climate type, an estimated hardiness zone and growing season, how its last ten years compare with 1991–2020 and, on the coast, projected sea-level rise.</p>
+      <p>Similarity is expressed as sigma dissimilarity (Mahony et al. 2017): a Mahalanobis distance scaled by each place's own year-to-year variability, with Ledoit–Wolf shrinkage of the variability correlations, converted to units of standard deviation. The approach follows Fitzpatrick &amp; Dunn (2019), extended to Canada, Mexico and 823 cities worldwide, to four emissions scenarios, and to an ensemble screened by transient climate response (Hausfather et al. 2022).</p>
+    </div>
+    <div class="cite" id="cite">
+      <h2>Suggested citation</h2>
+      <p class="ref" id="c-apa"></p>
+      <div class="btnrow"><button class="btn" type="button" data-copy="c-apa">Copy citation</button><button class="btn" type="button" data-copy="c-bib">Copy BibTeX</button><span class="copied" role="status" aria-live="polite"></span></div>
+      <details><summary>BibTeX</summary><pre id="c-bib"></pre></details>
+      <p class="small" style="margin:10px 0 0">When you use a result, please also cite the underlying datasets and the method papers in <a href="#data">Data and attribution</a>.</p>
+    </div>
+  </section>
+
+  <section id="question">
+    <h2>The question</h2>
+    <p>A climate analog is a location whose present climate resembles the projected future climate of another location. Analogs translate abstract projections, such as “3 °C warmer summers”, into a place people can picture, and they have a long history in ecology and adaptation planning, from the study of novel and disappearing climates (Williams et al. 2007; Williams &amp; Jackson 2007) to maps of analogs for North American cities (Fitzpatrick &amp; Dunn 2019).</p>
+    <p>For each place, scenario and period, the map reports the grid cell whose 1991–2020 climate is closest to the place's projected climate, four further good matches, the land area within 2σ, and how strongly the individual climate models agree. When no cell is close, the map says so rather than drawing a misleading arrow.</p>
+    <figure>
+      <div class="flow" role="img" aria-label="Method outline. Present climate at the place plus the change simulated by climate models gives the projected climate. The distance from the projected climate to present climate in every grid cell, scaled by the place's year-to-year variability, gives sigma dissimilarity and the best matches.">
+        <div class="box"><b>Present climate at the place</b>1991–2020 normals: AdaptWest in North America, TerraClimate elsewhere</div>
+        <div class="op" aria-hidden="true">+</div>
+        <div class="box"><b>Change simulated by climate models</b>24 CMIP6 models, 4 scenarios, 2041–2060 and 2081–2100</div>
+        <div class="op" aria-hidden="true">=</div>
+        <div class="box"><b>Projected climate</b>16 seasonal measures, per model and as an ensemble mean</div>
+        <div class="box"><b>Distance to present climate in every cell</b>97,488 cells of 15 km in North America; 64,958 cells of 0.5° worldwide</div>
+        <div class="op" aria-hidden="true">÷</div>
+        <div class="box"><b>Year-to-year variability at the place</b>Detrended 1991–2020 seasonal series, with their correlations</div>
+        <div class="op" aria-hidden="true">=</div>
+        <div class="box out"><b>Sigma dissimilarity</b>Best match, 4 further sites, area within 2σ, model agreement</div>
+      </div>
+      <figcaption><strong>Figure 1.</strong> Outline of the method. The top row is equation (1); the bottom row is equations (2) and (3). Numbers refer to the current release.</figcaption>
+    </figure>
+  </section>
+
+  <section id="places">
+    <h2>Places</h2>
+    <p><strong>North America (789 places):</strong> 634 in the contiguous United States, 23 in Alaska, 56 in Canada and 76 in Mexico, drawn from the GeoNames gazetteer. Places were selected greedily by population with a minimum spacing that widens as population falls (in the United States: 100,000 people at 25 km spacing, then 25,000 at 45 km, 8,000 at 75 km and 1,000 at 120 km; in Canada and Mexico: 250,000 at 35 km, 40,000 at 110 km and 5,000 at 220 km), so that large cities are all present and rural regions still have coverage. Two North Carolina places were added by hand.</p>
+    <p><strong>World (823 cities):</strong> every city of at least one million people outside the United States, Canada and Mexico; all 202 national capitals (Natural Earth); Honolulu, which lies outside the North American grid; and cities chosen by population with minimum spacing to cover sparsely populated regions. Together they span 192 countries and territories. Country names come from Natural Earth, shortened to common forms.</p>
+  </section>
+
+  <section id="present">
+    <h2>Present-day climate</h2>
+    <p>Climate is described by sixteen numbers: the mean daily maximum temperature, mean daily minimum temperature, mean dewpoint and total precipitation for each meteorological season (December–February, March–May, June–August, September–November). Precipitation enters the comparison as log(mm + 1), so that a given relative change counts similarly in wet and dry climates.</p>
+    <h3>North America</h3>
+    <p>Present climate comes from the AdaptWest 1991–2020 monthly normals at 1 km, generated with ClimateNA v7.30 (AdaptWest Project 2022; Wang et al. 2016). For the comparison grid, 1 km cells were averaged into 15 km blocks on a Lambert azimuthal equal-area projection centred at 45° N, 100° W, keeping blocks that are at least 25% land: 97,488 cells. Each place's own present climate is the mean of the 1 km cells within 10 km of it.</p>
+    <h3>Worldwide</h3>
+    <p>Present climate comes from TerraClimate (Abatzoglou et al. 2018), 1991–2020 monthly values at 1/24° (about 4 km). For the global comparison grid, values were averaged to 0.5° cells that are at least 25% land, covering all land except Antarctica and south of 60° S: 64,958 cells, including North America. Each world city's present climate is the mean of TerraClimate land cells within 10 km. Because the city and the grid use the same dataset, a city compared with its own surroundings scores close to 0σ (median 0.00σ).</p>
+    <h3>Year-to-year variability</h3>
+    <p>Distances are scaled by how much each season's climate varies from year to year at the place itself, estimated from 30 seasonal values (1991–2020), each series linearly detrended so that the warming trend is not counted as variability. In the contiguous United States these come from PRISM monthly 4 km data (PRISM Climate Group; Daly et al. 2008). Elsewhere, including Alaska, Canada, Mexico and all world cities, they come from TerraClimate. Where both are available, the two agree closely (TerraClimate-to-PRISM ratio of standard deviations: 1.05 for summer maximum temperature, 0.90 for precipitation).</p>
+  </section>
+
+  <section id="humidity">
+    <h2>Humidity</h2>
+    <p>Humidity is described by the dewpoint, the temperature at which the air would become saturated. It tracks the moisture people feel better than relative humidity, which swings with the time of day. Present-day dewpoints come from TerraClimate monthly vapour pressure (Abatzoglou et al. 2018) everywhere, including North America, where the 1/24° values are averaged over the 3 × 3 pixels nearest each 15 km cell; a season's dewpoint is computed from its mean vapour pressure with the Magnus formula (Alduchov &amp; Eskridge 1996). Of the four seasonal dewpoints, December–February and June–August enter the comparison, covering the humid season in both hemispheres; the other two are shown but not matched, so humidity carries weight comparable to its importance without swamping temperature and precipitation. Fourteen measures are matched in all.</p>
+    <p>Future humidity applies each model's change in near-surface specific humidity (huss), as a ratio limited to 0.5–3, to the observed vapour pressure. One model provides no humidity output for one scenario (FGOALS-g3 under SSP1-2.6); there, vapour pressure is scaled with that model's temperature change at constant relative humidity, following the Clausius–Clapeyron relation.</p>
+  </section>
+
+  <section id="future">
+    <h2>Projected climate</h2>
+    <p>Projected climate follows the change-factor (delta) approach (e.g. Maraun &amp; Widmann 2018): each model's simulated change is added to the observed present climate at the place, which removes the model's own bias in the baseline.</p>
+    <ul>
+      <li><strong>Periods.</strong> 2041–2060 (“2050”) and 2081–2100 (“2100”), the IPCC AR6 mid- and end-of-century periods, compared with 1991–2020. The model baseline joins each model's historical run (1991–2014) to the chosen scenario (2015–2020).</li>
+      <li><strong>Scenarios.</strong> SSP1-2.6, SSP2-4.5, SSP3-7.0 and SSP5-8.5 from ScenarioMIP (O'Neill et al. 2016; Riahi et al. 2017).</li>
+      <li><strong>Variables.</strong> Monthly near-surface daily maximum and minimum temperature and precipitation (CMIP6 <code>tasmax</code>, <code>tasmin</code>, <code>pr</code>), as monthly climatologies for each window.</li>
+      <li><strong>Extraction.</strong> Model values at a place are a land-weighted Gaussian average of nearby model grid cells, with a length scale of one grid spacing, cut off at two spacings, and weights multiplied by each cell's land fraction so that ocean cells do not dilute land climate.</li>
+      <li><strong>Applying the change.</strong> Temperature changes are added month by month. Precipitation changes are applied as ratios, limited to the range 0.2–5. Where a model's baseline month has no precipitation at all, the ratio is set to 1. The minimum temperature is kept at least 0.1 °C below the maximum.</li>
+      <li><strong>Ensemble mean.</strong> The map's main answer uses the mean of the models' projected climates. Precipitation is averaged in millimetres before the log transform.</li>
+    </ul>
+    <div class="eq" role="math" aria-label="Projected temperature equals observed temperature plus model future minus model baseline. Projected precipitation equals observed precipitation times the ratio of model future to model baseline, limited to between 0.2 and 5.">
+      <div class="m"><math display="block"><mrow><msub><mi>T</mi><mtext>proj</mtext></msub><mo>=</mo><msub><mi>T</mi><mtext>obs</mtext></msub><mo>+</mo><mo stretchy="false">(</mo><msub><mi>T</mi><mtext>fut</mtext></msub><mo>−</mo><msub><mi>T</mi><mtext>base</mtext></msub><mo stretchy="false">)</mo></mrow></math><math display="block"><mrow><msub><mi>P</mi><mtext>proj</mtext></msub><mo>=</mo><msub><mi>P</mi><mtext>obs</mtext></msub><mo>·</mo><mtext>clip</mtext><mo>(</mo><mfrac><msub><mi>P</mi><mtext>fut</mtext></msub><msub><mi>P</mi><mtext>base</mtext></msub></mfrac><mo>,</mo><mn>0.2</mn><mo>,</mo><mn>5</mn><mo>)</mo></mrow></math></div>
+      <span class="no">(1)</span>
+    </div>
+    <p class="small">Here “obs” is the observed 1991–2020 value at the place, and “fut” and “base” are the model's own future and 1991–2020 means for the same month.</p>
+  </section>
+
+  <section id="models">
+    <h2>Climate models</h2>
+    <p>The map uses 24 CMIP6 models (Eyring et al. 2016), one simulation each, read from the Pangeo CMIP6 cloud archive (Abernathey et al. 2021). Several CMIP6 models warm faster in response to CO₂ than observations and other lines of evidence support. Following Hausfather et al. (2022), the default ensemble keeps the 15 models whose transient climate response (TCR) lies in the IPCC AR6 likely range of 1.4–2.2 °C (Forster et al. 2021, Table 7.SM.5). The remaining nine can be added under Advanced on the map: seven above the range, one below it (INM-CM4-8) and one without a TCR in that table (EC-Earth3-Veg-LR). Including them mostly shifts results toward hotter outcomes.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Model</th><th>Member</th><th class="n">TCR (°C)</th><th>Default ensemble</th></tr></thead>
+      <tbody id="modeltable"></tbody>
+      <caption>Table 1. The 24 CMIP6 models. TCR values from IPCC AR6 WG1 Table 7.SM.5 as compiled by Hausfather et al. (2022). On the map, each model's own best match appears as a small dot, so a tight cluster means the models agree.</caption>
+    </table></div>
+  </section>
+
+  <section id="distance">
+    <h2>Measuring similarity</h2>
+    <p>Two climates are compared relative to the natural year-to-year variability of the place being studied. A difference of 1 °C in summer highs matters more at a place where summers barely vary than at one where they swing widely, and a mismatch in a pattern that rarely varies matters more than one in a pattern that varies a lot.</p>
+    <p>For place <em>t</em>, each of the 14 matched measures is standardised by its detrended interannual standard deviation <em>s</em>. The correlations among the 14 detrended series, estimated from only 30 years, are stabilised with Ledoit–Wolf shrinkage toward the identity matrix (Ledoit &amp; Wolf 2004), with the shrinkage intensity α estimated from each place's own data (median 0.44 in North America, range 0.15–0.70; median 0.40 for world cities, range 0.16–0.76). The distance between the place's projected climate <strong>x</strong> and a candidate cell's present climate <strong>y</strong> is the Mahalanobis distance in this metric:</p>
+    <div class="eq" role="math" aria-label="z equals x minus y divided by s. The shrunk correlation R star equals one minus alpha times R plus alpha times the identity. D squared equals z transpose R star inverse z.">
+      <div class="m"><math display="block"><mrow><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub></mrow><msub><mi>s</mi><mi>i</mi></msub></mfrac></mrow></math><math display="block"><mrow><msup><mi>𝐑</mi><mo>*</mo></msup><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>α</mi><mo stretchy="false">)</mo><mi>𝐑</mi><mo>+</mo><mi>α</mi><mi>𝐈</mi></mrow></math><math display="block"><mrow><msup><mi>D</mi><mn>2</mn></msup><mo>=</mo><msup><mi>𝐳</mi><mo>⊤</mo></msup><msup><mrow><mo stretchy="false">(</mo><msup><mi>𝐑</mi><mo>*</mo></msup><mo stretchy="false">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>𝐳</mi></mrow></math></div>
+      <span class="no">(2)</span>
+    </div>
+    <p>Following Mahony et al. (2017), <em>D</em> is converted to <strong>sigma dissimilarity</strong>: its percentile in a χ distribution with <em>k</em> = 14 degrees of freedom is re-expressed as the number of standard deviations of a one-dimensional normal distribution with the same two-sided tail probability. This makes distances comparable across places and dimensions, and gives the unit a familiar meaning.</p>
+    <div class="eq" role="math" aria-label="The probability that chi squared with k degrees of freedom exceeds D squared equals the probability that the absolute value of a standard normal variable exceeds sigma.">
+      <div class="m"><math display="block"><mrow><mi>Pr</mi><mo stretchy="false">(</mo><msubsup><mi>χ</mi><mi>k</mi><mn>2</mn></msubsup><mo>&gt;</mo><msup><mi>D</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo>=</mo><mi>Pr</mi><mo stretchy="false">(</mo><mrow><mo stretchy="false" lspace="0.1em" rspace="0">|</mo><mi>Z</mi><mo stretchy="false" lspace="0" rspace="0.1em">|</mo></mrow><mo>&gt;</mo><mi>σ</mi><mo stretchy="false">)</mo><mo>,</mo></mrow></math><math display="block"><mrow><mi>Z</mi><mo>∼</mo><mi>𝒩</mi><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></math></div>
+      <span class="no">(3)</span>
+    </div>
+    <figure class="sig">
+      <div class="band" aria-hidden="true"><span>Strong</span><span>Reasonable</span><span>Partial</span><span>No real match</span></div>
+      <div class="ticks" aria-hidden="true"><span>0σ</span><span>1σ</span><span>2σ</span><span><span>4σ</span><span>8σ+</span></span></div>
+      <figcaption><strong>Figure 2.</strong> How the map reads σ, using its own colour scale. Under 1σ, the two climates differ by no more than two ordinary years at the same place; 1–2σ is a reasonable match; 2–4σ is partial; beyond 4σ the future climate has no meaningful counterpart in the comparison area, which Mahony et al. (2017) treat as novel. These bands are reading aids, not statistical tests.</figcaption>
+    </figure>
+    <h3>Seasons that almost never rain</h3>
+    <p>In very dry seasons (for example in Lima, Cairo or Khartoum) precipitation barely varies between years, which makes the distance undefined. For world cities, any standardised series with a standard deviation below 0.10 (in log precipitation, roughly 10%; or 0.10 °C) receives a fixed, seeded, zero-mean random series that raises its standard deviation exactly to that floor without correlating with the other measures. This affected 26 cities, mostly in a single measure. No North American place needed it.</p>
+  </section>
+
+  <section id="matches">
+    <h2>Choosing and presenting matches</h2>
+    <ul>
+      <li><strong>Best match:</strong> the cell with the smallest σ for the ensemble-mean projection.</li>
+      <li><strong>Further matches:</strong> the next best cells at least 150 km (North America) or 300 km (worldwide) from every match already chosen, up to five in total. Matches under 1σ are about equally good.</li>
+      <li><strong>Area within 2σ:</strong> the summed land area of cells under 2σ, outlined on the map (true cell areas on the global grid, using latitude and land fraction).</li>
+      <li><strong>Model agreement:</strong> the share of individual models whose own best match lies within 500 km of the ensemble's (1,000 km for worldwide searches).</li>
+      <li><strong>A second method:</strong> as a robustness check, distances are recomputed with principal-component truncation instead of shrinkage, dropping components that carry under 1% of the year-to-year variance (as in Mahony et al. 2017).</li>
+      <li><strong>Confidence:</strong> high when at least 60% of models agree and the second method's best match is within 500 km; low when under 40% agree, or when the second method disagrees and fewer than 60% agree; medium otherwise.</li>
+      <li><strong>No match:</strong> when the best σ is 4 or more, or 2 or more with the best cell at the place itself, the map states that nowhere in the comparison area has this climate today and draws a ring instead of an arrow.</li>
+      <li><strong>Worldwide matches for North American places:</strong> when the best North American match is 2σ or worse, the place is also searched against the global grid, using its TerraClimate present climate so that both sides come from the same dataset.</li>
+      <li><strong>Labels:</strong> each cell is named after its nearest GeoNames populated place (worldwide: of at least 1,000 people), with the distance when it is not close.</li>
+    </ul>
+    <p>All of this is computed in the reader's browser at the moment a place is chosen, from per-place metric matrices shipped with the page, so every cell on the map carries its own σ. The browser results match the Python pipeline cell for cell.</p>
+  </section>
+
+  <section id="validation">
+    <h2>Checks and results</h2>
+    <ul>
+      <li><strong>Dataset consistency.</strong> For North American places, the present climate from TerraClimate and from AdaptWest differ by a median of 0.00σ (90th percentile 0.72σ).</li>
+      <li><strong>Self-check.</strong> Each world city's present climate compared with the global grid has a median best distance of 0.00σ. The exceptions are 53 small islands and narrow coastal strips (for example Malé, Funafuti, Majuro, Aden, Dakar and Saipan) whose climate no 0.5° cell resembles; their arrows should be read loosely.</li>
+      <li><strong>Model processing.</strong> Change factors from the global model fields reproduce the regional North American extraction at 5 places × 24 models × 4 scenarios, with a 99th-percentile difference of 0.01 °C (storage rounding).</li>
+      <li><strong>Browser against pipeline.</strong> The page and the Python batch pick the same best cell for North American places and for all 12 world cities tested. One known near-tie (Raleigh, 0.050σ against 0.053σ for two neighbouring cells) resolves differently because of rounding.</li>
+    </ul>
+    <div class="tw"><table class="res">
+      <thead><tr><th>Places</th><th>Period</th><th>Scenario</th><th class="n">Strong (&lt;1σ)</th><th class="n">Reasonable (1–2σ)</th><th class="n">Partial</th><th class="n">No match</th><th class="n">Median distance</th></tr></thead>
+      <tbody>
+        <tr><td data-l="Places" data-t="North America, 2050, SSP2-4.5">North America</td><td data-l="Period">2050</td><td data-l="Scenario">SSP2-4.5</td><td class="n" data-l="Under 1σ">93%</td><td class="n" data-l="1–2σ">4%</td><td class="n" data-l="Partial">2%</td><td class="n" data-l="No match">2%</td><td class="n" data-l="Median">217 km</td></tr>
+        <tr><td data-l="Places" data-t="North America, 2100, SSP2-4.5">North America</td><td data-l="Period">2100</td><td data-l="Scenario">SSP2-4.5</td><td class="n" data-l="Under 1σ">83%</td><td class="n" data-l="1–2σ">8%</td><td class="n" data-l="Partial">5%</td><td class="n" data-l="No match">5%</td><td class="n" data-l="Median">339 km</td></tr>
+        <tr><td data-l="Places" data-t="North America, 2100, SSP5-8.5">North America</td><td data-l="Period">2100</td><td data-l="Scenario">SSP5-8.5</td><td class="n" data-l="Under 1σ">49%</td><td class="n" data-l="1–2σ">17%</td><td class="n" data-l="Partial">16%</td><td class="n" data-l="No match">19%</td><td class="n" data-l="Median">675 km</td></tr>
+        <tr><td data-l="Places" data-t="World cities, 2050, SSP2-4.5">World cities</td><td data-l="Period">2050</td><td data-l="Scenario">SSP2-4.5</td><td class="n" data-l="Under 1σ">53%</td><td class="n" data-l="1–2σ">17%</td><td class="n" data-l="Partial">15%</td><td class="n" data-l="No match">15%</td><td class="n" data-l="Median">312 km</td></tr>
+        <tr><td data-l="Places" data-t="World cities, 2100, SSP2-4.5">World cities</td><td data-l="Period">2100</td><td data-l="Scenario">SSP2-4.5</td><td class="n" data-l="Under 1σ">36%</td><td class="n" data-l="1–2σ">13%</td><td class="n" data-l="Partial">23%</td><td class="n" data-l="No match">28%</td><td class="n" data-l="Median">513 km</td></tr>
+        <tr><td data-l="Places" data-t="World cities, 2100, SSP5-8.5">World cities</td><td data-l="Period">2100</td><td data-l="Scenario">SSP5-8.5</td><td class="n" data-l="Under 1σ">15%</td><td class="n" data-l="1–2σ">11%</td><td class="n" data-l="Partial">17%</td><td class="n" data-l="No match">57%</td><td class="n" data-l="Median">1,192 km</td></tr>
+      </tbody>
+      <caption>Table 2. Quality of the best match with the default 15-model ensemble. North American places are matched within the United States, Canada and Mexico; world cities against all land. Percentages may not sum to 100 because of rounding.</caption>
+    </table></div>
+    <p>Most tropical lowland cities have no match by 2100 under higher emissions, because their projected heat has no present-day counterpart anywhere, consistent with earlier global analyses of novel climates (Williams et al. 2007).</p>
+  </section>
+
+  <section id="features">
+    <h2>Climate type, hardiness zone and growing season</h2>
+    <p>These are computed from monthly normals by the same rules for a place today, the same place in the future (the ensemble-mean monthly climate) and every cell of both comparison grids, so the three columns in the comparison are always like with like.</p>
+    <p><strong>Climate type</strong> follows the Köppen–Geiger criteria of Beck et al. (2018), which use a 0 °C boundary between temperate and cold climates (Peel et al. 2007), with summer taken as the warmer half of the year.</p>
+    <p><strong>Hardiness zone</strong> is estimated, and is not the official USDA Plant Hardiness Zone Map. The quantity behind the zones, the average of each year's coldest temperature, is estimated from the coldest month's mean low, the annual temperature range and annual precipitation by a regression fitted to the official 1991–2020 grid from the PRISM Climate Group and USDA Agricultural Research Service (2023) across the contiguous United States (R² = {{HZ_R2}}; median error {{HZ_ERR}} °C). The estimate falls in the same half-zone as the official grid for {{HZ_SAME}} of 15 km cells and within one half-zone for {{HZ_ONE}}. Outside the contiguous United States the same formula is applied without local calibration.</p>
+    <p><strong>Growing season</strong> is the estimated number of days between the last spring frost and the first fall frost. It sums, over the months, the days in each month times a normal probability that the month is frost-free given its mean low, fitted to ClimateNA's frost-free period over North America (Wang et al. 2016; R² = {{FFP_R2}}; median error {{FFP_ERR}} days).</p>
+    <p><strong>Snowfall is not estimated.</strong> Monthly averages cannot separate rain from snow reliably: in months whose average temperature is above freezing, cold spells still bring snow. Even ClimateNA's precipitation-as-snow puts Denver's snow near 3% of its precipitation, far below what falls there.</p>
+  </section>
+
+  <section id="recent">
+    <h2>Already happening</h2>
+    <p>For each place, the average of the most recent ten complete years in TerraClimate ({{RECENT_FIRST}}–{{RECENT_LAST}}) is compared with its 1991–2020 average from the same dataset, so the difference reflects climate rather than differences between datasets. The page reports the change in annual mean temperature and, where the projected change is large enough to compare with, the share of the warming projected by around 2050 under SSP2-4.5 that has already occurred. Ten years is short, so part of any difference is natural variability.</p>
+  </section>
+
+  <section id="sealevel">
+    <h2>Sea level</h2>
+    <p>For places within 50 km of a projection site, the page shows relative sea-level rise from the IPCC Sixth Assessment Report (Fox-Kemper et al. 2021), using the medium-confidence projections at tide gauges and on a 1° coastal grid (Garner et al. 2021). Values are the median and the likely range (17th–83rd percentiles) for 2050 and 2100 relative to 1995–2014, and include vertical land motion such as subsidence. {{SL_N}} places have projections. Low-likelihood, high-impact outcomes involving rapid ice-sheet loss are not included and could add substantially by 2100.</p>
+  </section>
+
+  <section id="updates">
+    <h2>Updates and versions</h2>
+    <p>The data are rebuilt from the original sources each year by a public, automated pipeline ({{REPO_LINK}}). Each rebuild is checked before release: counts of places, grid cells and models; a self-check that today's climate at each place finds itself (current median {{SELFCHK}}σ); and a comparison with the previous release, flagging for review if more than 10% of best matches move over 500 km or the median change in σ exceeds 0.25. A browser test loads the page with the new data. Nothing is published until the rebuild is reviewed. A monthly check watches for a new TerraClimate year, corrected or withdrawn CMIP6 datasets and the arrival of CMIP7 projections. This page describes method version {{RELEASE}}, data version {{DATA_VERSION}}, using {{N_MODELS}} models.</p>
+  </section>
+
+  <section id="limits">
+    <h2>Limitations</h2>
+    <ul>
+      <li><strong>No extremes.</strong> Heat waves, heat index, cold snaps, hurricanes, wildfire and snowfall are not included. Two places can match on these fourteen measures and still differ in ways that matter to people.</li>
+      <li><strong>Estimated features.</strong> Hardiness zones and growing seasons are statistical estimates from monthly data, calibrated in North America only.</li>
+      <li><strong>Coarse model changes.</strong> Changes come from model grid cells roughly 50–300 km across and are added to local climate, so changes in fine-scale patterns, along mountains and coasts for example, are not captured.</li>
+      <li><strong>Grid resolution.</strong> The comparison grids (15 km and 0.5°) smooth mountain and coastal climates. A mountain or coastal town's best match can be somewhat worse than it would be at finer resolution.</li>
+      <li><strong>One simulation per model.</strong> Natural variability within each model is not sampled, so part of the spread between models is internal variability rather than model difference.</li>
+      <li><strong>Present-day pool.</strong> Matches are found among 1991–2020 climates, which already include some warming. Present climates elsewhere will also change, which the map does not show.</li>
+      <li><strong>Mixed variability sources.</strong> Places outside the contiguous United States use TerraClimate for year-to-year variability, which is coarser than PRISM.</li>
+      <li><strong>Scenarios are not forecasts.</strong> SSP5-8.5 in particular is now widely considered implausible for this century. Each arrow is a way to picture a scenario, not a prediction for a specific town.</li>
+    </ul>
+  </section>
+
+  <section id="software">
+    <h2>Software</h2>
+    <p>Data processing uses Python with NumPy, SciPy, pandas, xarray (reading the CMIP6 Zarr stores), rasterio, pyproj and Shapely. The interactive map uses MapLibre GL JS 5.24 with OpenFreeMap vector tiles; the heat layer, distances and arrows are computed in the browser. The North American grid uses an ellipsoidal Lambert azimuthal equal-area projection implemented in JavaScript and checked against pyproj to better than 10<sup>−7</sup> m.</p>
+  </section>
+
+  <section id="data">
+    <h2>Data and attribution</h2>
+    <div class="tw"><table class="stack">
+      <thead><tr><th>Dataset</th><th>Used for</th><th>Resolution, period</th><th>Credit and terms</th></tr></thead>
+      <tbody>
+        <tr><td data-l="Dataset">AdaptWest / ClimateNA v7.30 normals</td><td data-l="Used for">Present climate, North America</td><td data-l="Resolution, period">1 km, 1991–2020</td><td data-l="Credit and terms">AdaptWest Project (2022); Wang et al. (2016)</td></tr>
+        <tr><td data-l="Dataset">TerraClimate</td><td data-l="Used for">Present climate worldwide; humidity everywhere; recent years; variability outside the contiguous US</td><td data-l="Resolution, period">1/24°, monthly 1991–2020</td><td data-l="Credit and terms">Abatzoglou et al. (2018), Climatology Lab</td></tr>
+        <tr><td data-l="Dataset">PRISM</td><td data-l="Used for">Year-to-year variability, contiguous US</td><td data-l="Resolution, period">4 km, monthly 1991–2020</td><td data-l="Credit and terms">PRISM Climate Group, Oregon State University; Daly et al. (2008)</td></tr>
+        <tr><td data-l="Dataset">CMIP6</td><td data-l="Used for">Projected change</td><td data-l="Resolution, period">Model grids, monthly</td><td data-l="Credit and terms">WCRP CMIP6 modelling groups via ESGF and the Pangeo cloud archive; used under each model's terms of use (CC BY 4.0 for most)</td></tr>
+        <tr><td data-l="Dataset">USDA Plant Hardiness Zone Map grid</td><td data-l="Used for">Calibrating estimated hardiness zones</td><td data-l="Resolution, period">800 m, 1991–2020</td><td data-l="Credit and terms">PRISM Climate Group, Oregon State University, and USDA-ARS (2023). Used for calibration only; the zones shown here are estimates, not the official map</td></tr>
+        <tr><td data-l="Dataset">IPCC AR6 sea-level projections</td><td data-l="Used for">Sea-level rise at coastal places</td><td data-l="Resolution, period">Tide gauges and 1° grid, 2020–2150</td><td data-l="Credit and terms">Garner et al. (2021), CC BY 4.0; NASA Sea Level Change Team</td></tr>
+        <tr><td data-l="Dataset">GeoNames</td><td data-l="Used for">Places and cell labels</td><td data-l="Resolution, period">Towns of 500+ people</td><td data-l="Credit and terms">GeoNames, CC BY 4.0</td></tr>
+        <tr><td data-l="Dataset">Natural Earth</td><td data-l="Used for">Capitals, country names, backup outlines</td><td data-l="Resolution, period">1:10m and 1:50m</td><td data-l="Credit and terms">Natural Earth, public domain</td></tr>
+        <tr><td data-l="Dataset">OpenStreetMap via OpenFreeMap</td><td data-l="Used for">Basemap</td><td data-l="Resolution, period">Vector tiles</td><td data-l="Credit and terms">© OpenStreetMap contributors (ODbL); OpenFreeMap; OpenMapTiles</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Acknowledgements.</strong> We acknowledge the World Climate Research Programme, which, through its Working Group on Coupled Modelling, coordinated and promoted CMIP6. We thank the climate modelling groups for producing and making available their model output, the Earth System Grid Federation (ESGF) for archiving the data and providing access, and the multiple funding agencies who support CMIP6 and ESGF. Dataset citations for individual CMIP6 models are available from the <a href="https://cmip6cite.wdc-climate.de/" rel="noopener">CMIP6 Citation Service</a>. We also thank the Pangeo project and Google Cloud Public Datasets for the analysis-ready CMIP6 archive, the AdaptWest Project, the Climatology Lab at the University of California, Merced, and the PRISM Climate Group at Oregon State University.</p>
+  </section>
+
+  <section id="refs">
+    <h2>References</h2>
+    <ol class="refs">
+      <li>Alduchov, O. A., &amp; Eskridge, R. E. (1996). Improved Magnus form approximation of saturation vapor pressure. <em>Journal of Applied Meteorology, 35</em>(4), 601–609. <a href="https://doi.org/10.1175/1520-0450(1996)035&lt;0601:IMFAOS&gt;2.0.CO;2">https://doi.org/10.1175/1520-0450(1996)035&lt;0601:IMFAOS&gt;2.0.CO;2</a></li>
+      <li>Abatzoglou, J. T., Dobrowski, S. Z., Parks, S. A., &amp; Hegewisch, K. C. (2018). TerraClimate, a high-resolution global dataset of monthly climate and climatic water balance from 1958–2015. <em>Scientific Data, 5</em>, 170191. <a href="https://doi.org/10.1038/sdata.2017.191">https://doi.org/10.1038/sdata.2017.191</a></li>
+      <li>Abernathey, R. P., Augspurger, T., Banihirwe, A., Blackmon-Luca, C. C., Crone, T. J., Gentemann, C. L., Hamman, J. J., Henderson, N., Lepore, C., McCaie, T. A., Robinson, N. H., &amp; Signell, R. P. (2021). Cloud-native repositories for big scientific data. <em>Computing in Science &amp; Engineering, 23</em>(2), 26–35. <a href="https://doi.org/10.1109/MCSE.2021.3059437">https://doi.org/10.1109/MCSE.2021.3059437</a></li>
+      <li>AdaptWest Project. (2022). <em>Gridded current and projected climate data for North America at 1km resolution, generated using the ClimateNA v7.30 software</em> (T. Wang et al., 2022). <a href="https://adaptwest.databasin.org/pages/adaptwest-climatena/">adaptwest.databasin.org</a></li>
+      <li>Beck, H. E., Zimmermann, N. E., McVicar, T. R., Vergopolan, N., Berg, A., &amp; Wood, E. F. (2018). Present and future Köppen-Geiger climate classification maps at 1-km resolution. <em>Scientific Data, 5</em>, 180214. <a href="https://doi.org/10.1038/sdata.2018.214">https://doi.org/10.1038/sdata.2018.214</a></li>
+      <li>Daly, C., Halbleib, M., Smith, J. I., Gibson, W. P., Doggett, M. K., Taylor, G. H., Curtis, J., &amp; Pasteris, P. P. (2008). Physiographically sensitive mapping of climatological temperature and precipitation across the conterminous United States. <em>International Journal of Climatology, 28</em>(15), 2031–2064. <a href="https://doi.org/10.1002/joc.1688">https://doi.org/10.1002/joc.1688</a></li>
+      <li>Eyring, V., Bony, S., Meehl, G. A., Senior, C. A., Stevens, B., Stouffer, R. J., &amp; Taylor, K. E. (2016). Overview of the Coupled Model Intercomparison Project Phase 6 (CMIP6) experimental design and organization. <em>Geoscientific Model Development, 9</em>(5), 1937–1958. <a href="https://doi.org/10.5194/gmd-9-1937-2016">https://doi.org/10.5194/gmd-9-1937-2016</a></li>
+      <li>Fitzpatrick, M. C., &amp; Dunn, R. R. (2019). Contemporary climatic analogs for 540 North American urban areas in the late 21st century. <em>Nature Communications, 10</em>, 614. <a href="https://doi.org/10.1038/s41467-019-08540-3">https://doi.org/10.1038/s41467-019-08540-3</a></li>
+      <li>Forster, P., Storelvmo, T., Armour, K., Collins, W., Dufresne, J.-L., Frame, D., Lunt, D. J., Mauritsen, T., Palmer, M. D., Watanabe, M., Wild, M., &amp; Zhang, H. (2021). The Earth's energy budget, climate feedbacks, and climate sensitivity. In V. Masson-Delmotte et al. (Eds.), <em>Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change</em> (pp. 923–1054). Cambridge University Press. <a href="https://doi.org/10.1017/9781009157896.009">https://doi.org/10.1017/9781009157896.009</a></li>
+      <li>Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021). Ocean, cryosphere and sea level change. In V. Masson-Delmotte et al. (Eds.), <em>Climate Change 2021: The Physical Science Basis</em> (pp. 1211–1362). Cambridge University Press. <a href="https://doi.org/10.1017/9781009157896.011">https://doi.org/10.1017/9781009157896.011</a></li>
+      <li>Garner, G. G., Hermans, T., Kopp, R. E., Slangen, A. B. A., Edwards, T. L., Levermann, A., et al. (2021). <em>IPCC AR6 sea level projections</em> (Version 20210809) [Data set]. Zenodo. <a href="https://doi.org/10.5281/zenodo.5914709">https://doi.org/10.5281/zenodo.5914709</a></li>
+      <li>Hausfather, Z., Marvel, K., Schmidt, G. A., Nielsen-Gammon, J. W., &amp; Zelinka, M. (2022). Climate simulations: recognize the ‘hot model’ problem. <em>Nature, 605</em>, 26–29. <a href="https://doi.org/10.1038/d41586-022-01192-2">https://doi.org/10.1038/d41586-022-01192-2</a></li>
+      <li>Ledoit, O., &amp; Wolf, M. (2004). A well-conditioned estimator for large-dimensional covariance matrices. <em>Journal of Multivariate Analysis, 88</em>(2), 365–411. <a href="https://doi.org/10.1016/S0047-259X(03)00096-4">https://doi.org/10.1016/S0047-259X(03)00096-4</a></li>
+      <li>Mahony, C. R., Cannon, A. J., Wang, T., &amp; Aitken, S. N. (2017). A closer look at novel climates: new methods and insights at continental to landscape scales. <em>Global Change Biology, 23</em>(9), 3934–3955. <a href="https://doi.org/10.1111/gcb.13645">https://doi.org/10.1111/gcb.13645</a></li>
+      <li>Maraun, D., &amp; Widmann, M. (2018). <em>Statistical Downscaling and Bias Correction for Climate Research</em>. Cambridge University Press. <a href="https://doi.org/10.1017/9781107588783">https://doi.org/10.1017/9781107588783</a></li>
+      <li>O'Neill, B. C., Tebaldi, C., van Vuuren, D. P., Eyring, V., Friedlingstein, P., Hurtt, G., Knutti, R., Kriegler, E., Lamarque, J.-F., Lowe, J., Meehl, G. A., Moss, R., Riahi, K., &amp; Sanderson, B. M. (2016). The Scenario Model Intercomparison Project (ScenarioMIP) for CMIP6. <em>Geoscientific Model Development, 9</em>(9), 3461–3482. <a href="https://doi.org/10.5194/gmd-9-3461-2016">https://doi.org/10.5194/gmd-9-3461-2016</a></li>
+      <li>Peel, M. C., Finlayson, B. L., &amp; McMahon, T. A. (2007). Updated world map of the Köppen-Geiger climate classification. <em>Hydrology and Earth System Sciences, 11</em>(5), 1633–1644. <a href="https://doi.org/10.5194/hess-11-1633-2007">https://doi.org/10.5194/hess-11-1633-2007</a></li>
+      <li>PRISM Climate Group &amp; USDA Agricultural Research Service. (2023). <em>2023 USDA Plant Hardiness Zone Map GIS data, 1991–2020 mean annual extreme minimum temperature</em>. Oregon State University. <a href="https://prism.oregonstate.edu/phzm">https://prism.oregonstate.edu/phzm</a></li>
+      <li>PRISM Climate Group. (2026). <em>PRISM monthly time series, 4 km, 1991–2020</em>. Oregon State University. <a href="https://prism.oregonstate.edu">https://prism.oregonstate.edu</a></li>
+      <li>Riahi, K., van Vuuren, D. P., Kriegler, E., et al. (2017). The Shared Socioeconomic Pathways and their energy, land use, and greenhouse gas emissions implications: An overview. <em>Global Environmental Change, 42</em>, 153–168. <a href="https://doi.org/10.1016/j.gloenvcha.2016.05.009">https://doi.org/10.1016/j.gloenvcha.2016.05.009</a></li>
+      <li>Wang, T., Hamann, A., Spittlehouse, D., &amp; Carroll, C. (2016). Locally downscaled and spatially customizable climate data for historical and future periods for North America. <em>PLoS ONE, 11</em>(6), e0156720. <a href="https://doi.org/10.1371/journal.pone.0156720">https://doi.org/10.1371/journal.pone.0156720</a></li>
+      <li>Williams, J. W., &amp; Jackson, S. T. (2007). Novel climates, no-analog communities, and ecological surprises. <em>Frontiers in Ecology and the Environment, 5</em>(9), 475–482. <a href="https://doi.org/10.1890/070037">https://doi.org/10.1890/070037</a></li>
+      <li>Williams, J. W., Jackson, S. T., &amp; Kutzbach, J. E. (2007). Projected distributions of novel and disappearing climates by 2100 AD. <em>Proceedings of the National Academy of Sciences, 104</em>(14), 5738–5742. <a href="https://doi.org/10.1073/pnas.0606292104">https://doi.org/10.1073/pnas.0606292104</a></li>
+    </ol>
+    <footer class="end">
+      <p>Climate Twins, version <span class="v-rel"></span> (data version <span class="v-data"></span>). Baseline 1991–2020; CMIP6 projections; SSP1-2.6 to SSP5-8.5. <a href="./">Open the map</a>.</p>
+    </footer>
+  </section>
+</article>
+</div>
+
+<script>
+"use strict";
+// ---- release details: edit these when publishing a new version
+const AUTHOR={family:"Schweitzer",given:"Forest Meyer",initials:"F. M."};
+const TITLE="Climate Twins: present-day climate analogs for projected 2050 and 2100 climates";
+const RELEASE="{{RELEASE}}", DATA_VERSION="{{DATA_VERSION}}", YEAR="2026";
+const MODELS=[["ACCESS-CM2","r1i1p1f1",2.10],["AWI-CM-1-1-MR","r1i1p1f1",2.06],["BCC-CSM2-MR","r1i1p1f1",1.72],["CNRM-CM6-1-HR","r1i1p1f2",2.48],
+  ["CNRM-CM6-1","r1i1p1f2",2.14],["CNRM-ESM2-1","r1i1p1f2",1.86],["CanESM5-CanOE","r1i1p2f1",2.74],["CanESM5","r1i1p2f1",2.74],
+  ["EC-Earth3-Veg-LR","r1i1p1f1",null],["EC-Earth3-Veg","r4i1p1f1",2.62],["EC-Earth3","r4i1p1f1",2.30],["FGOALS-g3","r1i1p1f1",1.54],
+  ["GFDL-ESM4","r1i1p1f1",1.63],["GISS-E2-1-G","r1i1p3f1",1.80],["INM-CM4-8","r1i1p1f1",1.33],["INM-CM5-0","r1i1p1f1",1.41],
+  ["IPSL-CM6A-LR","r1i1p1f1",2.32],["KACE-1-0-G","r1i1p1f1",2.04],["MIROC-ES2L","r4i1p1f2",1.55],["MIROC6","r1i1p1f1",1.55],
+  ["MPI-ESM1-2-HR","r1i1p1f1",1.66],["MPI-ESM1-2-LR","r1i1p1f1",1.84],["MRI-ESM2-0","r1i1p1f1",1.64],["UKESM1-0-LL","r1i1p1f2",2.79]];
+
+document.getElementById("m-author").textContent=`${AUTHOR.given} ${AUTHOR.family}`;
+document.querySelectorAll(".v-rel").forEach(e=>e.textContent=RELEASE);
+document.querySelectorAll(".v-data").forEach(e=>e.textContent=DATA_VERSION);
+document.getElementById("modeltable").innerHTML=MODELS.map(([m,r,t])=>{
+  const inE=t!=null&&t>=1.4&&t<=2.2,why=t==null?"No TCR in table":t>2.2?"Above range":"Below range";
+  return `<tr><td>${m}</td><td>${r}</td><td class="n">${t==null?"–":t.toFixed(2)}</td><td>${inE?'<span class="tag in">Yes</span>':`<span class="tag out">${why}</span>`}</td></tr>`;}).join("");
+
+// ---- suggested citation, with this site's own address and today's date
+const mapURL=new URL("./",location.href).href.replace(/\/methods(\.html)?\/?$/,"/");
+const today=new Date(),months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const acc=`${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`,iso=today.toISOString().slice(0,10);
+const apa=`${AUTHOR.family}, ${AUTHOR.initials} (${YEAR}). ${TITLE} (Version ${RELEASE}, data version ${DATA_VERSION}) [Interactive web map]. Retrieved ${acc}, from ${mapURL}`;
+document.getElementById("c-apa").innerHTML=`${AUTHOR.family}, ${AUTHOR.initials} (${YEAR}). <em>${TITLE}</em> (Version ${RELEASE}, data version ${DATA_VERSION}) [Interactive web map]. Retrieved ${acc}, from <a href="${mapURL}">${mapURL}</a>`;
+document.getElementById("c-bib").textContent=`@misc{climatetwins${YEAR},
+  author       = {${AUTHOR.family}, ${AUTHOR.given}},
+  title        = {{${TITLE}}},
+  year         = {${YEAR}},
+  version      = {${RELEASE}},
+  note         = {Interactive web map; data version ${DATA_VERSION}},
+  howpublished = {\\url{${mapURL}}},
+  urldate      = {${iso}}
+}`;
+document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
+  const id=b.dataset.copy,txt=id==="c-apa"?apa:document.getElementById(id).textContent,st=document.querySelector(".copied");
+  try{await navigator.clipboard.writeText(txt);st.textContent="Copied.";}catch(e){st.textContent="Copying isn't available here; select the text instead.";}
+  setTimeout(()=>st.textContent="",2500);}));
+
+// ---- theme: shared with the map through localStorage "ct-theme"
+const KEY="ct-theme",sys=matchMedia("(prefers-color-scheme: dark)"),RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SUN='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.3 14.6A8.6 8.6 0 0 1 9.4 3.7a8.6 8.6 0 1 0 10.9 10.9z"/></svg>';
+function saved(){try{const t=localStorage.getItem(KEY);return t==="dark"||t==="light"?t:null;}catch(e){return null;}}
+let dark=saved()?saved()==="dark":sys.matches;
+const btn=document.getElementById("themebtn");
+function paint(anim){document.documentElement.setAttribute("data-theme",dark?"dark":"light");const lbl=dark?"Light mode":"Dark mode";
+  const set=()=>{btn.innerHTML=dark?SUN:MOON;btn.setAttribute("aria-label",lbl);btn.title=lbl;btn.setAttribute("aria-pressed",String(dark));};
+  if(!anim||RM){set();return;}btn.classList.add("spin");setTimeout(()=>{set();btn.classList.remove("spin");},180);}
+paint(false);
+btn.addEventListener("click",()=>{dark=!dark;try{localStorage.setItem(KEY,dark?"dark":"light");}catch(e){}paint(true);});
+sys.addEventListener("change",e=>{if(!saved()){dark=e.matches;paint(true);}});
+window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){dark=e.newValue==="dark";paint(false);}});
+
+// ---- contents: mark the section being read
+const links=[...document.querySelectorAll("nav.toc a")],secs=links.map(a=>document.querySelector(a.getAttribute("href")));
+if("IntersectionObserver" in window){const vis=new Map();
+  const io=new IntersectionObserver(es=>{es.forEach(e=>vis.set(e.target,e.isIntersecting));
+    const first=secs.find(s=>vis.get(s));if(first)links.forEach((a,i)=>a.classList.toggle("on",secs[i]===first));},{rootMargin:"-10% 0px -70% 0px"});
+  secs.forEach(s=>s&&io.observe(s));}
+</script>
+</body>
+</html>

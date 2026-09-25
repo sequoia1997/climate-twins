@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Climate twins: where is your city's future climate today?</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ocean:#c7d5de; --land:#e3e6de; --line:#8b949c; --line2:#5d6770; --lake:#c7d5de;
+  --bg:#f3f5f6; --panel:#ffffff; --ink:#1d2730; --muted:#5b6670; --rule:#d8dde1;
+  --accent:#d6412c; --target:#1d2730; --chip:#eef1f3; --chipOn:#1d2730; --chipOnInk:#fff;
+  --good:#1f7a4d; --warn:#b36b00; --bad:#b3261e;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-head:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ocean:#0e1920; --land:#26313a; --line:#56626c; --line2:#8894a0; --lake:#0e1920;
+    --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943;
+    --accent:#ff6b4a; --target:#f1f4f6; --chip:#22303a; --chipOn:#e7ecef; --chipOnInk:#11181e;
+    --good:#5fcf95; --warn:#f0b04a; --bad:#ff8a80;
+  }
+}
+:root[data-theme="dark"]{
+  --ocean:#0e1920; --land:#26313a; --line:#56626c; --line2:#8894a0; --lake:#0e1920;
+  --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943;
+  --accent:#ff6b4a; --target:#f1f4f6; --chip:#22303a; --chipOn:#e7ecef; --chipOnInk:#11181e;
+  --good:#5fcf95; --warn:#f0b04a; --bad:#ff8a80;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.45 var(--font-body)}
+#app{display:flex;height:100%;min-height:0}
+#mapwrap{position:relative;flex:1;min-width:0;background:var(--ocean);touch-action:none;overflow:hidden}
+#map{position:absolute;inset:0}
+#ov{position:absolute;left:0;top:0;pointer-events:none}
+.maplibregl-ctrl-bottom-right{z-index:2}
+
+aside{width:400px;max-width:100%;background:var(--panel);border-left:1px solid var(--rule);overflow-y:auto;padding:20px 22px 40px}
+h1{font:700 1.55rem/1.1 var(--font-head);margin:0 0 6px;letter-spacing:-.01em}
+.lede{color:var(--muted);margin:0 0 16px;font-size:.95rem}
+label.small,.small{font-size:.85rem;color:var(--muted)}
+.row{margin:12px 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.seg button{font:inherit;font-size:.88rem;border:1px solid var(--rule);background:var(--chip);color:var(--ink);padding:6px 10px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);border-color:var(--chipOn)}
+.seg button:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#search{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink)}
+.opts{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:.9rem}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+hr{border:0;border-top:1px solid var(--rule);margin:18px 0}
+#result h2{font:700 1.35rem/1.15 var(--font-head);margin:0 0 4px}
+.answer{font-size:1.05rem;margin:8px 0 10px}
+.answer strong{font-weight:700}
+.badge{display:inline-block;font-size:.82rem;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid currentColor}
+.q-good{color:var(--good)} .q-fair{color:var(--good)} .q-partial{color:var(--warn)} .q-novel{color:var(--bad)}
+.facts{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem;margin:12px 0}
+.facts dt{color:var(--muted)} .facts dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:.88rem;border-left:3px solid var(--warn);padding:6px 10px;margin:10px 0;background:var(--chip);border-radius:0 8px 8px 0}
+table{border-collapse:collapse;width:100%;font-size:.86rem;font-variant-numeric:tabular-nums}
+th,td{padding:4px 4px;text-align:right;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left}
+table.clim tr.grp th{text-align:left;font-weight:700;padding-top:12px;border-bottom:1.5px solid var(--ink)}
+table.clim tr.tot td{font-weight:700}
+table.clim td{white-space:nowrap} table.clim td:first-child{white-space:normal}
+thead th{font-weight:700;color:var(--muted);font-size:.78rem;vertical-align:bottom}
+.tablewrap{overflow:visible}
+.tablewrap td:first-child{overflow-wrap:anywhere}
+ol.sites{padding-left:1.3em;margin:6px 0;font-size:.92rem}
+ol.sites li{margin:3px 0}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--line);cursor:pointer;text-align:left}
+details{margin:10px 0} summary{cursor:pointer;font-weight:700}
+details.adv{margin-top:12px;font-size:.92rem} details.adv summary{font-weight:400;color:var(--muted)} .advopt{display:flex;gap:6px;align-items:center;margin-top:8px;cursor:pointer}
+.conf{font-size:.9rem;margin:10px 0}
+.world{margin:14px 0;padding:10px 12px;border:1px solid var(--rule);border-radius:10px} .world h3{font:700 1rem/1.2 var(--font-head);margin:0 0 4px} .world .small{margin:4px 0} .conf strong{font-weight:700}
+details p,details li{font-size:.9rem}
+#legend{position:absolute;z-index:2;left:12px;bottom:12px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:.78rem;max-width:calc(100% - 24px)}
+#legend .sw{display:flex;gap:0;margin-top:4px}
+#legend .sw span{display:block;height:10px;flex:1;min-width:22px}
+#legend .ticks{display:flex;justify-content:space-between;color:var(--muted)}
+#legend .lg-more{color:var(--ink);margin-top:6px;max-width:300px} #legend .lg-i{display:none;margin-left:6px}
+#legend .lg-title{color:var(--muted)} #legend.open .lg-title{white-space:normal} #legend .key{display:grid;grid-template-columns:26px 1fr;gap:3px 6px;align-items:center;line-height:1.25}
+#legend .key svg{display:block;overflow:visible}
+.cmp .recent,.cmp .slr{font-size:.92rem;margin:6px 0 10px;padding:7px 10px;border-radius:8px;background:var(--chip)}
+.cmp table.feat td{white-space:normal;vertical-align:top} .cmp table.feat td:first-child{width:34%;word-break:normal;overflow-wrap:normal;hyphens:none;text-align:left} .cmp .kgn{display:block;font-size:.78rem;color:var(--muted);line-height:1.2}
+.cmp table.feat abbr{text-decoration:none;font-weight:600} #legend .key span{color:var(--ink)} #legend .ticks .end{color:var(--muted);font-style:italic}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+#attrib{position:absolute;right:0;bottom:0;z-index:2;font-size:11px;line-height:1.4;padding:2px 7px;border-top-left-radius:6px;background:rgba(255,255,255,.85);color:#1d2730}
+#attrib.dark{background:rgba(23,32,40,.85);color:#e7ecef}
+#attrib a{color:inherit;text-decoration:none} #attrib a:hover,#attrib a:focus-visible{text-decoration:underline}
+@media (max-width:820px){#attrib{font-size:10px}}
+.sigma-note{font-size:.88rem;background:var(--chip);border-radius:10px;padding:8px 12px;margin:0 0 14px}
+.sigma-note p{margin:0 0 4px} .sigma-note p:last-child{margin:0}
+#tip{position:absolute;z-index:3;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:5px 8px;font-size:.82rem;display:none;max-width:240px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+#zoom{position:absolute;right:10px;top:84px;display:flex;flex-direction:column;gap:6px;z-index:2}
+#zoom #zreset{margin-top:6px}
+#zoom button{min-width:29px;padding:0 4px;height:29px;font-size:.72rem;border-radius:8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+#loading{position:absolute;z-index:4;background:var(--ocean);inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1rem}
+.muted{color:var(--muted)}
+.cmp{--cNow:#b4bcc3;--cFut:var(--ink);--cMat:var(--accent);margin:22px 0 10px}
+:root[data-theme="dark"] .cmp{--cNow:#5c6975}
+.cmp h3{font:700 1.12rem/1.2 var(--font-head);margin:0 0 6px}
+.cmp h4{font:700 .95rem/1.2 var(--font-body);margin:18px 0 8px}
+.cmp h4 .u{font-weight:400;color:var(--muted)}
+.cmp-sum{font-size:.95rem;margin:0 0 4px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.st{border-top:4px solid var(--c);padding-top:6px;min-width:0}
+.st .k{font-size:.76rem;line-height:1.25;color:var(--muted)}
+.st .v{font:700 1.4rem/1.15 var(--font-head);font-variant-numeric:tabular-nums;margin-top:2px}
+.st .d{font-size:.76rem;line-height:1.25;color:var(--muted)}
+.s-now{--c:var(--cNow);--t:var(--muted)} .s-fut{--c:var(--cFut);--t:var(--ink)} .s-mat{--c:var(--cMat);--t:var(--accent)}
+.chart{position:relative;margin:12px 0 0}
+.chart{--lw:4.1rem}
+.crow{display:grid;grid-template-columns:var(--lw) minmax(0,1fr);align-items:center;margin:0 0 6px}
+.crow .lab{font-size:.8rem;color:var(--muted)}
+.trk{position:relative;height:36px}
+.bar{position:absolute;height:7px;border-radius:4px;background:var(--c);min-width:3px}
+.bar b{position:absolute;top:50%;transform:translateY(-50%);font-size:.72rem;font-weight:400;line-height:1;color:var(--t);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar.s-fut b{font-weight:700}
+.bar .lo{right:calc(100% + 4px)} .bar .hi{left:calc(100% + 4px)}
+.gl{position:absolute;top:0;bottom:20px;width:0;border-left:1px solid var(--rule)}
+.gl.frz{border-left:1px dashed var(--line)}
+.axis{position:relative;height:18px;margin-left:var(--lw)}
+.axis span{position:absolute;top:2px;transform:translateX(-50%);font-size:.68rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cmp .cap{font-size:.8rem;color:var(--muted);margin:4px 0 0}
+details.exact{margin:14px 0 0} details.exact summary{font-weight:400;color:var(--muted);font-size:.9rem}
+table.ex{margin-top:6px} table.ex th{font-size:.76rem} table.ex td,table.ex th{padding:4px 3px}
+table.ex tr.grp th{text-align:left;font-weight:700;padding-top:10px;border-bottom:1.5px solid var(--ink);font-size:.82rem;color:var(--ink)}
+table.ex .sw{display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c);margin-right:4px;vertical-align:1px}
+#themebtn{position:absolute;left:10px;top:10px;z-index:2;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--rule);background:var(--panel);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+#themebtn svg{width:20px;height:20px;display:block;transition:transform .35s ease,opacity .35s ease}
+#themebtn.spin svg{transform:rotate(-90deg) scale(.6);opacity:0}
+#themebtn:hover{border-color:var(--line)}
+#themebtn:focus-visible,#zoom button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+:root[data-theme="dark"] .maplibregl-ctrl-group{background:var(--panel);box-shadow:0 0 0 1px var(--rule)}
+:root[data-theme="dark"] .maplibregl-ctrl-group button+button{border-top-color:var(--rule)}
+:root[data-theme="dark"] .maplibregl-ctrl-icon{filter:invert(1) brightness(.92)}
+aside a{color:var(--ink);text-decoration-color:var(--accent);text-underline-offset:2px}
+aside a:hover{text-decoration-thickness:2px}
+.methods-link{font-size:.9rem;margin:-6px 0 14px}
+.foot{font-size:.8rem;color:var(--muted);margin-top:24px}
+@media (max-width:820px){
+  #legend{font-size:11px;padding:4px 7px;left:6px;bottom:22px;max-width:58%;cursor:pointer}
+  #legend .lg-more{display:none;max-width:none} #legend.open .lg-more{display:block} #legend .lg-i{display:inline}
+  #legend .sw span{min-width:10px;height:7px} #legend .lg-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #attrib{font-size:10px;white-space:nowrap}
+  #zoom{right:10px;top:84px}
+  #app{flex-direction:column;height:auto;min-height:100%}
+  #mapwrap{flex:none;height:78vh;height:78svh;min-height:380px}
+  aside{width:100%;border-left:0;border-top:1px solid var(--rule)}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="mapwrap">
+    <div id="map" aria-label="World map with climate-analog arrows. Use the search box to choose a place."></div>
+    <canvas id="ov" aria-hidden="true"></canvas>
+    <button id="themebtn" type="button" aria-pressed="false" aria-label="Dark map" title="Dark map"></button>
+    <div id="zoom"><button id="zfit" aria-label="Show the United States" title="United States">US</button><button id="zworld" aria-label="Show the whole world" title="World">world</button><button id="zreset" aria-label="Back to the starting view" title="Back to the starting view (Esc)">reset</button></div>
+    <div id="legend"></div>
+    <div id="tip" role="status"></div>
+    <div id="attrib"></div>
+    <div id="loading">Unpacking climate data…</div>
+  </div>
+  <aside>
+    <h1>Climate twins</h1>
+    <p class="lede">Pick a place anywhere in North America, or one of 800 major cities around the world. The arrow points to where today's climate is the closest match to the climate that place is projected to have around 2050 or 2100.</p>
+    <div class="sigma-note">
+      <p><strong>What σ means.</strong> σ (sigma) measures how different two climates are, in units of a place's normal year-to-year swings. 0σ is identical.</p>
+      <p>Under 1σ, the climates are as alike as two ordinary years at the same place. 1–2σ is a reasonable match, 2–4σ only partial, and over 4σ no real match.</p>
+    </div>
+    <div class="row">
+      <input id="search" list="places" placeholder="Search places, e.g. Raleigh, NC or Lisbon" autocomplete="off" aria-label="Search for a place">
+      <div class="small" id="wstat" role="status" style="margin-top:4px"></div>
+      <datalist id="places"></datalist>
+    </div>
+    <div class="row">
+      <div class="small" id="per-label">Time period</div>
+      <div class="seg" id="per" role="group" aria-labelledby="per-label"></div>
+    </div>
+    <div class="row">
+      <div class="small" id="ssp-label">Emissions scenario</div>
+      <div class="seg" id="ssp" role="group" aria-labelledby="ssp-label"></div>
+      <div class="small" id="ssp-desc" style="margin-top:6px"></div>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="optModels" checked> Individual models</label>
+      <label><input type="checkbox" id="optAll" checked> All arrows</label>
+      <label><input type="checkbox" id="optUnits"> Metric units</label>
+    </div>
+    <details class="adv">
+      <summary>Advanced</summary>
+      <label class="advopt"><input type="checkbox" id="optHot"> Include the 9 models outside the likely range</label>
+      <p class="small">By default the map uses 15 climate models whose transient warming response to CO₂ lies in the IPCC's likely range. Of the other nine, seven warm faster than the evidence supports, one warms more slowly, and one has no published value. Including them mostly shows a hotter outcome that is possible but less likely.</p>
+    </details>
+    <hr>
+    <section id="result" aria-live="polite"><p class="muted">Tap a dot on the map or search for a place. With “All arrows” on, the map shows every place's best match for the chosen scenario, colored by how good the match is.</p></section>
+    <hr>
+    <details>
+      <summary>How this works</summary>
+      <p>For each place, the projected climate (averaged over 2041–2060 for “2050” and 2081–2100 for “2100”, the IPCC's standard mid-century and end-of-century periods) is the place's 1991–2020 climate plus the change simulated by CMIP6 climate models. That future climate is compared with today's (1991–2020) climate in every 15 km grid cell across the United States, Canada and Mexico.</p>
+      <p><strong>Cities outside North America</strong> are compared with today's climate everywhere on Earth's land (except Antarctica), in cells of 0.5° (about 55 km). Their present climate, and the global cells, come from TerraClimate 1991–2020; the same 24 climate models and the same method are used.</p>
+      <p>The comparison uses 14 numbers: average daily high, average nightly low and total precipitation for each season, plus how humid it is (dewpoint) in December–February and June–August. Differences are measured against how much each season normally varies from year to year at the place itself, then expressed as <em>sigma dissimilarity</em> (Mahony et al. 2017), the method Fitzpatrick &amp; Dunn used for their 2019 map of 540 North American cities.</p>
+      <ul>
+        <li><strong>Under 1σ:</strong> the two climates are as alike as two ordinary years at the same place.</li>
+        <li><strong>1–2σ:</strong> a reasonable match.</li>
+        <li><strong>2–4σ:</strong> a partial match. The future climate has no close counterpart anywhere on the continent today.</li>
+        <li><strong>Over 4σ:</strong> a novel climate; the arrow shows the least-bad match.</li>
+      </ul>
+      <p><strong>How year-to-year variation is used.</strong> The 14 measures don't vary independently. Hot summers tend to be dry, for example. The comparison accounts for these links, using a statistical technique called shrinkage (Ledoit &amp; Wolf 2004) so that patterns which barely vary at a place are neither ignored nor exaggerated.</p>
+      <p><strong>Models.</strong> The map averages 15 of 24 CMIP6 models: those whose transient climate response lies in the IPCC AR6 likely range of 1.4–2.2 °C, following Hausfather et al. (2022). The other nine (seven above the range, one below it, one without a published value) can be included under Advanced. The small dots show each model's own best match, so a tight cluster means the models agree.</p>
+      <p><strong>Confidence.</strong> High means at least 60% of the models put their own best match within 500 km of the arrow's tip, and a second statistical method (keeping only the main patterns of variation) agrees. Low means fewer than 40% of models agree, or the second method points elsewhere and model agreement is modest.</p>
+    </details>
+    <details>
+      <summary>What this leaves out</summary>
+      <ul>
+        <li>Only temperature and precipitation. Humidity, heat index, extremes, hurricanes, wildfire and sea-level rise are not included.</li>
+        <li>Model changes come from grid cells roughly 50–300 km wide and are added to the local climate, so changes in fine-scale patterns (for example along mountains or coasts) are not captured.</li>
+        <li>The analog pool uses 15 km cells, which smooths mountain climates. A mountain town's best match can be a little worse than it would be at finer resolution.</li>
+        <li>One simulation per model. Natural variability inside each model is not sampled.</li>
+        <li>Places outside the lower 48 use TerraClimate for year-to-year variability, which is coarser than PRISM.</li>
+        <li>Cities outside North America are matched at 0.5° (about 55 km), so mountain and coastal cities are compared more coarsely than in North America. Small islands and narrow coastal strips (Malé, Funafuti, Aden, Dakar) have no 55 km cell like them, so even their present climate may have no close match, and their arrows should be read loosely.</li>
+        <li>Where a season has almost no rain in any year (Lima, Cairo), its year-to-year variation is set to a small minimum (about 10%) so the comparison stays defined.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Data and sources</summary>
+      <p>Today's climate: AdaptWest/ClimateNA 1991–2020 monthly normals (1 km, averaged to 15 km; place values use the 1 km cells within 10 km). Year-to-year variability: PRISM monthly 4 km, 1991–2020, detrended (lower 48); TerraClimate elsewhere. Future change: 24 CMIP6 models (Pangeo archive), 2041–2060 and 2081–2100 minus 1991–2020, land-weighted. Worldwide matches and cities outside North America: TerraClimate 1991–2020 monthly (1/24°), averaged to 0.5° for the global pool and within 10 km for each city. Places: GeoNames; national capitals: Natural Earth. Basemap: OpenFreeMap, built from OpenStreetMap data. Backup outlines: Natural Earth.</p>
+      <p>Mahony, C.R. et al. (2017) Global Change Biology 23:3934. Fitzpatrick, M.C. &amp; Dunn, R.R. (2019) Nature Communications 10:614. Hausfather, Z. et al. (2022) Nature 605:26.</p>
+      <p id="modelslist" class="small"></p>
+    </details>
+    <p class="foot" id="dver"></p>
+    <p class="foot"><a href="methods.html" target="_blank" rel="noopener">How this map was made: methods, data and references</a></p>
+    <p class="foot">Projections are not forecasts. Treat each arrow as a way to picture a scenario, not a prediction for a specific town.</p>
+  </aside>
+</div>
+
+<script>
+"use strict";
+const BOUNDS=[0,1,2,3,4,5,6,8,10];
+const RAMP_L=["#ffd23f","#ffa630","#f26b3a","#d1435b","#9c3f7c","#6c4585","#4f4f7d","#5a6675"];
+// Dark basemap: same hues, but the high end is lifted so 4-8 sigma stays visible on near-black land.
+const RAMP_D=["#ffd23f","#ffa630","#f47a45","#e0566c","#c05c9e","#9a6cc4","#7a7fc0","#7f8b99"];
+let RAMP=RAMP_L;
+const SSP_DESC=["Strong mitigation: warming held near 2 °C this century.","Middle of the road: today's policies, roughly 2.5–3 °C by 2100.","High emissions: rising fossil fuel use, around 4 °C by 2100.","Very high emissions. Now widely considered implausible; the next generation of scenarios drops it."];
+const SEAS=["Winter","Spring","Summer","Fall"],SEASM=["Dec–Feb","Mar–May","Jun–Aug","Sep–Nov"];
+function seasons(lat){return lat<23.5?SEASM:SEAS;}
+function measNames(lat){const S4=seasons(lat),f=x=>S4===SEAS?x.toLowerCase():x;return[...S4.map(x=>f(x)+" highs"),...S4.map(x=>f(x)+" lows"),...S4.map(x=>f(x)+(S4===SEAS?" rain":" precipitation")),...S4.map(x=>f(x)+" dewpoint")];}
+let NV=12,K=12,MI=[0,1,2,3,4,5,6,7,8,9,10,11],HAS10=false,kgNow,zoneNow,ffpNow,kgFut,zoneFut,ffpFut,recentA,recSig;
+const isP=i=>i>=8&&i<12,decT=(v,i)=>isP(i)?v/1000:v/100,decR=(v,i)=>isP(i)?Math.exp(v/1000)-1:v/100;
+let D,NP,NT,NM,pool,poolRaw,cellRC,plat,plon,base,fut,sd,Msh,Mtr,bestIdx,bestSig,sigTab,places,cellPlace,cellCity;
+let POOLS=[],PI=0,NTNA=0,worldState="none"; // PI: 0 = North America 15 km pool, 1 = global 0.5° pool
+const MBW={w:-180,e:180,s:-60,n:84,W:2160,H:0};let heatW=null,hctxW,heatImgW,heat32W,lutW=null,gridToCellW;
+const S={per:1,gsel:-1,darkMap:false,cmp:0,sel:-1,ssp:1,ens:"tcr_likely",pm:0,metric:false,showModels:true,showAll:true,hover:null};
+let cur=null; // current computation
+// ---------- theme: saved choice, else the system setting
+const THEME_KEY="ct-theme",sysDark=matchMedia("(prefers-color-scheme: dark)");
+function savedTheme(){try{const t=localStorage.getItem(THEME_KEY);return t==="dark"||t==="light"?t:null;}catch(e){return null;}}
+const SUN='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.3 14.6A8.6 8.6 0 0 1 9.4 3.7a8.6 8.6 0 1 0 10.9 10.9z"/></svg>';
+function themeBtn(anim){const b=document.getElementById("themebtn");if(!b)return;const d=S.darkMap,lbl=d?"Light map":"Dark map";
+  const set=()=>{b.innerHTML=d?SUN:MOON;b.setAttribute("aria-label",lbl);b.title=lbl+" (your choice is remembered)";b.setAttribute("aria-pressed",String(d));};
+  if(!anim||RM){set();return;}b.classList.add("spin");setTimeout(()=>{set();b.classList.remove("spin");},180);}
+function applyTheme(dark,save,anim){
+  S.darkMap=dark;document.documentElement.setAttribute("data-theme",dark?"dark":"light");
+  if(save){try{localStorage.setItem(THEME_KEY,dark?"dark":"light");}catch(e){}}
+  RAMP=dark?RAMP_D:RAMP_L;RAMPRGB=RAMP.map(hex2rgb);themeBtn(anim);
+  if(!map||!D)return;
+  setAttrib();
+  if(usingFallback)setBaseStyle();else if(map.isStyleLoaded())paintBase();
+  for(const id of["heat","heatw"])if(map.getLayer(id))map.setPaintProperty(id,"raster-opacity",dark?0.84:0.72);
+  if(cur){compute();updateMapLayers();}
+  legend();draw();}
+// Positron recoloured for dark mode, layer by layer. Anything not listed goes through darkColor() below.
+const LBL_HALO="rgba(17,24,30,.9)";
+const DARK_BASE={
+  background:{"background-color":"#1d262e"},park:{"fill-color":"#1f2a2a"},water:{"fill-color":"#0d151b"},
+  landcover_ice_shelf:{"fill-color":"#2a333b"},landcover_glacier:{"fill-color":"#2a333b"},
+  landuse_residential:{"fill-color":"#222b33"},landcover_wood:{"fill-color":"#1f2a28"},
+  waterway:{"line-color":"#15212a"},building:{"fill-color":"#27313a","fill-outline-color":"#303a44"},
+  "aeroway-area":{"fill-color":"#2a333b"},"aeroway-runway":{"line-color":"#39434c"},"aeroway-taxiway":{"line-color":"#313b44"},"aeroway-runway-casing":{"line-color":"#2a333b"},
+  road_area_pier:{"fill-color":"#1d262e"},road_pier:{"line-color":"#1d262e"},
+  highway_path:{"line-color":"#2e3841"},highway_minor:{"line-color":"#333d47"},
+  highway_major_casing:{"line-color":"#2a333c"},highway_major_inner:{"line-color":"#3e4852"},highway_major_subtle:{"line-color":"rgba(78,90,101,.55)"},
+  highway_motorway_casing:{"line-color":"#2a333c"},highway_motorway_inner:{"line-color":"#4a5560"},highway_motorway_subtle:{"line-color":"rgba(78,90,101,.5)"},
+  highway_motorway_bridge_casing:{"line-color":"#2a333c"},highway_motorway_bridge_inner:{"line-color":"#4a5560"},
+  tunnel_motorway_casing:{"line-color":"#2a333c"},tunnel_motorway_inner:{"line-color":"#343e48"},
+  railway:{"line-color":"#3a444d"},railway_dashline:{"line-color":"#1d262e"},railway_transit:{"line-color":"#3a444d"},railway_transit_dashline:{"line-color":"#1d262e"},
+  railway_service:{"line-color":"#3a444d"},railway_service_dashline:{"line-color":"#1d262e"},
+  boundary_2:{"line-color":"#8793a0"},boundary_3:{"line-color":"#5f6b77"},boundary_disputed:{"line-color":"#8793a0"},
+  waterway_line_label:{"text-color":"#667a88","text-halo-color":"rgba(13,21,27,.75)"},
+  water_name_point_label:{"text-color":"#86a0d2","text-halo-color":"rgba(13,21,27,.75)"},water_name_line_label:{"text-color":"#86a0d2","text-halo-color":"rgba(13,21,27,.75)"},
+  "highway-name-path":{"text-color":"#8f9aa4","text-halo-color":"#172028"},"highway-name-minor":{"text-color":"#9aa5ae","text-halo-color":"#172028"},"highway-name-major":{"text-color":"#9aa5ae","text-halo-color":"#172028"},
+  "highway-shield-non-us":{"icon-opacity":0.55},"highway-shield-us-interstate":{"icon-opacity":0.55},road_shield_us:{"icon-opacity":0.55},
+  airport:{"text-color":"#9aa5ae","text-halo-color":"#172028"},
+  label_other:{"text-color":"#aeb8c1","text-halo-color":LBL_HALO},label_state:{"text-color":"#aeb8c1","text-halo-color":LBL_HALO},
+  label_village:{"text-color":"#dfe5ea","text-halo-color":LBL_HALO},label_town:{"text-color":"#e6ebef","text-halo-color":LBL_HALO},
+  label_city:{"text-color":"#eef2f5","text-halo-color":LBL_HALO},label_city_capital:{"text-color":"#eef2f5","text-halo-color":LBL_HALO},
+  label_country_1:{"text-color":"#eef2f5","text-halo-color":LBL_HALO},label_country_2:{"text-color":"#e6ebef","text-halo-color":LBL_HALO},label_country_3:{"text-color":"#dfe5ea","text-halo-color":LBL_HALO}};
+const cnorm=(()=>{const c=document.createElement("canvas").getContext("2d");return v=>{c.fillStyle="#000";c.fillStyle=v;return c.fillStyle;};})();
+// Fallback for layers not in DARK_BASE: fills/lines become dark slate, text becomes light, halos dark.
+function darkColor(v,prop){
+  if(Array.isArray(v))return v.map(x=>darkColor(x,prop));
+  if(typeof v!=="string"||!/^(#|rgb|hsl)/i.test(v))return v;
+  const n=cnorm(v);let r,g,b,a=1;
+  if(n[0]==="#"){const x=parseInt(n.slice(1),16);r=x>>16&255;g=x>>8&255;b=x&255;}else{const m=n.match(/[\d.]+/g).map(Number);[r,g,b]=m;if(m.length>3)a=m[3];}
+  const L=(0.2126*r+0.7152*g+0.0722*b)/255,mix=(t,base)=>base.map(c=>Math.round(c+t*(255-c)));
+  let o;if(prop==="text-color")o=mix(0.55+0.35*(1-L),[40,50,60]);else if(prop==="text-halo-color")o=[17,24,30];else o=mix(0.03+0.14*(1-L),[24,32,40]);
+  return a<1?`rgba(${o[0]},${o[1]},${o[2]},${a})`:`rgb(${o[0]},${o[1]},${o[2]})`;}
+let baseOrig=null;   // Positron's own paint values, captured on each style load, restored in light mode
+function paintBase(){if(usingFallback||!map)return;const st=map.getStyle();if(!st||!st.layers)return;
+  if(!baseOrig){baseOrig={};for(const l of st.layers){if(l.id==="heat"||l.id==="heatw")continue;const o={},p=l.paint||{};
+    for(const k in p)if(/color|icon-opacity/.test(k))o[k]=p[k];baseOrig[l.id]=o;}}
+  for(const l of st.layers){const o=baseOrig[l.id];if(!o)continue;const d=DARK_BASE[l.id]||{};
+    const keys=new Set([...Object.keys(o),...Object.keys(d)]);
+    for(const k of keys){let v;if(S.darkMap)v=k in d?d[k]:/color/.test(k)?darkColor(o[k],k):o[k];else v=o[k];
+      try{map.setPaintProperty(l.id,k,v);}catch(e){}}}}
+const ov=document.getElementById("ov"),ctx=ov.getContext("2d"),wrap=document.getElementById("mapwrap");
+let map=null,mapReady=false,gridToCell,lut,heat,hctx,heatImg,heat32;
+const MB={w:-170,e:-50,s:14,n:75,W:1600,H:0};
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const STYLES={light:"https://tiles.openfreemap.org/styles/positron",dark:"https://tiles.openfreemap.org/styles/dark"};
+// Lambert azimuthal equal-area on WGS84 (lat0 45N, lon0 100W), Snyder 1987; matches pyproj to <1e-7 m
+const LA=(()=>{const a=6378137,f=1/298.257223563,e2=f*(2-f),e=Math.sqrt(e2);const q=ph=>{const s=Math.sin(ph);return(1-e2)*(s/(1-e2*s*s)-(1/(2*e))*Math.log((1-e*s)/(1+e*s)));};
+  const qp=q(Math.PI/2),Rq=a*Math.sqrt(qp/2),lat0=45*Math.PI/180,b1=Math.asin(q(lat0)/qp),m1=Math.cos(lat0)/Math.sqrt(1-e2*Math.sin(lat0)**2);
+  return{e2,q,qp,Rq,lon0:-100*Math.PI/180,sb1:Math.sin(b1),cb1:Math.cos(b1),D:a*m1/(Rq*Math.cos(b1))};})();
+function laeaFwd(lon,lat){const r=Math.PI/180,b=Math.asin(LA.q(lat*r)/LA.qp),dl=lon*r-LA.lon0,cb=Math.cos(b),sb=Math.sin(b),cd=Math.cos(dl);
+  const B=LA.Rq*Math.sqrt(2/(1+LA.sb1*sb+LA.cb1*cb*cd));return[B*LA.D*cb*Math.sin(dl),(B/LA.D)*(LA.cb1*sb-LA.sb1*cb*cd)];}
+function laeaInv(x,y){const Dd=LA.D,rho=Math.hypot(x/Dd,Dd*y);if(rho<1e-6)return[-100,45];const ce=2*Math.asin(Math.min(1,rho/(2*LA.Rq))),sc=Math.sin(ce),cc=Math.cos(ce);
+  const b=Math.asin(cc*LA.sb1+Dd*y*sc*LA.cb1/rho),lam=LA.lon0+Math.atan2(x*sc,Dd*rho*LA.cb1*cc-Dd*Dd*y*LA.sb1*sc),e2=LA.e2;
+  const ph=b+(e2/3+31*e2*e2/180+517*e2**3/5040)*Math.sin(2*b)+(23*e2*e2/360+251*e2**3/3780)*Math.sin(4*b)+(761*e2**3/45360)*Math.sin(6*b);return[lam*180/Math.PI,ph*180/Math.PI];}
+
+function b64u8(b){if(b&&b.buf)return new Uint8Array(b.buf,b.off,b.n);const s=atob(b);const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+function arr(b,T){if(b&&b.buf)return b.t==="i16p"?unplane16(b):new T(b.buf.slice(b.off,b.off+b.n));const u=b64u8(b);return new T(u.buffer,u.byteOffset,u.byteLength/T.BYTES_PER_ELEMENT);}
+const DATA_VERSION="__DATA_VERSION__";
+async function fetchCTW(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.ok)throw new Error("HTTP "+r.status+" for "+url);
+  const u=new Uint8Array(await r.arrayBuffer());let buf=u.buffer;
+  if(u[0]===0x1f&&u[1]===0x8b)buf=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+  return unpackWorld(buf);}
+async function load(){return fetchCTW("data/na.dat");}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function hav(a1,o1,a2,o2){const r=Math.PI/180,dl=(a2-a1)*r,dn=(o2-o1)*r;const h=Math.sin(dl/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dn/2)**2;return 12742.0176*Math.asin(Math.min(1,Math.sqrt(h)));}
+function bearing(a1,o1,a2,o2){const r=Math.PI/180,dx=(o2-o1)*Math.cos((a1+a2)/2*r),dy=a2-a1;return(Math.atan2(dx,dy)/r+360)%360;}
+function compass(b){return ["north","northeast","east","southeast","south","southwest","west","northwest"][Math.round(b/45)%8];}
+function sigma(Dv,k){const t=Dv/D.sig_dstep;const n=D.sig_n;const row=(k-1)*n;if(t>=n-1)return 99;const i=Math.floor(t),f=t-i;return sigTab[row+i]*(1-f)+sigTab[row+i+1]*f;}
+function colorFor(s){for(let i=BOUNDS.length-1;i>=0;i--)if(s>=BOUNDS[i])return i<RAMP.length?RAMP[i]:null;return RAMP[0];}
+function hex2rgb(h){const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255];}
+let RAMPRGB=RAMP.map(hex2rgb);
+
+function init(d){
+  applyTheme(savedTheme()?savedTheme()==="dark":sysDark.matches,false);
+  document.getElementById("themebtn").onclick=()=>applyTheme(!S.darkMap,true,true);
+  sysDark.addEventListener("change",e=>{if(!savedTheme())applyTheme(e.matches,false,true);});
+  D=d;NP=d.NP;NT=d.targets.length;NM=d.models.length;
+  NV=d.nv||12;MI=d.midx||MI;K=MI.length;HAS10=NV>=16;
+  const p16=arr(d.pool,Int16Array);pool=new Float32Array(NV*NP);poolRaw=new Float32Array(NV*NP);
+  for(let i=0;i<NV;i++)for(let p=0;p<NP;p++){const v=p16[i*NP+p];pool[i*NP+p]=decT(v,i);poolRaw[i*NP+p]=decR(v,i);}
+  const m=b64u8(d.mask);cellRC=new Uint32Array(NP);let c=0;
+  for(let g=0;g<d.nx*d.ny;g++){if(m[g>>3]&(128>>(g&7)))cellRC[c++]=g;}
+  plat=arr(d.plat,Float32Array);plon=arr(d.plon,Float32Array);
+  base=arr(d.base,Int16Array);
+  if(d.fut_d){fut=unplane16(d.fut_d);const per=fut.length/base.length;for(let t=0;t<base.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)fut[o+i]+=base[t*NV+i];}}else fut=arr(d.fut,Int16Array);
+  const z8=n=>new Uint8Array(n),z16=n=>new Uint16Array(n),nt=d.targets.length,nc=nt*16;
+  kgNow=d.kg_now?arr(d.kg_now,Uint8Array):z8(nt);zoneNow=d.zone_now?arr(d.zone_now,Uint8Array):z8(nt);ffpNow=d.ffp_now?arr(d.ffp_now,Uint16Array):z16(nt);
+  kgFut=d.kg_fut?arr(d.kg_fut,Uint8Array):z8(nc);zoneFut=d.zone_fut?arr(d.zone_fut,Uint8Array):z8(nc);ffpFut=d.ffp_fut?arr(d.ffp_fut,Uint16Array):z16(nc);
+  recentA=d.recent?arr(d.recent,Int16Array):new Int16Array(nt*NV);recSig=d.rec_sig?arr(d.rec_sig,Float32Array):new Float32Array(nt);
+  Msh=arr(d.Msh,Float32Array);Mtr=arr(d.Mtr,Float32Array);sd=arr(d.icvsd,Float32Array);
+  bestIdx=arr(d.best_idx,Int32Array);bestSig=arr(d.best_sig,Float32Array);
+  sigTab=arr(d.sig_tab,Float32Array);places=d.places;
+  cellPlace=arr(d.cell_place,Uint16Array);cellCity=arr(d.cell_city,Uint16Array);
+  d.targets.forEach(t=>t.g=0);NTNA=NT;
+  POOLS[0]={g:0,NP,pool,poolRaw,cellRC,plat,plon,places,cellPlace,cellCity,kg:d.kg_pool?arr(d.kg_pool,Uint8Array):null,zone:d.zone_pool?arr(d.zone_pool,Uint8Array):null,ffp:d.ffp_pool?arr(d.ffp_pool,Uint16Array):null,sep:150,region:"North America",area:c=>225};
+  buildLUT();
+  const dl=document.getElementById("places");
+  d.targets.forEach((t,i)=>{const o=document.createElement("option");o.value=t.n;dl.appendChild(o);});
+  document.getElementById("modelslist").textContent="Models: "+d.models.map((m,i)=>{const r=d.tcr?d.tcr[i]:null;return m+(d.ens.tcr_likely.includes(i)?"":r==null?" (no TCR)":r>2.2?" (hot)":" (cool)");}).join(", ")+". Marked models are outside the default mid-range screen.";
+}
+// ---------- world cities (global 0.5° pool), fetched after the North American payload
+function usePool(g){const P=POOLS[g];if(!P)return;PI=g;({NP,pool,poolRaw,cellRC,plat,plon,places,cellPlace,cellCity}=P);ppCache={key:null,Pp:null};}
+function cat(A,B){const o=new A.constructor(A.length+B.length);o.set(A,0);o.set(B,A.length);return o;}
+async function loadWorld(){
+  const st=document.getElementById("wstat");worldState="loading";st.textContent="Loading world cities…";
+  try{
+    addWorld(await fetchCTW("data/world.dat"));worldState="ready";st.textContent="";
+  }catch(e){worldState="failed";st.textContent="World cities could not load, so only North America is available. ("+e.message+")";}
+}
+// world.dat = [gzip] "CTW1" | uint32 header length | JSON header | 4-byte-aligned binary arrays referenced as {"$b":[offset,nbytes]}
+function unpackWorld(buf){const dv=new DataView(buf),u=new Uint8Array(buf);
+  const mg=String.fromCharCode(u[0],u[1],u[2],u[3]);if(mg!=="CTW1"&&mg!=="CTW2")throw new Error("unexpected data format");
+  const hl=dv.getUint32(4,true),bin=8+hl,w=JSON.parse(new TextDecoder().decode(u.subarray(8,bin)));
+  for(const k in w){const v=w[k];if(v&&v.$b)w[k]={buf,off:bin+v.$b[0],n:v.$b[1],t:v.$b[2]};}return w;}
+function warr(x,T){return x.buf?new T(x.buf.slice(x.off,x.off+x.n)):arr(x,T);}
+function wu8(x){return x.buf?new Uint8Array(x.buf,x.off,x.n):b64u8(x);}
+function unplane16(x){const u=new Uint8Array(x.buf,x.off,x.n),n=x.n>>1,o=new Int16Array(n);for(let i=0;i<n;i++)o[i]=(u[i]|(u[n+i]<<8))<<16>>16;return o;}
+function addWorld(w){
+  if(w.models.join()!==D.models.join())throw new Error("world data uses different models");
+  if((w.nv||12)!==NV)throw new Error("world data uses a different set of measures");
+  const NPw=w.NP,p16=unplane16(w.pool_p),pl=new Float32Array(NV*NPw),pr=new Float32Array(NV*NPw);
+  for(let i=0;i<NV;i++)for(let p=0;p<NPw;p++){const v=p16[i*NPw+p];pl[i*NPw+p]=decT(v,i);pr[i*NPw+p]=decR(v,i);}
+  const m=wu8(w.mask),rc=new Uint32Array(NPw),la=new Float32Array(NPw),lo=new Float32Array(NPw);let c=0;
+  for(let g=0;g<w.nx*w.ny;g++){if(m[g>>3]&(128>>(g&7))){rc[c]=g;la[c]=90-(Math.floor(g/w.nx)+.5)*w.res;lo[c]=-180+(g%w.nx+.5)*w.res;c++;}}
+  const lf=wu8(w.land),ckm=(w.res*111.195)**2;
+  gridToCellW=new Int32Array(w.nx*w.ny).fill(-1);for(let p=0;p<NPw;p++)gridToCellW[rc[p]]=p;
+  POOLS[1]={g:1,NP:NPw,pool:pl,poolRaw:pr,cellRC:rc,plat:la,plon:lo,places:w.places,cellPlace:warr(w.cell_place,Uint16Array),cellCity:warr(w.cell_city,Uint16Array),kg:w.kg_pool?arr(w.kg_pool,Uint8Array):null,zone:w.zone_pool?arr(w.zone_pool,Uint8Array):null,ffp:w.ffp_pool?arr(w.ffp_pool,Uint16Array):null,
+    sep:300,region:"the world",nx:w.nx,ny:w.ny,res:w.res,area:p=>ckm*Math.cos(la[p]*Math.PI/180)*lf[p]/255};
+  const wb=warr(w.base,Int16Array),wf=unplane16(w.fut_d),per=wf.length/wb.length;       // per = 2 periods x 4 SSPs x NM models
+  for(let t=0;t<wb.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)wf[o+i]+=wb[t*NV+i];}
+  const wt=w.targets.length,cz=(x,T,n)=>x?arr(x,T):new T(n);
+  kgNow=cat(kgNow,cz(w.kg_now,Uint8Array,wt));zoneNow=cat(zoneNow,cz(w.zone_now,Uint8Array,wt));ffpNow=cat(ffpNow,cz(w.ffp_now,Uint16Array,wt));
+  kgFut=cat(kgFut,cz(w.kg_fut,Uint8Array,wt*16));zoneFut=cat(zoneFut,cz(w.zone_fut,Uint8Array,wt*16));ffpFut=cat(ffpFut,cz(w.ffp_fut,Uint16Array,wt*16));
+  recentA=cat(recentA,cz(w.recent,Int16Array,wt*NV));recSig=cat(recSig,cz(w.rec_sig,Float32Array,wt));
+  base=cat(base,wb);fut=cat(fut,wf);Msh=cat(Msh,warr(w.Msh,Float32Array));Mtr=cat(Mtr,warr(w.Mtr,Float32Array));
+  sd=cat(sd,warr(w.icvsd,Float32Array));bestIdx=cat(bestIdx,warr(w.best_idx,Int32Array));bestSig=cat(bestSig,warr(w.best_sig,Float32Array));
+  const dl=document.getElementById("places");
+  w.targets.forEach(t=>{D.targets.push(t);const o=document.createElement("option");o.value=t.n;dl.appendChild(o);});
+  NT=D.targets.length;popOrder=null;
+  document.getElementById("search").placeholder=`Search ${NT.toLocaleString()} places, e.g. Raleigh, NC or Lisbon`;
+  heatW=document.createElement("canvas");const r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2));
+  MBW.H=Math.round(MBW.W*(my(MBW.n)-my(MBW.s))/((MBW.e-MBW.w)*r));heatW.width=MBW.W;heatW.height=MBW.H;
+  D.fallbackWorld=w.fallback||null;if(usingFallback)setBaseStyle();else if(mapReady)addWorldHeat();
+  const h=decodeURIComponent(location.hash.slice(1));if(h&&S.sel<0){const i=D.targets.findIndex(t=>t.n===h);if(i>=0)select(i,true);}
+  legend();draw();
+}
+function buildWorldLUT(){const W=MBW.W,H=MBW.H,P=POOLS[1],r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2)),yN=my(MBW.n),yS=my(MBW.s);
+  hctxW=heatW.getContext("2d");heatImgW=hctxW.createImageData(W,H);heat32W=new Uint32Array(heatImgW.data.buffer);lutW=new Int32Array(W*H).fill(-1);
+  const col=new Int32Array(W);for(let i=0;i<W;i++){col[i]=Math.min(P.nx-1,Math.floor(((MBW.w+(i+.5)/W*(MBW.e-MBW.w))+180)/P.res));}
+  for(let j=0;j<H;j++){const lat=(2*Math.atan(Math.exp(yN-(j+.5)/H*(yN-yS)))-Math.PI/2)/r,row=Math.floor((90-lat)/P.res);if(row<0||row>=P.ny)continue;
+    const o=row*P.nx;for(let i=0;i<W;i++)lutW[j*W+i]=gridToCellW[o+col[i]];}}
+function wrapLon(lon,ref){while(lon-ref>180)lon-=360;while(lon-ref<-180)lon+=360;return lon;}
+// ---------- climate vectors (transformed space: temps °C, precip log(mm+1))
+function PER(){return D.periods[S.per];}
+function futVec(t,si,mi,per=S.per){const o=new Float64Array(NV);const b=(((t*2+per)*4+si)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(fut[b+i],i);return o;}
+function ensVec(t,si,ens,per=S.per){const ml=D.ens[ens];const o=new Float64Array(NV);for(const mi of ml){const v=futVec(t,si,mi,per);for(let i=0;i<NV;i++)o[i]+=isP(i)?Math.exp(v[i])-1:v[i];}for(let i=0;i<NV;i++){o[i]/=ml.length;if(isP(i))o[i]=Math.log(o[i]+1);}return o;}
+function baseVec(t){const o=new Float64Array(NV);for(let i=0;i<NV;i++)o[i]=decT(base[t*NV+i],i);return o;}
+function toRaw(v){return Array.from(v,(x,i)=>isP(i)?Math.exp(x)-1:x);}
+function metric(t,pm){const src=pm?Mtr:Msh,k=pm?D.targets[t].k:K;const M=new Float64Array(K*k);for(let i=0;i<K;i++)for(let j=0;j<k;j++)M[i*k+j]=src[t*K*K+i*K+j];return{k,M};}
+function proj(v,mt){const q=new Float64Array(mt.k);for(let j=0;j<mt.k;j++){let s=0;for(let i=0;i<K;i++)s+=v[MI[i]]*mt.M[i*mt.k+j];q[j]=s;}return q;}
+let ppCache={key:null,Pp:null};
+function projectPool(t,pm,mt){const key=t+":"+pm;if(ppCache.key===key)return ppCache.Pp;const k=mt.k;const Pp=new Float32Array(k*NP);
+  for(let i=0;i<K;i++){const off=MI[i]*NP;for(let j=0;j<k;j++){const m=mt.M[i*k+j];const o=j*NP;for(let p=0;p<NP;p++)Pp[o+p]+=pool[off+p]*m;}}
+  ppCache={key,Pp};return Pp;}
+function dist2(Pp,q,k,out){out.fill(0);for(let j=0;j<k;j++){const o=j*NP,qj=q[j];for(let p=0;p<NP;p++){const d=Pp[o+p]-qj;out[p]+=d*d;}}return out;}
+function argmin(a){let b=0,bv=Infinity;for(let i=0;i<a.length;i++)if(a[i]<bv){bv=a[i];b=i;}return b;}
+function nearName(c){const p=places[cellPlace[c]];const dk=hav(plat[c],plon[c],p[1],p[2]);return{name:p[0],km:dk};}
+function cityName(c){const p=places[cellCity[c]];return{name:p[0],km:hav(plat[c],plon[c],p[1],p[2])};}
+function gname(q){return q[5]<25?`near ${q[3]}, ${q[4]}`:`${Math.round(kmU(q[5]))} ${distU()} from ${q[3]}, ${q[4]}`;}
+function describeCell(c){const n=nearName(c);return n.km<12?"near "+n.name:(Math.round(kmU(n.km))+" "+distU()+" from "+n.name);}
+function kmU(k){return S.metric?k:k*0.621371;} function distU(){return S.metric?"km":"mi";}
+
+function compute(){
+  if(S.sel<0){cur=null;return;}
+  const t=S.sel,mt=metric(t,S.pm),k=mt.k,Pp=projectPool(t,S.pm,mt);
+  const ev=ensVec(t,S.ssp,S.ens),q=proj(ev,mt);
+  const glob=(D.glob||{})[`${S.per}|${t}|${S.ssp}|${S.ens==="tcr_likely"?1:0}`]||null;
+  const D2=dist2(Pp,q,k,new Float32Array(NP));
+  const sig=new Float32Array(NP);for(let p=0;p<NP;p++)sig[p]=sigma(Math.sqrt(D2[p]),k);
+  const best=argmin(D2);
+  // distinct sites >=150 km apart
+  const idx=new Uint32Array(NP);for(let i=0;i<NP;i++)idx[i]=i;idx.sort((a,b)=>D2[a]-D2[b]);
+  const sep=POOLS[PI].sep;const sites=[best];for(let n=0;n<NP&&sites.length<5&&n<40000;n++){const c=idx[n];if(sites.every(s=>hav(plat[c],plon[c],plat[s],plon[s])>=sep))sites.push(c);}
+  // models
+  const models=[];const tmp=new Float32Array(NP);
+  for(const mi of D.ens[S.ens]){const qm=proj(futVec(t,S.ssp,mi),mt);dist2(Pp,qm,k,tmp);const c=argmin(tmp);models.push({mi,c,s:sigma(Math.sqrt(tmp[c]),k)});}
+  const qb=proj(baseVec(t),mt);let dd=0;for(let j=0;j<k;j++)dd+=(q[j]-qb[j])**2;const own=sigma(Math.sqrt(dd),k);
+  let area=0;const ar=POOLS[PI].area;for(let p=0;p<NP;p++)if(sig[p]<2)area+=ar(p);
+  // other PC mode (precomputed) for robustness
+  const ei=S.ens==="tcr_likely"?1:0; // batch order: all=0, tcr_likely=1
+  const bo=(((t*2+S.per)*4+S.ssp)*2+ei)*2+(1-S.pm);const oi=bestIdx[bo],os=bestSig[bo];
+  cur={glob,t,k,sig,best,sites,models,own,area,ev,other:{c:oi,s:os}};
+  // heat image in Web Mercator via the lookup table
+  const cellCol=new Uint32Array(NP);
+  for(let p=0;p<NP;p++){const sv=sig[p];let ci=-1;for(let b=BOUNDS.length-1;b>=0;b--)if(sv>=BOUNDS[b]){ci=b;break;}if(ci<0||ci>=7)continue;const c=RAMPRGB[ci];const a=ci===6?120:225;cellCol[p]=((a<<24)|(c[2]<<16)|(c[1]<<8)|c[0])>>>0;}
+  if(PI===1){if(!lutW)buildWorldLUT();for(let i=0;i<lutW.length;i++){const p=lutW[i];heat32W[i]=p>=0?cellCol[p]:0;}hctxW.putImageData(heatImgW,0,0);
+    const P=POOLS[1],nx=P.nx,ny=P.ny,rs=P.res,inside=new Uint8Array(nx*ny);for(let p=0;p<NP;p++)if(sig[p]<2)inside[cellRC[p]]=1;
+    const lines=[],L=c=>-180+c*rs,A=r=>90-r*rs;
+    for(let r=0;r<ny;r++)for(let c=0;c<nx;c++){const v=inside[r*nx+c];
+      if(v!==inside[r*nx+(c+1)%nx])lines.push([[L(c+1),A(r)],[L(c+1),A(r+1)]]);
+      if(r<ny-1&&v!==inside[(r+1)*nx+c])lines.push([[L(c),A(r+1)],[L(c+1),A(r+1)]]);}
+    cur.contour=lines;return;}
+  for(let i=0;i<lut.length;i++){const p=lut[i];heat32[i]=p>=0?cellCol[p]:0;}
+  hctx.putImageData(heatImg,0,0);
+  // 2-sigma outline as cell edges, converted to lon/lat
+  const inside=new Uint8Array(D.nx*D.ny);for(let p=0;p<NP;p++)if(sig[p]<2)inside[cellRC[p]]=1;
+  const nx=D.nx,ny=D.ny,cm=D.cell_m,P=(c,r)=>laeaInv(D.x0+c*cm,D.y0-r*cm),lines=[];
+  for(let r=0;r<ny;r++)for(let c=0;c<nx;c++){const v=inside[r*nx+c];
+    if(c<nx-1&&v!==inside[r*nx+c+1])lines.push([P(c+1,r),P(c+1,r+1)]);
+    if(r<ny-1&&v!==inside[(r+1)*nx+c])lines.push([P(c,r+1),P(c+1,r+1)]);}
+  cur.contour=lines;
+}
+function buildLUT(){gridToCell=new Int32Array(D.nx*D.ny).fill(-1);for(let p=0;p<NP;p++)gridToCell[cellRC[p]]=p;
+  const W=MB.W,r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2)),yN=my(MB.n),yS=my(MB.s);
+  const H=MB.H=Math.round(W*(yN-yS)/((MB.e-MB.w)*r));
+  heat=document.createElement("canvas");heat.width=W;heat.height=H;hctx=heat.getContext("2d");heatImg=hctx.createImageData(W,H);heat32=new Uint32Array(heatImg.data.buffer);
+  lut=new Int32Array(W*H).fill(-1);const cosdl=new Float64Array(W),sindl=new Float64Array(W);
+  for(let i=0;i<W;i++){const dl=(MB.w+(i+.5)/W*(MB.e-MB.w))*r-LA.lon0;cosdl[i]=Math.cos(dl);sindl[i]=Math.sin(dl);}
+  for(let j=0;j<H;j++){const yy=yN-(j+.5)/H*(yN-yS),lat=2*Math.atan(Math.exp(yy))-Math.PI/2,b=Math.asin(LA.q(lat)/LA.qp),cb=Math.cos(b),sb=Math.sin(b);
+    for(let i=0;i<W;i++){const cd=cosdl[i],B=LA.Rq*Math.sqrt(2/(1+LA.sb1*sb+LA.cb1*cb*cd));
+      const x=B*LA.D*cb*sindl[i],y=(B/LA.D)*(LA.cb1*sb-LA.sb1*cb*cd),c=Math.floor((x-D.x0)/D.cell_m),rr=Math.floor((D.y0-y)/D.cell_m);
+      if(c>=0&&rr>=0&&c<D.nx&&rr<D.ny)lut[j*W+i]=gridToCell[rr*D.nx+c];}}}
+// ---------- drawing
+function cellXY(c){return[plon[c],plat[c]];}
+function toScr(lon,lat){const p=map.project([lon,lat]);return[p.x,p.y];}
+function sizeOv(){const r=wrap.getBoundingClientRect(),dpr=window.devicePixelRatio||1;ov.width=Math.max(1,Math.round(r.width*dpr));ov.height=Math.max(1,Math.round(r.height*dpr));ov.style.width=r.width+"px";ov.style.height=r.height+"px";}
+function resize(){if(!map)return;map.resize();sizeOv();const r=wrap.getBoundingClientRect();if(r.width>=20&&r.height>=20){if(!fitted)fit();if(pendingFocus&&cur){pendingFocus=false;focusOn();}}draw();}
+let fitted=false,pendingFocus=false;
+function fit(){const r=wrap.getBoundingClientRect();if(r.width<20||r.height<20)return;fitted=true;map.fitBounds([[-124.8,24.4],[-66.9,49.4]],{padding:24,animate:false});}
+// Arrow = shaft + filled head. The shaft ends at the head's base (so it never pokes past the point) and the head is
+// always clearly wider than the shaft. halo/hw: outline colour and width drawn under the whole arrow.
+function arrow(x0,y0,x1,y1,col,w,head,dash,halo,hw){
+  const L=Math.hypot(x1-x0,y1-y0);if(L<2)return;const ux=(x1-x0)/L,uy=(y1-y0)/L;
+  const hl=Math.min(head,L*0.8),hb=Math.max(hl*0.5,w*1.9);            // head length, half-width of its base
+  const bx=x1-ux*hl,by=y1-uy*hl,px=-uy*hb,py=ux*hb;
+  const shaft=()=>{ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(bx+ux*0.5,by+uy*0.5);};
+  const tri=()=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(bx+px,by+py);ctx.lineTo(bx-px,by-py);ctx.closePath();};
+  ctx.lineCap="butt";ctx.lineJoin="round";
+  if(halo){ctx.strokeStyle=halo;ctx.setLineDash(dash?[w*2.2,w*1.8]:[]);ctx.lineWidth=w+2*hw;shaft();ctx.stroke();ctx.setLineDash([]);
+    ctx.lineWidth=2*hw;tri();ctx.stroke();}
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=w;ctx.setLineDash(dash?[w*2.2,w*1.8]:[]);shaft();ctx.stroke();ctx.setLineDash([]);tri();ctx.fill();}
+let popOrder=null;
+function overviewLimit(z){return z<3.6?110:z<4.4?260:z<5.2?480:1e9;}
+function draw(){
+  if(!D||!map)return;posTip();const dpr=window.devicePixelRatio||1,W=ov.width/dpr,H=ov.height/dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+  const m=MC(),z=map.getZoom(),ei=S.ens==="tcr_likely"?1:0;
+  if(!popOrder)popOrder=D.targets.map((t,i)=>i).sort((a,b)=>D.targets[b].pop-D.targets[a].pop);
+  const lim=overviewLimit(z),shown=new Uint8Array(NT);
+  if(S.showAll&&!cur){ctx.lineCap="butt";
+    let nOn=0;for(let n=0;n<NT&&nOn<lim;n++){const t=popOrder[n];const tt=D.targets[t];const[a,b]=toScr(tt.lon,tt.lat);
+      if(a<-8||a>W+8||b<-8||b>H+8)continue;nOn++;shown[t]=1;const o=(((t*2+S.per)*4+S.ssp)*2+ei)*2+S.pm;const c=bestIdx[o];if(c<0)continue;
+      const Pg=POOLS[tt.g];const[x,y]=toScr(wrapLon(Pg.plon[c],tt.lon),Pg.plat[c]);
+      const sg=bestSig[o];if(sg>=4||(sg>=2&&Math.hypot(x-a,y-b)<4)){ctx.beginPath();ctx.arc(a,b,6,0,7);ctx.lineWidth=3.4;ctx.strokeStyle=m.casing;ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle=RAMP[5];ctx.stroke();continue;}
+      const dash=sg>=2;arrow(a,b,x,y,colorFor(sg)||"#5a6675",1.8,8,dash,m.casing,0.9);}}
+  const r0=z<3.5?2:z<5?2.8:3.6;
+  for(let t=0;t<NT;t++){const tt=D.targets[t];const[x,y]=toScr(tt.lon,tt.lat);if(x<-10||y<-10||x>W+10||y>H+10)continue;
+    const faint=S.showAll&&!cur&&!shown[t];ctx.globalAlpha=faint?0.35:1;ctx.beginPath();ctx.arc(x,y,faint?r0*0.8:r0,0,7);ctx.fillStyle=m.dot;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle=m.rim;ctx.stroke();}
+  ctx.globalAlpha=1;
+  if(cur){const tt=D.targets[cur.t];const[a,b]=toScr(tt.lon,tt.lat);
+    ctx.strokeStyle=m.ink;ctx.lineWidth=1.4;ctx.lineCap="square";ctx.beginPath();
+    for(const[p0,p1]of cur.contour){const u=toScr(p0[0],p0[1]),v=toScr(p1[0],p1[1]);ctx.moveTo(u[0],u[1]);ctx.lineTo(v[0],v[1]);}ctx.stroke();
+    if(S.showModels){for(const md of cur.models){const[x,y]=toScr(plon[md.c],plat[md.c]);ctx.beginPath();ctx.arc(x,y,3.2,0,7);ctx.fillStyle=m.halo;ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle=m.ink;ctx.stroke();}}
+    cur.sites.slice(1).forEach((c,i)=>{const[x,y]=toScr(plon[c],plat[c]);ctx.beginPath();ctx.arc(x,y,8,0,7);ctx.fillStyle=S.cmp===i+1?css("--warn"):m.halo;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=m.ink;ctx.stroke();ctx.fillStyle=m.ink;ctx.font="700 10px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(i+2),x,y+.5);});
+    if(cur.glob)cur.glob.sites.forEach((q,i)=>{const[x,y]=toScr(q[1],q[0]);if(x<-20||y<-20||x>W+20||y>H+20)return;const r=S.gsel===i?11:9;
+      ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();ctx.fillStyle=S.gsel===i?m.acc:m.halo;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=m.ink;ctx.stroke();
+      ctx.fillStyle=S.gsel===i?m.halo:m.ink;ctx.font="700 9px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("W"+(i+1),x,y+.5);
+      if(S.gsel===i)label(q[3],x,y+20,m.ink,m.halo);});
+    const[x,y]=toScr(wrapLon(plon[cur.best],tt.lon),plat[cur.best]);
+    ctx.lineCap="round";const dsh=cur.sig[cur.best]>=2,selfm=hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60;
+    if(!selfm){arrow(a,b,x,y,m.acc,3,13,dsh,m.halo,1.3);
+    ctx.beginPath();ctx.arc(x,y,6.5,0,7);ctx.fillStyle=m.acc;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=m.halo;ctx.stroke();}
+    else{ctx.beginPath();ctx.arc(a,b,15,0,7);ctx.lineWidth=2.5;ctx.strokeStyle=RAMP[5];ctx.stroke();}
+    star(a,b,9,m.dot,m.halo);
+    label(tt.n,a,b-(selfm?22:14),m.ink,m.halo);const nn=nearName(cur.best);if(!selfm&&(Math.hypot(x-a,y-b)>45||y>b+20))label(PI?nn.name.replace(/, [^,]+$/,""):nn.name.replace(/, [A-Z.]+( MX)?$/,""),x,y+18,m.ink,m.halo);}
+}
+function star(x,y,r,f,s){ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;ctx.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}ctx.closePath();ctx.fillStyle=f;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=s;ctx.stroke();}
+function label(t,x,y,f,s){ctx.font="700 13px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle=s;ctx.lineJoin="round";ctx.strokeText(t,x,y);ctx.fillStyle=f;ctx.fillText(t,x,y);}
+// ---------- panel
+function quality(s){if(s<1)return["Strong match","q-good"];if(s<2)return["Reasonable match","q-fair"];if(s<4)return["Partial match","q-partial"];return["No real match","q-novel"];}
+function fT(c){return S.metric?c.toFixed(1)+"°":(c*9/5+32).toFixed(0)+"°";}
+function fdT(c){const v=S.metric?c:c*9/5;return(v>=0?"+":"")+v.toFixed(1)+"°";}
+function fP(mm){return S.metric?Math.round(mm)+"":(mm/25.4).toFixed(1);}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function diffs(c){const t=cur.t,q=cur.ev;const out=[];
+  for(const i of MI){const x=pool[i*NP+c];const z=(x-q[i])/sd[t*NV+i];out.push({i,z,d:x-q[i]});}
+  out.sort((a,b)=>Math.abs(b.z)-Math.abs(a.z));
+  const nm=measNames(D.targets[t].lat);
+  const txt=out.filter(o=>Math.abs(o.z)>=0.7).slice(0,2).map(o=>{if(!isP(o.i)){const v=Math.abs(S.metric?o.d:o.d*9/5);return `${nm[o.i]} ${v.toFixed(v<1?1:0)}° ${o.i>=12?(o.d>0?"more humid":"less humid"):(o.d>0?"warmer":"cooler")}`;}
+    const pct=Math.round((Math.exp(o.d)-1)*100);return `${nm[o.i]} ${Math.abs(pct)}% ${pct>0?"wetter":"drier"}`;});
+  return txt.length?"differs most in "+txt.join(", "):`close on all ${K} measures`;}
+function panel(){
+  const el=document.getElementById("result");
+  if(!cur){el.innerHTML=`<p class="muted">Tap a dot on the map or search for a place. With “All arrows” on, the map shows every place's best match for the chosen scenario, colored by how good the match is.</p>`;return;}
+  const tt=D.targets[cur.t],c=cur.best,bs=cur.sig[c];const [ql,qc]=quality(bs);
+  const km=hav(tt.lat,tt.lon,plat[c],plon[c]),br=compass(bearing(tt.lat,tt.lon,plat[c],plon[c]));
+  const nn=nearName(c),city=cityName(c);
+  const ensN=D.ens[S.ens].length;
+  const agree=cur.models.filter(m=>hav(plat[m.c],plon[m.c],plat[c],plon[c])<500).length;
+  const oc=cur.other.c,od=oc>=0?hav(plat[oc],plon[oc],plat[c],plon[c]):0;
+  const where=nn.km<12?esc(nn.name):`${Math.round(kmU(nn.km))} ${distU()} from ${esc(nn.name)}`;
+  const selfMatch=km<60,noMatch=bs>=4||(selfMatch&&bs>=2),partial=!noMatch&&bs>=2;
+  const dirTxt=`${Math.round(kmU(km))} ${distU()} ${br}`;
+  let h=`<h2>${esc(tt.n)}</h2>`;
+  if(noMatch){
+    h+=`<p class="answer"><strong>${PI?"No place on Earth":"No place in North America"} has this climate today.</strong> `+(selfMatch
+      ?`In ${PER().years} under ${D.ssps[S.ssp]}, its climate is ${cur.own.toFixed(1)}σ from its own present climate, and nowhere else ${PI?"in the world":"on the continent"} comes closer.</p>`
+      :`The closest partial match under ${D.ssps[S.ssp]} is ${where}, ${dirTxt}.</p>`);
+    if(cur.glob&&cur.glob.s<2){const g0=cur.glob.sites[0];h+=`<p class="answer">Worldwide, the closest match today is <strong>${gname(g0)}</strong> (${g0[2].toFixed(2)}σ).</p>`;}
+    h+=`<span class="badge q-novel">No match, ${bs.toFixed(1)}σ</span>`;
+  }else{
+    h+=partial?`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
+      :`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
+    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`;
+    const af=agree/ensN,mAgree=oc<0||od<500;
+    const lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
+    let why=`${agree} of ${ensN} models point to this area`;
+    why+=mAgree?(lvl==="high"?", and a second statistical method agrees.":". A second statistical method agrees."):`. A second statistical method picks ${esc(describeCell(oc))}, ${Math.round(kmU(od))} ${distU()} away.`;
+    if(lvl==="low")why+=" Treat the arrow as one of several plausible answers, and see the other matches below.";
+    h+=`<p class="conf"><strong>Confidence: ${lvl}.</strong> ${why}</p>`;
+  }
+  h+=`<dl class="facts">
+  <dt>Change from its own 1991–2020 climate</dt><dd>${cur.own.toFixed(1)}σ</dd>
+  <dt>Land area within 2σ (outlined)</dt><dd>${cur.area>=500?Math.round(cur.area*(S.metric?1:0.386102)/1000).toLocaleString()+"k "+(S.metric?"km²":"mi²"):"none"}</dd>
+  <dt>Models agreeing within 500 km</dt><dd>${agree} of ${ensN}</dd>
+  <dt>Largest city nearby</dt><dd>${esc(city.name)}, ${Math.round(kmU(city.km))} ${distU()}</dd></dl>`;
+  if(cur.glob){const g=cur.glob;
+    h+=`<section class="world"><h3>Closest matches worldwide</h3><p class="small">Outside the US, Canada and Mexico, at least 300 km apart. Tap one to see it on the map.</p><ol class="sites">`;
+    g.sites.forEach((q,i)=>{h+=`<li${S.gsel===i?' style="font-weight:700"':''}><button class="linkbtn" data-g="${i}">${esc(gname(q))}</button> <span class="muted">${q[2].toFixed(2)}σ</span></li>`;});
+    h+=`</ol><p class="small">${g.a} of ${g.n} models put their own best worldwide match within 1,000 km of the first site.${g.s>=4?" Even the best worldwide match is poor, so this future climate may be new to the planet.":""} Worldwide comparisons use TerraClimate, a coarser global dataset, for both places.</p>${S.gsel>=0?`<button class="linkbtn small" id="backhome">Back to ${esc(tt.n)}</button>`:""}</section>`;}
+  if(cur.sites.length>1){h+=`<div class="small">Best matches${PI?" worldwide":""}, at least ${Math.round(kmU(POOLS[PI].sep))} ${distU()} apart</div><ol class="sites" start="1">`;
+    cur.sites.forEach((s,i)=>{h+=`<li${S.cmp===i?' aria-current="true" style="font-weight:700"':''}><button class="linkbtn" data-site="${i}">${esc(describeCell(s).replace(/^near /,""))}</button> <span class="muted">${cur.sig[s].toFixed(2)}σ; ${diffs(s)}</span></li>`;});h+=`</ol><p class="small">Matches under 1σ are about equally good. Tap one to compare it below.</p>`;}
+  // climate comparison
+  const cc=cur.sites[S.cmp]??c;const now=toRaw(baseVec(cur.t)),fu=toRaw(cur.ev);let an=[];for(let i=0;i<NV;i++)an.push(poolRaw[i*NP+cc]);
+  const Pf=POOLS[PI],eiF=S.ens==="tcr_likely"?1:0,fo=((cur.t*2+S.per)*4+S.ssp)*2+eiF;
+  let feat=HAS10&&Pf.kg?{now:[kgNow[cur.t],zoneNow[cur.t],ffpNow[cur.t]],fut:[kgFut[fo],zoneFut[fo],ffpFut[fo]],an:[Pf.kg[cc],Pf.zone[cc],Pf.ffp[cc]]}:null;
+  let mname=describeCell(cc),mlab=S.cmp?"Match "+(S.cmp+1):"Best match";
+  if(S.gsel>=0&&cur.glob){const q=cur.glob.sites[S.gsel];an=q[6];mname=gname(q);mlab="Worldwide match "+(S.gsel+1);if(feat)feat.an=q.length>9?[q[7],q[8],q[9]]:null;}
+  h+=compareHTML(tt.n,tt.lat,now,fu,an,mlab,mname,feat,tt);
+  // per-model list
+  h+=`<details><summary>Each model's best match (${ensN})</summary><div class="tablewrap"><table><thead><tr><th>Model</th><th>Summer highs</th><th>Match</th><th>σ</th></tr></thead><tbody>`;
+  const ms=cur.models.slice().sort((a,b)=>a.s-b.s);
+  for(const m of ms){const v=toRaw(futVec(cur.t,S.ssp,m.mi));h+=`<tr><td>${esc(D.models[m.mi])}</td><td>${fdT(v[2]-now[2])}</td><td style="text-align:left;padding-left:8px">${esc(describeCell(m.c).replace(/^near /,""))}</td><td>${m.s.toFixed(1)}</td></tr>`;}
+  h+=`</tbody></table></div></details>`;
+  h+=`<p class="small">Year-to-year variability from ${tt.icv}; ${cur.k} of ${K} components used.${PI?" Present climate from TerraClimate; matches use 0.5° cells (about 55 km).":""}</p>`;
+  el.innerHTML=h;
+  el.querySelectorAll("[data-g]").forEach(b=>b.addEventListener("click",()=>{S.gsel=+b.dataset.g;const q=cur.glob.sites[S.gsel];panel();draw();map.flyTo({center:[q[1],q[0]],zoom:4.2,duration:RM?0:1400});}));
+  {const bh=el.querySelector("#backhome");if(bh)bh.addEventListener("click",()=>{S.gsel=-1;panel();draw();focusOn();});}
+  el.querySelectorAll("[data-site]").forEach(b=>b.addEventListener("click",()=>{S.gsel=-1;S.cmp=+b.dataset.site;const [x,y]=cellXY(cur.sites[S.cmp]);panel();draw();centerOn(x,y);}));
+}
+// Here now / here in the future / the match: summary, stat blocks, seasonal range bars and precipitation bars.
+function comfort(td){const f=td*9/5+32;return f<50?"dry":f<60?"comfortable":f<65?"humid":f<70?"muggy":"oppressive";}
+function humidHTML(SN,S3,stat,C,TU,M){const mx=v=>Math.max(v[12],v[13],v[14],v[15]),deg=v=>Math.round(C(v))+"°";
+  let h=`<h4>Humidity <span class="u">dewpoint ${TU}, muggiest season</span></h4>`+stat(v=>deg(mx(v)),(i,v,y)=>comfort(mx(v)));
+  let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let q=0;q<4;q++){lo=Math.min(lo,C(v[12+q]));hi=Math.max(hi,C(v[12+q]));}
+  const z0=Math.min(lo,M?-5:25)-(M?2:4),z1=hi+(hi-z0)*0.12,X=v=>((C(v)-z0)/(z1-z0)*100).toFixed(2);
+  h+=`<div class="chart" aria-hidden="true">`;
+  for(let q=0;q<4;q++){h+=`<div class="crow"><div class="lab">${SN[q]}</div><div class="trk">`;
+    S3.forEach(([k, , ,v],j)=>{h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:0;width:${X(v[12+q])}%"><b class="hi">${deg(v[12+q])}</b></div>`;});h+=`</div></div>`;}
+  h+=`</div><p class="cap">Dewpoint tracks the moisture in the air. Above about ${M?"18°C":"65°F"} most people find it muggy. ${K>12?"Matches are chosen on Dec–Feb and Jun–Aug dewpoint along with temperature and precipitation.":""}</p>`;return h;}
+function zoneTxt(z){return z?`${Math.floor(z/2)}${z%2?"b":"a"}`:"–";}
+function featHTML(f,S3){const kg=i=>D.kg&&i<D.kg.length?`<abbr title="${esc(D.kg_name[i])}">${D.kg[i]}</abbr> <span class="kgn">${esc(D.kg_name[i])}</span>`:"–";
+  const cols=[f.now,f.fut,f.an];const row=(lab,fn)=>`<tr><td>${lab}</td>${cols.map(c=>`<td>${c?fn(c):"–"}</td>`).join("")}</tr>`;
+  let h=`<h4>Climate type and growing season</h4><div class="tablewrap"><table class="clim ex feat"><thead><tr><th></th>${S3.map(([k,l])=>`<th><span class="sw ${k}"></span>${l.replace("Here ","").replace(" now","")}</th>`).join("")}</tr></thead><tbody>`;
+  h+=row("Köppen climate type",c=>kg(c[0]))+row("Hardiness zone, est.",c=>zoneTxt(c[1]))+row("Growing season, est.",c=>c[2]>=365?"all year":`${c[2]} days`);
+  h+=`</tbody></table></div><p class="cap">Climate type follows Köppen–Geiger rules. Hardiness zone and growing season (days between the last spring and first fall frost) are estimated from monthly averages and are not the official USDA Plant Hardiness Zone Map. <a href="methods.html#features">How these are estimated</a>.</p>`;return h;}
+function recentHTML(place,now){const t=cur.t;if(!HAS10||!recSig[t])return "";const M=S.metric,y=D.recent_years;
+  let a=0;for(let i=0;i<8;i++)a+=recentA[t*NV+i]/100;a/=8;const dv=M?a:a*9/5;
+  const f50=toRaw(ensVec(t,1,S.ens,0));let p=0;for(let i=0;i<8;i++)p+=(f50[i]-now[i]);p/=8;
+  const share=p>0.2&&a>0?Math.round(a/p*100):null;
+  return `<p class="recent"><strong>Already happening:</strong> ${y[0]}–${y[1]} averaged ${Math.abs(dv).toFixed(1)}°${M?"C":"F"} ${a>=0?"warmer":"cooler"} here than 1991–2020${share!==null&&share<=150?`, about ${share}% of the warming projected by ~2050 under SSP2-4.5`:""}.</p>`;}
+function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v[sc];if(!v)return "";const u=x=>M?x.toFixed(2)+" m":(x*3.281).toFixed(1)+" ft",r=a=>`${u(a[1])} (likely ${u(a[0])}–${u(a[2])})`;
+  return `<p class="slr"><strong>Sea level:</strong> projected to rise ${r(v["2050"])} by 2050 and ${r(v["2100"])} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away).</p>`;}
+function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
+  const SN=seasons(lat);
+  const M=S.metric,TU=M?"°C":"°F",C=v=>M?v:v*9/5+32,dC=v=>M?v:v*9/5,P=mm=>M?mm:mm/25.4;
+  const annT=v=>{let x=0;for(let i=0;i<8;i++)x+=v[i];return x/8;},annP=v=>v[8]+v[9]+v[10]+v[11];
+  const deg=v=>Math.round(C(v))+"°",dd=x=>(M?Math.abs(x).toFixed(1):Math.round(Math.abs(x)))+"°",pv=mm=>M?Math.round(P(mm)).toLocaleString():P(mm).toFixed(1);
+  const sgn=x=>(x>=0?"+":"−")+dd(x);
+  const ta=v=>M?+C(annT(v)).toFixed(1):Math.round(C(annT(v))),tas=v=>(M?ta(v).toFixed(1):ta(v))+"°",tdel=(a,b)=>{const x=+(ta(a)-ta(b)).toFixed(1);return x===0?null:(x>0?"+":"−")+(M?Math.abs(x).toFixed(1):Math.abs(x))+"°";};
+  const S3=[["s-now","Here now","1991–2020",now],["s-fut",`Here ~${PER().label}`,PER().years,fu],["s-mat",`${mlab} now`,"1991–2020",an]];
+  const nm=measNames(lat);
+  // plain-language summary
+  const dT=ta(fu)-ta(now),pr=annP(fu)/annP(now)-1;
+  let big=0;for(let i=1;i<8;i++)if(Math.abs(fu[i]-now[i])>Math.abs(fu[big]-now[big]))big=i;
+  let sum=`By ~${PER().label} under ${D.ssps[S.ssp]}, ${esc(place)} is ${M?Math.abs(dT).toFixed(1):Math.abs(dT)}°${M?"C":"F"} ${dT>=0?"warmer":"cooler"} on average, most in its ${nm[big]} (${sgn(dC(fu[big]-now[big]))}), and `+
+    (Math.abs(pr)<0.03?"about as wet as today.":`${Math.round(Math.abs(pr)*100)}% ${pr>0?"wetter":"drier"} over the year.`);
+  let wi=0;for(let i=1;i<8;i++)if(Math.abs(an[i]-fu[i])>Math.abs(an[wi]-fu[wi]))wi=i;
+  const wd=dC(an[wi]-fu[wi]),pm=annP(an)/annP(fu)-1,ok=Math.abs(wd)<=(M?1.5:2.5);
+  sum+=ok?` Today the climate ${esc(mname)} is within ${dd(Math.max(Math.abs(wd),M?0.5:1))} of that in every season`
+         :` Today the climate ${esc(mname)} comes closest, though its ${nm[wi]} are ${dd(wd)} ${wd>0?"warmer":"cooler"}`;
+  sum+=Math.abs(pm)<0.06?", with similar yearly precipitation.":`, with ${Math.round(Math.abs(pm)*100)}% ${pm>0?"more":"less"} precipitation.`;
+  let h=`<section class="cmp" aria-labelledby="cmp-h"><h3 id="cmp-h">How the climates compare</h3><p class="cmp-sum">${sum}</p>`;
+  h+=recentHTML(place,now);if(tt&&tt.sl)h+=seaHTML(tt.sl);
+  // temperature: stat blocks + range bars on one axis
+  const stat=(f,dl)=>`<div class="stats">${S3.map(([k,l,y,v],i)=>`<div class="st ${k}"><div class="k">${l}</div><div class="v">${f(v)}</div><div class="d">${dl(i,v,y)}</div></div>`).join("")}</div>`;
+  h+=`<h4>Temperature <span class="u">${TU}, annual average</span></h4>`+stat(tas,(i,v,y)=>{if(i===0)return y;const d=tdel(v,i===1?now:fu);return i===1?(d?`${d} from now`:"same as now"):(d?`${d} vs ~${PER().label}`:`same as ~${PER().label}`);});
+  let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let i=0;i<8;i++){lo=Math.min(lo,C(v[i]));hi=Math.max(hi,C(v[i]));}
+  const span=Math.max(hi-lo,1),pad=0.15,d0=lo-span*pad/(1-2*pad),d1=hi+span*pad/(1-2*pad),X=v=>((C(v)-d0)/(d1-d0)*100).toFixed(2);
+  const steps=M?[2,5,10,20]:[5,10,20,40];let step=steps[3];for(const st of steps)if(Math.floor(d1/st)-Math.ceil(d0/st)+1<=6){step=st;break;}
+  const frz=M?0:32,gx=t=>((t-d0)/(d1-d0)*100).toFixed(2);
+  let g="",ax="";const hasF=frz>d0&&frz<d1;for(let t=Math.ceil(d0/step)*step;t<=d1;t+=step){if(t===frz)continue;if(hasF&&Math.abs(gx(t)-gx(frz))<13){g+=`<i class="gl" style="left:calc(var(--lw) + (100% - var(--lw))*${gx(t)/100})"></i>`;continue;}g+=`<i class="gl" style="left:calc(var(--lw) + (100% - var(--lw))*${gx(t)/100})"></i>`;ax+=`<span style="left:${gx(t)}%">${t}°</span>`;}
+  if(frz>d0&&frz<d1){g+=`<i class="gl frz" style="left:calc(var(--lw) + (100% - var(--lw))*${gx(frz)/100})"></i>`;ax+=`<span style="left:${gx(frz)}%">${frz}°</span>`;}
+  h+=`<div class="chart" aria-hidden="true">${g}`;
+  for(let q=0;q<4;q++){h+=`<div class="crow"><div class="lab">${SN[q]}</div><div class="trk">`;
+    S3.forEach(([k, , ,v],j)=>{const a=X(v[4+q]),b=X(v[q]);h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:${a}%;width:${(b-a).toFixed(2)}%"><b class="lo">${deg(v[4+q])}</b><b class="hi">${deg(v[q])}</b></div>`;});
+    h+=`</div></div>`;}
+  h+=`<div class="axis">${ax}</div></div><p class="cap">Each bar runs from the season's average daily low to its average daily high.${hasF?` The dashed line marks freezing (${frz}${TU}).`:""}</p>`;
+  if(HAS10&&an.length>=16&&isFinite(an[12]))h+=humidHTML(SN,S3,stat,C,TU,M);
+  // precipitation: stat blocks + bars from zero
+  const PU=M?"mm":"inches";
+  h+=`<h4>Precipitation <span class="u">${PU}, yearly total</span></h4>`+stat(v=>pv(annP(v)),(i,v,y)=>{const r=annP(v)/annP(i===2?fu:now)-1;
+    return i===0?y:Math.abs(r)<0.03?(i===1?"about the same":`same as ~${PER().label}`):`${Math.round(Math.abs(r)*100)}% ${r>0?"more":"less"}${i===1?" than now":` than ~${PER().label}`}`;});
+  let pmx=0;for(const[, , ,v]of S3)for(let q=0;q<4;q++)pmx=Math.max(pmx,v[8+q]);
+  const PX=mm=>(mm/(pmx*1.25||1)*100).toFixed(2);
+  h+=`<div class="chart" aria-hidden="true">`;
+  for(let q=0;q<4;q++){h+=`<div class="crow"><div class="lab">${SN[q]}</div><div class="trk">`;
+    S3.forEach(([k, , ,v],j)=>{h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:0;width:${PX(v[8+q])}%"><b class="hi">${pv(v[8+q])}</b></div>`;});
+    h+=`</div></div>`;}
+  h+=`</div><p class="cap">Total precipitation in each season, rain and snow as water.</p>`;
+  if(feat)h+=featHTML(feat,S3);
+  // exact values, also the accessible version of the charts
+  const cols=[now,fu,an];
+  h+=`<details class="exact"><summary>Exact values</summary><div class="tablewrap"><table class="clim ex"><thead><tr><th></th>${S3.map(([k,l])=>`<th><span class="sw ${k}"></span>${l.replace("Here ","").replace(" now","")}</th>`).join("")}</tr></thead><tbody>`;
+  h+=`<tr class="grp"><th colspan="4">Temperature (${TU})</th></tr><tr class="tot"><td>Annual average</td>${cols.map(v=>`<td>${fT(annT(v))}</td>`).join("")}</tr>`;
+  for(let q=0;q<4;q++)for(const[o,w]of[[0,"high"],[4,"low"]])h+=`<tr><td>${SN[q]} ${w}</td>${cols.map(v=>`<td>${fT(v[o+q])}</td>`).join("")}</tr>`;
+  h+=`<tr class="grp"><th colspan="4">Precipitation (${PU})</th></tr><tr class="tot"><td>Annual total</td>${cols.map(v=>`<td>${fP(annP(v))}</td>`).join("")}</tr>`;
+  for(let q=0;q<4;q++)h+=`<tr><td>${SN[q]}</td>${cols.map(v=>`<td>${fP(v[8+q])}</td>`).join("")}</tr>`;
+  if(HAS10&&an.length>=16&&isFinite(an[12])){h+=`<tr class="grp"><th colspan="4">Dewpoint (${TU})</th></tr>`;for(let q=0;q<4;q++)h+=`<tr><td>${SN[q]}</td>${cols.map(v=>`<td>${fT(v[12+q])}</td>`).join("")}</tr>`;}
+  h+=`</tbody></table></div><p class="cap">Highs and lows are averages of daily values; precipitation is each season's total${HAS10?"; dewpoint is the season's average":""}.</p></details></section>`;
+  return h;}
+function glyph(kind,m){const W=26,H=14,y=7;const c=m||MC();const acc=c.acc,ink=c.ink,halo=c.halo;let g="";
+  const arrowSvg=(col,dash,w)=>`<line x1="2" y1="${y}" x2="17" y2="${y}" stroke="${c.casing}" stroke-width="${w+1.6}" stroke-linecap="butt"${dash?' stroke-dasharray="3.2 2.6"':''}/><line x1="2" y1="${y}" x2="17" y2="${y}" stroke="${col}" stroke-width="${w}" stroke-linecap="butt"${dash?' stroke-dasharray="3.2 2.6"':''}/><path d="M24 ${y} L16 ${y-4.5} L16 ${y+4.5} Z" fill="${col}" stroke="${c.casing}" stroke-width=".8"/>`;
+  if(kind==="dot")g=`<circle cx="13" cy="${y}" r="3.4" fill="${c.dot}" stroke="${c.rim}" stroke-width="1"/>`;
+  else if(kind==="faint")g=`<circle cx="13" cy="${y}" r="2.6" fill="${c.dot}" opacity=".35"/>`;
+  else if(kind==="arrow")g=arrowSvg(RAMP[1],false,1.8);
+  else if(kind==="dashed")g=arrowSvg(RAMP[2],true,1.8);
+  else if(kind==="ring")g=`<circle cx="13" cy="${y}" r="5.5" fill="none" stroke="${c.casing}" stroke-width="3.4"/><circle cx="13" cy="${y}" r="5.5" fill="none" stroke="${RAMP[5]}" stroke-width="2"/>`;
+  else if(kind==="star"){let d="";for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?3.2:7;d+=(i?"L":"M")+(13+r*Math.cos(a)).toFixed(2)+" "+(y+r*Math.sin(a)).toFixed(2);}g=`<path d="${d}Z" fill="${c.dot}" stroke="${halo}" stroke-width="1.3"/>`;}
+  else if(kind==="best"||kind==="bestd")g=`<line x1="1" y1="${y}" x2="16" y2="${y}" stroke="${acc}" stroke-width="2.6" stroke-linecap="round"${kind==="bestd"?' stroke-dasharray="3.5 3"':''}/><circle cx="20" cy="${y}" r="4.6" fill="${acc}" stroke="${halo}" stroke-width="1.6"/>`;
+  else if(kind==="here")g=`<circle cx="13" cy="${y}" r="6.2" fill="none" stroke="${RAMP[5]}" stroke-width="2.2"/><circle cx="13" cy="${y}" r="1.8" fill="${c.dot}"/>`;
+  else if(kind==="alt")g=`<circle cx="13" cy="${y}" r="6.5" fill="${halo}" stroke="${ink}" stroke-width="1.3"/><text x="13" y="${y+3}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${ink}">2</text>`;
+  else if(kind==="world")g=`<path d="M13 ${y-7} L20 ${y} L13 ${y+7} L6 ${y} Z" fill="${halo}" stroke="${ink}" stroke-width="1.3"/><text x="13" y="${y+2.8}" text-anchor="middle" font-size="6.5" font-weight="700" fill="${ink}">W</text>`;
+  else if(kind==="model")g=`<circle cx="9" cy="${y+1}" r="2.6" fill="${halo}" stroke="${ink}" stroke-width="1.1"/><circle cx="17" cy="${y-2}" r="2.6" fill="${halo}" stroke="${ink}" stroke-width="1.1"/>`;
+  else if(kind==="blank")g=`<rect x="4" y="2" width="18" height="10" rx="3" fill="none" stroke="${c.line2}" stroke-width="1" stroke-dasharray="2 2"/>`;
+  else if(kind==="outline")g=`<rect x="4" y="2" width="18" height="10" rx="3" fill="${RAMP[0]}" stroke="${ink}" stroke-width="1.3"/>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${g}</svg>`;}
+function legend(){const el=document.getElementById("legend");if(!el)return;
+  const bar=(n,ticks,end)=>`<div class="sw">${RAMP.slice(0,n).map(c=>`<span style="background:${c}"></span>`).join("")}</div><div class="ticks">${ticks.map(b=>`<span>${b}</span>`).join("")}${end?`<span class="end">${end}</span>`:""}</div>`;
+  const key=rows=>`<div class="lg-more"><div class="key">${rows.map(([k,t])=>glyph(k)+`<span>${t}</span>`).join("")}</div></div>`;
+  const info=`<span class="lg-i" aria-hidden="true">ⓘ</span>`;
+  if(!cur){if(!S.showAll){el.innerHTML=`<div class="lg-title">Tap a dot to see its climate twin</div>`+key([["dot","Place with a climate twin"]]);return;}
+    const nshow=map?overviewLimit(map.getZoom()):110;
+    const rows=[["dot","Place: tap for details"],["arrow","Arrow to its climate twin"],["dashed","Dashed: only a partial twin"],["ring","Ring: no close twin anywhere"]];
+    if(nshow<NT)rows.push(["faint","Faint: smaller places, zoom in"]);
+    el.innerHTML=`<div class="lg-title">Arrow colour: closeness (σ)${info}</div>${bar(4,[0,1,2,3,4])}`+key(rows)+(worldState==="loading"?`<div class="lg-more" style="color:var(--muted)">World cities are still loading.</div>`:"");return;}
+  const tt=D.targets[cur.t],selfm=hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60,dsh=cur.sig[cur.best]>=2;
+  const rows=[["star",esc(tt.n)]];
+  rows.push(selfm?["here","Best match is right here"]:[dsh?"bestd":"best",dsh?"Best match (partial)":"Best match"]);
+  if(cur.sites.length>1)rows.push(["alt","Other matches, by rank"]);
+  if(cur.glob&&cur.glob.sites.length)rows.push(["world","Matches outside North America"]);
+  if(S.showModels&&cur.models&&cur.models.length)rows.push(["model","Each model’s match"]);
+  rows.push(["outline","Outlined: under 2σ, close"]);
+  rows.push(["blank","No colour: over 8σ"]);
+  el.innerHTML=`<div class="lg-title">How alike to ${esc(tt.n)}, ~${PER().label} (σ)${info}</div>${bar(7,BOUNDS.slice(0,8))}`+key(rows);}
+function refresh(){S.cmp=0;S.gsel=-1;hideTip();compute();panel();legend();updateMapLayers();draw();}
+function select(t,focus){S.sel=t;if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
+  if(focus&&t>=0)focusOn();}
+function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
+  const tt=D.targets[cur.t];const pts=[[tt.lon,tt.lat],...cur.sites.map(c=>[plon[c],plat[c]])];
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const mob=wrap.getBoundingClientRect().width<600;
+  map.fitBounds([[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)]],{padding:{top:60,bottom:mob?80:60,left:50,right:50},maxZoom:7,duration:RM?0:700});}
+function centerOn(lon,lat){map.easeTo({center:[lon,lat],duration:RM?0:500});}
+// ---------- controls
+function segs(){
+  document.getElementById("dver").textContent=`Data version ${D.data_version}. Climate models: CMIP6. Baseline: 1991–2020.`;
+  const pe=document.getElementById("per");D.periods.forEach((q,i)=>{const b=document.createElement("button");b.textContent=`${q.label} (${q.years})`;b.setAttribute("aria-pressed",i===S.per);b.onclick=()=>{S.per=i;[...pe.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));refresh();};pe.appendChild(b);});
+  const s=document.getElementById("ssp");D.ssps.forEach((n,i)=>{const b=document.createElement("button");b.textContent=n;b.setAttribute("aria-pressed",i===S.ssp);b.onclick=()=>{S.ssp=i;[...s.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));document.getElementById("ssp-desc").textContent=SSP_DESC[i];refresh();};s.appendChild(b);});
+  document.getElementById("ssp-desc").textContent=SSP_DESC[S.ssp];
+  document.getElementById("optModels").onchange=ev=>{S.showModels=ev.target.checked;legend();draw();};
+  document.getElementById("optAll").onchange=ev=>{S.showAll=ev.target.checked;legend();draw();};
+  document.getElementById("optUnits").onchange=ev=>{S.metric=ev.target.checked;panel();};
+  document.getElementById("optHot").onchange=ev=>{S.ens=ev.target.checked?"all":"tcr_likely";refresh();};
+  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();}};
+  sr.addEventListener("change",pick);sr.addEventListener("keydown",e=>{if(e.key==="Enter")pick();});
+  document.getElementById("zfit").onclick=()=>{fitted=false;fit();};
+  const reset=()=>{hideTip();if(S.sel>=0)select(-1,false);if(location.hash)history.replaceState(null,"",location.pathname+location.search);map.fitBounds([[-124.8,24.4],[-66.9,49.4]],{padding:24,duration:RM?0:700});};
+  document.getElementById("zreset").onclick=reset;
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.activeElement!==document.getElementById("search"))reset();});
+  document.getElementById("zworld").onclick=()=>map.fitBounds([[-175,-50],[178,72]],{padding:10,duration:RM?0:600});
+}
+// ---------- map
+function heatCoords(){return[[MB.w,MB.n],[MB.e,MB.n],[MB.e,MB.s],[MB.w,MB.s]];}
+function addOverlays(){if(!map.getSource("heat")){
+    map.addSource("heat",{type:"canvas",canvas:heat,coordinates:heatCoords(),animate:false});
+    const first=(map.getStyle().layers||[]).find(l=>l.type==="symbol");
+    map.addLayer({id:"heat",type:"raster",source:"heat",layout:{visibility:"none"},paint:{"raster-opacity":S.darkMap?0.84:0.72,"raster-resampling":"nearest","raster-fade-duration":0}},first?first.id:undefined);}
+  if(heatW)addWorldHeat();
+  mapReady=true;updateMapLayers();}
+function addWorldHeat(){if(map.getSource("heatw"))return;
+  map.addSource("heatw",{type:"canvas",canvas:heatW,coordinates:[[MBW.w,MBW.n],[MBW.e,MBW.n],[MBW.e,MBW.s],[MBW.w,MBW.s]],animate:false});
+  const first=(map.getStyle().layers||[]).find(l=>l.type==="symbol");
+  map.addLayer({id:"heatw",type:"raster",source:"heatw",layout:{visibility:"none"},paint:{"raster-opacity":S.darkMap?0.84:0.72,"raster-resampling":"nearest","raster-fade-duration":0}},first?first.id:undefined);}
+function updateMapLayers(){if(!mapReady||!map.getLayer("heat"))return;map.setLayoutProperty("heat","visibility",cur&&PI===0?"visible":"none");
+  if(map.getLayer("heatw"))map.setLayoutProperty("heatw","visibility",cur&&PI===1?"visible":"none");
+  if(!cur)return;const src=map.getSource(PI?"heatw":"heat");if(!src)return;src.play();map.triggerRepaint();map.once("render",()=>requestAnimationFrame(()=>{try{src.pause();}catch(e){}}));}
+function fallbackStyle(){const f=D.fallback,wf=D.fallbackWorld,fc=k=>({type:"FeatureCollection",features:[{type:"Feature",properties:{},geometry:f[k]}].concat(wf?[{type:"Feature",properties:{},geometry:wf[k]}]:[])});return{version:8,sources:{land:{type:"geojson",data:fc("land"),attribution:"Outlines: Natural Earth (map tiles unavailable)"},lines:{type:"geojson",data:fc("lines")}},
+  layers:[{id:"bg",type:"background",paint:{"background-color":MC().ocean}},{id:"land",type:"fill",source:"land",paint:{"fill-color":MC().land}},
+    {id:"admin",type:"line",source:"lines",paint:{"line-color":MC().line,"line-width":0.7}},{id:"coast",type:"line",source:"land",paint:{"line-color":MC().line2,"line-width":0.8}}]};}
+let usingFallback=false,styleTimer=null;
+function isDark(){return S.darkMap;}
+function MC(){return S.darkMap?{ink:"#e7ecef",halo:"#172028",dot:"#f1f4f6",rim:"#172028",casing:"rgba(8,12,16,.9)",acc:"#ff6b4a",ocean:"#0e1920",land:"#26313a",line:"#56626c",line2:"#8894a0"}:{ink:"#1d2730",halo:"#ffffff",dot:"#1d2730",rim:"#ffffff",casing:"rgba(29,39,48,.55)",acc:"#d6412c",ocean:"#c7d5de",land:"#eef0ea",line:"#9aa3aa",line2:"#6b757d"};}
+function setAttrib(){const el=document.getElementById("attrib");el.classList.toggle("dark",S.darkMap);
+  const ml=`<a href="methods.html" target="_blank" rel="noopener">Methods &amp; Sources</a> · `;
+  el.innerHTML=ml+(usingFallback?`Outlines © <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>`
+    :`© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" title="Map data © OpenStreetMap contributors. Tiles: OpenFreeMap, OpenMapTiles">OpenStreetMap</a>`);
+  if(typeof D!=="undefined"&&D)legend();}
+function setBaseStyle(){mapReady=false;setAttrib();if(usingFallback){map.setStyle(fallbackStyle(),{diff:false});return;}
+  map.setStyle(STYLES.light,{diff:false});clearTimeout(styleTimer);
+  styleTimer=setTimeout(()=>{if(!map.isStyleLoaded()||!map.getStyle().layers.length){usingFallback=true;setBaseStyle();}},8000);}
+function makeMap(){
+  map=new maplibregl.Map({container:"map",style:STYLES.light,bounds:[[-124.8,24.4],[-66.9,49.4]],fitBoundsOptions:{padding:24},
+    minZoom:1.5,maxZoom:10,dragRotate:false,pitchWithRotate:false,touchPitch:false,attributionControl:false});
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-right");
+  styleTimer=setTimeout(()=>{if(!mapReady){usingFallback=true;setBaseStyle();}},8000);
+  setAttrib();
+  map.on("style.load",()=>{clearTimeout(styleTimer);baseOrig=null;setAttrib();if(S.darkMap)paintBase();addOverlays();draw();});
+  map.on("error",e=>{const u=(e&&e.error&&String(e.error.message||e.error))||"";if(!mapReady&&!usingFallback&&/style|openfreemap|Failed to fetch|NetworkError/i.test(u)){usingFallback=true;setBaseStyle();}});
+  map.on("render",draw);
+  map.on("zoomend",()=>{if(!cur)legend();});
+  map.on("mousemove",e=>hover(e.point.x,e.point.y));
+  // the map suppresses mousemove while dragging, so track the real cursor on the container for the post-drag snap
+  wrap.addEventListener("mousemove",e=>{if(e.target.closest("button,#legend,#attrib")){lastMouse=null;return;}const r=wrap.getBoundingClientRect();lastMouse=[e.clientX-r.left,e.clientY-r.top];},true);
+  map.on("mouseout",()=>{lastMouse=null;map.getCanvas().style.cursor="";if(!touchMode)hideTip();});
+  map.on("dragstart",()=>{dragging=true;});
+  map.on("dragend",()=>{dragging=false;});
+  map.on("moveend",()=>{if(!touchMode&&!dragging&&lastMouse)hover(lastMouse[0],lastMouse[1]);});
+  map.getCanvasContainer().addEventListener("pointerdown",e=>{touchMode=e.pointerType!=="mouse";},true);
+  map.on("click",e=>click(e.point.x,e.point.y));
+}
+function nearestTarget(x,y,maxpx){let b=-1,bd=maxpx;for(let t=0;t<NT;t++){const tt=D.targets[t];const[a,c]=toScr(tt.lon,tt.lat);const d=Math.hypot(a-x,c-y);if(d<bd){bd=d;b=t;}}return b;}
+function cellAt(x,y){const ll=map.unproject([x,y]);if(PI===1){const P=POOLS[1];const lon=((ll.lng+180)%360+360)%360-180,r=Math.floor((90-ll.lat)/P.res),c=Math.floor((lon+180)/P.res);if(r<0||r>=P.ny||c<0||c>=P.nx)return -1;return gridToCellW[r*P.nx+c];}const[X,Y]=laeaFwd(ll.lng,ll.lat);const c=Math.floor((X-D.x0)/D.cell_m),r=Math.floor((D.y0-Y)/D.cell_m);if(c<0||r<0||c>=D.nx||r>=D.ny)return -1;return gridToCell[r*D.nx+c];}
+// Tooltip: anchored to the map location it describes, so it moves with the map instead of sticking to the screen.
+// Desktop: follows the cursor, but not while dragging; snaps to the cursor when the drag or zoom ends.
+// Touch: shown by a tap, stays with its spot while panning, cleared by tapping elsewhere.
+let TIP=null,dragging=false,touchMode=false,lastMouse=null;
+function setTip(html,x,y){const ll=map.unproject([x,y]);TIP={html,lng:ll.lng,lat:ll.lat};const tip=document.getElementById("tip");tip.innerHTML=html;posTip();}
+function hideTip(){TIP=null;document.getElementById("tip").style.display="none";}
+function posTip(){if(!TIP||!map)return;const tip=document.getElementById("tip"),p=map.project([TIP.lng,TIP.lat]),r=wrap.getBoundingClientRect();
+  if(p.x<0||p.y<0||p.x>r.width||p.y>r.height){tip.style.display="none";return;}place(tip,p.x,p.y);}
+function tipFor(x,y,near){const t=nearestTarget(x,y,near);if(t>=0)return{t,html:esc(D.targets[t].n)};
+  if(cur){const c=cellAt(x,y);if(c>=0)return{c,html:`${esc(describeCell(c))}<br><strong>${cur.sig[c]>=10?"over 10":cur.sig[c].toFixed(2)}σ</strong> <span class="muted">from ${esc(D.targets[cur.t].n)} ~${PER().label}</span>`};}
+  return null;}
+const ZONE_SIGMA=2,ZONE_KM=700;   // frame the connected patch under ZONE_SIGMA (1 = yellow only), only the part within ZONE_KM of the match
+// Connected patch of cells under ZONE_SIGMA containing the best match -> [minLon,minLat,maxLon,maxLat], longitudes
+// unwrapped around the match. null if the best match itself is not under ZONE_SIGMA (a partial match).
+function matchZone(){const b=cur.best;if(cur.sig[b]>=ZONE_SIGMA)return null;
+  const world=PI===1,P=POOLS[PI],nx=world?P.nx:D.nx,ny=world?P.ny:D.ny,g2c=world?gridToCellW:gridToCell;
+  const seen=new Uint8Array(NP),stack=[b];seen[b]=1;const lo0=plon[b];let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  const half=world?P.res/2:0.07;                                          // pad by about half a cell
+  while(stack.length){const p=stack.pop(),lon=wrapLon(plon[p],lo0),lat=plat[p];
+    if(hav(lat,lon,plat[b],lo0)<=ZONE_KM){if(lon<x0)x0=lon;if(lon>x1)x1=lon;if(lat<y0)y0=lat;if(lat>y1)y1=lat;}
+    const g=cellRC[p],r=Math.floor(g/nx),c=g%nx;
+    for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){const rr=r+dr;if(rr<0||rr>=ny)continue;let cc=c+dc;
+      if(world)cc=(cc+nx)%nx;else if(cc<0||cc>=nx)continue;
+      const q=g2c[rr*nx+cc];if(q>=0&&!seen[q]&&cur.sig[q]<ZONE_SIGMA){seen[q]=1;stack.push(q);}}}
+  return[x0-half,y0-half,x1+half,y1+half];}
+// Tap/click a place: if its match is off-screen, centre on the match and zoom to its outlined patch.
+function revealMatch(){if(!cur||!map)return;const tt=D.targets[cur.t],c=cur.best;
+  if(hav(tt.lat,tt.lon,plat[c],plon[c])<60)return;                      // no-match ring at the place itself
+  const lon=wrapLon(plon[c],tt.lon),lat=plat[c],r=wrap.getBoundingClientRect(),mob=r.width<600;
+  const m=mob?{top:60,bottom:70,left:30,right:62}:{top:50,bottom:50,left:40,right:70};
+  const [x,y]=toScr(lon,lat);
+  if(x>=m.left&&x<=r.width-m.right&&y>=m.top&&y<=r.height-m.bottom)return;     // match already visible
+  const z=matchZone();
+  if(!z){const[a,b]=[tt.lon,tt.lat];                                      // partial match: frame both ends
+    map.fitBounds([[Math.min(lon,a),Math.min(lat,b)],[Math.max(lon,a),Math.max(lat,b)]],{padding:m,maxZoom:Math.max(map.getZoom(),3),duration:RM?0:800});return;}
+  const lonM=plon[c];                                                     // symmetric box around the match
+  const dx=Math.max(lonM-z[0],z[2]-lonM,0.4),dy=Math.max(lat-z[1],z[3]-lat,0.3);
+  const cam=map.cameraForBounds([[lonM-dx,Math.max(-84,lat-dy)],[lonM+dx,Math.min(84,lat+dy)]],{padding:m,maxZoom:7});
+  map.easeTo({center:[lonM,lat],zoom:cam?cam.zoom:map.getZoom(),duration:RM?0:900});}
+function click(x,y){const t=nearestTarget(x,y,14);if(t>=0){hideTip();select(t,false);revealMatch();return;}
+  const h=tipFor(x,y,0);if(h)setTip(h.html,x,y);else hideTip();}
+function hover(x,y){if(touchMode||dragging)return;const h=tipFor(x,y,10);map.getCanvas().style.cursor=h&&h.t!==undefined?"default":"";
+  if(h)setTip(h.html,x,y);else hideTip();}
+function place(tip,x,y){tip.style.display="block";const r=wrap.getBoundingClientRect();const w=tip.offsetWidth;tip.style.left=Math.max(4,Math.min(r.width-w-6,x+12))+"px";tip.style.top=Math.min(r.height-tip.offsetHeight-4,y+14)+"px";}
+window.addEventListener("resize",resize);
+document.getElementById("legend").addEventListener("click",()=>document.getElementById("legend").classList.toggle("open"));
+if(window.ResizeObserver)new ResizeObserver(()=>resize()).observe(wrap);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)resize();});
+window.addEventListener("error",e=>{const l=document.getElementById("loading");if(l)l.textContent="Something went wrong loading the map: "+e.message;});
+
+load().then(d=>{
+  if(typeof maplibregl==="undefined")throw new Error("the map library did not load");
+  init(d);segs();makeMap();sizeOv();document.getElementById("loading").remove();legend();
+  const r=wrap.getBoundingClientRect();if(r.width>=20&&r.height>=20)fitted=true;
+  const h=decodeURIComponent(location.hash.slice(1));const i=h?D.targets.findIndex(t=>t.n===h):-1;if(i>=0)select(i,true);
+  loadWorld();
+}).catch(err=>{const l=document.getElementById("loading");if(l)l.textContent="The map could not start: "+err.message+". It needs a current browser with WebGL.";});
+</script>
+</body>
+</html>

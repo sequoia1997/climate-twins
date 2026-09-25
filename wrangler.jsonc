@@ -1,0 +1,7 @@
+{
+  // The site is served as static files by a Cloudflare Worker. "name" must match the existing Worker so the
+  // address stays https://climate-twins.forest4science.workers.dev
+  "name": "climate-twins",
+  "compatibility_date": "2026-09-01",
+  "assets": { "directory": "./site" }
+}

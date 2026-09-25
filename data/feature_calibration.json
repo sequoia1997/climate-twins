@@ -1,0 +1,26 @@
+{
+ "hardiness": {
+  "coef": [
+   -10.47579,
+   1.38707,
+   0.06059,
+   -0.2836
+  ],
+  "n": 35277,
+  "r2": 0.956,
+  "median_abs_err_c": 1.03,
+  "same_half_zone": 0.558,
+  "within_one_half_zone": 0.949,
+  "reference": "PRISM Climate Group / USDA-ARS 2023 Plant Hardiness Zone Map grid, 1991-2020 mean annual extreme minimum"
+ },
+ "ffp": {
+  "coef": [
+   4.5625,
+   7.3276
+  ],
+  "n": 97488,
+  "r2": 0.963,
+  "median_abs_err_days": 7.3,
+  "reference": "ClimateNA v7.30 frost-free period (AdaptWest 2022)"
+ }
+}

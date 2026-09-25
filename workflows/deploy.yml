@@ -1,0 +1,18 @@
+# Publishes site/ to Cloudflare whenever it changes on main (merging a data-update pull request, or editing the page).
+name: Deploy site
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "wrangler.jsonc"]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

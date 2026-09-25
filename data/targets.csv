@@ -1,0 +1,790 @@
+label,country,admin1,lat,lon,pop,domain
+"Shallotte, NC",US,North Carolina,33.97323,-78.38584,3991,conus
+"Raleigh, NC",US,North Carolina,35.7721,-78.63861,482295,conus
+"New York City, NY",US,New York,40.71427,-74.00597,8804190,conus
+"Los Angeles, CA",US,California,34.05223,-118.24368,3820914,conus
+"Chicago, IL",US,Illinois,41.85003,-87.65005,2664452,conus
+"Houston, TX",US,Texas,29.76328,-95.36327,2314157,conus
+"Phoenix, AZ",US,Arizona,33.44838,-112.07404,1650070,conus
+"Philadelphia, PA",US,Pennsylvania,39.95238,-75.16362,1573916,conus
+"San Antonio, TX",US,Texas,29.42412,-98.49363,1526656,conus
+"San Diego, CA",US,California,32.71571,-117.16472,1404452,conus
+"Dallas, TX",US,Texas,32.78306,-96.80667,1326087,conus
+"Jacksonville, FL",US,Florida,30.33218,-81.65565,1009833,conus
+"Fort Worth, TX",US,Texas,32.72541,-97.32085,1008106,conus
+"San Jose, CA",US,California,37.33939,-121.89496,997368,conus
+"Austin, TX",US,Texas,30.26715,-97.74306,974447,conus
+"Columbus, OH",US,Ohio,39.96118,-82.99879,913175,conus
+"Charlotte, NC",US,North Carolina,35.22709,-80.84313,911311,conus
+"Indianapolis, IN",US,Indiana,39.76838,-86.15804,887642,conus
+"San Francisco, CA",US,California,37.77493,-122.41942,827526,conus
+"Seattle, WA",US,Washington,47.60621,-122.33207,780995,conus
+"Denver, CO",US,Colorado,39.73915,-104.9847,729019,conus
+"Washington, DC",US,District of Columbia,38.89511,-77.03637,689545,conus
+"Nashville, TN",US,Tennessee,36.16589,-86.78444,689447,conus
+"Oklahoma City, OK",US,Oklahoma,35.46756,-97.51643,681054,conus
+"El Paso, TX",US,Texas,31.75872,-106.48693,678815,conus
+"Boston, MA",US,Massachusetts,42.35843,-71.05977,653833,conus
+"Portland, OR",US,Oregon,45.52345,-122.67621,652503,conus
+"Detroit, MI",US,Michigan,42.33143,-83.04575,645705,conus
+"Las Vegas, NV",US,Nevada,36.17497,-115.13722,641903,conus
+"Memphis, TN",US,Tennessee,35.14953,-90.04898,633104,conus
+"Louisville, KY",US,Kentucky,38.25424,-85.75941,624444,conus
+"Baltimore, MD",US,Maryland,39.29038,-76.61219,585708,conus
+"Albuquerque, NM",US,New Mexico,35.08449,-106.65114,564559,conus
+"Milwaukee, WI",US,Wisconsin,43.0389,-87.90647,563531,conus
+"Tucson, AZ",US,Arizona,32.22174,-110.92648,542629,conus
+"Fresno, CA",US,California,36.74773,-119.77237,542107,conus
+"Sacramento, CA",US,California,38.58157,-121.4944,524943,conus
+"Atlanta, GA",US,Georgia,33.749,-84.38798,510823,conus
+"Miami, FL",US,Florida,25.77427,-80.19366,487014,conus
+"Omaha, NE",US,Nebraska,41.25626,-95.94043,486051,conus
+"Kansas City, MO",US,Missouri,39.09973,-94.57857,475378,conus
+"Long Beach, CA",US,California,33.76696,-118.18923,474140,conus
+"Colorado Springs, CO",US,Colorado,38.83388,-104.82136,456568,conus
+"Virginia Beach, VA",US,Virginia,36.85293,-75.97799,454808,conus
+"Tampa, FL",US,Florida,27.94752,-82.45843,414547,conus
+"Tulsa, OK",US,Oklahoma,36.15398,-95.99277,413066,conus
+"Minneapolis, MN",US,Minnesota,44.97997,-93.26384,410939,conus
+"Wichita, KS",US,Kansas,37.69224,-97.33754,396119,conus
+"Bakersfield, CA",US,California,35.37329,-119.01871,373640,conus
+"Cleveland, OH",US,Ohio,41.4995,-81.69541,365379,conus
+"New Orleans, LA",US,Louisiana,29.95465,-90.07507,362701,conus
+"Anaheim, CA",US,California,33.83529,-117.9145,350742,conus
+"Orlando, FL",US,Florida,28.53834,-81.37924,334854,conus
+"Lexington, KY",US,Kentucky,37.98869,-84.47772,320347,conus
+"Riverside, CA",US,California,33.95335,-117.39616,317261,conus
+"Corpus Christi, TX",US,Texas,27.80058,-97.39638,316239,conus
+"Cincinnati, OH",US,Ohio,39.12711,-84.51439,311097,conus
+"Stockton, CA",US,California,37.9577,-121.29078,305658,conus
+"Pittsburgh, PA",US,Pennsylvania,40.44062,-79.99589,304391,conus
+"Lincoln, NE",US,Nebraska,40.8,-96.66696,294757,conus
+"Anchorage, AK",US,Alaska,61.21806,-149.90028,289600,na
+"Meads, KY",US,Kentucky,38.41258,-82.70905,288649,conus
+"Greensboro, NC",US,North Carolina,36.07264,-79.79198,285342,conus
+"Plano, TX",US,Texas,33.01984,-96.69889,283558,conus
+"Madison, WI",US,Wisconsin,43.07305,-89.40123,280305,conus
+"St. Louis, MO",US,Missouri,38.62727,-90.19789,279695,conus
+"Toledo, OH",US,Ohio,41.66394,-83.55521,265638,conus
+"Reno, NV",US,Nevada,39.52963,-119.8138,264165,conus
+"Chandler, AZ",US,Arizona,33.30616,-111.84125,260828,conus
+"Fort Wayne, IN",US,Indiana,41.1306,-85.12886,260326,conus
+"Buffalo, NY",US,New York,42.88645,-78.87837,258071,conus
+"Durham, NC",US,North Carolina,35.99403,-78.89862,257636,conus
+"St. Petersburg, FL",US,Florida,27.77086,-82.67927,257083,conus
+"Laredo, TX",US,Texas,27.50641,-99.50754,256153,conus
+"Lubbock, TX",US,Texas,33.57786,-101.85517,249042,conus
+"Tri-Cities, WA",US,Washington,46.2454,-119.19617,244036,conus
+"Winston-Salem, NC",US,North Carolina,36.09986,-80.24422,241218,conus
+"Norfolk, VA",US,Virginia,36.84681,-76.28522,238005,conus
+"Boise, ID",US,Idaho,43.6135,-116.20345,235684,conus
+"Spokane, WA",US,Washington,47.65966,-117.42908,229447,conus
+"Baton Rouge, LA",US,Louisiana,30.44332,-91.18747,227470,conus
+"Richmond, VA",US,Virginia,37.55376,-77.46026,226610,conus
+"Tacoma, WA",US,Washington,47.25288,-122.44429,222906,conus
+"Salt Lake City, UT",US,Utah,40.76078,-111.89105,215548,conus
+"Huntsville, AL",US,Alabama,34.7304,-86.58594,215006,conus
+"Des Moines, IA",US,Iowa,41.60054,-93.60911,214133,conus
+"Modesto, CA",US,California,37.6391,-120.99688,211266,conus
+"Rochester, NY",US,New York,43.15478,-77.61556,209802,conus
+"Oxnard, CA",US,California,34.1975,-119.17705,207254,conus
+"Columbus, GA",US,Georgia,32.46098,-84.98771,206922,conus
+"Worcester, MA",US,Massachusetts,42.26259,-71.80229,206518,conus
+"Little Rock, AR",US,Arkansas,34.74648,-92.28959,202591,conus
+"Fayetteville, NC",US,North Carolina,35.05266,-78.87836,201963,conus
+"Tallahassee, FL",US,Florida,30.43826,-84.28073,201731,conus
+"Yonkers, NY",US,New York,40.9304,-73.89789,201116,conus
+"Cypress, TX",US,Texas,29.96911,-95.69717,200839,conus
+"Aurora, IL",US,Illinois,41.76058,-88.32007,200661,conus
+"Amarillo, TX",US,Texas,35.222,-101.8313,198645,conus
+"Akron, OH",US,Ohio,41.08144,-81.51901,197542,conus
+"Birmingham, AL",US,Alabama,33.52066,-86.80249,196357,conus
+"Montgomery, AL",US,Alabama,32.36681,-86.29997,195287,conus
+"Grand Rapids, MI",US,Michigan,42.96336,-85.66809,195097,conus
+"Providence, RI",US,Rhode Island,41.82399,-71.41283,190934,conus
+"Knoxville, TN",US,Tennessee,35.96064,-83.92074,190740,conus
+"Shreveport, LA",US,Louisiana,32.52515,-93.75018,187593,conus
+"Brownsville, TX",US,Texas,25.90175,-97.49748,186738,conus
+"Mobile, AL",US,Alabama,30.69436,-88.04305,183289,conus
+"Fort Lauderdale, FL",US,Florida,26.12231,-80.14338,183146,conus
+"Santa Clarita, CA",US,California,34.39166,-118.54259,182371,conus
+"Chattanooga, TN",US,Tennessee,35.04563,-85.30968,181099,conus
+"Santa Rosa, CA",US,California,38.44047,-122.71443,178127,conus
+"Eugene, OR",US,Oregon,44.05207,-123.08675,176654,conus
+"Oceanside, CA",US,California,33.19587,-117.37948,175691,conus
+"Salem, OR",US,Oregon,44.9429,-123.0351,175535,conus
+"Cape Coral, FL",US,Florida,26.56285,-81.94953,175229,conus
+"Sioux Falls, SD",US,South Dakota,43.54369,-96.72796,171544,conus
+"Ontario, CA",US,California,34.06334,-117.65089,171214,conus
+"Fort Collins, CO",US,Colorado,40.58526,-105.08442,170924,conus
+"Springfield, MO",US,Missouri,37.21533,-93.29824,170188,conus
+"Clarksville, TN",US,Tennessee,36.52977,-87.35945,166722,conus
+"Murfreesboro, TN",US,Tennessee,35.84562,-86.39027,165430,conus
+"Port Saint Lucie, FL",US,Florida,27.29393,-80.35033,164603,conus
+"Lancaster, CA",US,California,34.69804,-118.13674,161103,conus
+"Hayward, CA",US,California,37.66882,-122.0808,158289,conus
+"Salinas, CA",US,California,36.67774,-121.6555,157380,conus
+"Springfield, MA",US,Massachusetts,42.10148,-72.58981,154341,conus
+"Jackson, MS",US,Mississippi,32.29876,-90.18481,153701,conus
+"Escondido, CA",US,California,33.11921,-117.08642,151038,conus
+"Rockford, IL",US,Illinois,42.27113,-89.094,148278,conus
+"Joliet, IL",US,Illinois,41.52519,-88.0834,147861,conus
+"Savannah, GA",US,Georgia,32.08354,-81.09983,147780,conus
+"Bridgeport, CT",US,Connecticut,41.17923,-73.18945,147629,conus
+"Gainesville, FL",US,Florida,29.65163,-82.32483,145214,conus
+"Syracuse, NY",US,New York,43.04812,-76.14742,144142,conus
+"Surprise, AZ",US,Arizona,33.63059,-112.33322,143148,conus
+"Columbia, SC",US,South Carolina,34.00071,-81.03481,142416,conus
+"Killeen, TX",US,Texas,31.11712,-97.7278,140806,conus
+"McAllen, TX",US,Texas,26.20341,-98.23001,140269,conus
+"Dayton, OH",US,Ohio,39.75895,-84.19161,135512,conus
+"Olathe, KS",US,Kansas,38.8814,-94.81913,134305,conus
+"Charleston, SC",US,South Carolina,32.77632,-79.93275,132609,conus
+"Midland, TX",US,Texas,31.99735,-102.07791,132524,conus
+"Waco, TX",US,Texas,31.54933,-97.14667,132356,conus
+"Sterling Heights, MI",US,Michigan,42.58031,-83.0302,132052,conus
+"Denton, TX",US,Texas,33.21484,-97.13307,131044,conus
+"Cedar Rapids, IA",US,Iowa,42.00833,-91.64407,130405,conus
+"New Haven, CT",US,Connecticut,41.30815,-72.92816,130322,conus
+"Roseville, CA",US,California,38.75212,-121.28801,130269,conus
+"Visalia, CA",US,California,36.33023,-119.29206,130104,conus
+"Thousand Oaks, CA",US,California,34.17056,-118.83759,129339,conus
+"Columbia, MO",US,Missouri,38.95171,-92.33407,129330,conus
+"Stamford, CT",US,Connecticut,41.05343,-73.53873,128874,conus
+"Concord, CA",US,California,37.97798,-122.03107,128667,conus
+"Norman, OK",US,Oklahoma,35.22257,-97.43948,128026,conus
+"Athens, GA",US,Georgia,33.96095,-83.37794,127315,conus
+"Topeka, KS",US,Kansas,39.04833,-95.67804,125963,conus
+"Abilene, TX",US,Texas,32.44874,-99.73314,125182,conus
+"Victorville, CA",US,California,34.53611,-117.29116,122225,conus
+"Lafayette, LA",US,Louisiana,30.22409,-92.01984,121374,conus
+"Chico, CA",US,California,39.72849,-121.83748,121345,conus
+"Hartford, CT",US,Connecticut,41.76371,-72.68509,121054,conus
+"West Palm Beach, FL",US,Florida,26.71534,-80.05337,120932,conus
+"Allentown, PA",US,Pennsylvania,40.60843,-75.49018,120207,conus
+"Evansville, IN",US,Indiana,37.97476,-87.55585,119943,conus
+"Palm Bay, FL",US,Florida,28.03446,-80.58866,119760,conus
+"Fargo, ND",US,North Dakota,46.87719,-96.7898,118523,conus
+"Billings, MT",US,Montana,45.78329,-108.50069,117116,conus
+"Ann Arbor, MI",US,Michigan,42.27756,-83.74088,117070,conus
+"Round Rock, TX",US,Texas,30.50826,-97.6789,115997,conus
+"Wilmington, NC",US,North Carolina,34.23556,-77.94604,115933,conus
+"Beaumont, TX",US,Texas,30.08605,-94.10185,115282,conus
+"Provo, UT",US,Utah,40.23384,-111.65853,115162,conus
+"Peoria, IL",US,Illinois,40.69365,-89.58899,115070,conus
+"Odessa, TX",US,Texas,31.84568,-102.36764,114428,conus
+"Springfield, IL",US,Illinois,39.80172,-89.64371,114394,conus
+"Fairfield, CA",US,California,38.24936,-122.03997,112970,conus
+"Lansing, MI",US,Michigan,42.73253,-84.55553,112644,conus
+"Rochester, MN",US,Minnesota,44.02163,-92.4699,112225,conus
+"Elgin, IL",US,Illinois,42.03725,-88.28119,112111,conus
+"Tuscaloosa, AL",US,Alabama,33.20984,-87.56917,111338,conus
+"Lowell, MA",US,Massachusetts,42.63342,-71.31617,110699,conus
+"Manchester, NH",US,New Hampshire,42.99564,-71.45479,110229,conus
+"Temecula, CA",US,California,33.49364,-117.14836,110003,conus
+"Pueblo, CO",US,Colorado,38.25445,-104.60914,109412,conus
+"Waterbury, CT",US,Connecticut,41.55815,-73.0515,108802,conus
+"Greeley, CO",US,Colorado,40.42331,-104.70913,108795,conus
+"West Covina, CA",US,California,34.06862,-117.93895,108484,conus
+"Everett, WA",US,Washington,47.97898,-122.20208,108010,conus
+"College Station, TX",US,Texas,30.62798,-96.33441,107889,conus
+"South Fulton, GA",US,Georgia,33.59259,-84.67294,107436,conus
+"Boulder, CO",US,Colorado,40.01499,-105.27055,106803,conus
+"Green Bay, WI",US,Wisconsin,44.51916,-88.01983,105207,conus
+"Santa Maria, CA",US,California,34.95303,-120.43572,105093,conus
+"Wichita Falls, TX",US,Texas,33.91371,-98.49339,104710,conus
+"Lakeland, FL",US,Florida,28.03947,-81.9498,104401,conus
+"Tyler, TX",US,Texas,32.35126,-95.30106,103700,conus
+"Davenport, IA",US,Iowa,41.52364,-90.57764,102582,conus
+"Edison, NJ",US,New Jersey,40.51872,-74.4121,102548,conus
+"Las Cruces, NM",US,New Mexico,32.31232,-106.77834,101643,conus
+"South Bend, IN",US,Indiana,41.68338,-86.25001,101516,conus
+"Albany, NY",US,New York,42.65258,-73.75623,101228,conus
+"New Bedford, MA",US,Massachusetts,41.63526,-70.92701,101079,conus
+"Roanoke, VA",US,Virginia,37.27097,-79.94143,100011,conus
+"San Angelo, TX",US,Texas,31.46377,-100.43704,99893,conus
+"Kenosha, WI",US,Wisconsin,42.58474,-87.82119,99858,conus
+"Erie, PA",US,Pennsylvania,42.12922,-80.08506,99475,conus
+"Spring Hill, FL",US,Florida,28.47688,-82.52546,98621,conus
+"Flint, MI",US,Michigan,43.01253,-83.68746,98310,conus
+"Lawton, OK",US,Oklahoma,34.60869,-98.39033,96655,conus
+"Yuma, AZ",US,Arizona,32.72532,-114.6244,95548,conus
+"Asheville, NC",US,North Carolina,35.60095,-82.55402,95056,conus
+"Yakima, WA",US,Washington,46.60207,-120.5059,93701,conus
+"Santa Barbara, CA",US,California,34.42083,-119.69819,91842,conus
+"Redding, CA",US,California,40.58654,-122.39168,91582,conus
+"Macon, GA",US,Georgia,32.84069,-83.6324,91351,conus
+"Greenville, NC",US,North Carolina,35.61266,-77.36635,90597,conus
+"Toms River, NJ",US,New Jersey,39.95373,-74.19792,88791,conus
+"Fort Smith, AR",US,Arkansas,35.38592,-94.39855,88194,conus
+"Reading, PA",US,Pennsylvania,40.33565,-75.92687,87879,conus
+"Indio, CA",US,California,33.7207,-116.21677,87533,conus
+"Santa Fe, NM",US,New Mexico,35.68698,-105.9378,87505,conus
+"Bend, OR",US,Oregon,44.05817,-121.31531,87014,conus
+"Duluth, MN",US,Minnesota,46.78327,-92.10658,86110,conus
+"Champaign, IL",US,Illinois,40.11642,-88.24338,86096,conus
+"Ogden, UT",US,Utah,41.223,-111.97383,85444,conus
+"Bellingham, WA",US,Washington,48.75955,-122.48822,85146,conus
+"O'Fallon, MO",US,Missouri,38.81061,-90.69985,85040,conus
+"Bloomington, IN",US,Indiana,39.16533,-86.52639,84067,conus
+"Palm Coast, FL",US,Florida,29.58497,-81.20784,82893,conus
+"Fayetteville, AR",US,Arkansas,36.06258,-94.15743,82830,conus
+"Sioux City, IA",US,Iowa,42.49999,-96.40031,82821,conus
+"Merced, CA",US,California,37.30216,-120.48297,82436,conus
+"Longview, TX",US,Texas,32.5007,-94.74049,82287,conus
+"Lynchburg, VA",US,Virginia,37.41375,-79.14225,79812,conus
+"Medford, OR",US,Oregon,42.32652,-122.87559,79805,conus
+"Bloomington, IL",US,Illinois,40.4842,-88.99369,78292,conus
+"Scranton, PA",US,Pennsylvania,41.40916,-75.6649,77118,conus
+"Saint Joseph, MO",US,Missouri,39.76861,-94.84663,76780,conus
+"Lake Charles, LA",US,Louisiana,30.21309,-93.2044,76070,conus
+"Kalamazoo, MI",US,Michigan,42.29171,-85.58723,76041,conus
+"Bismarck, ND",US,North Dakota,46.80833,-100.78374,75092,conus
+"Albany, GA",US,Georgia,31.57851,-84.15574,74843,conus
+"Jonesboro, AR",US,Arkansas,35.8423,-90.70428,73907,conus
+"Rapid City, SD",US,South Dakota,44.08054,-103.23101,73569,conus
+"Decatur, IL",US,Illinois,39.84031,-88.9548,73254,conus
+"Saint George, UT",US,Utah,37.10415,-113.58412,72897,conus
+"Daytona Beach, FL",US,Florida,29.21081,-81.02283,72647,conus
+"Gulfport, MS",US,Mississippi,30.36742,-89.09282,71856,conus
+"Lafayette, IN",US,Indiana,40.4167,-86.87529,71111,conus
+"Missoula, MT",US,Montana,46.87215,-113.994,71022,conus
+"New Braunfels, TX",US,Texas,29.703,-98.12445,70543,conus
+"Flagstaff, AZ",US,Arizona,35.19807,-111.65127,70320,conus
+"Muncie, IN",US,Indiana,40.19338,-85.38636,70087,conus
+"Frederick, MD",US,Maryland,39.41427,-77.41054,69479,conus
+"Dothan, AL",US,Alabama,31.22323,-85.39049,68567,conus
+"Waterloo, IA",US,Iowa,42.49276,-92.34296,68460,conus
+"Eau Claire, WI",US,Wisconsin,44.81135,-91.49849,67778,conus
+"Victoria, TX",US,Texas,28.80527,-97.0036,67574,conus
+"Jacksonville, NC",US,North Carolina,34.75405,-77.43024,67357,conus
+"Jackson, TN",US,Tennessee,35.61452,-88.81395,66975,conus
+"Yuba City, CA",US,California,39.14045,-121.61691,66941,conus
+"Portland, ME",US,Maine,43.65737,-70.2589,66881,conus
+"Oshkosh, WI",US,Wisconsin,44.02471,-88.54261,66555,conus
+"Johnson City, TN",US,Tennessee,36.31344,-82.35347,66027,conus
+"Saint Cloud, MN",US,Minnesota,45.5608,-94.16249,65842,conus
+"Cheyenne, WY",US,Wyoming,41.13998,-104.82025,65132,conus
+"Ames, IA",US,Iowa,42.03471,-93.61994,65060,conus
+"Youngstown, OH",US,Ohio,41.09978,-80.64952,64628,conus
+"Greenville, SC",US,South Carolina,34.85262,-82.39401,64579,conus
+"Janesville, WI",US,Wisconsin,42.68279,-89.01872,64123,conus
+"Bowling Green, KY",US,Kentucky,36.99032,-86.4436,63616,conus
+"North Port, FL",US,Florida,27.04422,-82.23593,62345,conus
+"Auburn, AL",US,Alabama,32.60986,-85.48078,62059,conus
+"Utica, NY",US,New York,43.1009,-75.23266,61100,conus
+"Terre Haute, IN",US,Indiana,39.4667,-87.41391,60825,conus
+"Vineland, NJ",US,New Jersey,39.48623,-75.02573,60818,conus
+"Grand Junction, CO",US,Colorado,39.06387,-108.55065,60358,conus
+"Casper, WY",US,Wyoming,42.86663,-106.31308,60285,conus
+"Great Falls, MT",US,Montana,47.50024,-111.30081,59638,conus
+"Lancaster, PA",US,Pennsylvania,40.03788,-76.30551,59339,conus
+"Idaho Falls, ID",US,Idaho,43.46658,-112.03414,59184,conus
+"Dubuque, IA",US,Iowa,42.50056,-90.66457,58799,conus
+"Ocala, FL",US,Florida,29.1872,-82.14009,58218,conus
+"Kokomo, IN",US,Indiana,40.48643,-86.1336,57995,conus
+"Grand Forks, ND",US,North Dakota,47.92526,-97.03285,57011,conus
+"Manhattan, KS",US,Kansas,39.18361,-96.57167,56308,conus
+"Rocky Mount, NC",US,North Carolina,35.93821,-77.79053,55806,conus
+"Corvallis, OR",US,Oregon,44.56457,-123.26204,55780,conus
+"Valdosta, GA",US,Georgia,30.83334,-83.28032,55724,conus
+"Pocatello, ID",US,Idaho,42.8713,-112.44553,54441,conus
+"East Pensacola Heights, FL",US,Florida,30.42881,-87.17997,54104,conus
+"Lake Havasu City, AZ",US,Arizona,34.4839,-114.32245,53553,conus
+"Delano, CA",US,California,35.76884,-119.24705,52733,conus
+"Harrisonburg, VA",US,Virginia,38.44957,-78.86892,52538,conus
+"La Crosse, WI",US,Wisconsin,43.80136,-91.23958,52306,conus
+"Joplin, MO",US,Missouri,37.08423,-94.51328,51818,conus
+"Enid, OK",US,Oklahoma,36.39559,-97.87839,51776,conus
+"Casa Grande, AZ",US,Arizona,32.8795,-111.75735,51460,conus
+"Grand Island, NE",US,Nebraska,40.92501,-98.34201,51440,conus
+"Logan, UT",US,Utah,41.73549,-111.83439,50371,conus
+"Harrisburg, PA",US,Pennsylvania,40.2737,-76.88442,50183,conus
+"Galveston, TX",US,Texas,29.30135,-94.7977,50180,conus
+"Monroe, LA",US,Louisiana,32.50931,-92.1193,49598,conus
+"Minot, ND",US,North Dakota,48.23251,-101.29627,49450,conus
+"Saginaw, MI",US,Michigan,43.41947,-83.95081,49347,conus
+"Coeur d'Alene, ID",US,Idaho,47.67768,-116.78047,49122,conus
+"Stillwater, OK",US,Oklahoma,36.11561,-97.05837,48967,conus
+"Sheboygan, WI",US,Wisconsin,43.75083,-87.71453,48797,conus
+"Roswell, NM",US,New Mexico,33.39437,-104.52491,48544,conus
+"Newark, OH",US,Ohio,40.05812,-82.40126,47986,conus
+"Alexandria, LA",US,Louisiana,31.31129,-92.44514,47889,conus
+"Barnstable, MA",US,Massachusetts,41.70011,-70.29947,47821,conus
+"Salina, KS",US,Kansas,38.84028,-97.61142,47813,conus
+"Twin Falls, ID",US,Idaho,42.56297,-114.46087,47468,conus
+"Charleston, WV",US,West Virginia,38.34982,-81.63262,46838,conus
+"Mansfield, OH",US,Ohio,40.75839,-82.51545,46830,conus
+"Hattiesburg, MS",US,Mississippi,31.32712,-89.29034,46805,conus
+"Columbus, IN",US,Indiana,39.20144,-85.92138,46690,conus
+"Charlottesville, VA",US,Virginia,38.02931,-78.47668,46597,conus
+"Binghamton, NY",US,New York,42.09869,-75.91797,46032,conus
+"Titusville, FL",US,Florida,28.61222,-80.80755,45393,conus
+"Altoona, PA",US,Pennsylvania,40.51868,-78.39474,45344,conus
+"Pine Bluff, AR",US,Arkansas,34.22843,-92.0032,44772,conus
+"El Centro, CA",US,California,32.792,-115.56305,43956,conus
+"Augusta, GA",US,Georgia,33.47097,-81.97484,43459,conus
+"Bozeman, MT",US,Montana,45.67965,-111.03856,43405,conus
+"Sierra Vista, AZ",US,Arizona,31.55454,-110.30369,43355,conus
+"Pittsfield, MA",US,Massachusetts,42.45008,-73.24538,43303,conus
+"Farmington, NM",US,New Mexico,36.72806,-108.21869,42871,conus
+"Burlington, VT",US,Vermont,44.47588,-73.21207,42452,conus
+"Prescott Valley, AZ",US,Arizona,34.61002,-112.31572,42197,conus
+"State College, PA",US,Pennsylvania,40.79339,-77.86,42161,conus
+"Danville, VA",US,Virginia,36.58597,-79.39502,42082,conus
+"Hutchinson, KS",US,Kansas,38.06084,-97.92977,41569,conus
+"Findlay, OH",US,Ohio,41.04422,-83.64993,41149,conus
+"Mankato, MN",US,Minnesota,44.15906,-94.00915,41044,conus
+"Huntsville, TX",US,Texas,30.72353,-95.55078,40938,conus
+"Sumter, SC",US,South Carolina,33.92044,-80.34147,40816,conus
+"Quincy, IL",US,Illinois,39.9356,-91.40987,40780,conus
+"Sherman, TX",US,Texas,33.63566,-96.60888,40667,conus
+"Hickory, NC",US,North Carolina,35.73319,-81.3412,40374,conus
+"Florence, AL",US,Alabama,34.79981,-87.67725,40026,conus
+"Norwich, CT",US,Connecticut,41.52426,-72.07591,39899,conus
+"Meridian, MS",US,Mississippi,32.36431,-88.70366,39661,conus
+"Clovis, NM",US,New Mexico,34.4048,-103.20523,39480,conus
+"Cape Girardeau, MO",US,Missouri,37.30588,-89.51815,39462,conus
+"Bullhead City, AZ",US,Arizona,35.14778,-114.5683,39445,conus
+"Dover, DE",US,Delaware,39.15817,-75.52437,39403,conus
+"Atlantic City, NJ",US,New Jersey,39.36415,-74.42306,39260,conus
+"Wausau, WI",US,Wisconsin,44.95914,-89.63012,39094,conus
+"Gainesville, GA",US,Georgia,34.29788,-83.82407,38712,conus
+"Muskogee, OK",US,Oklahoma,35.74788,-95.36969,38456,conus
+"Hobbs, NM",US,New Mexico,32.70261,-103.13604,38416,conus
+"Muskegon, MI",US,Michigan,43.23418,-86.24839,38401,conus
+"Panama City, FL",US,Florida,30.15946,-85.65983,38286,conus
+"Florence, SC",US,South Carolina,34.19543,-79.76256,38228,conus
+"Lima, OH",US,Ohio,40.74255,-84.10523,37873,conus
+"Texarkana, TX",US,Texas,33.42513,-94.04769,37280,conus
+"Longview, WA",US,Washington,46.13817,-122.93817,36848,conus
+"Columbia, TN",US,Tennessee,35.61507,-87.03528,36800,conus
+"Portage, IN",US,Indiana,41.57587,-87.17615,36738,conus
+"Bartlesville, OK",US,Oklahoma,36.74731,-95.98082,36595,conus
+"Pahrump, NV",US,Nevada,36.20829,-115.98391,36441,conus
+"Marion, OH",US,Ohio,40.58867,-83.12852,36363,conus
+"Lufkin, TX",US,Texas,31.33824,-94.7291,36333,conus
+"Rome, GA",US,Georgia,34.25704,-85.16467,36323,conus
+"Lewiston, ME",US,Maine,44.10035,-70.21478,36202,conus
+"Del Rio, TX",US,Texas,29.36273,-100.89676,36153,conus
+"Gadsden, AL",US,Alabama,34.01434,-86.00639,36084,conus
+"Richmond, IN",US,Indiana,39.82894,-84.89024,35854,conus
+"Goldsboro, NC",US,North Carolina,35.38488,-77.99277,35826,conus
+"Linton Hall, VA",US,Virginia,38.75984,-77.57499,35725,conus
+"Tupelo, MS",US,Mississippi,34.25807,-88.70464,35680,conus
+"Hot Springs, AR",US,Arkansas,34.5037,-93.05518,35635,conus
+"Rosenberg, TX",US,Texas,29.55718,-95.80856,35510,conus
+"Houma, LA",US,Louisiana,29.59577,-90.71953,34287,conus
+"Butte, MT",US,Montana,46.00382,-112.53474,34190,conus
+"Salisbury, NC",US,North Carolina,35.67097,-80.47423,34017,conus
+"Newark, DE",US,Delaware,39.68372,-75.74966,33817,conus
+"Wenatchee, WA",US,Washington,47.42346,-120.31035,33636,conus
+"Hinesville, GA",US,Georgia,31.84688,-81.59595,33398,conus
+"Jackson, MI",US,Michigan,42.24587,-84.40135,33133,conus
+"Kearney, NE",US,Nebraska,40.69946,-99.08148,33021,conus
+"Kiryas Joel, NY",US,New York,41.34204,-74.16792,32954,conus
+"Salisbury, MD",US,Maryland,38.36067,-75.59937,32899,conus
+"Pullman, WA",US,Washington,46.73127,-117.17962,32816,conus
+"Gillette, WY",US,Wyoming,44.29109,-105.50222,32649,conus
+"Santa Rosa Beach, FL",US,Florida,30.39603,-86.22883,32459,conus
+"Bangor, ME",US,Maine,44.79884,-68.77265,32391,conus
+"Fairbanks, AK",US,Alaska,64.83778,-147.71639,32325,na
+"Walla Walla, WA",US,Washington,46.06458,-118.34302,32237,conus
+"Laramie, WY",US,Wyoming,41.31137,-105.5911,32158,conus
+"Greenville, MS",US,Mississippi,33.40898,-91.05978,32156,conus
+"Cookeville, TN",US,Tennessee,36.16284,-85.50164,32113,conus
+"Danville, IL",US,Illinois,40.12448,-87.63002,32108,conus
+"Helena, MT",US,Montana,46.59271,-112.03611,32091,conus
+"West Bend, WI",US,Wisconsin,43.42528,-88.18343,31695,conus
+"Juneau, AK",US,Alaska,58.30194,-134.41972,31555,na
+"Shawnee, OK",US,Oklahoma,35.32729,-96.9253,31286,conus
+"Galesburg, IL",US,Illinois,40.94782,-90.37124,31273,conus
+"Myrtle Beach, SC",US,South Carolina,33.68906,-78.88669,31035,conus
+"Parkersburg, WV",US,West Virginia,39.26674,-81.56151,30991,conus
+"Banning, CA",US,California,33.92557,-116.87641,30945,conus
+"Dover, NH",US,New Hampshire,43.19786,-70.87367,30880,conus
+"Ithaca, NY",US,New York,42.44063,-76.49661,30788,conus
+"Alamogordo, NM",US,New Mexico,32.89953,-105.96027,30753,conus
+"Statesboro, GA",US,Georgia,32.44879,-81.78317,30721,conus
+"Morgantown, WV",US,West Virginia,39.62953,-79.9559,30708,conus
+"Cedar City, UT",US,Utah,37.67748,-113.06189,30184,conus
+"Jamestown, NY",US,New York,42.097,-79.23533,30075,conus
+"New Bern, NC",US,North Carolina,35.10849,-77.04411,30070,conus
+"Atascadero, CA",US,California,35.48942,-120.67073,29819,conus
+"Elizabethtown, KY",US,Kentucky,37.69395,-85.85913,29678,conus
+"LaGrange, GA",US,Georgia,33.03929,-85.03133,29588,conus
+"Morristown, TN",US,Tennessee,36.21398,-83.29489,29478,conus
+"Port Huron, MI",US,Michigan,42.97086,-82.42491,29330,conus
+"Williamsport, PA",US,Pennsylvania,41.24119,-77.00108,29201,conus
+"Russellville, AR",US,Arkansas,35.27842,-93.13379,29166,conus
+"Sanford, NC",US,North Carolina,35.47988,-79.1803,29144,conus
+"Carlsbad, NM",US,New Mexico,32.42067,-104.22884,28957,conus
+"Kingman, AZ",US,Arizona,35.18944,-114.05301,28912,conus
+"Big Spring, TX",US,Texas,32.2504,-101.47874,28862,conus
+"Ridgecrest, CA",US,California,35.62246,-117.6709,28780,conus
+"Eagle Pass, TX",US,Texas,28.70914,-100.49952,28765,conus
+"Elmira, NY",US,New York,42.0898,-76.80773,28213,conus
+"Fredericksburg, VA",US,Virginia,38.30318,-77.46054,28118,conus
+"Aberdeen, SD",US,South Dakota,45.4647,-98.48648,28102,conus
+"Bella Vista, AR",US,Arkansas,36.4807,-94.27134,27999,conus
+"Enterprise, AL",US,Alabama,31.31517,-85.85522,27978,conus
+"Slidell, LA",US,Louisiana,30.27519,-89.78117,27942,conus
+"Dodge City, KS",US,Kansas,37.7528,-100.01708,27912,conus
+"Shirley, NY",US,New York,40.80149,-72.8676,27854,conus
+"Saratoga Springs, NY",US,New York,43.08313,-73.78457,27765,conus
+"Wheeling, WV",US,West Virginia,40.06396,-80.72091,27648,conus
+"Marshalltown, IA",US,Iowa,42.04943,-92.90798,27620,conus
+"Lake Jackson, TX",US,Texas,29.03386,-95.43439,27533,conus
+"Mason City, IA",US,Iowa,43.15357,-93.20104,27366,conus
+"Anderson, SC",US,South Carolina,34.50344,-82.65013,27335,conus
+"Winchester, VA",US,Virginia,39.18566,-78.16333,27284,conus
+"Eureka, CA",US,California,40.80207,-124.16367,27017,conus
+"Garden City, KS",US,Kansas,37.97169,-100.87266,27005,conus
+"Williston, ND",US,North Dakota,48.14697,-103.61797,26977,conus
+"Watertown, NY",US,New York,43.97478,-75.91076,26780,conus
+"Wooster, OH",US,Ohio,40.80517,-81.93646,26749,conus
+"Kankakee, IL",US,Illinois,41.12003,-87.86115,26676,conus
+"Stevens Point, WI",US,Wisconsin,44.52358,-89.57456,26604,conus
+"Greenville, TX",US,Texas,33.13845,-96.11081,26515,conus
+"Fremont, NE",US,Nebraska,41.43333,-96.49808,26474,conus
+"Carbondale, IL",US,Illinois,37.72727,-89.21675,26399,conus
+"Kingsville, TX",US,Texas,27.51587,-97.85611,26225,conus
+"Clinton, IA",US,Iowa,41.84447,-90.18874,26064,conus
+"Mount Pleasant, MI",US,Michigan,43.59781,-84.76751,26060,conus
+"Twentynine Palms, CA",US,California,34.13556,-116.05417,26025,conus
+"Key West, FL",US,Florida,24.55524,-81.78163,25755,conus
+"Owatonna, MN",US,Minnesota,44.08385,-93.22604,25725,conus
+"Canton, GA",US,Georgia,34.23676,-84.49076,25469,conus
+"Burlington, IA",US,Iowa,40.80754,-91.11292,25410,conus
+"Starkville, MS",US,Mississippi,33.45049,-88.81961,25366,conus
+"Sandusky, OH",US,Ohio,41.44894,-82.70796,25212,conus
+"Ardmore, OK",US,Oklahoma,34.17426,-97.14363,25176,conus
+"Athens, OH",US,Ohio,39.32924,-82.10126,25044,conus
+"Paducah, KY",US,Kentucky,37.08339,-88.60005,24864,conus
+"Paris, TX",US,Texas,33.66094,-95.55551,24782,conus
+"Emporia, KS",US,Kansas,38.4039,-96.18166,24649,conus
+"Ottumwa, IA",US,Iowa,41.02001,-92.4113,24624,conus
+"Norfolk, NE",US,Nebraska,42.02834,-97.417,24366,conus
+"Searcy, AR",US,Arkansas,35.25064,-91.73625,24196,conus
+"North Platte, NE",US,Nebraska,41.12389,-100.76542,24194,conus
+"Rock Springs, WY",US,Wyoming,41.58746,-109.2029,23962,conus
+"Corsicana, TX",US,Texas,32.09543,-96.46887,23952,conus
+"Dickinson, ND",US,North Dakota,46.87918,-102.78962,23765,conus
+"Brookings, SD",US,South Dakota,44.31136,-96.79839,23657,conus
+"Gallup, NM",US,New Mexico,35.52808,-108.74258,23240,conus
+"Kerrville, TX",US,Texas,30.04743,-99.14032,23136,conus
+"Oxford, MS",US,Mississippi,34.3665,-89.51925,22314,conus
+"Roseburg, OR",US,Oregon,43.2165,-123.34174,22114,conus
+"Moses Lake, WA",US,Washington,47.13014,-119.27808,22082,conus
+"Kalispell, MT",US,Montana,48.19579,-114.31291,22052,conus
+"Sedalia, MO",US,Missouri,38.70446,-93.22826,21516,conus
+"Klamath Falls, OR",US,Oregon,42.22487,-121.78167,21399,conus
+"Marquette, MI",US,Michigan,46.54354,-87.39542,21297,conus
+"Conda, ID",US,Idaho,42.72825,-111.53245,21260,conus
+"Hays, KS",US,Kansas,38.87918,-99.32677,21092,conus
+"Liberal, KS",US,Kansas,37.04308,-100.921,20746,conus
+"Elko, NV",US,Nevada,40.83242,-115.76312,20279,conus
+"Stephenville, TX",US,Texas,32.2207,-98.20226,20120,conus
+"Rolla, MO",US,Missouri,37.95143,-91.77127,20019,conus
+"Willmar, MN",US,Minnesota,45.12191,-95.04334,19638,conus
+"Port Angeles, WA",US,Washington,48.11815,-123.43074,19448,conus
+"Altus, OK",US,Oklahoma,34.63813,-99.33398,19214,conus
+"Blythe, CA",US,California,33.6103,-114.59635,19208,conus
+"Montrose, CO",US,Colorado,38.47832,-107.87617,19062,conus
+"Brownwood, TX",US,Texas,31.70932,-98.99116,19031,conus
+"El Dorado, AR",US,Arkansas,33.20763,-92.66627,18386,conus
+"Natchitoches, LA",US,Louisiana,31.76072,-93.08627,18365,conus
+"McAlester, OK",US,Oklahoma,34.93343,-95.76971,18310,conus
+"Farmington, MO",US,Missouri,37.78088,-90.42179,18181,conus
+"Pampa, TX",US,Texas,35.53616,-100.95987,18177,conus
+"Vincennes, IN",US,Indiana,38.67727,-87.52863,18012,conus
+"Sheridan, WY",US,Wyoming,44.79719,-106.95618,17873,conus
+"Kirksville, MO",US,Missouri,40.19475,-92.58325,17520,conus
+"Poplar Bluff, MO",US,Missouri,36.757,-90.39289,17266,conus
+"Clarksdale, MS",US,Mississippi,34.20011,-90.57093,16847,conus
+"Douglas, AZ",US,Arizona,31.34455,-109.54534,16592,conus
+"Coalinga, CA",US,California,36.13968,-120.36015,16564,conus
+"Uvalde, TX",US,Texas,29.20968,-99.78617,16476,conus
+"Aberdeen, WA",US,Washington,46.97537,-123.81572,16276,conus
+"Hibbing, MN",US,Minnesota,47.42715,-92.93769,16204,conus
+"Dublin, GA",US,Georgia,32.54044,-82.90375,16197,conus
+"Brunswick, GA",US,Georgia,31.15013,-81.49147,16157,conus
+"Mount Pleasant, TX",US,Texas,33.15679,-94.96827,16051,conus
+"Ukiah, CA",US,California,39.15017,-123.20778,15917,conus
+"Rutland, VT",US,Vermont,43.61062,-72.97261,15824,conus
+"Great Bend, KS",US,Kansas,38.36446,-98.76481,15717,conus
+"Mitchell, SD",US,South Dakota,43.70943,-98.0298,15669,conus
+"Greenwood, MS",US,Mississippi,33.51623,-90.17953,15431,conus
+"Jamestown, ND",US,North Dakota,46.91054,-98.70844,15422,conus
+"Payson, AZ",US,Arizona,34.23087,-111.32514,15345,conus
+"The Dalles, OR",US,Oregon,45.59456,-121.17868,15340,conus
+"Susanville, CA",US,California,40.41628,-120.65301,15247,conus
+"Traverse City, MI",US,Michigan,44.76306,-85.62063,15218,conus
+"Natchez, MS",US,Mississippi,31.56017,-91.40329,15128,conus
+"Corinth, MS",US,Mississippi,34.93425,-88.52227,14866,conus
+"Scottsbluff, NE",US,Nebraska,41.86663,-103.66717,14802,conus
+"Lebanon, MO",US,Missouri,37.6806,-92.66379,14688,conus
+"Bemidji, MN",US,Minnesota,47.47356,-94.88028,14594,conus
+"Yankton, SD",US,South Dakota,42.87111,-97.39728,14557,conus
+"Deming, NM",US,New Mexico,32.2687,-107.75864,14522,conus
+"Sterling, CO",US,Colorado,40.62554,-103.20771,14104,conus
+"Pierre, SD",US,South Dakota,44.36832,-100.35097,14091,conus
+"Waycross, GA",US,Georgia,31.21368,-82.3557,14053,conus
+"Sault Ste. Marie, MI",US,Michigan,46.4953,-84.34532,13827,conus
+"Athens, TN",US,Tennessee,35.44285,-84.59299,13688,conus
+"Marshall, MN",US,Minnesota,44.4469,-95.78835,13652,conus
+"Brainerd, MN",US,Minnesota,46.35802,-94.20083,13371,conus
+"Fergus Falls, MN",US,Minnesota,46.28302,-96.07756,13281,conus
+"Beeville, TX",US,Texas,28.40095,-97.74974,13277,conus
+"Harrison, AR",US,Arkansas,36.22979,-93.10768,13138,conus
+"Worthington, MN",US,Minnesota,43.61996,-95.5964,13090,conus
+"La Grande, OR",US,Oregon,45.32458,-118.08772,13074,conus
+"Saint Marys, PA",US,Pennsylvania,41.42784,-78.56086,13070,conus
+"Woodward, OK",US,Oklahoma,36.43365,-99.39039,12993,conus
+"Elk City, OK",US,Oklahoma,35.41199,-99.40426,12717,conus
+"McComb, MS",US,Mississippi,31.24379,-90.45315,12661,conus
+"Centralia, IL",US,Illinois,38.52505,-89.1334,12655,conus
+"Effingham, IL",US,Illinois,39.12004,-88.54338,12604,conus
+"Steamboat Springs, CO",US,Colorado,40.48498,-106.83172,12435,conus
+"Escanaba, MI",US,Michigan,45.74525,-87.06458,12334,conus
+"West Plains, MO",US,Missouri,36.72812,-91.85237,12285,conus
+"Evanston, WY",US,Wyoming,41.26828,-110.96324,12133,conus
+"California, MD",US,Maryland,38.3004,-76.50745,11857,conus
+"Somerset, KY",US,Kentucky,37.09202,-84.60411,11439,conus
+"Vernal, UT",US,Utah,40.45552,-109.52875,11200,conus
+"Ontario, OR",US,Oregon,44.02655,-116.96294,10999,conus
+"Martin, TN",US,Tennessee,36.3434,-88.85034,10959,conus
+"Storm Lake, IA",US,Iowa,42.64109,-95.20972,10910,conus
+"Ogdensburg, NY",US,New York,44.69423,-75.48634,10883,conus
+"Riverton, WY",US,Wyoming,43.02496,-108.3801,10873,conus
+"Show Low, AZ",US,Arizona,34.25421,-110.02983,10860,conus
+"Jackson, WY",US,Wyoming,43.47993,-110.76243,10523,conus
+"Sebring, FL",US,Florida,27.49559,-81.44091,10497,conus
+"Key Largo, FL",US,Florida,25.08652,-80.44728,10433,conus
+"Bluefield, WV",US,West Virginia,37.26984,-81.22232,10323,conus
+"Edwards, CO",US,Colorado,39.64499,-106.5942,10266,conus
+"Roma, TX",US,Texas,26.40526,-99.01581,10223,conus
+"Alpena, MI",US,Michigan,45.06168,-83.43275,10175,conus
+"Oil City, PA",US,Pennsylvania,41.43395,-79.70644,10137,conus
+"Pearsall, TX",US,Texas,28.89219,-99.09503,9980,conus
+"Peru, IL",US,Illinois,41.32753,-89.12897,9952,conus
+"Havre, MT",US,Montana,48.55,-109.68409,9834,conus
+"Alamosa, CO",US,Colorado,37.46945,-105.87002,9819,conus
+"Cody, WY",US,Wyoming,44.52634,-109.05653,9792,conus
+"Safford, AZ",US,Arizona,32.83395,-109.70758,9683,conus
+"Winslow, AZ",US,Arizona,35.02419,-110.69736,9600,conus
+"Rifle, CO",US,Colorado,39.5347,-107.78312,9563,conus
+"Pecos, TX",US,Texas,31.42291,-103.49323,9517,conus
+"Chillicothe, MO",US,Missouri,39.79529,-93.55244,9487,conus
+"Berlin, NH",US,New Hampshire,44.46867,-71.18508,9367,conus
+"Chanute, KS",US,Kansas,37.67921,-95.4572,9252,conus
+"Grants, NM",US,New Mexico,35.1476,-107.85261,9239,conus
+"Rockingham, NC",US,North Carolina,34.93932,-79.77395,9220,conus
+"Presque Isle, ME",US,Maine,46.68115,-68.01586,9171,conus
+"Rawlins, WY",US,Wyoming,41.79107,-107.23866,9040,conus
+"Fort Polk South, LA",US,Louisiana,31.0511,-93.21578,9038,conus
+"Fitzgerald, GA",US,Georgia,31.71491,-83.25265,9013,conus
+"Graham, TX",US,Texas,33.10706,-98.5895,8865,conus
+"Sitka, AK",US,Alaska,57.05315,-135.33088,8863,na
+"Fort Irwin, CA",US,California,35.26275,-116.68475,8845,conus
+"Maysville, KY",US,Kentucky,38.64119,-83.74437,8819,conus
+"Miles City, MT",US,Montana,46.40834,-105.84056,8796,conus
+"Socorro, NM",US,New Mexico,34.0584,-106.89142,8722,conus
+"Cortez, CO",US,Colorado,37.34888,-108.58593,8715,conus
+"Frostburg, MD",US,Maryland,39.65814,-78.92836,8667,conus
+"Florence, OR",US,Oregon,43.98262,-124.09984,8649,conus
+"Fort Stockton, TX",US,Texas,30.89404,-102.87932,8649,conus
+"Tuba City, AZ",US,Arizona,36.13499,-111.23986,8611,conus
+"Fallon, NV",US,Nevada,39.47353,-118.77737,8458,conus
+"Rice Lake, WI",US,Wisconsin,45.50607,-91.73823,8391,conus
+"Price, UT",US,Utah,39.59941,-110.81071,8378,conus
+"Dalhart, TX",US,Texas,36.05948,-102.51325,8370,conus
+"Hornell, NY",US,New York,42.32785,-77.6611,8336,conus
+"Nevada, MO",US,Missouri,37.83921,-94.35467,8253,conus
+"Ketchikan, AK",US,Alaska,55.3418,-131.64757,8197,na
+"Trinidad, CO",US,Colorado,37.16946,-104.50054,8153,conus
+"Hailey, ID",US,Idaho,43.51963,-114.31532,8134,conus
+"Ludington, MI",US,Michigan,43.95528,-86.45258,8058,conus
+"Ashland, WI",US,Wisconsin,46.59244,-90.8838,8040,conus
+"Mammoth Lakes, CA",US,California,37.64855,-118.97208,7946,conus
+"Winnemucca, NV",US,Nevada,40.97296,-117.73568,7887,conus
+"Richfield, UT",US,Utah,38.77247,-112.08409,7592,conus
+"Lamar, CO",US,Colorado,38.08723,-102.62075,7555,conus
+"Devils Lake, ND",US,North Dakota,48.11278,-98.86512,7351,conus
+"Bethel, AK",US,Alaska,60.79222,-161.75583,6450,na
+"Kodiak, AK",US,Alaska,57.78852,-152.40533,6253,na
+"International Falls, MN",US,Minnesota,48.60105,-93.41098,6158,conus
+"Lewistown, MT",US,Montana,47.06247,-109.42824,5874,conus
+"Chadron, NE",US,Nebraska,42.82942,-102.99991,5775,conus
+"Homer, AK",US,Alaska,59.6425,-151.5494,5515,na
+"Colby, KS",US,Kansas,39.39584,-101.05238,5417,conus
+"Omak, WA",US,Washington,48.41099,-119.52755,4854,conus
+"Unalaska, AK",US,Alaska,53.87413,-166.53408,4491,na
+"Utqiagvik, AK",US,Alaska,71.29058,-156.78872,4384,na
+"West Wendover, NV",US,Nevada,40.7391,-114.07335,4294,conus
+"Ely, NV",US,Nevada,39.24744,-114.88863,4134,conus
+"Presidio, TX",US,Texas,29.56074,-104.37215,3904,conus
+"Valdez, AK",US,Alaska,61.13083,-146.34833,3870,na
+"Nome, AK",US,Alaska,64.50111,-165.40639,3806,na
+"Mobridge, SD",US,South Dakota,45.53722,-100.42791,3466,conus
+"Glasgow, MT",US,Montana,48.19696,-106.63671,3414,conus
+"Kotzebue, AK",US,Alaska,66.89846,-162.59809,3277,na
+"Grangeville, ID",US,Idaho,45.92655,-116.12237,3155,conus
+"Salmon, ID",US,Idaho,45.17575,-113.8959,3036,conus
+"Cut Bank, MT",US,Montana,48.63304,-112.32616,3002,conus
+"Calais, ME",US,Maine,45.18376,-67.27662,2980,conus
+"Petersburg, AK",US,Alaska,56.8125,-132.95556,2948,na
+"Valentine, NE",US,Nebraska,42.87278,-100.55097,2836,conus
+"Seward, AK",US,Alaska,60.10426,-149.4435,2790,na
+"Burns, OR",US,Oregon,43.58626,-119.0541,2757,conus
+"Roseau, MN",US,Minnesota,48.84609,-95.76277,2715,conus
+"Santa Rosa, NM",US,New Mexico,34.93867,-104.68249,2675,conus
+"Tonopah, NV",US,Nevada,38.06716,-117.23008,2478,conus
+"Dillingham, AK",US,Alaska,59.03972,-158.4575,2404,na
+"Gold Beach, OR",US,Oregon,42.40733,-124.42177,2279,conus
+"Deltana, AK",US,Alaska,63.87217,-145.21773,2251,na
+"Prudhoe Bay, AK",US,Alaska,70.25528,-148.33722,2174,na
+"Van Horn, TX",US,Texas,31.04029,-104.83073,1928,conus
+"Many Farms, AZ",US,Arizona,36.35278,-109.61789,1348,conus
+"Grand Marais, MN",US,Minnesota,47.75045,-90.33427,1327,conus
+"Ontonagon, MI",US,Michigan,46.87105,-89.31403,1324,conus
+"Buxton, NC",US,North Carolina,35.26768,-75.54237,1273,conus
+"Tok, AK",US,Alaska,63.33667,-142.98556,1258,na
+"Atkinson, NE",US,Nebraska,42.53139,-98.97815,1241,conus
+"Skagway, AK",US,Alaska,59.45833,-135.31389,1240,na
+"Hooper Bay, AK",US,Alaska,61.53111,-166.09667,1187,na
+"Alamo, NV",US,Nevada,37.36496,-115.16446,1080,conus
+"Sand Point, AK",US,Alaska,55.33597,-160.50071,1064,na
+"Healy, AK",US,Alaska,63.85694,-148.96611,1021,na
+"Mexico City, Mexico City, MX",MX,Mexico City,19.42847,-99.12766,12294193,na
+"Toronto, Ontario, CA",CA,Ontario,43.70643,-79.39864,2794356,na
+"Tijuana, Baja California, MX",MX,Baja California,32.5027,-117.00371,1922523,na
+"Montréal, Quebec, CA",CA,Quebec,45.50884,-73.58781,1762949,na
+"Puebla, Puebla, MX",MX,Puebla,19.04778,-98.20723,1692181,na
+"Santiago de Querétaro, Querétaro, MX",MX,Querétaro,20.58806,-100.38806,1594212,na
+"León de los Aldama, Guanajuato, MX",MX,Guanajuato,21.12908,-101.67374,1579803,na
+"Ciudad Juárez, Chihuahua, MX",MX,Chihuahua,31.72024,-106.46084,1512450,na
+"Zapopan, Jalisco, MX",MX,Jalisco,20.72111,-103.38742,1476491,na
+"Calgary, Alberta, CA",CA,Alberta,51.05011,-114.08529,1306784,na
+"Mérida, Yucatán, MX",MX,Yucatán,20.967,-89.62318,1201000,na
+"Monterrey, Nuevo León, MX",MX,Nuevo León,25.68435,-100.31721,1135512,na
+"Mexicali, Baja California, MX",MX,Baja California,32.62781,-115.45446,1032686,na
+"Ottawa, Ontario, CA",CA,Ontario,45.41117,-75.69812,1017449,na
+"Edmonton, Alberta, CA",CA,Alberta,53.55014,-113.46871,1010899,na
+"Chihuahua, Chihuahua, MX",MX,Chihuahua,28.63528,-106.08889,925762,na
+"Cancún, Quintana Roo, MX",MX,Quintana Roo,21.17429,-86.84656,888797,na
+"Hermosillo, Sonora, MX",MX,Sonora,29.08874,-110.96677,812229,na
+"Culiacán, Sinaloa, MX",MX,Sinaloa,24.80209,-107.39421,808416,na
+"Winnipeg, Manitoba, CA",CA,Manitoba,49.8844,-97.14704,749607,na
+"Morelia, Michoacán, MX",MX,Michoacán,19.70078,-101.18443,743275,na
+"Torreón, Coahuila, MX",MX,Coahuila,25.54389,-103.41898,735340,na
+"San Luis Potosí, San Luis Potosí, MX",MX,San Luis Potosí,22.15234,-100.97135,722772,na
+"Aguascalientes, Aguascalientes, MX",MX,Aguascalientes,21.88262,-102.2843,722250,na
+"Saltillo, Coahuila, MX",MX,Coahuila,25.42595,-100.97963,709671,na
+"Vancouver, British Columbia, CA",CA,British Columbia,49.24966,-123.11934,662248,na
+"Acapulco de Juárez, Guerrero, MX",MX,Guerrero,16.84942,-99.90891,658609,na
+"Tuxtla, Chiapas, MX",MX,Chiapas,16.75357,-93.11578,604147,na
+"Reynosa, Tamaulipas, MX",MX,Tamaulipas,26.08005,-98.28456,589466,na
+"Hamilton, Ontario, CA",CA,Ontario,43.25011,-79.84963,569353,na
+"Québec, Quebec, CA",CA,Quebec,46.81228,-71.21454,531902,na
+"Victoria de Durango, Durango, MX",MX,Durango,24.02032,-104.65756,518709,na
+"Heroica Matamoros, Tamaulipas, MX",MX,Tamaulipas,25.87972,-97.50417,510739,na
+"Toluca, México, MX",MX,México,19.28786,-99.65324,489333,na
+"Halifax, Nova Scotia, CA",CA,Nova Scotia,44.64269,-63.57688,471559,na
+"Ensenada, Baja California, MX",MX,Baja California,31.87149,-116.60071,443807,na
+"Veracruz, Veracruz, MX",MX,Veracruz,19.18095,-96.1429,428323,na
+"Xalapa de Enríquez, Veracruz, MX",MX,Veracruz,19.53124,-96.91589,424755,na
+"London, Ontario, CA",CA,Ontario,42.98339,-81.23304,422324,na
+"Nuevo Laredo, Tamaulipas, MX",MX,Tamaulipas,27.47629,-99.51639,416055,na
+"Mazatlán, Sinaloa, MX",MX,Sinaloa,23.22163,-106.41885,381583,na
+"Irapuato, Guanajuato, MX",MX,Guanajuato,20.67675,-101.35628,380941,na
+"Tapachula, Chiapas, MX",MX,Chiapas,14.90541,-92.25891,353706,na
+"Villahermosa, Tabasco, MX",MX,Tabasco,17.98625,-92.93928,353577,na
+"Celaya, Guanajuato, MX",MX,Guanajuato,20.52353,-100.8157,340387,na
+"Cuernavaca, Morelos, MX",MX,Morelos,18.9261,-99.23075,338650,na
+"Tepic, Nayarit, MX",MX,Nayarit,21.50733,-104.89332,332863,na
+"Ciudad Victoria, Tamaulipas, MX",MX,Tamaulipas,23.74061,-99.14364,332100,na
+"Ciudad Obregón, Sonora, MX",MX,Sonora,27.48642,-109.94079,329404,na
+"Coatzacoalcos, Veracruz, MX",MX,Veracruz,18.14905,-94.4447,310698,na
+"Tampico, Tamaulipas, MX",MX,Tamaulipas,22.28519,-97.87777,309003,na
+"Uruapan, Michoacán, MX",MX,Michoacán,19.41116,-102.05644,299523,na
+"Victoria, British Columbia, CA",CA,British Columbia,48.4359,-123.35155,289625,na
+"Zumpango, México, MX",MX,México,19.7967,-99.09946,280455,na
+"Saskatoon, Saskatchewan, CA",CA,Saskatchewan,52.13238,-106.66892,266141,na
+"Nogales, Sonora, MX",MX,Sonora,31.30862,-110.94217,264782,na
+"Kitchener, Ontario, CA",CA,Ontario,43.42537,-80.5112,256885,na
+"Los Mochis, Sinaloa, MX",MX,Sinaloa,25.79097,-108.99825,256613,na
+"Pachuca de Soto, Hidalgo, MX",MX,Hidalgo,20.11697,-98.73329,256584,na
+"Oaxaca, Oaxaca, MX",MX,Oaxaca,17.06025,-96.72544,255029,na
+"La Paz, Baja California Sur, MX",MX,Baja California Sur,24.14231,-110.31316,250141,na
+"Windsor, Ontario, CA",CA,Ontario,42.30008,-83.01654,229660,na
+"Regina, Saskatchewan, CA",CA,Saskatchewan,50.45008,-104.6178,226404,na
+"Campeche, Campeche, MX",MX,Campeche,19.84073,-90.51676,220389,na
+"Ciudad Acuña, Coahuila, MX",MX,Coahuila,29.32322,-100.95217,216099,na
+"Monclova, Coahuila, MX",MX,Coahuila,26.90687,-101.42056,215271,na
+"Cabo San Lucas, Baja California Sur, MX",MX,Baja California Sur,22.89088,-109.91238,202694,na
+"Ciudad Lázaro Cárdenas, Michoacán, MX",MX,Michoacán,17.97066,-102.22124,196003,na
+"Ciudad del Carmen, Campeche, MX",MX,Campeche,18.64592,-91.82991,191238,na
+"Poza Rica de Hidalgo, Veracruz, MX",MX,Veracruz,20.53315,-97.45946,185242,na
+"Chetumal, Quintana Roo, MX",MX,Quintana Roo,18.51957,-88.30397,169028,na
+"Comitán, Chiapas, MX",MX,Chiapas,16.24004,-92.13668,166178,na
+"Greater Sudbury, Ontario, CA",CA,Ontario,46.49,-80.99001,166004,na
+"Manzanillo, Colima, MX",MX,Colima,19.11695,-104.34214,159853,na
+"Tuxtepec, Oaxaca, MX",MX,Oaxaca,18.0883,-96.12535,159452,na
+"Saguenay, Quebec, CA",CA,Quebec,48.41675,-71.06573,148886,na
+"Kelowna, British Columbia, CA",CA,British Columbia,49.88307,-119.48568,144576,na
+"Trois-Rivières, Quebec, CA",CA,Quebec,46.34515,-72.5477,144472,na
+"Fresnillo, Zacatecas, MX",MX,Zacatecas,23.1749,-102.86785,143281,na
+"Kingston, Ontario, CA",CA,Ontario,44.22976,-76.48098,132485,na
+"Sherbrooke, Quebec, CA",CA,Quebec,45.40008,-71.89908,129447,na
+"Ciudad Valles, San Luis Potosí, MX",MX,San Luis Potosí,21.99631,-99.01093,124644,na
+"Ciudad Guzmán, Jalisco, MX",MX,Jalisco,19.70413,-103.46383,111975,na
+"St. John's, Newfoundland and Labrador, CA",CA,Newfoundland and Labrador,47.56494,-52.70931,110525,na
+"Thunder Bay, Ontario, CA",CA,Ontario,48.38202,-89.25018,108843,na
+"Sydney, Nova Scotia, CA",CA,Nova Scotia,46.1351,-60.1831,105968,na
+"Parral, Chihuahua, MX",MX,Chihuahua,26.93022,-105.6664,104836,na
+"Lethbridge, Alberta, CA",CA,Alberta,49.69999,-112.81856,103197,na
+"Red Deer, Alberta, CA",CA,Alberta,52.26682,-113.802,100844,na
+"Juchitán de Zaragoza, Oaxaca, MX",MX,Oaxaca,16.43603,-95.01975,88280,na
+"Moncton, New Brunswick, CA",CA,New Brunswick,46.09454,-64.7965,86106,na
+"Prince George, British Columbia, CA",CA,British Columbia,53.9166,-122.75301,78943,na
+"Matehuala, San Luis Potosí, MX",MX,San Luis Potosí,23.64824,-100.64334,77328,na
+"Agua Prieta, Sonora, MX",MX,Sonora,31.3224,-109.54251,77254,na
+"Sault Ste. Marie, Ontario, CA",CA,Ontario,46.51677,-84.33325,72051,na
+"Saint John, New Brunswick, CA",CA,New Brunswick,45.27076,-66.05616,71808,na
+"Grande Prairie, Alberta, CA",CA,Alberta,55.16667,-118.80271,70385,na
+"Linares, Nuevo León, MX",MX,Nuevo León,24.85798,-99.56768,70378,na
+"Fort McMurray, Alberta, CA",CA,Alberta,56.72676,-111.38103,66573,na
+"Medicine Hat, Alberta, CA",CA,Alberta,50.03928,-110.67661,63138,na
+"Puerto Peñasco, Sonora, MX",MX,Sonora,31.31716,-113.53799,62689,na
+"Heroica Caborca, Sonora, MX",MX,Sonora,30.71833,-112.15837,59922,na
+"Nuevo Casas Grandes, Chihuahua, MX",MX,Chihuahua,30.41552,-107.91166,55553,na
+"Ciudad de Huajuapan de León, Oaxaca, MX",MX,Oaxaca,17.80787,-97.77956,53043,na
+"North Bay, Ontario, CA",CA,Ontario,46.3168,-79.46633,50396,na
+"Pijijiapan, Chiapas, MX",MX,Chiapas,15.68618,-93.20938,50079,na
+"Valladolid, Yucatán, MX",MX,Yucatán,20.68812,-88.19936,48973,na
+"Brandon, Manitoba, CA",CA,Manitoba,49.84692,-99.95306,48859,na
+"Palenque, Chiapas, MX",MX,Chiapas,17.50914,-91.98125,42947,na
+"Rimouski, Quebec, CA",CA,Quebec,48.44879,-68.52396,42240,na
+"Timmins, Ontario, CA",CA,Ontario,48.46686,-81.33312,41788,na
+"Ciudad Constitución, Baja California Sur, MX",MX,Baja California Sur,25.0321,-111.66256,40935,na
+"Huejutla de Reyes, Hidalgo, MX",MX,Hidalgo,21.14,-98.41944,40015,na
+"Lloydminster, Alberta, CA",CA,Alberta,53.27237,-110.02256,31582,na
+"Sept-Îles, Quebec, CA",CA,Quebec,50.20011,-66.38208,28534,na
+"Whitehorse, Yukon, CA",CA,Yukon,60.71611,-135.05375,28201,na
+"Val-d'Or, Quebec, CA",CA,Quebec,48.0974,-77.79737,25541,na
+"Yellowknife, Northwest Territories, CA",CA,Northwest Territories,62.45411,-114.37248,20340,na
+"Terrace, British Columbia, CA",CA,British Columbia,54.51634,-128.60345,19443,na
+"Corner Brook, Newfoundland and Labrador, CA",CA,Newfoundland and Labrador,48.95001,-57.95202,18693,na
+"Thompson, Manitoba, CA",CA,Manitoba,55.7435,-97.85579,13678,na
+"Guerrero Negro, Baja California Sur, MX",MX,Baja California Sur,27.96005,-114.05589,13054,na
+"Hanceville, British Columbia, CA",CA,British Columbia,51.91922,-123.04458,10000,na
+"Dryden, Ontario, CA",CA,Ontario,49.78334,-92.75032,8195,na
+"Chandler, Quebec, CA",CA,Quebec,48.34935,-64.67926,7914,na
+"Happy Valley-Goose Bay, Newfoundland and Labrador, CA",CA,Newfoundland and Labrador,53.3038,-60.32576,7572,na
+"Chibougamau, Quebec, CA",CA,Quebec,49.91684,-74.36586,7563,na
+"Iqaluit, Nunavut, CA",CA,Nunavut,63.74697,-68.51727,7429,na
+"Labrador City, Newfoundland and Labrador, CA",CA,Newfoundland and Labrador,52.94626,-66.91137,7220,na
+"Flin Flon, Manitoba, CA",CA,Manitoba,54.76703,-101.87433,5865,na
+"La Ronge, Saskatchewan, CA",CA,Saskatchewan,55.10013,-105.28422,5671,na
+"Creston, British Columbia, CA",CA,British Columbia,49.09987,-116.50211,5583,na

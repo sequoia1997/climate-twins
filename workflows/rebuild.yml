@@ -1,0 +1,162 @@
+# Rebuilds all Climate Twins data from the original sources and opens a pull request with the result and a
+# check report. Runs every year in March (TerraClimate adds the previous year early in the year) and on demand.
+# Nothing goes live until the pull request is merged; merging triggers deploy.yml.
+name: Rebuild data
+on:
+  schedule:
+    - cron: "0 7 15 3 *"
+  workflow_dispatch:
+    inputs:
+      smoke:
+        description: "Quick test run (2 models, 12 places, few years) - opens no pull request"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+concurrency:
+  group: rebuild
+  cancel-in-progress: false
+env:
+  CTW_WORK: ${{ github.workspace }}/work
+  CTW_SMOKE: ${{ inputs.smoke && '1' || '' }}
+  PYTHONUNBUFFERED: "1"
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.p.outputs.models }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - id: p
+        run: echo "models=$(python -m ctw plan | python -c 'import json,sys;print(json.dumps(json.load(sys.stdin)["models"]))')" >> "$GITHUB_OUTPUT"
+
+  cmip6:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        model: ${{ fromJson(needs.plan.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw cmip6 --model "${{ matrix.model }}"
+      - uses: actions/upload-artifact@v4
+        with: { name: "cmip6-${{ matrix.model }}", path: work/cmip6/*.npz, retention-days: 7 }
+
+  terraclimate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        var: [tmax, tmin, ppt, vap]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw terraclimate --var ${{ matrix.var }}
+      - uses: actions/upload-artifact@v4
+        with: { name: "tc-${{ matrix.var }}", path: work/terraclimate/*.npz, retention-days: 7 }
+
+  north-america:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw adaptwest
+      - run: python -m ctw prism
+      - run: python -m ctw gazetteer
+      - uses: actions/upload-artifact@v4
+        with: { name: na-inputs, path: "work/adaptwest.npz\nwork/prism.npz\nwork/gazetteer.json\nwork/downloads/ne_50m_countries.geojson", retention-days: 7 }
+
+  sealevel:
+    # IPCC AR6 projections do not change between assessments: fetched once, then kept in data/sealevel.json.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: "[ -f data/sealevel.json ] || python -m ctw sealevel"
+      - uses: actions/upload-artifact@v4
+        with: { name: sealevel, path: data/sealevel.json, if-no-files-found: ignore, retention-days: 7 }
+
+  analyze:
+    needs: [cmip6, terraclimate, north-america, sealevel]
+    if: ${{ !cancelled() && needs.cmip6.result == 'success' && needs.terraclimate.result == 'success' && needs.north-america.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with: { pattern: "cmip6-*", path: work/cmip6, merge-multiple: true }
+      - uses: actions/download-artifact@v4
+        with: { pattern: "tc-*", path: work/terraclimate, merge-multiple: true }
+      - uses: actions/download-artifact@v4
+        with: { name: na-inputs, path: work }
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with: { name: sealevel, path: data }
+      - name: Keep the current release's summary for comparison
+        run: cp site/data/summary.json /tmp/previous_summary.json 2>/dev/null || true
+      - run: python -m ctw analogs
+      - run: python -m ctw export
+      - run: python -m ctw site
+      - name: Check the build
+        id: check
+        run: |
+          prev=""; [ -f /tmp/previous_summary.json ] && prev="--previous /tmp/previous_summary.json"
+          python -m ctw validate $prev
+          echo "status=$(cat site/data/status.txt)" >> "$GITHUB_OUTPUT"
+      - name: Test the page in a browser
+        run: |
+          pip install playwright && python -m playwright install --with-deps chromium
+          python tests/test_page.py site
+      - uses: actions/upload-artifact@v4
+        with: { name: site, path: site, retention-days: 30 }
+      - name: Open a pull request
+        if: ${{ env.CTW_SMOKE == '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(python -c "import json;print(json.load(open('site/data/summary.json'))['data_version'])")
+          b="data-update-$v"
+          git config user.name "climate-twins-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout -b "$b"
+          git add site data/sealevel.json 2>/dev/null || git add site
+          git commit -m "Data update $v (${{ steps.check.outputs.status }})"
+          git push -f origin "$b"
+          label="${{ steps.check.outputs.status }}"
+          gh label create "$label" --force >/dev/null 2>&1 || true
+          gh pr create --title "Data update $v: ${label/routine/routine update}" --body-file site/data/report.md --label "$label" --base main --head "$b" \
+            || gh pr edit "$b" --body-file site/data/report.md
+
+  report-failure:
+    needs: [analyze]
+    if: ${{ failure() || cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create -R "${{ github.repository }}" --title "Data rebuild failed ($(date +%F))" \
+            --body "The yearly rebuild did not finish. Open the run for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. The live site is unchanged."
