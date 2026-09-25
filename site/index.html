@@ -697,7 +697,7 @@ function legend(){const el=document.getElementById("legend");if(!el)return;
     const nshow=map?overviewLimit(map.getZoom()):110;
     const rows=[["dot","Place: tap for details"],["arrow","Arrow to its climate twin"],["dashed","Dashed: only a partial twin"],["ring","Ring: no close twin anywhere"]];
     if(nshow<NT)rows.push(["faint","Faint: smaller places, zoom in"]);
-    el.innerHTML=`<div class="lg-title">Arrow colour: closeness (σ)${info}</div>${bar(4,[0,1,2,3,4])}`+key(rows)+(worldState==="loading"?`<div class="lg-more" style="color:var(--muted)">World cities are still loading.</div>`:"");return;}
+    el.innerHTML=`<div class="lg-title">Arrow colour: closeness (σ)${info}</div>${bar(4,[0,1,2,3,4])}`+key(rows);return;}
   const tt=D.targets[cur.t],selfm=hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60,dsh=cur.sig[cur.best]>=2;
   const rows=[["star",esc(tt.n)]];
   rows.push(selfm?["here","Best match is right here"]:[dsh?"bestd":"best",dsh?"Best match (partial)":"Best match"]);
