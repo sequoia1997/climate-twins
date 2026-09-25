@@ -9,7 +9,7 @@ author_initials = "F. M."
 # Bump the method version when the method changes. The data version is the build date.
 method_version = "10.0"
 # Public address of this repository, shown on the methods page (e.g. "https://github.com/yourname/climate-twins").
-repo_url = ""
+repo_url = "https://github.com/sequoia1997/climate-twins"
 
 [baseline]
 years = [1991, 2020]            # present-day normals; switch to [2001, 2030] once those normals exist
