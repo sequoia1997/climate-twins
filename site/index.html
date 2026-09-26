@@ -542,7 +542,9 @@ function draw(){
       if(S.gsel===i)label(q[3],x,y+20,m.ink,m.halo);});
     const[x,y]=toScr(wrapLon(plon[cur.best],tt.lon),plat[cur.best]);
     ctx.lineCap="round";const dsh=cur.sig[cur.best]>=2,selfm=hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60;
-    if(!selfm){arrow(a,b,x,y,m.acc,3,13,dsh,m.halo,1.3);
+    if(!selfm){const L=Math.hypot(x-a,y-b),gap=10;                                   // stop the tip just outside the match dot and its outline
+    if(L>gap+16)arrow(a,b,x-(x-a)/L*gap,y-(y-b)/L*gap,m.acc,3,13,dsh,m.halo,1.3);
+    else{ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(x,y);ctx.lineWidth=3;ctx.strokeStyle=m.acc;ctx.setLineDash(dsh?[6.6,5.4]:[]);ctx.stroke();ctx.setLineDash([]);}
     ctx.beginPath();ctx.arc(x,y,6.5,0,7);ctx.fillStyle=m.acc;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=m.halo;ctx.stroke();}
     else{ctx.beginPath();ctx.arc(a,b,15,0,7);ctx.lineWidth=2.5;ctx.strokeStyle=RAMP[5];ctx.stroke();}
     star(a,b,9,m.dot,m.halo);
