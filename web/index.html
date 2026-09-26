@@ -963,8 +963,9 @@ function select(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";f
   if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
 function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
-  const tt=D.targets[cur.t],pts=[[tt.lon,tt.lat]];
-  for(const c of [cur.best,...cur.sites])pts.push([wrapLon(plon[c],tt.lon),plat[c]]);   // shortest way round the globe
+  const tt=D.targets[cur.t],pts=[[tt.lon,tt.lat],[wrapLon(plon[cur.best],tt.lon),plat[cur.best]]];   // the arrow, the short way round
+  const reach=Math.max(2*hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best]),400);                  // nearby matches join the frame;
+  for(const c of cur.sites)if(c!==cur.best&&hav(tt.lat,tt.lon,plat[c],plon[c])<=reach)pts.push([wrapLon(plon[c],tt.lon),plat[c]]);  // far ones stay a click away
   const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const mob=wrap.getBoundingClientRect().width<600;
   const pad=mob?{top:64,bottom:56,left:36,right:72}:{top:70,bottom:70,left:60,right:96};   // clear of the buttons and key
   const w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys);
