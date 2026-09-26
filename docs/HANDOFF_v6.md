@@ -10,6 +10,15 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
 - **10.0** (produced by the first *Rebuild data* run): humidity in the matching, climate type, estimated
   hardiness zone and growing season, "already happening", sea level, page loads `data/na.dat` + `data/world.dat`.
 
+## Page changes waiting for 10.0 (in web/index.html)
+- Layout: intro folds into "About this map and σ" after a pick; period/scenario in a compact bar pinned while scrolling;
+  checkboxes under Settings; key facts and matches 2-5 folded; comparison is an at-a-glance table (Temperature,
+  Humidity, Precipitation, Climate type, Hardiness zone) whose rows open to charts. Open folds persist across re-renders.
+- Phones (<=820px): full-screen map, panel as a bottom sheet (peek / half / full; drag or tap the grab bar).
+  Picking a place opens half and scrolls to the answer; the search opens full; map padding follows the sheet.
+- Map: US/World/Reset as one grouped control; best-match arrow stops outside the match dot; key has no loading line.
+- deploy.yml rebuilds site/ from web/ once site/data/summary.json exists, so page edits go live on upload.
+
 ## Method changes in 10.0
 - 16 seasonal measures: tmax, tmin, ppt, dewpoint (DJF MAM JJA SON). Matched: 12 T/P + dewpoint DJF and JJA (K = 14).
   `config.toml [matching] humidity = false` returns to the v9 12-measure method.
