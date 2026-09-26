@@ -21,8 +21,22 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   a hidden panel stays hidden when places are tapped (the bar's title updates). Bottom sheet is portrait-only.
 - Sideways phones and short landscape screens: map beside a 340px panel, compact key, labels hidden, panel scrolls
   to the answer after a pick.
+- Side-by-side layouts (desktop, sideways phones): a caret on the middle of the panel edge hides the panel
+  (map goes full width); a floating mini bar at top centre (place, period/scenario pickers, caret) restores it.
+  Hidden panels stay hidden when places are tapped. Upright phones keep the bottom sheet and its own caret.
 - Map: US/World/Reset as one grouped control; best-match arrow stops outside the match dot; key has no loading line.
 - deploy.yml rebuilds site/ from web/ once site/data/summary.json exists, so page edits go live on upload.
+
+## Place requests (added after 10.0 went live)
+- Page: "Don't see your place? Request it" under the search; a search with no match offers it too. Form posts to
+  /api/request (place, region, note, honeypot `website`, `elapsed` ms).
+- worker/index.js (Cloudflare Worker, assets binding ASSETS, rate limit binding REQUEST_LIMIT 5/min/IP, var
+  GITHUB_REPO, secret DISPATCH_TOKEN) -> GitHub repository_dispatch "city-request". Tests: node worker/test.mjs.
+- city-request.yml -> python -m ctw request (ctw/request.py triage: GeoNames candidates, already-covered check within
+  20 km, grid coverage) -> issue labelled city-request with candidates in a hidden JSON comment.
+- add-place.yml on an OWNER comment "/add [N]" -> python -m ctw add-place -> appends to data/targets.csv or
+  data/world_targets.csv, commits to main, runs rebuild.yml, closes the issue.
+- deploy.yml runs `wrangler secret put DISPATCH_TOKEN` when the repository secret exists.
 
 ## Method changes in 10.0
 - 16 seasonal measures: tmax, tmin, ppt, dewpoint (DJF MAM JJA SON). Matched: 12 T/P + dewpoint DJF and JJA (K = 14).
