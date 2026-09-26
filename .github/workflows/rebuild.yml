@@ -27,13 +27,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       models: ${{ steps.p.outputs.models }}
+      latest: ${{ steps.p.outputs.latest }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - id: p
-        run: echo "models=$(python -m ctw plan | python -c 'import json,sys;print(json.dumps(json.load(sys.stdin)["models"]))')" >> "$GITHUB_OUTPUT"
+        run: |
+          python -m ctw plan > plan.json
+          echo "models=$(python -c 'import json;print(json.dumps(json.load(open("plan.json"))["models"]))')" >> "$GITHUB_OUTPUT"
+          echo "latest=$(python -c 'import json;print(json.load(open("plan.json"))["latest_year"])')" >> "$GITHUB_OUTPUT"
 
   cmip6:
     needs: plan
@@ -54,10 +58,14 @@ jobs:
         with: { name: "cmip6-${{ matrix.model }}", path: work/cmip6/*.npz, retention-days: 7 }
 
   terraclimate:
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 240
+    env:
+      CTW_TC_LATEST: ${{ needs.plan.outputs.latest }}
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         var: [tmax, tmin, ppt, vap]
     steps:
@@ -81,7 +89,14 @@ jobs:
       - run: python -m ctw prism
       - run: python -m ctw gazetteer
       - uses: actions/upload-artifact@v4
-        with: { name: na-inputs, path: "work/adaptwest.npz\nwork/prism.npz\nwork/gazetteer.json\nwork/downloads/ne_50m_countries.geojson", retention-days: 7 }
+        with:
+          name: na-inputs
+          retention-days: 7
+          path: |
+            work/adaptwest.npz
+            work/prism.npz
+            work/gazetteer.json
+            work/downloads/ne_50m_countries.geojson
 
   sealevel:
     # IPCC AR6 projections do not change between assessments: fetched once, then kept in data/sealevel.json.
