@@ -13,6 +13,8 @@ def main(argv=None):
     sub.add_parser("analogs"); sub.add_parser("export")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
     sub.add_parser("site"); sub.add_parser("watch")
+    sub.add_parser("request", help="check a place request (PLACE, REGION, NOTE from the environment)")
+    sub.add_parser("add-place", help="add a requested place (BODY = issue text, CMD = the /add comment)")
     a = sub.add_parser("all", help="every step in order, locally (slow; for testing)")
     args = p.parse_args(argv)
     cfg = C.config()
@@ -41,6 +43,12 @@ def main(argv=None):
         from . import validate; sys.exit(validate.run(cfg, args.previous))
     elif args.step == "site":
         from . import site; site.run(cfg)
+    elif args.step == "request":
+        import os
+        from . import request; sys.exit(request.triage(os.environ.get("PLACE", ""), os.environ.get("REGION", ""), os.environ.get("NOTE", ""), cfg))
+    elif args.step == "add-place":
+        import os
+        from . import request; sys.exit(request.add(os.environ.get("BODY", ""), os.environ.get("CMD", ""), cfg))
     elif args.step == "watch":
         from . import watch; sys.exit(watch.run(cfg))
     elif args.step == "all":
