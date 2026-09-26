@@ -16,6 +16,11 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   Humidity, Precipitation, Climate type, Hardiness zone) whose rows open to charts. Open folds persist across re-renders.
 - Phones (<=820px): full-screen map, panel as a bottom sheet (peek / half / full; drag or tap the grab bar).
   Picking a place opens half and scrolls to the answer; the search opens full; map padding follows the sheet.
+- Phone sheet v2: sticky header (grab bar, place name, period/scenario pickers, caret) is the drag zone; content
+  scrolls vertically only; page locked. States hidden (64px bar) / peek / half / full; the caret hides and restores;
+  a hidden panel stays hidden when places are tapped (the bar's title updates). Bottom sheet is portrait-only.
+- Sideways phones and short landscape screens: map beside a 340px panel, compact key, labels hidden, panel scrolls
+  to the answer after a pick.
 - Map: US/World/Reset as one grouped control; best-match arrow stops outside the match dot; key has no loading line.
 - deploy.yml rebuilds site/ from web/ once site/data/summary.json exists, so page edits go live on upload.
 
