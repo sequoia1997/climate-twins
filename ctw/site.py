@@ -29,12 +29,16 @@ def run(cfg=None):
     assert not left, f"unfilled methods placeholders: {left}"
     (C.SITE / "methods.html").write_text(m)
     manifest = {"data_version": S["data_version"], "method_version": S["method_version"], "recent_years": S["recent_years"]}
+    old = C.SITE / "data" / "manifest.json"
+    if old.exists():                                               # a page-only rebuild keeps the recorded versions
+        manifest = {**json.load(open(old)), **manifest}
     try:
         vers = {}
         for mm in C.models(cfg):
             z = C.load(C.work("cmip6", f"{mm['name']}.npz"))
             vers.update(json.loads(str(z["versions"])))
-        manifest["cmip6_versions"] = vers
+        if vers:
+            manifest["cmip6_versions"] = vers
     except Exception:  # noqa: BLE001
         pass
     json.dump(manifest, open(C.SITE / "data" / "manifest.json", "w"), indent=1)
