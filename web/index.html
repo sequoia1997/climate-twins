@@ -4,18 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Climate twins: where is your city's future climate today?</title>
-<meta name="description" content="Find the place that already has your town's 2050 or 2100 climate. An interactive map of climate twins for over 1,600 places across North America and the world.">
+<meta name="description" content="An interactive map of climate twins: see where today's climate already matches the projected 2050 or 2100 climate of 1,600+ places worldwide.">
 <link rel="canonical" href="__SITE_URL__/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Climate Twins">
 <meta property="og:title" content="Climate twins: where is your city's future climate today?">
-<meta property="og:description" content="Find the place that already has your town's 2050 or 2100 climate. An interactive map of climate twins for over 1,600 places across North America and the world.">
+<meta property="og:description" content="Find the place that already has your town's 2050 or 2100 climate, for 1,600+ places across North America and the world.">
 <meta property="og:url" content="__SITE_URL__/">
 <meta property="og:image" content="__SITE_URL__/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Dark map of North America with gold arrows running from each city to the place whose climate today matches its projected climate around 2100.">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Climate twins: where is your city's future climate today?">
+<meta name="twitter:description" content="Find the place that already has your town's 2050 or 2100 climate, for 1,600+ places across North America and the world.">
+<meta name="twitter:image" content="__SITE_URL__/og-image.png">
+<meta name="twitter:image:alt" content="Dark map of North America with gold arrows running from each city to the place whose climate today matches its projected climate around 2100.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -262,10 +266,12 @@ aside a:hover{text-decoration-thickness:2px}
   #sidetog{display:grid;place-items:center;position:absolute;z-index:8;top:50%;transform:translateY(-50%);right:calc(var(--aside-w,400px) - 15px);width:30px;height:30px;padding:0;
            border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
   #sidetog:hover{background:var(--chip)}
-  :root.panel-hidden aside,:root.panel-hidden #sidetog{display:none}
+  :root.panel-hidden aside{display:none}
+  :root.panel-hidden #sidetog{right:12px;width:34px;height:34px;box-shadow:0 2px 10px rgba(0,0,0,.25)} :root.panel-hidden #sidetog svg{transform:rotate(180deg)}
+  #sidetog svg{transition:transform .2s}
   :root.panel-hidden #minibar{display:flex}
   #minibar{position:absolute;z-index:4;top:12px;left:50%;transform:translateX(-50%);align-items:center;gap:6px;max-width:calc(100% - 150px);
-           padding:5px 5px 5px 14px;background:var(--panel);border:1px solid var(--rule);border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+           padding:5px 6px 5px 14px;background:var(--panel);border:1px solid var(--rule);border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
   #mb-title{min-width:0;flex:0 1 auto;font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
   #minibar select{flex:none;font:600 .8rem/1.2 var(--font-body);color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:999px;padding:5px 8px}
   #mb-open{flex:none;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);cursor:pointer}
@@ -286,7 +292,6 @@ aside a:hover{text-decoration-thickness:2px}
       <span id="mb-title">Climate twins</span>
       <select class="pk-per" aria-label="Time period"></select>
       <select class="pk-ssp" aria-label="Emissions scenario"></select>
-      <button id="mb-open" type="button" aria-label="Show the panel" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <button id="themebtn" type="button" aria-pressed="false" aria-label="Dark map" title="Dark map"></button>
     <div id="zoom"><button id="zfit" aria-label="Show the United States" title="United States">US</button><button id="zworld" aria-label="Show the whole world" title="World">World</button><button id="zreset" aria-label="Back to the starting view" title="Back to the starting view (Esc)">Reset</button></div>
@@ -696,7 +701,7 @@ function draw(){
     if(cur.glob)cur.glob.sites.forEach((q,i)=>{const[x,y]=toScr(q[1],q[0]);if(x<-20||y<-20||x>W+20||y>H+20)return;const r=S.gsel===i?11:9;
       ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();ctx.fillStyle=S.gsel===i?m.acc:m.halo;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=m.ink;ctx.stroke();
       ctx.fillStyle=S.gsel===i?m.halo:m.ink;ctx.font="700 9px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("W"+(i+1),x,y+.5);
-      if(S.gsel===i)label(q[3],x,y+20,m.ink,m.halo);});
+      if(S.gsel===i)label(`${q[3]}, ${q[4]}`,x,y+20,m.ink,m.halo);});
     const[x,y]=toScr(wrapLon(plon[cur.best],tt.lon),plat[cur.best]);
     ctx.lineCap="round";const dsh=cur.sig[cur.best]>=2,selfm=hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60;
     if(!selfm){const L=Math.hypot(x-a,y-b),gap=10;                                   // stop the tip just outside the match dot and its outline
@@ -705,7 +710,7 @@ function draw(){
     ctx.beginPath();ctx.arc(x,y,6.5,0,7);ctx.fillStyle=m.acc;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=m.halo;ctx.stroke();}
     else{ctx.beginPath();ctx.arc(a,b,15,0,7);ctx.lineWidth=2.5;ctx.strokeStyle=RAMP[5];ctx.stroke();}
     star(a,b,9,m.dot,m.halo);
-    label(tt.n,a,b-(selfm?22:14),m.ink,m.halo);const nn=nearName(cur.best);if(!selfm&&(Math.hypot(x-a,y-b)>45||y>b+20))label(PI?nn.name.replace(/, [^,]+$/,""):nn.name.replace(/, [A-Z.]+( MX)?$/,""),x,y+18,m.ink,m.halo);}
+    label(tt.n,a,b-(selfm?22:14),m.ink,m.halo);const nn=nearName(cur.best);if(!selfm&&(Math.hypot(x-a,y-b)>45||y>b+20))label(nn.name,x,y+18,m.ink,m.halo);}
 }
 function star(x,y,r,f,s){ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;ctx.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}ctx.closePath();ctx.fillStyle=f;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=s;ctx.stroke();}
 function label(t,x,y,f,s){ctx.font="700 13px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle=s;ctx.lineJoin="round";ctx.strokeText(t,x,y);ctx.fillStyle=f;ctx.fillText(t,x,y);}
@@ -904,10 +909,11 @@ function legend(){const el=document.getElementById("legend");if(!el)return;
   el.innerHTML=`<div class="lg-title">How alike to ${esc(tt.n)}, ~${PER().label} (σ)${info}</div>${bar(7,BOUNDS.slice(0,8))}`+key(rows);}
 function refresh(){{const mp=document.getElementById("mper"),ms=document.getElementById("mssp");if(mp){mp.value=S.per;ms.value=S.ssp;}document.querySelectorAll(".pk-per").forEach(x=>x.value=S.per);document.querySelectorAll(".pk-ssp").forEach(x=>x.value=S.ssp);}S.cmp=0;S.gsel=-1;hideTip();compute();panel();legend();updateMapLayers();draw();}
 (()=>{const as=document.querySelector("aside"),bar=()=>document.getElementById("ctlbar");if(as)as.addEventListener("scroll",()=>{const b=bar();if(b)b.classList.toggle("stuck",as.scrollTop>(b.offsetTop-30));},{passive:true});})();
-const SIDE=(()=>{const root=document.documentElement,hide=document.getElementById("sidetog"),show=document.getElementById("mb-open");
-  const set=h=>{root.classList.toggle("panel-hidden",h);hide.setAttribute("aria-expanded",String(!h));show.setAttribute("aria-expanded",String(h));
-    if(typeof map!=="undefined"&&map)requestAnimationFrame(()=>map.resize());(h?show:hide).focus({preventScroll:true});};
-  hide.addEventListener("click",()=>set(true));show.addEventListener("click",()=>set(false));
+const SIDE=(()=>{const root=document.documentElement,btn=document.getElementById("sidetog");
+  const set=h=>{root.classList.toggle("panel-hidden",h);const t=h?"Show the panel":"Hide the panel";
+    btn.setAttribute("aria-expanded",String(!h));btn.setAttribute("aria-label",t);btn.title=t;
+    if(typeof map!=="undefined"&&map)requestAnimationFrame(()=>map.resize());};
+  btn.addEventListener("click",()=>set(!root.classList.contains("panel-hidden")));
   return{set,get hidden(){return root.classList.contains("panel-hidden")}};})();
 const SHEET=(()=>{const mq=matchMedia("(max-width:820px) and (orientation:portrait)"),as=document.querySelector("aside"),hd=document.getElementById("sheethead"),g=document.getElementById("grab"),tog=document.getElementById("sh-tog"),root=document.documentElement;
   let state="peek",last="peek",drag=null;
