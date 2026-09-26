@@ -105,13 +105,14 @@ details.intro{margin:0 0 10px} details.intro[open]>summary{margin-bottom:8px} de
 #ssp-desc{margin:2px 0 4px 64px;color:var(--muted)}
 @media (min-width:821px){#ctlbar{position:sticky;top:-20px;margin:0 -22px;padding:6px 22px;border-bottom:1px solid transparent} #ctlbar.stuck{border-bottom-color:var(--rule);box-shadow:0 4px 8px -6px rgba(0,0,0,.25)}}
 details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{font-weight:700} details.moresites ol.sites{margin-top:4px}
-.glance-h,.topic>summary{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,62px) 12px;align-items:center;column-gap:6px}
+.glance-h,.topic>summary{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,70px) 12px;align-items:center;column-gap:4px}
 .glance-h{font-size:.74rem;color:var(--muted);margin-top:12px;padding-bottom:5px;border-bottom:1.5px solid var(--ink)}
-.glance-h span{text-align:right;white-space:nowrap} .glance-h .sw,.kgl .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--c)}
+.glance-h span{text-align:center;white-space:nowrap} .glance-h .sw,.kgl .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--c)}
 .topic{border-bottom:1px solid var(--rule)} .topic>summary{list-style:none;cursor:pointer;padding:9px 0}
 .topic>summary::-webkit-details-marker{display:none}
 .topic>summary .t{font-weight:650;font-size:.93rem} .topic>summary .t small,.topic>summary .v small{display:block;font-weight:400;color:var(--muted);font-size:.72rem;line-height:1.2}
-.topic>summary .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem}
+.topic>summary .v{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem;min-width:0}
+.topic>summary .v small{white-space:nowrap;font-size:.7rem}
 .topic>summary::after{content:"";width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);justify-self:end;margin-top:-3px;transition:transform .15s}
 .topic[open]>summary::after{transform:rotate(-135deg);margin-top:3px}
 .topic>summary:hover .t{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
