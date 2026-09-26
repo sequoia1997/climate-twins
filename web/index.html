@@ -694,7 +694,7 @@ function recentHTML(place,now){const t=cur.t;if(!HAS10||!recSig[t])return "";con
   const f50=toRaw(ensVec(t,1,S.ens,0));let p=0;for(let i=0;i<8;i++)p+=(f50[i]-now[i]);p/=8;
   const share=p>0.2&&a>0?Math.round(a/p*100):null;
   return `<p class="recent"><strong>Already happening:</strong> ${y[0]}–${y[1]} averaged ${Math.abs(dv).toFixed(1)}°${M?"C":"F"} ${a>=0?"warmer":"cooler"} here than 1991–2020${share!==null&&share<=150?`, about ${share}% of the warming projected by ~2050 under SSP2-4.5`:""}.</p>`;}
-function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v[sc];if(!v)return "";const u=x=>M?x.toFixed(2)+" m":(x*3.281).toFixed(1)+" ft",r=a=>`${u(a[1])} (likely ${u(a[0])}–${u(a[2])})`;
+function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!v["2050"]||!v["2100"]||[...v["2050"],...v["2100"]].some(x=>typeof x!=="number"))return "";const u=x=>M?x.toFixed(2)+" m":(x*3.281).toFixed(1)+" ft",r=a=>`${u(a[1])} (likely ${u(a[0])}–${u(a[2])})`;
   return `<p class="slr"><strong>Sea level:</strong> projected to rise ${r(v["2050"])} by 2050 and ${r(v["2100"])} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away).</p>`;}
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const SN=seasons(lat);
