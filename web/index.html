@@ -121,6 +121,13 @@ details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{
 .topic abbr{text-decoration:none}
 .reqline{margin:6px 0 2px;color:var(--muted)} .reqline.miss{color:var(--ink)}
 #search::-webkit-calendar-picker-indicator{display:none!important;opacity:0}
+.combo{position:relative}
+#plist{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;margin:0;padding:4px 0;list-style:none;max-height:min(340px,45vh);overflow-y:auto;overscroll-behavior:contain;
+       background:var(--panel);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#plist li{padding:7px 12px;cursor:pointer;font-size:.93rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#plist li[aria-selected="true"],#plist li:hover{background:var(--chip)}
+#plist li.cur{font-weight:700} #plist li.none{color:var(--muted);cursor:default} #plist li.none:hover{background:none}
+#plist mark{background:none;color:inherit;font-weight:700;text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:2px}
 #reqdlg{border:1px solid var(--rule);border-radius:14px;background:var(--panel);color:var(--ink);padding:18px 20px;width:min(420px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.3)}
 #reqdlg::backdrop{background:rgba(0,0,0,.35)}
 #reqdlg h2{font-size:1.15rem;margin:0 0 4px} #reqdlg label{display:block;font-size:.88rem;margin:10px 0 0;font-weight:600}
@@ -292,7 +299,7 @@ aside a:hover{text-decoration-thickness:2px}
       <p>Under 1σ, the climates are as alike as two ordinary years at the same place. 1–2σ is a reasonable match, 2–4σ only partial, and over 4σ no real match.</p>
     </div></details>
     <div class="row">
-      <input id="search" list="places" placeholder="Search places, e.g. Raleigh, NC or Lisbon" autocomplete="off" aria-label="Search for a place">
+      <div class="combo"><input id="search" placeholder="Search places, e.g. Raleigh, NC or Lisbon" autocomplete="off" spellcheck="false" aria-label="Search for a place" role="combobox" aria-expanded="false" aria-controls="plist" aria-autocomplete="list"><ul id="plist" role="listbox" aria-label="Places" hidden></ul></div>
       <div class="small" id="wstat" role="status" style="margin-top:4px"></div>
       <p class="small reqline" id="reqline">Don't see your place? <button type="button" class="linkbtn" id="reqopen">Request it</button></p>
       <dialog id="reqdlg" aria-labelledby="reqh">
@@ -631,7 +638,7 @@ function buildLUT(){gridToCell=new Int32Array(D.nx*D.ny).fill(-1);for(let p=0;p<
       if(c>=0&&rr>=0&&c<D.nx&&rr<D.ny)lut[j*W+i]=gridToCell[rr*D.nx+c];}}}
 // ---------- drawing
 function cellXY(c){return[plon[c],plat[c]];}
-function toScr(lon,lat){const p=map.project([lon,lat]);return[p.x,p.y];}
+function toScr(lon,lat){const p=map.project([wrapLon(lon,map.getCenter().lng),lat]);return[p.x,p.y];}
 function sizeOv(){const r=wrap.getBoundingClientRect(),dpr=window.devicePixelRatio||1;ov.width=Math.max(1,Math.round(r.width*dpr));ov.height=Math.max(1,Math.round(r.height*dpr));ov.style.width=r.width+"px";ov.style.height=r.height+"px";}
 function resize(){if(!map)return;map.resize();sizeOv();const r=wrap.getBoundingClientRect();if(r.width>=20&&r.height>=20){if(!fitted)fit();if(pendingFocus&&cur){pendingFocus=false;focusOn();}}draw();}
 let fitted=false,pendingFocus=false;
@@ -926,13 +933,43 @@ async function sendReq(e){e.preventDefault();const f=document.getElementById("re
     if(r.ok&&j.ok){m.className="small ok";m.textContent="Thanks! Your request is in. If the data cover it, it will appear after a data update.";b.textContent="Sent";setTimeout(()=>{document.getElementById("reqdlg").close();b.textContent="Send request";},2600);}
     else{m.className="small err";m.textContent=j.error||"Requests aren't available on this copy of the site.";b.disabled=false;}}
   catch(err){m.className="small err";m.textContent="Couldn't reach the server. Please try again later.";b.disabled=false;}}
+const COMBO=(()=>{let sr,ul,pickFn,items=[],act=-1,ALL=null,justFocused=false,lastQ=null;
+  const fold=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+  const all=()=>{if(!ALL||ALL.length!==D.targets.length)ALL=D.targets.map((t,i)=>({i,n:t.n,f:fold(t.n)})).sort((a,b)=>a.n.localeCompare(b.n));return ALL;};
+  const show=v=>{ul.hidden=!v;sr.setAttribute("aria-expanded",String(v));if(!v){sr.removeAttribute("aria-activedescendant");act=-1;}};
+  const hl=(n,f)=>{if(!f)return esc(n);const k=fold(n).indexOf(f);return k<0?esc(n):esc(n.slice(0,k))+"<mark>"+esc(n.slice(k,k+f.length))+"</mark>"+esc(n.slice(k+f.length));};
+  function render(q){const f=fold(q.trim());lastQ=f;let list=all();
+    if(f){const a=[],b=[];for(const x of list){const k=x.f.indexOf(f);if(k===0||(k>0&&/[\s,(-]/.test(x.f[k-1])))a.push(x);else if(k>0)b.push(x);}list=a.concat(b).slice(0,120);}
+    items=list;ul.innerHTML=items.length?items.map((x,j)=>`<li role="option" id="po${j}" data-i="${x.i}" aria-selected="false"${x.i===S.sel?' class="cur"':''}>${hl(x.n,f)}</li>`).join("")
+      :`<li class="none" role="option" aria-disabled="true">No place called “${esc(q.trim())}” on the map</li>`;
+    show(true);ul.scrollTop=0;}
+  function move(j){if(!items.length)return;act=(j+items.length)%items.length;ul.querySelectorAll('[aria-selected="true"]').forEach(x=>x.setAttribute("aria-selected","false"));
+    const li=document.getElementById("po"+act);li.setAttribute("aria-selected","true");sr.setAttribute("aria-activedescendant",li.id);li.scrollIntoView({block:"nearest"});}
+  function choose(i){show(false);sr.value=D.targets[i].n;reqMiss("");select(i,true);sr.blur();}
+  function init(input,pick){sr=input;ul=document.getElementById("plist");pickFn=pick;
+    sr.addEventListener("focus",()=>{justFocused=true;setTimeout(()=>{sr.setSelectionRange(0,sr.value.length);},0);render("");
+      if(S.sel>=0){const j=items.findIndex(x=>x.i===S.sel);if(j>=0){move(j);const li=document.getElementById("po"+j);ul.scrollTop=Math.max(0,li.offsetTop-ul.clientHeight/2);}}});
+    sr.addEventListener("mouseup",e=>{if(justFocused){e.preventDefault();justFocused=false;}});
+    sr.addEventListener("input",()=>{justFocused=false;render(sr.value);if(sr.value.trim())move(0);});
+    sr.addEventListener("keydown",e=>{
+      if(e.key==="ArrowDown"){e.preventDefault();if(ul.hidden)render(sr.value);move(act+1);}
+      else if(e.key==="ArrowUp"){e.preventDefault();move(act-1);}
+      else if(e.key==="Enter"){e.preventDefault();if(act>=0&&items[act])choose(items[act].i);else{show(false);pickFn();}}
+      else if(e.key==="Escape"){if(!ul.hidden){e.stopPropagation();show(false);}}});
+    ul.addEventListener("pointerdown",e=>{const li=e.target.closest("li[data-i]");if(!li)return;e.preventDefault();choose(+li.dataset.i);});
+    sr.addEventListener("blur",()=>setTimeout(()=>show(false),120));}
+  return{init};})();
 function select(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
   if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
 function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
-  const tt=D.targets[cur.t];const pts=[[tt.lon,tt.lat],...cur.sites.map(c=>[plon[c],plat[c]])];
+  const tt=D.targets[cur.t],pts=[[tt.lon,tt.lat]];
+  for(const c of [cur.best,...cur.sites])pts.push([wrapLon(plon[c],tt.lon),plat[c]]);   // shortest way round the globe
   const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const mob=wrap.getBoundingClientRect().width<600;
-  map.fitBounds([[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)]],{padding:{top:60,bottom:mob?80:60,left:50,right:50},maxZoom:7,duration:RM?0:700});}
+  const pad=mob?{top:64,bottom:56,left:36,right:72}:{top:70,bottom:70,left:60,right:96};   // clear of the buttons and key
+  const w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys);
+  const cx=(Math.max(...xs)+Math.min(...xs))/2,cy=(Math.max(...ys)+Math.min(...ys))/2,mw=Math.max(w,1.2)/2,mh=Math.max(h,0.8)/2;  // a single spot still gets context
+  map.fitBounds([[cx-mw,Math.max(-84,cy-mh)],[cx+mw,Math.min(84,cy+mh)]],{padding:pad,maxZoom:7,duration:RM?0:800});}
 function centerOn(lon,lat){map.easeTo({center:[lon,lat],duration:RM?0:500});}
 // ---------- controls
 function segs(){
@@ -952,7 +989,7 @@ function segs(){
   const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim(),worldState==="loading");};
   reqMiss("");document.getElementById("reqform").addEventListener("submit",sendReq);document.getElementById("reqcancel").onclick=()=>document.getElementById("reqdlg").close();
   sr.addEventListener("input",()=>{if(document.getElementById("reqline").classList.contains("miss"))reqMiss("");});
-  sr.addEventListener("change",pick);sr.addEventListener("keydown",e=>{if(e.key==="Enter")pick();});
+  COMBO.init(sr,pick);
   document.getElementById("zfit").onclick=()=>{fitted=false;fit();};
   document.getElementById("search").addEventListener("focus",()=>{if(SHEET.on)SHEET.set("full");});
   const reset=()=>{hideTip();if(S.sel>=0)select(-1,false);if(location.hash)history.replaceState(null,"",location.pathname+location.search);map.fitBounds([[-124.8,24.4],[-66.9,49.4]],{padding:24,duration:RM?0:700});};
@@ -1053,7 +1090,7 @@ function revealMatch(){if(!cur||!map)return;const tt=D.targets[cur.t],c=cur.best
   const dx=Math.max(lonM-z[0],z[2]-lonM,0.4),dy=Math.max(lat-z[1],z[3]-lat,0.3);
   const cam=map.cameraForBounds([[lonM-dx,Math.max(-84,lat-dy)],[lonM+dx,Math.min(84,lat+dy)]],{padding:m,maxZoom:7});
   map.easeTo({center:[lonM,lat],zoom:cam?cam.zoom:map.getZoom(),duration:RM?0:900});}
-function click(x,y){const t=nearestTarget(x,y,14);if(t>=0){hideTip();select(t,false);revealMatch();return;}
+function click(x,y){const t=nearestTarget(x,y,14);if(t>=0){hideTip();select(t,true);return;}
   const h=tipFor(x,y,0);if(h)setTip(h.html,x,y);else hideTip();}
 function hover(x,y){if(touchMode||dragging)return;const h=tipFor(x,y,10);map.getCanvas().style.cursor=h&&h.t!==undefined?"default":"";
   if(h)setTip(h.html,x,y);else hideTip();}
