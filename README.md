@@ -57,6 +57,24 @@ Nothing reaches the live site until you merge.
 
 The first push deploys the current site (release 9.6) unchanged. The first rebuild produces release 10.
 
+## Place requests
+
+Visitors can ask for a place that isn't on the map ("Don't see your place?" under the search box).
+
+1. The form posts to the Worker (`worker/index.js`), which passes the request to GitHub. Spam guards: a hidden
+   field bots fill in, a minimum time on the form, 5 requests per minute per visitor, length limits.
+2. **Place request** (`city-request.yml`) looks the place up in GeoNames, checks whether it is already on the map
+   and whether the data cover it, and opens an issue labelled `city-request`. You get the usual GitHub notification.
+3. Comment **`/add`** on the issue (or `/add 2` for the second candidate) and **Add requested place**
+   (`add-place.yml`) adds it to the place list, starts **Rebuild data** and closes the issue. Merge the rebuild's
+   pull request and the place is live. To decline, close the issue.
+
+One-time setup: the Worker needs a GitHub token to pass requests on.
+*GitHub → your photo → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new
+token*: repository access **Only select repositories → climate-twins**; repository permission **Contents: Read and
+write** (GitHub requires this for dispatch events); the longest expiry offered. Save it as the repository secret
+`DISPATCH_TOKEN`. Every deploy hands it to the Worker. When it expires, requests fail politely until you make a new one.
+
 ## Running locally
 
 ```

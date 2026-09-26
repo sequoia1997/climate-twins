@@ -1,7 +1,12 @@
 {
-  // The site is served as static files by a Cloudflare Worker. "name" must match the existing Worker so the
-  // address stays https://climate-twins.forest4science.workers.dev
+  // The site is a Cloudflare Worker: files in ./site are served as they are; worker/index.js only handles
+  // POST /api/request (the "Don't see your place?" form). "name" must match the existing Worker so the address
+  // stays https://climate-twins.forest4science.workers.dev
   "name": "climate-twins",
+  "main": "worker/index.js",
   "compatibility_date": "2026-09-01",
-  "assets": { "directory": "./site" }
+  "assets": { "directory": "./site", "binding": "ASSETS" },
+  "vars": { "GITHUB_REPO": "sequoia1997/climate-twins" },
+  // At most 5 place requests per visitor per minute.
+  "ratelimits": [{ "name": "REQUEST_LIMIT", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }]
 }
