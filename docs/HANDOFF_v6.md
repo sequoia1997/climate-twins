@@ -24,6 +24,11 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
 - Side-by-side layouts (desktop, sideways phones): a caret on the middle of the panel edge hides the panel
   (map goes full width); a floating mini bar at top centre (place, period/scenario pickers, caret) restores it.
   Hidden panels stay hidden when places are tapped. Upright phones keep the bottom sheet and its own caret.
+- Search: custom combobox (COMBO) replaces the datalist: focus selects the text and opens an alphabetical list
+  (current place highlighted); typing filters (word-start matches first, 120 max); arrows/Enter/Esc; no-match row.
+- Framing: every pick (search, map tap, link) runs focusOn(): fits place + best + other matches, wrapped the short
+  way round the globe, padded clear of the controls. Scenario/period changes don't move the map.
+- toScr() wraps longitudes to the copy nearest the map centre, so views across the date line show both sides.
 - Map: US/World/Reset as one grouped control; best-match arrow stops outside the match dot; key has no loading line.
 - deploy.yml rebuilds site/ from web/ once site/data/summary.json exists, so page edits go live on upload.
 
