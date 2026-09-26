@@ -13,7 +13,11 @@ def run(cfg=None):
     web = C.ROOT / "web"
     idx = (web / "index.html").read_text()
     assert "__DATA_VERSION__" in idx
-    (C.SITE / "index.html").write_text(idx.replace("__DATA_VERSION__", S["data_version"]))
+    url = cfg["release"].get("site_url", "").rstrip("/")
+    (C.SITE / "index.html").write_text(idx.replace("__DATA_VERSION__", S["data_version"]).replace("__SITE_URL__", url))
+    import shutil
+    for f in (web / "assets").glob("*"):                              # preview image and icons
+        shutil.copy2(f, C.SITE / f.name)
     (C.SITE / "world.dat").unlink(missing_ok=True)              # v9 kept world data beside index.html
     m = (web / "methods.html").read_text()
     fills = {"DATA_VERSION": S["data_version"], "RELEASE": S["method_version"], "RECENT_FIRST": str(S["recent_years"][0]),
@@ -25,6 +29,7 @@ def run(cfg=None):
              "REPO_LINK": (f'<a href="{cfg["release"]["repo_url"]}">{cfg["release"]["repo_url"]}</a>' if cfg["release"].get("repo_url") else "source code in the project repository")}
     for k, v in fills.items():
         m = m.replace("{{" + k + "}}", v)
+    m = m.replace("__SITE_URL__", url)
     left = re.findall(r"\{\{[A-Z_0-9]+\}\}", m)
     assert not left, f"unfilled methods placeholders: {left}"
     (C.SITE / "methods.html").write_text(m)
