@@ -17,13 +17,27 @@ LON = np.linspace(-179.97917, 179.97917, NLON)
 
 
 def latest_year(cfg) -> int:
-    """Latest year whose TerraClimate files exist (TerraClimate publishes whole years)."""
+    """Latest year whose TerraClimate files exist (TerraClimate publishes whole years). The rebuild's plan job
+    asks once and passes the answer on in CTW_TC_LATEST. Server hiccups are retried with growing waits."""
+    import os
+    if os.environ.get("CTW_TC_LATEST"):
+        return int(os.environ["CTW_TC_LATEST"])
     if cfg["recent"]["end"] != "auto":
         return int(cfg["recent"]["end"])
     y = time.gmtime().tm_year
     s = C.http()
     for yy in range(y, y - 4, -1):
-        r = s.head(cfg["sources"]["terraclimate"].format(v="tmax", y=yy), timeout=60, allow_redirects=True)
+        url = cfg["sources"]["terraclimate"].format(v="tmax", y=yy)
+        for attempt in range(8):
+            try:
+                r = s.head(url, timeout=60, allow_redirects=True)
+                break
+            except Exception as e:  # noqa: BLE001 - connection refused, timeouts: wait and try again
+                wait = min(300, 20 * 2 ** attempt)
+                C.log.warning("TerraClimate not answering (%s); retry in %ss", e, wait)
+                time.sleep(wait)
+        else:
+            raise RuntimeError("TerraClimate server unreachable")
         if r.status_code == 200:
             return yy
     raise RuntimeError("no recent TerraClimate year found")
