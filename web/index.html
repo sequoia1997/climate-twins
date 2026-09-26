@@ -175,6 +175,8 @@ aside a:hover{text-decoration-thickness:2px}
   #legend .sw span{min-width:10px;height:7px} #legend .lg-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #attrib{font-size:10px;white-space:nowrap}
   #zoom{right:10px;top:84px}
+}
+@media (max-width:820px) and (orientation:portrait){
   #app{height:100%}
   #mapwrap{position:fixed;inset:0}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
@@ -194,12 +196,32 @@ aside a:hover{text-decoration-thickness:2px}
   #sh-title{flex:1;min-width:0;font-weight:700;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sh-row select{flex:none;font:600 .8rem/1.2 var(--font-body);color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:999px;padding:5px 8px;max-width:9.5em;touch-action:manipulation}
   #sh-tog{flex:none;width:32px;height:32px;border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);display:grid;place-items:center;touch-action:manipulation}
-  aside.full #sh-tog svg{transform:rotate(180deg)}
+  aside:not(.collapsed) #sh-tog svg{transform:rotate(180deg)}
+  #sh-tog svg{transition:transform .2s}
+  aside.collapsed{height:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px));overflow:hidden}
+  aside.collapsed #sheethead{border-bottom-color:transparent;margin-bottom:0}
+  :root.sheet-hidden #legend{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px) + 8px)}
+  :root.sheet-hidden #attrib{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px))}
   #ctlbar{display:none}
   #ssp-desc{margin-left:0}
   aside h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   #legend{bottom:calc(var(--sheet-h,260px) + 8px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
   #attrib{bottom:var(--sheet-h,260px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
+}
+@media (max-width:820px) and (orientation:landscape),(orientation:landscape) and (max-height:520px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  #app{flex-direction:row;height:100%}
+  #mapwrap{flex:1;min-width:0;height:100%}
+  aside{width:min(340px,46vw);flex:none;height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:12px 14px 18px}
+  aside h1{font-size:1.25rem;margin:0 0 4px}
+  #ctlbar{position:sticky;top:-12px;margin:0 -14px;padding:6px 14px;border-bottom:1px solid transparent}
+  #ctlbar.stuck{border-bottom-color:var(--rule)}
+  .ctl>.small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .ctl .seg{width:100%} .ctl .seg button{flex:1;padding:4px 3px;font-size:.74rem} #ssp-desc{margin-left:0}
+  #legend{font-size:11px;padding:4px 7px;left:6px;bottom:18px;max-width:60%;cursor:pointer}
+  #legend .lg-more{display:none;max-width:none} #legend.open .lg-more{display:block} #legend .lg-i{display:inline}
+  #legend .sw span{min-width:10px;height:7px} #legend .lg-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #zoom{top:84px}
 }
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
@@ -223,7 +245,7 @@ aside a:hover{text-decoration-thickness:2px}
         <span id="sh-title">Climate twins</span>
         <select id="mper" aria-label="Time period"></select>
         <select id="mssp" aria-label="Emissions scenario"></select>
-        <button id="sh-tog" type="button" aria-label="Expand the panel"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 9l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button id="sh-tog" type="button" aria-label="Hide the panel" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 9l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
     <h1>Climate twins</h1>
@@ -810,24 +832,29 @@ function legend(){const el=document.getElementById("legend");if(!el)return;
   el.innerHTML=`<div class="lg-title">How alike to ${esc(tt.n)}, ~${PER().label} (σ)${info}</div>${bar(7,BOUNDS.slice(0,8))}`+key(rows);}
 function refresh(){{const mp=document.getElementById("mper"),ms=document.getElementById("mssp");if(mp){mp.value=S.per;ms.value=S.ssp;}}S.cmp=0;S.gsel=-1;hideTip();compute();panel();legend();updateMapLayers();draw();}
 (()=>{const as=document.querySelector("aside"),bar=()=>document.getElementById("ctlbar");if(as)as.addEventListener("scroll",()=>{const b=bar();if(b)b.classList.toggle("stuck",as.scrollTop>(b.offsetTop-30));},{passive:true});})();
-const SHEET=(()=>{const mq=matchMedia("(max-width:820px)"),as=document.querySelector("aside"),hd=document.getElementById("sheethead"),g=document.getElementById("grab"),tog=document.getElementById("sh-tog"),root=document.documentElement;
-  let state="peek",drag=null;
-  const H=()=>{const vh=innerHeight;return{peek:Math.round(Math.min(300,Math.max(230,vh*0.34))),half:Math.round(vh*0.6),full:Math.round(vh-48)};};
+const SHEET=(()=>{const mq=matchMedia("(max-width:820px) and (orientation:portrait)"),as=document.querySelector("aside"),hd=document.getElementById("sheethead"),g=document.getElementById("grab"),tog=document.getElementById("sh-tog"),root=document.documentElement;
+  let state="peek",last="peek",drag=null;
+  const H=()=>{const vh=innerHeight;return{hidden:Math.round(hd.getBoundingClientRect().height)+2,peek:Math.round(Math.min(300,Math.max(230,vh*0.34))),half:Math.round(vh*0.6),full:Math.round(vh-48)};};
   const pad=h=>{if(typeof map!=="undefined"&&map&&map.setPadding)map.setPadding({top:0,left:0,right:0,bottom:mq.matches?h:0});};
-  function set(st){if(!mq.matches)return;state=st;const h=H()[st];root.style.setProperty("--sheet-h",h+"px");pad(h);as.classList.toggle("full",st==="full");
-    g.setAttribute("aria-expanded",String(st!=="peek"));tog.setAttribute("aria-label",st==="full"?"Shrink the panel":"Expand the panel");}
-  const cycle=()=>set(state==="peek"?"half":state==="half"?"full":"peek");
+  function set(st){if(!mq.matches)return;if(st!=="hidden")last=st;state=st;const h=H()[st];root.style.setProperty("--sheet-h",h+"px");pad(h);
+    as.classList.toggle("full",st==="full");as.classList.toggle("collapsed",st==="hidden");root.classList.toggle("sheet-hidden",st==="hidden");
+    if(st==="hidden")as.scrollTop=0;
+    g.setAttribute("aria-expanded",String(st!=="hidden"));tog.setAttribute("aria-label",st==="hidden"?"Show the panel":"Hide the panel");tog.setAttribute("aria-expanded",String(st!=="hidden"));}
+  const cycle=()=>set(state==="hidden"?last:state==="peek"?"half":state==="half"?"full":"peek");
   hd.addEventListener("pointerdown",e=>{if(!mq.matches||e.target.closest("select,#sh-tog"))return;drag={y:e.clientY,h:as.getBoundingClientRect().height,moved:false};as.classList.add("dragging");hd.setPointerCapture(e.pointerId);});
-  hd.addEventListener("pointermove",e=>{if(!drag)return;const dy=drag.y-e.clientY;if(Math.abs(dy)>6)drag.moved=true;if(drag.moved)as.style.height=Math.max(120,Math.min(innerHeight-40,drag.h+dy))+"px";});
+  hd.addEventListener("pointermove",e=>{if(!drag)return;const dy=drag.y-e.clientY;if(Math.abs(dy)>6)drag.moved=true;
+    if(drag.moved){as.classList.remove("collapsed");as.style.height=Math.max(H().hidden,Math.min(innerHeight-40,drag.h+dy))+"px";}});
   const end=()=>{if(!drag)return;const moved=drag.moved,h=as.getBoundingClientRect().height;drag=null;as.classList.remove("dragging");as.style.height="";
     if(!moved){cycle();return;}const s=H();let best="peek";for(const k in s)if(Math.abs(s[k]-h)<Math.abs(s[best]-h))best=k;set(best);};
   hd.addEventListener("pointerup",end);hd.addEventListener("pointercancel",end);
   g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();cycle();}});
-  tog.addEventListener("click",()=>set(state==="full"?"half":"full"));
-  addEventListener("resize",()=>{if(mq.matches)set(state);else{root.style.removeProperty("--sheet-h");pad(0);}});
+  tog.addEventListener("click",()=>set(state==="hidden"?last:"hidden"));
+  const onMode=()=>{if(mq.matches)set(state);else{root.style.removeProperty("--sheet-h");root.classList.remove("sheet-hidden");as.classList.remove("collapsed","full");pad(0);}};
+  addEventListener("resize",onMode);mq.addEventListener("change",onMode);
   const toResult=()=>{const r=document.getElementById("result");if(mq.matches&&r)requestAnimationFrame(()=>as.scrollTo({top:Math.max(0,r.offsetTop-hd.offsetHeight-6),behavior:RM?"auto":"smooth"}));};
   return{set,toResult,get on(){return mq.matches},get state(){return state}};})();
-function select(t,focus){S.sel=t;{const st=document.getElementById("sh-title");if(st)st.textContent=t>=0?D.targets[t].n:"Climate twins";}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(SHEET.on){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
+function select(t,focus){S.sel=t;{const st=document.getElementById("sh-title");if(st)st.textContent=t>=0?D.targets[t].n:"Climate twins";}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
+  if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
 function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
   const tt=D.targets[cur.t];const pts=[[tt.lon,tt.lat],...cur.sites.map(c=>[plon[c],plat[c]])];
