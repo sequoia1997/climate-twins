@@ -1,9 +1,10 @@
-# Publishes site/ to Cloudflare whenever it changes on main (merging a data-update pull request, or editing the page).
+# Publishes the site to Cloudflare whenever the page (web/) or the data (site/) changes on main.
+# Once release-10 data is in place, the page is rebuilt from web/ first, so page edits go live on their own.
 name: Deploy site
 on:
   push:
     branches: [main]
-    paths: ["site/**", "wrangler.jsonc"]
+    paths: ["site/**", "web/**", "wrangler.jsonc"]
   workflow_dispatch:
 jobs:
   deploy:
@@ -11,6 +12,15 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - name: Build the page from web/
+        run: |
+          if [ -f site/data/summary.json ]; then
+            pip install -r requirements.txt && python -m ctw site
+          else
+            echo "No release-10 data yet: publishing site/ as it is."
+          fi
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
