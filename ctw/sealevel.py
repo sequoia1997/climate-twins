@@ -59,18 +59,27 @@ def _run(cfg, dest):
         ld = next(d for d in v.dims if d.startswith("location"))
         if lat is None:
             lat, lon = ds["lat"].values.astype(float), ds["lon"].values.astype(float)
-            near = np.zeros(len(T), int); dist = np.zeros(len(T))
+            cand = {}                                       # place -> projection sites within MAX_KM, nearest first
             for k in range(len(T)):                         # one place at a time keeps memory small
                 dk = C.haversine_km(T.lat.values[k], T.lon.values[k], lat, lon)
-                near[k] = int(dk.argmin()); dist[k] = float(dk[near[k]])
+                idx = np.where(dk <= MAX_KM)[0]
+                if len(idx):
+                    idx = idx[np.argsort(dk[idx])]
+                    cand[k] = (idx, dk[idx])
         scale = 0.001 if str(v.attrs.get("units", "mm")).lower().startswith("mm") else 1.0
         vals = v.sel({qd: list(QUANTS)}, method="nearest").sel({yd: [2050, 2100]}, method="nearest").transpose(qd, yd, ld).values * scale
-        for k in np.where(dist <= MAX_KM)[0]:
-            rec = out.setdefault(T.label[k], {"km": round(float(dist[k]), 1), "loc": [round(float(lat[near[k]]), 3), round(float(lon[near[k]]), 3)], "v": {}})
-            rec["v"][slab] = {"2050": [round(float(x), 2) for x in vals[:, 0, near[k]]],
-                              "2100": [round(float(x), 2) for x in vals[:, 1, near[k]]]}
+        complete = np.isfinite(vals).all((0, 1))           # sites with every percentile for 2050 and 2100
+        for k, (idx, dk) in cand.items():
+            ok = complete[idx]
+            if not ok.any():
+                continue
+            j, d = int(idx[ok][0]), float(dk[ok][0])
+            rec = out.setdefault(T.label[k], {"km": round(d, 1), "loc": [round(float(lat[j]), 3), round(float(lon[j]), 3)], "v": {}})
+            rec["v"][slab] = {"2050": [round(float(x), 2) for x in vals[:, 0, j]],
+                              "2100": [round(float(x), 2) for x in vals[:, 1, j]]}
     if not out:
         raise RuntimeError("no coastal places found; archive layout may have changed")
+    out = {k: v for k, v in out.items() if len(v["v"]) == len(cfg["scenarios"]["ids"])}   # every scenario or none
     json.dump({"source": "IPCC AR6 sea level projections (Garner et al. 2021), medium confidence, relative to 1995-2014",
-               "quantiles": QUANTS, "units": "m", "places": out}, open(dest, "w"), separators=(",", ":"))
+               "quantiles": QUANTS, "units": "m", "places": out}, open(dest, "w"), separators=(",", ":"), allow_nan=False)
     C.log.info("sea level: %d coastal places written to %s", len(out), dest)

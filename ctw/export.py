@@ -30,6 +30,20 @@ class Pack:
         return self.add(np.concatenate([u[:, 0], u[:, 1]]), "i16p")
 
     def write(self, header, path):
+        bad = []
+
+        def clean(x, where):
+            if isinstance(x, float) and not np.isfinite(x):
+                bad.append(where)
+                return None
+            if isinstance(x, dict):
+                return {k: clean(v, f"{where}.{k}") for k, v in x.items()}
+            if isinstance(x, (list, tuple)):
+                return [clean(v, f"{where}[{i}]") for i, v in enumerate(x)]
+            return x
+        header = clean(header, path.name)
+        if bad:
+            C.log.warning("%s: %d missing values written as null, e.g. %s", path.name, len(bad), bad[:8])
         h = json.dumps(header, separators=(",", ":"), allow_nan=False).encode()
         h += b" " * (-len(h) % 4)
         raw = b"CTW2" + len(h).to_bytes(4, "little") + h + b"".join(self.blobs)
@@ -83,7 +97,9 @@ def run(cfg=None):
             rec = dict(n=T.label[k] if g else _na_label(T, k), lat=round(float(T.lat[k]), 4), lon=round(float(T.lon[k]), 4),
                        pop=int(T["pop"][k]), c=T.country[k], icv=str(R["icv_src"][k]), k=int(R["kdef"][k]), g=g)
             if sl and T.label[k] in sl["places"]:
-                rec["sl"] = sl["places"][T.label[k]]
+                r = sl["places"][T.label[k]]
+                if all(isinstance(x, (int, float)) and np.isfinite(x) for v in r["v"].values() for a in v.values() for x in a):
+                    rec["sl"] = r
             pk_rows.append(rec)
         sel = np.array(idx)
         base16 = C.enc(R["base"][sel])
