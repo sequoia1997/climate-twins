@@ -1,0 +1,34 @@
+# A visitor asked for a place via the site's form. Check it against the data and open an issue (which notifies you).
+# Comment "/add" (or "/add 2", ...) on the issue to add it; close the issue to decline.
+name: Place request
+on:
+  repository_dispatch:
+    types: [city-request]
+permissions:
+  contents: read
+  issues: write
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Check the request against the data
+        id: t
+        env:
+          PLACE: ${{ github.event.client_payload.place }}
+          REGION: ${{ github.event.client_payload.region }}
+          NOTE: ${{ github.event.client_payload.note }}
+        run: python -m ctw request
+      - name: Open an issue (or add to an open one for the same place)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.t.outputs.title }}
+          VERDICT: ${{ steps.t.outputs.verdict }}
+        run: |
+          gh label create city-request --color 0E8A16 --description "Place requested from the site" --force >/dev/null 2>&1 || true
+          n=$(gh issue list --label city-request --state open --search "\"$TITLE\" in:title" --json number,title -q ".[] | select(.title==env.TITLE) | .number" | head -1)
+          if [ -n "$n" ]; then gh issue comment "$n" --body "Requested again from the site."
+          else gh issue create --title "$TITLE" --label city-request --body-file request.md; fi

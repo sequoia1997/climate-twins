@@ -1,0 +1,44 @@
+# The owner commented "/add" or "/add N" on a place-request issue: add that place, start a rebuild, close the issue.
+name: Add requested place
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  contents: write
+  issues: write
+  actions: write
+jobs:
+  add:
+    if: >-
+      contains(github.event.issue.labels.*.name, 'city-request') &&
+      startsWith(github.event.comment.body, '/add') &&
+      github.event.comment.author_association == 'OWNER'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Add the place
+        id: add
+        env:
+          BODY: ${{ github.event.issue.body }}
+          CMD: ${{ github.event.comment.body }}
+        run: |
+          if python -m ctw add-place > added.txt 2>err.txt; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+          cat added.txt err.txt
+      - name: Commit, start the rebuild, reply
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ github.event.issue.number }}
+        run: |
+          name=$(tail -1 added.txt)
+          if [ "${{ steps.add.outputs.ok }}" != "true" ]; then
+            gh issue comment "$N" --body "Couldn't add it: ${name:-see the workflow log}."; exit 0; fi
+          git config user.name "climate-twins-bot"; git config user.email "actions@users.noreply.github.com"
+          git add data/targets.csv data/world_targets.csv
+          git commit -m "Add $name (requested in #$N)"
+          git push
+          gh workflow run rebuild.yml
+          gh issue comment "$N" --body "Added **$name**. A data rebuild has started; the place appears on the map when its pull request is merged."
+          gh issue close "$N"
