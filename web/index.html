@@ -119,6 +119,7 @@ details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{
 .topic .tb{padding:2px 0 12px} .kgl{list-style:none;padding:0;margin:4px 0;font-size:.88rem} .kgl li{margin:3px 0}
 .topic abbr{text-decoration:none}
 .reqline{margin:6px 0 2px;color:var(--muted)} .reqline.miss{color:var(--ink)}
+#search::-webkit-calendar-picker-indicator{display:none!important;opacity:0}
 #reqdlg{border:1px solid var(--rule);border-radius:14px;background:var(--panel);color:var(--ink);padding:18px 20px;width:min(420px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.3)}
 #reqdlg::backdrop{background:rgba(0,0,0,.35)}
 #reqdlg h2{font-size:1.15rem;margin:0 0 4px} #reqdlg label{display:block;font-size:.88rem;margin:10px 0 0;font-weight:600}
@@ -907,7 +908,9 @@ const SHEET=(()=>{const mq=matchMedia("(max-width:820px) and (orientation:portra
   const toResult=()=>{const r=document.getElementById("result");if(mq.matches&&r)requestAnimationFrame(()=>as.scrollTo({top:Math.max(0,r.offsetTop-hd.offsetHeight-6),behavior:RM?"auto":"smooth"}));};
   return{set,toResult,get on(){return mq.matches},get state(){return state}};})();
 let reqOpened=0;
-function reqMiss(q){const el=document.getElementById("reqline");if(!el)return;el.classList.toggle("miss",!!q);
+function reqMiss(q,loading){const el=document.getElementById("reqline");if(!el)return;
+  if(q&&loading){el.classList.add("miss");el.textContent="World cities are still loading. Try again in a moment.";return;}
+  el.classList.toggle("miss",!!q);
   el.innerHTML=q?`No place called “${esc(q)}” on the map yet. <button type="button" class="linkbtn" id="reqopen">Request it</button>`:`Don't see your place? <button type="button" class="linkbtn" id="reqopen">Request it</button>`;
   document.getElementById("reqopen").onclick=()=>openReq(q);}
 function openReq(q){const d=document.getElementById("reqdlg"),f=document.getElementById("reqform"),m=document.getElementById("reqmsg");
@@ -945,8 +948,9 @@ function segs(){
   document.getElementById("optAll").onchange=ev=>{S.showAll=ev.target.checked;legend();draw();};
   document.getElementById("optUnits").onchange=ev=>{S.metric=ev.target.checked;panel();};
   document.getElementById("optHot").onchange=ev=>{S.ens=ev.target.checked?"all":"tcr_likely";refresh();};
-  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim());};
+  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim(),worldState==="loading");};
   reqMiss("");document.getElementById("reqform").addEventListener("submit",sendReq);document.getElementById("reqcancel").onclick=()=>document.getElementById("reqdlg").close();
+  sr.addEventListener("input",()=>{if(document.getElementById("reqline").classList.contains("miss"))reqMiss("");});
   sr.addEventListener("change",pick);sr.addEventListener("keydown",e=>{if(e.key==="Enter")pick();});
   document.getElementById("zfit").onclick=()=>{fitted=false;fit();};
   document.getElementById("search").addEventListener("focus",()=>{if(SHEET.on)SHEET.set("full");});
