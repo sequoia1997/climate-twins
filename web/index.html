@@ -238,12 +238,12 @@ aside a:hover{text-decoration-thickness:2px}
   #sh-tog svg{transition:transform .2s}
   aside.collapsed{height:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px));overflow:hidden}
   aside.collapsed #sheethead{border-bottom-color:transparent;margin-bottom:0}
-  :root.sheet-hidden #legend{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px) + 8px)}
+  :root.sheet-hidden #legend{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px) + 30px)}
   :root.sheet-hidden #attrib{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px))}
   #ctlbar{display:none}
   #ssp-desc{margin-left:0}
   aside h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  #legend{bottom:calc(var(--sheet-h,260px) + 8px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
+  #legend{bottom:calc(var(--sheet-h,260px) + 30px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
   #attrib{bottom:var(--sheet-h,260px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
 }
 @media (max-width:820px) and (orientation:landscape),(orientation:landscape) and (max-height:520px){
@@ -256,7 +256,7 @@ aside a:hover{text-decoration-thickness:2px}
   #ctlbar.stuck{border-bottom-color:var(--rule)}
   .ctl>.small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .ctl .seg{width:100%} .ctl .seg button{flex:1;padding:4px 3px;font-size:.74rem} #ssp-desc{margin-left:0}
-  #legend{font-size:11px;padding:4px 7px;left:6px;bottom:18px;max-width:60%;cursor:pointer}
+  #legend{font-size:11px;padding:4px 7px;left:6px;bottom:26px;max-width:60%;cursor:pointer}
   #legend .lg-more{display:none;max-width:none} #legend.open .lg-more{display:block} #legend .lg-i{display:inline}
   #legend .sw span{min-width:10px;height:7px} #legend .lg-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #zoom{top:84px}
