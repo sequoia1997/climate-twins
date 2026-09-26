@@ -42,7 +42,11 @@ def run(cfg=None, previous=None) -> int:
         if not ok:
             problems.append(msg)
     notes.append(f"Recent-climate years: {S['recent_years'][0]}–{S['recent_years'][1]}")
-    notes.append(f"Coastal places with sea-level projections: {S['sealevel_places']}")
+    if S["sealevel_places"]:
+        notes.append(f"Coastal places with sea-level projections: {S['sealevel_places']}")
+    else:
+        notes.append("⚠️ No sea-level projections: the sealevel job did not produce data/sealevel.json. "
+                     "Its log has a line starting 'sea level step failed' with the reason. The page simply omits sea level.")
     if S["cc_fill"]:
         notes.append("Humidity change filled at constant relative humidity (model lacks humidity output): " + ", ".join(S["cc_fill"]))
     if S["unusable"]:
