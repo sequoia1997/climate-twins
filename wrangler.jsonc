@@ -13,7 +13,7 @@
     { "pattern": "www.climatetwins.org", "custom_domain": true }
   ],
   "workers_dev": true,
-  "vars": { "GITHUB_REPO": "sequoia1997/climate-twins", "FEEDBACK_FROM": "feedback@climatetwins.org" },
+  "vars": { "GITHUB_REPO": "sequoia1997/climate-twins", "FEEDBACK_FROM": "feedback@climatetwins.org", "CANONICAL_HOST": "climatetwins.org" },
   // Feedback is emailed to the owner through Cloudflare Email Routing. The owner's address is the secret
   // FEEDBACK_TO (never in this file) and must be a verified destination in Email Routing.
   "send_email": [{ "name": "FEEDBACK_MAIL" }],
