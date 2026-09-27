@@ -12,6 +12,7 @@ jobs:
     environment: production
     env:
       HAS_DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN != '' }}
+      HAS_FEEDBACK_TO: ${{ secrets.FEEDBACK_TO != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,3 +37,10 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
         run: printf '%s' "$DISPATCH_TOKEN" | npx --yes wrangler@4 secret put DISPATCH_TOKEN
+      - name: Give the Worker the feedback address (kept private)
+        if: ${{ env.HAS_FEEDBACK_TO == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          FEEDBACK_TO: ${{ secrets.FEEDBACK_TO }}
+        run: printf '%s' "$FEEDBACK_TO" | npx --yes wrangler@4 secret put FEEDBACK_TO
