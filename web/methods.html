@@ -209,6 +209,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <li><a href="#recent">Already happening</a></li>
     <li><a href="#sealevel">Sea level</a></li>
     <li><a href="#updates">Updates and versions</a></li>
+    <li><a href="#tropics">Why many tropical places have no match</a></li>
     <li><a href="#limits">Limitations</a></li>
     <li><a href="#software">Software</a></li>
     <li><a href="#data">Data and attribution</a></li>
@@ -388,6 +389,22 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <p>The data are rebuilt from the original sources each year by a public, automated pipeline ({{REPO_LINK}}). Each rebuild is checked before release: counts of places, grid cells and models; a self-check that today's climate at each place finds itself (current median {{SELFCHK}}σ); and a comparison with the previous release, flagging for review if more than 10% of best matches move over 500 km or the median change in σ exceeds 0.25. A browser test loads the page with the new data. Nothing is published until the rebuild is reviewed. A monthly check watches for a new TerraClimate year, corrected or withdrawn CMIP6 datasets and the arrival of CMIP7 projections. This page describes method version {{RELEASE}}, data version {{DATA_VERSION}}, using {{N_MODELS}} models.</p>
   </section>
 
+  <section id="tropics">
+    <h2>Why many tropical places have no match</h2>
+    <p>Places near the equator are far more likely to have no present-day match. Around 2100 under SSP2-4.5 (models in the likely range):</p>
+    <div class="tablewrap"><table class="data">
+      <thead><tr><th>Latitude</th><th>Places</th><th>No match (4σ or more)</th><th>Partial or no match (2σ or more)</th></tr></thead>
+      <tbody>{{TROPICS_TABLE}}</tbody>
+    </table></div>
+    <p>This is mainly physics, not a gap in the data or an effect of wealth: rich tropical and desert cities such as Singapore, Dubai and Darwin have no match either. Two things combine.</p>
+    <ul>
+      <li><strong>There is nowhere warmer to point to.</strong> A mid-latitude city's future climate usually exists today somewhere closer to the equator. The hottest places on Earth have no hotter place to match, so their future climates are new to the planet. Williams et al. (2007) found such novel climates concentrated in the tropics and subtropics.</li>
+      <li><strong>Tropical climates vary little from year to year.</strong> σ measures change against a place's own normal swings, so a given warming stands out far more where years are steady. This is why tropical climates are expected to leave their historical range first (Mora et al. 2013). It also means the change is large relative to what local ecosystems and people are adapted to.</li>
+    </ul>
+    <p>Data play a smaller part. Where weather stations are sparse, TerraClimate can understate year-to-year variability, which inflates σ; the variability floor (above) limits this, but some tropical results are more uncertain than mid-latitude ones.</p>
+    <p>The pattern also has a moral dimension. The places facing climates with no present-day equivalent are largely those that have contributed least to the emissions causing the change (King &amp; Harrington 2018).</p>
+  </section>
+
   <section id="limits">
     <h2>Limitations</h2>
     <ul>
@@ -442,8 +459,10 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
       <li>Garner, G. G., Hermans, T., Kopp, R. E., Slangen, A. B. A., Edwards, T. L., Levermann, A., et al. (2021). <em>IPCC AR6 sea level projections</em> (Version 20210809) [Data set]. Zenodo. <a href="https://doi.org/10.5281/zenodo.5914709">https://doi.org/10.5281/zenodo.5914709</a></li>
       <li>Hausfather, Z., Marvel, K., Schmidt, G. A., Nielsen-Gammon, J. W., &amp; Zelinka, M. (2022). Climate simulations: recognize the ‘hot model’ problem. <em>Nature, 605</em>, 26–29. <a href="https://doi.org/10.1038/d41586-022-01192-2">https://doi.org/10.1038/d41586-022-01192-2</a></li>
       <li>Ledoit, O., &amp; Wolf, M. (2004). A well-conditioned estimator for large-dimensional covariance matrices. <em>Journal of Multivariate Analysis, 88</em>(2), 365–411. <a href="https://doi.org/10.1016/S0047-259X(03)00096-4">https://doi.org/10.1016/S0047-259X(03)00096-4</a></li>
+      <li>King, A. D., &amp; Harrington, L. J. (2018). The inequality of climate change from 1.5 to 2°C of global warming. <em>Geophysical Research Letters, 45</em>(10), 5030–5033. <a href="https://doi.org/10.1029/2018GL078430">https://doi.org/10.1029/2018GL078430</a></li>
       <li>Mahony, C. R., Cannon, A. J., Wang, T., &amp; Aitken, S. N. (2017). A closer look at novel climates: new methods and insights at continental to landscape scales. <em>Global Change Biology, 23</em>(9), 3934–3955. <a href="https://doi.org/10.1111/gcb.13645">https://doi.org/10.1111/gcb.13645</a></li>
       <li>Maraun, D., &amp; Widmann, M. (2018). <em>Statistical Downscaling and Bias Correction for Climate Research</em>. Cambridge University Press. <a href="https://doi.org/10.1017/9781107588783">https://doi.org/10.1017/9781107588783</a></li>
+      <li>Mora, C., Frazier, A. G., Longman, R. J., Dacks, R. S., Walton, M. M., Tong, E. J., et al. (2013). The projected timing of climate departure from recent variability. <em>Nature, 502</em>(7470), 183–187. <a href="https://doi.org/10.1038/nature12540">https://doi.org/10.1038/nature12540</a></li>
       <li>O'Neill, B. C., Tebaldi, C., van Vuuren, D. P., Eyring, V., Friedlingstein, P., Hurtt, G., Knutti, R., Kriegler, E., Lamarque, J.-F., Lowe, J., Meehl, G. A., Moss, R., Riahi, K., &amp; Sanderson, B. M. (2016). The Scenario Model Intercomparison Project (ScenarioMIP) for CMIP6. <em>Geoscientific Model Development, 9</em>(9), 3461–3482. <a href="https://doi.org/10.5194/gmd-9-3461-2016">https://doi.org/10.5194/gmd-9-3461-2016</a></li>
       <li>Peel, M. C., Finlayson, B. L., &amp; McMahon, T. A. (2007). Updated world map of the Köppen-Geiger climate classification. <em>Hydrology and Earth System Sciences, 11</em>(5), 1633–1644. <a href="https://doi.org/10.5194/hess-11-1633-2007">https://doi.org/10.5194/hess-11-1633-2007</a></li>
       <li>PRISM Climate Group &amp; USDA Agricultural Research Service. (2023). <em>2023 USDA Plant Hardiness Zone Map GIS data, 1991–2020 mean annual extreme minimum temperature</em>. Oregon State University. <a href="https://prism.oregonstate.edu/phzm">https://prism.oregonstate.edu/phzm</a></li>

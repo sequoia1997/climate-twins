@@ -78,6 +78,7 @@ hr{border:0;border-top:1px solid var(--rule);margin:18px 0}
 #result h2{font:700 1.35rem/1.15 var(--font-head);margin:0 0 4px}
 .answer{font-size:1.05rem;margin:8px 0 10px}
 .answer strong{font-weight:700}
+.tropnote{margin:8px 0 2px;color:var(--muted)} .tropnote strong{color:var(--ink)}
 .badge{display:inline-block;font-size:.82rem;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid currentColor}
 .q-good{color:var(--good)} .q-fair{color:var(--good)} .q-partial{color:var(--warn)} .q-novel{color:var(--bad)}
 .facts{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem;margin:12px 0}
@@ -715,6 +716,8 @@ function draw(){
 function star(x,y,r,f,s){ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;ctx.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}ctx.closePath();ctx.fillStyle=f;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=s;ctx.stroke();}
 function label(t,x,y,f,s){ctx.font="700 13px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle=s;ctx.lineJoin="round";ctx.strokeText(t,x,y);ctx.fillStyle=f;ctx.fillText(t,x,y);}
 // ---------- panel
+function tropNote(s){const t=D.targets[cur.t];if(s<2||Math.abs(t.lat)>=30)return "";
+  return `<p class="small tropnote"><strong>Why no ${s>=4?"":"close "}match?</strong> Places that are already among the warmest on Earth have nowhere warmer to compare with, and their climates vary little from year to year, so warming stands out sharply. <a href="methods.html#tropics">More on this</a></p>`;}
 function quality(s){if(s<1)return["Strong match","q-good"];if(s<2)return["Reasonable match","q-fair"];if(s<4)return["Partial match","q-partial"];return["No real match","q-novel"];}
 function fT(c){return S.metric?c.toFixed(1)+"°":(c*9/5+32).toFixed(0)+"°";}
 function fdT(c){const v=S.metric?c:c*9/5;return(v>=0?"+":"")+v.toFixed(1)+"°";}
@@ -745,11 +748,11 @@ function panel(){
       ?`In ${PER().years} under ${D.ssps[S.ssp]}, its climate is ${cur.own.toFixed(1)}σ from its own present climate, and nowhere else ${PI?"in the world":"on the continent"} comes closer.</p>`
       :`The closest partial match under ${D.ssps[S.ssp]} is ${where}, ${dirTxt}.</p>`);
     if(cur.glob&&cur.glob.s<2){const g0=cur.glob.sites[0];h+=`<p class="answer">Worldwide, the closest match today is <strong>${gname(g0)}</strong> (${g0[2].toFixed(2)}σ).</p>`;}
-    h+=`<span class="badge q-novel">No match, ${bs.toFixed(1)}σ</span>`;
+    h+=`<span class="badge q-novel">No match, ${bs.toFixed(1)}σ</span>`+tropNote(bs);
   }else{
     h+=partial?`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
       :`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
-    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`;
+    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
     const lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
     let why=`${agree} of ${ensN} models point to this area`;
