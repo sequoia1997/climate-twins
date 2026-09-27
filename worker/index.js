@@ -6,11 +6,26 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const r = canonical(url, request.method, env);
+    if (r) return r;
     if (url.pathname === "/api/request") return handleRequest(request, env);
     if (url.pathname === "/api/feedback") return handleFeedback(request, env);
     return env.ASSETS.fetch(request);
   },
 };
+
+// One address for everyone: https, no "www", and the old workers.dev address forwards to the domain.
+// Only page loads (GET/HEAD) are redirected; form submissions are answered wherever they arrive.
+export function canonical(url, method, env) {
+  const home = env.CANONICAL_HOST;
+  if (!home || (method !== "GET" && method !== "HEAD") || url.hostname === "localhost" || url.hostname === "127.0.0.1") return null;
+  const wrongHost = url.hostname === "www." + home || url.hostname.endsWith(".workers.dev");
+  if (url.protocol === "https:" && !wrongHost) return null;
+  const to = new URL(url);
+  to.protocol = "https:";
+  if (wrongHost) to.hostname = home;
+  return Response.redirect(to.toString(), 301);
+}
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
