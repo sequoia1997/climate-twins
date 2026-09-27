@@ -32,6 +32,8 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
 - Sharing: description, Open Graph/Twitter card (og-image.png 1200x630: dark map of 2100 SSP2-4.5 arrows, site fonts)
   and icons (favicon.svg, favicon-32.png, apple-touch-icon.png) live in web/assets/ and are copied by `ctw site`.
   The public address is config.toml [release] site_url; site.py fills __SITE_URL__. Change it there for a new domain.
+- Tropics: panel note (tropNote) under the badge when best σ >= 2 and |lat| < 30; methods section #tropics with a
+  latitude table filled by site.py (tropics_rows, ~2100 SSP2-4.5 likely range) and refs Mora 2013, King & Harrington 2018.
 - Map: US/World/Reset as one grouped control; best-match arrow stops outside the match dot; key has no loading line.
 - deploy.yml rebuilds site/ from web/ once site/data/summary.json exists, so page edits go live on upload.
 
