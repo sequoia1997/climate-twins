@@ -75,6 +75,23 @@ token*: repository access **Only select repositories → climate-twins**; reposi
 write** (GitHub requires this for dispatch events); the longest expiry offered. Save it as the repository secret
 `DISPATCH_TOKEN`. Every deploy hands it to the Worker. When it expires, requests fail politely until you make a new one.
 
+## Feedback
+
+"Send feedback" (bottom of the panel, under each place's comparison, and on the methods page via `/#feedback`)
+opens a short form: what it's about, the note, an optional reply email, and an optional summary of what the visitor
+was looking at (place, period, scenario, match, screen type, data version; shown to them before sending).
+The Worker (`worker/index.js`, `/api/feedback`) emails it privately to you through Cloudflare Email Routing,
+from `feedback@climatetwins.org`, with Reply-To set to the visitor's address if they gave one. Nothing is published
+or stored. Each email has a link that opens a public GitHub issue with the note (without their email) if you want
+to track it. Spam guards as for place requests. Tests: `node worker/test_feedback.mjs`.
+
+One-time setup (in this order):
+1. Cloudflare dashboard → **climatetwins.org → Email → Email Routing → Enable**. Accept the DNS records it adds.
+2. **Destination addresses → Add** your personal email, then click the link in the verification email.
+3. Optional: add a routing rule `feedback@climatetwins.org` → your email, so replies to that address reach you.
+4. GitHub repository secret **`FEEDBACK_TO`** = that verified address. It is never stored in the repository.
+5. Upload the files and let **Deploy site** run. It hands `FEEDBACK_TO` to the Worker.
+
 ## Running locally
 
 ```
