@@ -48,6 +48,15 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   data/world_targets.csv, commits to main, runs rebuild.yml, closes the issue.
 - deploy.yml runs `wrangler secret put DISPATCH_TOKEN` when the repository secret exists.
 
+## Feedback
+- Page: fbdlg dialog (kind chips wrong/bug/idea/other, note, optional email, context preview via fbContext()); entry points:
+  panel footer, "Something look off for this place?" under the comparison (kind=wrong), /#feedback (methods footer).
+- Worker /api/feedback: validation (3–3000 chars, strict email regex, no header injection), honeypot, >= 3 s on form,
+  rate limit; builds a UTF-8 text email (buildFeedbackEmail) and sends via send_email binding FEEDBACK_MAIL from
+  var FEEDBACK_FROM to secret FEEDBACK_TO; 503 with a GitHub issues link if not configured.
+- deploy.yml puts FEEDBACK_TO when the repository secret exists. Requires Email Routing on climatetwins.org with the
+  address verified.
+
 ## Method changes in 10.0
 - 16 seasonal measures: tmax, tmin, ppt, dewpoint (DJF MAM JJA SON). Matched: 12 T/P + dewpoint DJF and JJA (K = 14).
   `config.toml [matching] humidity = false` returns to the v9 12-measure method.
