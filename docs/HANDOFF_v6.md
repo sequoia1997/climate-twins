@@ -34,6 +34,11 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   The public address is config.toml [release] site_url; site.py fills __SITE_URL__. Change it there for a new domain.
 - Tropics: panel note (tropNote) under the badge when best σ >= 2 and |lat| < 30; methods section #tropics with a
   latitude table filled by site.py (tropics_rows, ~2100 SSP2-4.5 likely range) and refs Mora 2013, King & Harrington 2018.
+- Map view buttons: Home (start over: clear selection, starting view; also Esc) and World, 29 px icon buttons styled
+  like the MapLibre +/- group directly beneath it. The old "US" button was dropped (Home covers it).
+- Worker redirects page loads to https://climatetwins.org (http, www and the old workers.dev address); var CANONICAL_HOST.
+  Tests: node worker/test_redirect.mjs.
+- Preview titles: og/twitter title is "Where is your city's future climate today?" (Messages trims a leading site name).
 - Map: US/World/Reset as one grouped control; best-match arrow stops outside the match dot; key has no loading line.
 - deploy.yml rebuilds site/ from web/ once site/data/summary.json exists, so page edits go live on upload.
 
