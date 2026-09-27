@@ -6,6 +6,20 @@ import json, re
 from . import common as C
 
 
+def tropics_rows(S) -> str:
+    """How often places lack a match, by latitude (~2100, SSP2-4.5, likely-range models), for the methods page."""
+    import numpy as np
+    T = C.targets()
+    lat = dict(zip(T.label, T.lat.abs()))
+    pairs = [(lat[k], v["sig"][1][1][1]) for k, v in S["places"].items() if k in lat]
+    rows = []
+    for lo, hi, lab in [(0, 15, "0–15°"), (15, 25, "15–25°"), (25, 35, "25–35°"), (35, 45, "35–45°"), (45, 91, "45° and poleward")]:
+        x = np.array([s for a, s in pairs if lo <= a < hi])
+        if len(x):
+            rows.append(f"<tr><td>{lab}</td><td>{len(x):,}</td><td>{np.mean(x >= 4):.0%}</td><td>{np.mean(x >= 2):.0%}</td></tr>")
+    return "".join(rows)
+
+
 def run(cfg=None):
     cfg = cfg or C.config()
     S = json.load(open(C.SITE / "data" / "summary.json"))
@@ -27,6 +41,7 @@ def run(cfg=None):
              "FFP_R2": f"{na['ffp']['r2']:.2f}", "FFP_ERR": f"{na['ffp']['median_abs_err_days']:.0f}",
              "SELFCHK": f"{S['selfchk_median']:.2f}", "SL_N": str(S["sealevel_places"]),
              "REPO_LINK": (f'<a href="{cfg["release"]["repo_url"]}">{cfg["release"]["repo_url"]}</a>' if cfg["release"].get("repo_url") else "source code in the project repository")}
+    fills["TROPICS_TABLE"] = tropics_rows(S)
     for k, v in fills.items():
         m = m.replace("{{" + k + "}}", v)
     m = m.replace("__SITE_URL__", url)
