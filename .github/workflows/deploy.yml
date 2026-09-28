@@ -16,11 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12", cache: pip }
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: requirements-site.txt }
       - name: Build the page from web/
         run: |
           if [ -f site/data/summary.json ]; then
-            pip install -r requirements.txt && python -m ctw site
+            # a short list, patient retries, and one more try after a pause if the package server hiccups
+            pip install --retries 10 --timeout 60 -r requirements-site.txt || { sleep 60; pip install --retries 10 --timeout 60 -r requirements-site.txt; }
+            python -m ctw site
           else
             echo "No release-10 data yet: publishing site/ as it is."
           fi
