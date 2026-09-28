@@ -1,0 +1,5 @@
+# Just what `python -m ctw site` needs (the deploy uses this; the data rebuild uses requirements.txt).
+numpy>=2.0
+scipy>=1.13
+pandas>=2.2
+requests>=2.32
