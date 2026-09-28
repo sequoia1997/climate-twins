@@ -459,7 +459,7 @@ function applyTheme(dark,save,anim){
   RAMP=dark?RAMP_D:RAMP_L;RAMPRGB=RAMP.map(hex2rgb);themeBtn(anim);
   if(!map||!D)return;
   setAttrib();
-  if(usingFallback)setBaseStyle();else if(map.isStyleLoaded())paintBase();
+  if(usingFallback)setBaseStyle();else if(map.isStyleLoaded()){paintBase();stateLines();}
   for(const id of["heat","heatw"])if(map.getLayer(id))map.setPaintProperty(id,"raster-opacity",dark?0.84:0.72);
   if(cur){compute();updateMapLayers();}
   legend();draw();}
@@ -500,6 +500,15 @@ function darkColor(v,prop){
   let o;if(prop==="text-color")o=mix(0.55+0.35*(1-L),[40,50,60]);else if(prop==="text-halo-color")o=[17,24,30];else o=mix(0.03+0.14*(1-L),[24,32,40]);
   return a<1?`rgba(${o[0]},${o[1]},${o[2]},${a})`:`rgb(${o[0]},${o[1]},${o[2]})`;}
 let baseOrig=null;   // Positron's own paint values, captured on each style load, restored in light mode
+// State, province and territory lines (admin level 4): the base style only draws them from zoom 8 and mixes in
+// counties; show just the first level below countries from the continent view down, fainter than national borders.
+function stateLines(){if(usingFallback||!map||!map.getLayer("boundary_3"))return;
+  try{map.setLayerZoomRange("boundary_3",2,24);
+    map.setFilter("boundary_3",["all",["==",["get","admin_level"],4],["!=",["get","maritime"],1]]);
+    map.setPaintProperty("boundary_3","line-color",S.darkMap?"#6f7c89":"#98a1ab");
+    map.setPaintProperty("boundary_3","line-width",["interpolate",["linear"],["zoom"],2,0.6,5,1,8,1.4,12,2]);
+    map.setPaintProperty("boundary_3","line-opacity",["interpolate",["linear"],["zoom"],2,0.65,4,1]);
+    map.setPaintProperty("boundary_3","line-dasharray",[3,2]);}catch(e){}}
 function paintBase(){if(usingFallback||!map)return;const st=map.getStyle();if(!st||!st.layers)return;
   if(!baseOrig){baseOrig={};for(const l of st.layers){if(l.id==="heat"||l.id==="heatw")continue;const o={},p=l.paint||{};
     for(const k in p)if(/color|icon-opacity/.test(k))o[k]=p[k];baseOrig[l.id]=o;}}
@@ -1121,7 +1130,7 @@ function makeMap(){
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-right");
   styleTimer=setTimeout(()=>{if(!mapReady){usingFallback=true;setBaseStyle();}},8000);
   setAttrib();
-  map.on("style.load",()=>{clearTimeout(styleTimer);baseOrig=null;setAttrib();if(S.darkMap)paintBase();addOverlays();draw();});
+  map.on("style.load",()=>{clearTimeout(styleTimer);baseOrig=null;setAttrib();if(S.darkMap)paintBase();stateLines();addOverlays();draw();});
   map.on("error",e=>{const u=(e&&e.error&&String(e.error.message||e.error))||"";if(!mapReady&&!usingFallback&&/style|openfreemap|Failed to fetch|NetworkError/i.test(u)){usingFallback=true;setBaseStyle();}});
   map.on("render",draw);
   map.on("zoomend",()=>{if(!cur)legend();});
