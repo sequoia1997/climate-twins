@@ -29,8 +29,8 @@ jobs:
       models: ${{ steps.p.outputs.models }}
       latest: ${{ steps.p.outputs.latest }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - id: p
@@ -49,12 +49,12 @@ jobs:
       matrix:
         model: ${{ fromJson(needs.plan.outputs.models) }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - run: python -m ctw cmip6 --model "${{ matrix.model }}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: "cmip6-${{ matrix.model }}", path: work/cmip6/*.npz, retention-days: 7 }
 
   terraclimate:
@@ -69,26 +69,26 @@ jobs:
       matrix:
         var: [tmax, tmin, ppt, vap]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - run: python -m ctw terraclimate --var ${{ matrix.var }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: "tc-${{ matrix.var }}", path: work/terraclimate/*.npz, retention-days: 7 }
 
   north-america:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - run: python -m ctw adaptwest
       - run: python -m ctw prism
       - run: python -m ctw gazetteer
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: na-inputs
           retention-days: 7
@@ -104,12 +104,12 @@ jobs:
     timeout-minutes: 60
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - run: "[ -f data/sealevel.json ] || python -m ctw sealevel"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: sealevel, path: data/sealevel.json, if-no-files-found: ignore, retention-days: 7 }
 
   analyze:
@@ -118,17 +118,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { pattern: "cmip6-*", path: work/cmip6, merge-multiple: true }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { pattern: "tc-*", path: work/terraclimate, merge-multiple: true }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: na-inputs, path: work }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         continue-on-error: true
         with: { name: sealevel, path: data }
       - name: Keep the current release's summary for comparison
@@ -146,7 +146,7 @@ jobs:
         run: |
           pip install playwright && python -m playwright install --with-deps chromium
           python tests/test_page.py site
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: site, path: site, retention-days: 30 }
       - name: Open a pull request
         if: ${{ env.CTW_SMOKE == '' }}
