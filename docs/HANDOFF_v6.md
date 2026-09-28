@@ -26,8 +26,9 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   Hidden panels stay hidden when places are tapped. Upright phones keep the bottom sheet and its own caret.
 - Search: custom combobox (COMBO) replaces the datalist: focus selects the text and opens an alphabetical list
   (current place highlighted); typing filters (word-start matches first, 120 max); arrows/Enter/Esc; no-match row.
-- Framing: every pick (search, map tap, link) runs focusOn(): fits the place and its best match (the arrow), plus other
-  matches within max(2 x best distance, 400 km); wrapped the short way round the globe, padded clear of the controls. Scenario/period changes don't move the map.
+- Framing: every pick runs focusOn(): centres on the arrow's midpoint in Mercator space (place -> best, short way round),
+  min ~90 km context; other matches join only if within 1.8x the arrow frame around that centre; balanced padding with
+  room above the key. Phones may zoom out to 0.8 so very long arrows fit. Scenario/period changes don't move the map.
 - toScr() wraps longitudes to the copy nearest the map centre, so views across the date line show both sides.
 - Sharing: description, Open Graph/Twitter card (og-image.png 1200x630: dark map of 2100 SSP2-4.5 arrows, site fonts)
   and icons (favicon.svg, favicon-32.png, apple-touch-icon.png) live in web/assets/ and are copied by `ctw site`.
