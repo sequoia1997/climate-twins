@@ -792,6 +792,7 @@ function panel(){
     h+=`<span class="badge q-novel">No match, ${bs.toFixed(1)}σ</span>`+tropNote(bs);
   }else{
     h+=partial?`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
+      :selfMatch?`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, <strong>no place today is a closer match than ${esc(tt.n)} itself.</strong> It will warm, but its weather already varies so much from year to year that the projected change is small by comparison.</p>`
       :`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
     h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
@@ -856,8 +857,11 @@ function recentHTML(place,now){const t=cur.t;if(!HAS10||!recSig[t])return "";con
   const f50=toRaw(ensVec(t,1,S.ens,0));let p=0;for(let i=0;i<8;i++)p+=(f50[i]-now[i]);p/=8;
   const share=p>0.2&&a>0?Math.round(a/p*100):null;
   return `<p class="recent"><strong>Already happening:</strong> ${y[0]}–${y[1]} averaged ${Math.abs(dv).toFixed(1)}°${M?"C":"F"} ${a>=0?"warmer":"cooler"} here than 1991–2020${share!==null&&share<=150?`, about ${share}% of the warming projected by ~2050 under SSP2-4.5`:""}.</p>`;}
-function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!v["2050"]||!v["2100"]||[...v["2050"],...v["2100"]].some(x=>typeof x!=="number"))return "";const u=x=>M?x.toFixed(2)+" m":(x*3.281).toFixed(1)+" ft",r=a=>`${u(a[1])} (likely ${u(a[0])}–${u(a[2])})`;
-  return `<p class="slr"><strong>Sea level:</strong> projected to rise ${r(v["2050"])} by 2050 and ${r(v["2100"])} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away).</p>`;}
+function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!v["2050"]||!v["2100"]||[...v["2050"],...v["2100"]].some(x=>typeof x!=="number"))return "";const n=x=>M?Math.abs(x).toFixed(2):(Math.abs(x)*3.281).toFixed(1),un=M?" m":" ft";
+  const rng=a=>a[0]>=0?`likely ${n(a[0])}–${n(a[2])}${un}`:a[2]<=0?`likely ${n(a[2])}–${n(a[0])}${un}`:`likely between a ${n(a[0])}${un} fall and a ${n(a[2])}${un} rise`;
+  const dir=a=>a[1]>=0?"rise":"fall",a5=v["2050"],a1=v["2100"];
+  const r=(a,verb)=>`${verb?dir(a)+" ":""}${n(a[1])}${un} (${rng(a)})`;
+  return `<p class="slr"><strong>Sea level:</strong> projected to ${r(a5,true)} by 2050 and ${r(a1,dir(a1)!==dir(a5))} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, ${sl.km<3?"projection for a tide gauge here":`nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away`}).</p>`;}
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const SN=seasons(lat);
   const M=S.metric,TU=M?"°C":"°F",C=v=>M?v:v*9/5+32,dC=v=>M?v:v*9/5,P=mm=>M?mm:mm/25.4;
@@ -874,9 +878,14 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
     (Math.abs(pr)<0.03?"about as wet as today.":`${Math.round(Math.abs(pr)*100)}% ${pr>0?"wetter":"drier"} over the year.`);
   let wi=0;for(let i=1;i<8;i++)if(Math.abs(an[i]-fu[i])>Math.abs(an[wi]-fu[wi]))wi=i;
   const wd=dC(an[wi]-fu[wi]),pm=annP(an)/annP(fu)-1,ok=Math.abs(wd)<=(M?1.5:2.5);
+  const selfCmp=!!(tt&&cur&&S.cmp===0&&S.gsel<0&&hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60);
+  if(selfCmp){const ch=dC(fu[wi]-an[wi]);
+    sum+=ok?` Its climate today is already within ${dd(Math.max(Math.abs(wd),M?0.5:1))} of that in every season.`
+           :` Its weather already swings so much from year to year that this still counts as a close match, and no other place today comes closer.`;}
+  else{
   sum+=ok?` Today the climate ${esc(mname)} is within ${dd(Math.max(Math.abs(wd),M?0.5:1))} of that in every season`
-         :` Today the climate ${esc(mname)} comes closest, though its ${nm[wi]} are ${dd(wd)} ${wd>0?"warmer":"cooler"}`;
-  sum+=Math.abs(pm)<0.06?", with similar yearly precipitation.":`, with ${Math.round(Math.abs(pm)*100)}% ${pm>0?"more":"less"} precipitation.`;
+         :` Today the climate ${esc(mname)} ${S.cmp>0||S.gsel>=0?"is also close":"comes closest"}, though its ${nm[wi]} are ${dd(wd)} ${wd>0?"warmer":"cooler"}`;
+  sum+=Math.abs(pm)<0.06?", with similar yearly precipitation.":`, with ${Math.round(Math.abs(pm)*100)}% ${pm>0?"more":"less"} precipitation.`;}
   let h=`<section class="cmp" aria-labelledby="cmp-h"><h3 id="cmp-h">How the climates compare</h3><p class="cmp-sum">${sum}</p>`;
   h+=recentHTML(place,now);if(tt&&tt.sl)h+=seaHTML(tt.sl);
   // temperature: stat blocks + range bars on one axis
