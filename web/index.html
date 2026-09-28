@@ -1041,14 +1041,18 @@ function select(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";f
   if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
 function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
-  const tt=D.targets[cur.t],pts=[[tt.lon,tt.lat],[wrapLon(plon[cur.best],tt.lon),plat[cur.best]]];   // the arrow, the short way round
-  const reach=Math.max(2*hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best]),400);                  // nearby matches join the frame;
-  for(const c of cur.sites)if(c!==cur.best&&hav(tt.lat,tt.lon,plat[c],plon[c])<=reach)pts.push([wrapLon(plon[c],tt.lon),plat[c]]);  // far ones stay a click away
-  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const mob=wrap.getBoundingClientRect().width<600;
-  const pad=mob?{top:64,bottom:56,left:36,right:72}:{top:70,bottom:70,left:60,right:96};   // clear of the buttons and key
-  const w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys);
-  const cx=(Math.max(...xs)+Math.min(...xs))/2,cy=(Math.max(...ys)+Math.min(...ys))/2,mw=Math.max(w,1.2)/2,mh=Math.max(h,0.8)/2;  // a single spot still gets context
-  map.fitBounds([[cx-mw,Math.max(-84,cy-mh)],[cx+mw,Math.min(84,cy+mh)]],{padding:pad,maxZoom:7,duration:RM?0:800});}
+  // Centre on the arrow (place -> best match), measured in the map's own projection so it is centred on screen.
+  const MC=maplibregl.MercatorCoordinate,tt=D.targets[cur.t],P=(lo,la)=>MC.fromLngLat([wrapLon(lo,tt.lon),la]);
+  const a=P(tt.lon,tt.lat),b=P(plon[cur.best],plat[cur.best]),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
+  const minH=90/(40075*Math.cos(tt.lat*Math.PI/180));                       // at least ~90 km of context each way
+  let hx=Math.max(Math.abs(a.x-b.x)/2,minH),hy=Math.max(Math.abs(a.y-b.y)/2,minH*0.75);
+  const lim=Math.max(hx,hy)*1.8;                                              // other matches join only if they fit near this frame
+  for(const c of cur.sites){if(c===cur.best)continue;const p=P(plon[c],plat[c]),nx=Math.abs(p.x-cx),ny=Math.abs(p.y-cy);
+    if(Math.max(nx,ny)<=lim){hx=Math.max(hx,nx);hy=Math.max(hy,ny);}}
+  const sw=new MC(cx-hx,cy+hy).toLngLat(),ne=new MC(cx+hx,cy-hy).toLngLat();
+  const r=wrap.getBoundingClientRect(),mob=r.width<600,lg=document.getElementById("legend"),lh=lg&&!SHEET.on?lg.getBoundingClientRect().height:0;
+  const pad=mob?{top:70,bottom:60,left:50,right:50}:{top:80,bottom:Math.max(80,lh+30),left:90,right:90};  // balanced; room above the key
+  map.fitBounds([[sw.lng,Math.max(-84,sw.lat)],[ne.lng,Math.min(84,ne.lat)]],{padding:pad,maxZoom:7,duration:RM?0:800});}
 function centerOn(lon,lat){map.easeTo({center:[lon,lat],duration:RM?0:500});}
 // ---------- controls
 function segs(){
@@ -1111,7 +1115,7 @@ function setBaseStyle(){mapReady=false;setAttrib();if(usingFallback){map.setStyl
 function makeMap(){
   if(SHEET.on){const it=document.getElementById("intro");if(it)it.open=false;}
   map=new maplibregl.Map({container:"map",style:STYLES.light,bounds:[[-124.8,24.4],[-66.9,49.4]],fitBoundsOptions:{padding:24},
-    minZoom:1.5,maxZoom:10,dragRotate:false,pitchWithRotate:false,touchPitch:false,attributionControl:false});
+    minZoom:innerWidth<600?0.8:1.5,maxZoom:10,dragRotate:false,pitchWithRotate:false,touchPitch:false,attributionControl:false});
   map.touchZoomRotate.disableRotation();
   if(SHEET.on){SHEET.set("peek");map.fitBounds([[-124.8,24.4],[-66.9,49.4]],{padding:24,animate:false});}
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-right");
