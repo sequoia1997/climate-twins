@@ -35,6 +35,8 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   The public address is config.toml [release] site_url; site.py fills __SITE_URL__. Change it there for a new domain.
 - Tropics: panel note (tropNote) under the badge when best σ >= 2 and |lat| < 30; methods section #tropics with a
   latitude table filled by site.py (tropics_rows, ~2100 SSP2-4.5 likely range) and refs Mora 2013, King & Harrington 2018.
+- Basemap: stateLines() restyles positron's boundary_3 to admin_level 4 only (states/provinces/territories) from zoom 2,
+  dashed, lighter than national borders (#98a1ab light, #6f7c89 dark); runs after style load and every theme switch.
 - Map view buttons: Home (start over: clear selection, starting view; also Esc) and World, 29 px icon buttons styled
   like the MapLibre +/- group directly beneath it. The old "US" button was dropped (Home covers it).
 - Worker redirects page loads to https://climatetwins.org (http, www and the old workers.dev address); var CANONICAL_HOST.
@@ -52,6 +54,7 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   20 km, grid coverage) -> issue labelled city-request with candidates in a hidden JSON comment.
 - add-place.yml on an OWNER comment "/add [N]" -> python -m ctw add-place -> appends to data/targets.csv or
   data/world_targets.csv, commits to main, runs rebuild.yml, closes the issue.
+- deploy.yml installs only requirements-site.txt (numpy, scipy, pandas, requests) with retries before `ctw site`.
 - deploy.yml runs `wrangler secret put DISPATCH_TOKEN` when the repository secret exists.
 
 ## Feedback
