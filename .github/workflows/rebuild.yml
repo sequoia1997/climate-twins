@@ -160,7 +160,8 @@ jobs:
 
   chelsa:
     # Independent temperature and precipitation cross-check: CHELSA v2.1 1981-2010 monthly normals, one file at a time, sampled and deleted.
-    # DISABLED: the download host (os.zhdk.ch) does not resolve, even from GitHub runners (checked 2026-09-29). Remove the
+    # DISABLED: CHELSA moved hosts (now os.zhdk.cloud.switch.ch/chelsa01, layout not yet mapped) and only adds a 1981-2010
+    # cross-check that ERA5 and CHIRPS already cover. Update CHELSA_URL in ctw/baselines.py, then remove the
     # `if: false` line if it returns; the analysis step already skips the source when no CHELSA files exist.
     if: false
     needs: plan
