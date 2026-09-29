@@ -4,6 +4,12 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 29 September 2026: data update
+<!-- data:2026-09-29 -->
+
+- **Rebuilt from the latest source data.** The "already happening" comparison now covers 2016–2025.
+- 2,385 places, 24 climate models, sea-level projections for 1013 coastal places.
+
 ## 30 September 2026 (model resolution, more sources)
 
 - **The model-resolution caution now checks three downscaled sources.** Besides NASA's NEX-GDDP-CMIP6, each projection is repeated with the WorldClim 2.1 CMIP6 changes (global) and the AdaptWest downscaled CMIP6 changes (North America), and the worst case counts. The line under the answer, still shown only where the futures differ noticeably, now says which source(s) disagree. See "Sensitivity to model resolution" on the methods page.
