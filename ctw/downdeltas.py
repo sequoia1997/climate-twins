@@ -46,14 +46,16 @@ DEFAULTS = {
     "aw_bucket": "https://s3-us-west-2.amazonaws.com/www.cacpd.org",
     "aw_prefix": "CMIP6v73/",
     "aw_exclude": "normals|Normal_",
-    "aw": False,                       # AdaptWest jobs in the plan; off until a downloadable future product is found (see aw_probe)
+    "aw": True,                        # AdaptWest jobs in the plan (one 8-GCM ensemble-mean product, North America)
     "aw_pages": ["https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6/", "https://adaptwest.databasin.org/pages/adaptwest-climatena/"],
-    "aw_urls": {},                     # {label: URL template with {ssp} and {per}} once the object names are known
+    # Objects found on the AdaptWest docs page (the bucket cannot be listed). {per} is tried with each AW_PERIODS spelling in order.
+    "aw_urls": {"ensemble": "https://s3-us-west-2.amazonaws.com/www.cacpd.org/CMIP6v73/ensembles/ensemble_8GCMs_{ssp}_{per}_monthly.zip"},
     "aw_max_gb": 3.0,                  # skip a single AdaptWest file larger than this (a runner has 14 GB)
     "radius_px": 3,                    # WorldClim: nearest valid pixel within this many pixels (coastal places)
     "aw_radius_m": 10000,              # AdaptWest: mean of the 1 km cells within this distance (as adaptwest.py)
 }
 PERIODS = {"2050": "2041-2060", "2100": "2081-2100"}
+AW_PERIODS = {"2050": ["2041_2060"], "2100": ["2071_2100", "2081_2100"]}     # AdaptWest monthly files: 2071-2100 (2081-2100 exists for bioclim)
 
 
 def settings(cfg) -> dict:
@@ -190,14 +192,16 @@ def aw_products(s, cfg, keys=None):
     keys = list(keys if keys is not None else aw_keys(s))
     for lab, tmpl in (s.get("aw_urls") or {}).items():                  # explicit URL templates: {ssp}, {per} (e.g. 2041-2060)
         for ssp in s["scenarios"]:
-            for pk, per in PERIODS.items():
-                url = tmpl.format(ssp=ssp, per=per, label=lab)
-                try:
-                    r = C.http().head(url, timeout=30, allow_redirects=True)
-                except Exception:  # noqa: BLE001
-                    continue
-                if r.status_code == 200:
-                    keys.append((url, int(r.headers.get("content-length", 0))))
+            for pk in PERIODS:
+                for per in AW_PERIODS[pk]:
+                    url = tmpl.format(ssp=ssp, per=per, label=lab)
+                    try:
+                        r = C.http().head(url, timeout=30, allow_redirects=True)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if r.status_code == 200:
+                        keys.append((url, int(r.headers.get("content-length", 0))))
+                        break
     ex = re.compile(s["aw_exclude"], re.I) if s["aw_exclude"] else None
     gcms = [m["name"] for m in C.models(cfg)] + list(s["wc_gcms"])
     starts = {int(v.split("-")[0]): k for k, v in PERIODS.items()} | {2071: "2100"}   # AdaptWest may publish 30-year windows (2041-2070, 2071-2100)
@@ -276,7 +280,8 @@ def list_sources(cfg, source="all"):
             r = C.http().head(url, timeout=30, allow_redirects=True)
             print(f"  base {v}: HTTP {r.status_code} {int(r.headers.get('content-length', 0)) / 1e6:.1f} MB  {url}")
     if source in ("all", "aw"):
-        aw_probe(s, cfg)
+        if os.environ.get("CTW_AW_PROBE"):
+            aw_probe(s, cfg)
         keys = aw_keys(s)
         print(f"AdaptWest {s['aw_prefix']}: {len(keys)} objects, {sum(k[1] for k in keys) / 1e9:.1f} GB")
         tops = {}
@@ -457,7 +462,7 @@ def aw_extract(url_or_key, size, sm, s, tag):
     with RemoteZip(url) as rz:
         mem = _aw_members(rz.namelist())
         if len(mem) < 36:
-            raise RuntimeError(f"{url}: {len(mem)} monthly tmax/tmin/ppt members (need 36); is it a monthly product?")
+            raise RuntimeError(f"{url}: {len(mem)} monthly tmax/tmin/ppt members (need 36); members: {rz.namelist()[:12]}")
         tmp = C.work("downloads", f"aw_{tag}.tif")
         for (v, m), name in sorted(mem.items()):
             with rz.open(name) as src, open(tmp, "wb") as dst:

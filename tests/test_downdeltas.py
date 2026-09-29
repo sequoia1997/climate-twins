@@ -115,10 +115,15 @@ def test_base_months_zip_of_singles_and_multiband():
         pass
 
 
-def test_aw_disabled_by_default_and_templates():
+def test_aw_ensemble_defaults():
     s = {**D.DEFAULTS}
-    assert s["aw"] is False
-    assert "aw-base" not in D.plan({"downdeltas": {"wc_gcms": []}, "models": C.config()["models"]}, "aw")     # AdaptWest off: no jobs
+    assert s["aw"] is True and "ensemble" in s["aw_urls"] and D.AW_PERIODS["2100"][0] == "2071_2100"
+    u = s["aw_urls"]["ensemble"].format(ssp="ssp245", per="2041_2060")
+    assert u.endswith("ensembles/ensemble_8GCMs_ssp245_2041_2060_monthly.zip")
+    assert D.parse_aw_key(u, []) == ("ensemble", "ssp245", 2041)
+    assert D.parse_aw_key(u.replace("2041_2060", "2071_2100"), []) == ("ensemble", "ssp245", 2071)
+    pr = D.aw_products({**s, "aw_urls": {}}, C.config(), [(u.replace("2041_2060", "2071_2100"), 5), (u, 5)])
+    assert set(pr["ensemble"]) == {("ssp245", "2050"), ("ssp245", "2100")}      # 2071-2100 stands in for 2081-2100
 
 
 def synth_files(tmp, src, names, T, dt=3.0, base_t=10.0):

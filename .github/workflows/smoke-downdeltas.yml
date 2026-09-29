@@ -46,20 +46,22 @@ jobs:
   aw:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      CTW_SMOKE_PLACES: "Shallotte, NC|Raleigh, NC|Phoenix, AZ|Denver, CO|Seattle, WA|Miami, FL|Chicago, IL|Boston, MA|Los Angeles, CA|Anchorage, AK|Vancouver, British Columbia, CA|Houston, TX"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
-      - name: What exists (AdaptWest; the bucket cannot be listed, so docs pages and URL probes)
+      - name: What exists (AdaptWest; docs page links in full, then the configured ensemble URLs are HEAD-checked)
         run: |
           for u in https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6/ https://adaptwest.databasin.org/pages/adaptwest-climatena/ https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6-downscaled/ ; do
             echo "== $u"; curl -sSL -m 60 -w "HTTP %{http_code}\n" "$u" -o /tmp/p.html || true
-            grep -o 'https\?://[^"<> )]*\(cacpd\|databasin\)[^"<> )]*' /tmp/p.html | sort -u | head -80 || true
+            grep -o 'https\?://[^"<> )]*\(cacpd\|databasin\)[^"<> )]*' /tmp/p.html | sort -u | || true
           done
           curl -sSI "https://s3-us-west-2.amazonaws.com/www.cacpd.org/CMIP6v73/normals/Normal_1991_2020_monthly.zip" | head -5
           time python -m ctw downdeltas --list --source aw
-      - name: Plan (empty unless [downdeltas] aw = true)
+      - name: Plan
         run: python -m ctw downdeltas --plan --source aw
       - name: Extract (base and first product)
         run: |
