@@ -165,6 +165,11 @@ extra_max_median_dsigma = 0.30 # ... and the median |change in best sigma| is at
 # measured with the place's own year-to-year variability (the matching metric).
 agree_fair = 2.0               # above this the page says the two datasets differ noticeably
 agree_poor = 3.5               # above this the confidence badge drops one level
+# How the independent sources are combined. "corroborated": a place is only flagged when two sources both disagree (the
+# second-largest disagreement counts; one source alone never lowers the badge). "worst": the largest disagreement counts.
+# Set after the first full rebuild: ERA5 alone put 33% of places over 3.5 sigma, mostly small islands and coasts that its
+# 0.25 degree grid smears into the ocean, while CHIRPS put 2%.
+combine = "corroborated"
 # The same thresholds apply to the combined agreement: the largest disagreement over the independent sources (ERA5 on all measures,
 # CHIRPS on precipitation, CHELSA on highs, lows and precipitation), each with its own typical offset removed (ctw/baselines.py).
 

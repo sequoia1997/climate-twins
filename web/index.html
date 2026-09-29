@@ -891,14 +891,20 @@ function panel(){
     /* BEGIN baseline-agreement: independent datasets (ERA5 on all measures, CHIRPS on precipitation, CHELSA on temperature and precipitation)
        are compared with the place's present climate; the worst one decides, and a poor agreement lowers the badge one level */
     const e5t=D.era5_thr||[2,3.5];
-    let e5=-1,e5n="",e5all=[];
-    if(AGN){for(let q=0;q<AGN;q++){const v=agrSig[cur.t*AGN+q];if(v>=0){e5all.push(D.agr_src[q]);if(v>e5){e5=v;e5n=D.agr_src[q];}}}}
-    else if(era5Sig[cur.t]>=0){e5=era5Sig[cur.t];e5n="ERA5";e5all=["ERA5"];}
-    const e5what=(()=>{const q=AGN?D.agr_src.indexOf(e5n):-1,c=q>=0&&D.agr_cols?D.agr_cols[q].length:16;return c>=16?"":c>=12?" (temperature and precipitation)":" (precipitation only)";})();
+    let e5=-1,e5n="",e5all=[],e5vals=[];
+    const corro=(D.agr_combine||"worst")==="corroborated";
+    if(AGN){for(let q=0;q<AGN;q++){const v=agrSig[cur.t*AGN+q];if(v>=0){e5all.push(D.agr_src[q]);e5vals.push([v,D.agr_src[q]]);if(v>e5){e5=v;e5n=D.agr_src[q];}}}}
+    else if(era5Sig[cur.t]>=0){e5=era5Sig[cur.t];e5n="ERA5";e5all=["ERA5"];e5vals=[[e5,"ERA5"]];}
+    if(corro){ /* two independent datasets must both disagree: the second-largest disagreement decides, and one source alone says nothing */
+      e5vals.sort((a,b)=>b[0]-a[0]);
+      if(e5vals.length>=2){e5=e5vals[1][0];e5n=e5vals[0][1]+" and "+e5vals[1][1];}else{e5=-1;e5n="";}
+    }
+    const e5what=corro?"":(()=>{const q=AGN?D.agr_src.indexOf(e5n):-1,c=q>=0&&D.agr_cols?D.agr_cols[q].length:16;return c>=16?"":c>=12?" (temperature and precipitation)":" (precipitation only)";})();
     const e5poor=e5>e5t[1];
     const lvl0=lvl;if(e5poor)lvl=lvl==="high"?"medium":"low";
-    const e5line=e5<0?"":e5poor?`<br>${e5n}${e5what}, an independent dataset, describes this place's present climate quite differently (${e5.toFixed(1)}σ)${lvl!==lvl0?", so confidence is lowered one level":""}.`
-      :e5>e5t[0]?`<br>${e5n}${e5what}, an independent dataset, differs somewhat on this place's present climate (${e5.toFixed(1)}σ).`
+    const e5line=e5<0?"":e5poor?`<br>${e5n}${e5what}, ${corro?"independent datasets, both describe":"an independent dataset, describes"} this place's present climate quite differently (${e5.toFixed(1)}σ)${lvl!==lvl0?", so confidence is lowered one level":""}.`
+      :e5>e5t[0]?`<br>${e5n}${e5what}, ${corro?"independent datasets, both differ":"an independent dataset, differs"} somewhat on this place's present climate (${e5.toFixed(1)}σ).`
+      :corro&&e5vals[0][0]>e5t[0]?`<br>${e5vals[1][1]}, an independent dataset, agrees on this place's present climate.`
       :e5all.length>1?`<br>Independent datasets (${e5all.join(", ")}) agree on this place's present climate.`:`<br>${e5n}, an independent dataset, agrees on this place's present climate.`;
     /* END baseline-agreement */
     let why=`${agree} of ${ensN} models point to this area`;

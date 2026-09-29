@@ -98,7 +98,7 @@ def run(cfg=None, previous=None) -> int:
         cb = AG.get("combined")
         if cb:
             by = ", ".join(f"{LABEL[n]} {c}" for n, c in cb["poor_by"].items() if c)
-            out.append(f"ℹ️ Combined agreement (worst source per place): median {cb['median']:.2f}σ; {cb['over_fair']:.0%} above {AG['thr'][0]}σ, "
+            out.append(f"ℹ️ Combined agreement ({"two sources must agree" if AG.get("combine") == "corroborated" else "worst source per place"}): median {cb['median']:.2f}σ; {cb['over_fair']:.0%} above {AG['thr'][0]}σ, "
                        f"{cb['over_poor']:.0%} above {AG['thr'][1]}σ" + (f" (poor, by source: {by})" if by else ""))
         missing = [LABEL[n] for n in ("chirps", "chelsa") if n not in AG["sources"]]
         if missing:

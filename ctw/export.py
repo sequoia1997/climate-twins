@@ -142,7 +142,7 @@ def run(cfg=None):
         periods=[{"key": k, "label": k, "years": f"{a}–{b}"} for k, (a, b) in zip(cfg["periods"]["keys"], cfg["periods"]["years"])],
         baseline=cfg["baseline"]["years"], data_version=version, method_version=cfg["release"]["method_version"],
         kg=F.KG, kg_name=[F.KG_NAME[c] for c in F.KG], recent_years=R["rec_years"].tolist(), humidity=bool(cfg["matching"]["humidity"]),
-        era5_thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]],      # era5-agreement
+        era5_thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]], agr_combine=cfg["era5"].get("combine", "corroborated"),      # era5-agreement
         agr_src=[BL.LABEL[x] for x in BL.SOURCES], agr_cols=[BL.COLS[x].tolist() for x in BL.SOURCES],      # baseline-agreement
         calibration={"hardiness": {k: v for k, v in cal["hardiness"].items() if k != "coef"}, "ffp": {k: v for k, v in cal["ffp"].items() if k != "coef"}},
     )
@@ -382,13 +382,13 @@ def agreement_summary(cfg, AGR, R, bad, T):
     """Per-source and combined agreement statistics (for methods.html and validate.py), plus the CHIRPS/CHELSA bias tables."""
     fair, poor = cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]
     A = AGR[~bad]
-    out = {"thr": [fair, poor], "sources": {}, "bias": {}}
+    out = {"thr": [fair, poor], "combine": cfg["era5"].get("combine", "corroborated"), "sources": {}, "bias": {}}
     for i, n in enumerate(BL.SOURCES):
         fin = A[:, i][np.isfinite(A[:, i])]
         if len(fin):
             out["sources"][n] = dict(median=round(float(np.median(fin)), 3), n=int(len(fin)), p90=round(float(np.percentile(fin, 90)), 3),
                                      over_fair=round(float(np.mean(fin > fair)), 4), over_poor=round(float(np.mean(fin > poor)), 4))
-    worst, which = BL.combine(A)
+    worst, which = BL.combine(A, cfg["era5"].get("combine", "corroborated"))
     fin = np.isfinite(worst)
     if fin.any():
         w = worst[fin]

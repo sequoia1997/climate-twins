@@ -216,10 +216,14 @@ def test_agreement_summary_shapes():
     R = {"agr_diff": RNG.normal(0, 1, (n, 2, 16)).astype("float32"), "chirps_icv": RNG.uniform(.8, 1.2, (n, 4)).astype("float32")}
     import pandas as pd
     T = pd.DataFrame({"g": np.r_[np.zeros(20, int), np.ones(30, int)]})
+    cfg["era5"]["combine"] = "worst"
     out = export.agreement_summary(cfg, AGR, R, np.zeros(n, bool), T)
     assert set(out["sources"]) == {"era5", "chirps", "chelsa"} and out["sources"]["chirps"]["n"] == 10
     cb = out["combined"]
     assert cb["n"] == n and cb["median"] >= out["sources"]["era5"]["median"] and cb["over_poor"] >= out["sources"]["era5"]["over_poor"]
+    cfg["era5"]["combine"] = "corroborated"          # the default: two sources must both disagree, so it can only be milder
+    oc = export.agreement_summary(cfg, AGR, R, np.zeros(n, bool), T)["combined"]
+    assert oc["n"] == n and oc["median"] <= cb["median"] and oc["over_poor"] <= cb["over_poor"]
     assert sum(cb["poor_by"].values()) == int(round(cb["over_poor"] * n))
     assert set(out["bias"]) == {"chirps", "chelsa"} and len(out["bias"]["chelsa"]["World cities"]["tmax"]) == 4
     assert len(out["chirps_icv_ratio"]) == 4
@@ -292,3 +296,17 @@ def test_run_chelsa_end_to_end_with_fake_downloads(tmp_path, monkeypatch):
     assert d["tmax"][0, 0] == pytest.approx(298.1 - 273.15, abs=1e-3) and d["tmax"][0, 6] == pytest.approx(298.7 - 273.15, abs=1e-3)
     assert d["ppt"][1, 0] == pytest.approx(10.1, abs=1e-3)
     assert np.isnan(d["tmax"][:, 1]).all()                              # months not fetched stay empty
+
+
+def test_combine_corroborated_needs_two_sources():
+    sig = np.array([[55.0, 0.1, np.nan],      # ERA5 far off, CHIRPS fine: not flagged (second largest is 0.1)
+                    [4.0, 5.0, np.nan],       # both off: flagged at the smaller of the two
+                    [9.0, np.nan, np.nan],    # only one source: never flagged
+                    [np.nan, np.nan, np.nan]])
+    v, which = BL.combine(sig, "corroborated")
+    assert v[0] == np.float32(0.1) and which[0] == 1
+    assert v[1] == 4.0 and which[1] == 0
+    assert np.isnan(v[2]) and which[2] == -1
+    assert np.isnan(v[3]) and which[3] == -1
+    w, _ = BL.combine(sig)                      # default mode is unchanged
+    assert w[0] == 55.0

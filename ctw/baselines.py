@@ -335,11 +335,21 @@ def source_agreement(SH, midx, base, other, groups, cols, ok=None):
     return sig, off
 
 
-def combine(sig):
-    """sig (NT, n_sources) with NaN for unavailable. Returns (worst sigma (NT,), index of the source giving it (NT,), -1 where none)."""
+def combine(sig, mode="worst"):
+    """sig (NT, n_sources) with NaN for unavailable. Returns (sigma (NT,), index of the source giving it (NT,), -1 where none).
+    mode "worst": the largest disagreement over the sources. mode "corroborated": the second largest, so a place is only
+    flagged when two independent datasets both disagree with its baseline; NaN where fewer than two sources exist."""
     sig = np.asarray(sig, float)
     have = np.isfinite(sig)
     filled = np.where(have, sig, -np.inf)
+    if mode == "corroborated":
+        if sig.shape[1] < 2:
+            return np.full(len(sig), np.nan, "float32"), np.full(len(sig), -1, "int8")
+        order = np.argsort(filled, axis=1)
+        idx = order[:, -2]
+        second = np.take_along_axis(filled, idx[:, None], 1)[:, 0]
+        ok = np.isfinite(second)
+        return np.where(ok, second, np.nan).astype("float32"), np.where(ok, idx, -1).astype("int8")
     idx = filled.argmax(1)
     worst = np.where(have.any(1), filled.max(1), np.nan)
     return worst.astype("float32"), np.where(have.any(1), idx, -1).astype("int8")
