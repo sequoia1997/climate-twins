@@ -35,7 +35,7 @@ def era5_html(S) -> str:
             '<div class="tw"><table class="res"><thead><tr><th>Places</th><th>Measure</th><th class="n">Winter</th><th class="n">Spring</th>'
             '<th class="n">Summer</th><th class="n">Autumn</th></tr></thead><tbody>' + rows +
             "</tbody><caption>Median ERA5 minus baseline (TerraClimate, or AdaptWest in North America), 1991–2020, by season "
-            "(December–February, and so on; seasons are the same in both hemispheres). North American precipitation and temperature come from AdaptWest; dewpoint from TerraClimate.</caption></table></div>")
+            "(December–February, and so on; the same months in both hemispheres). These are the offsets removed before the agreement is computed. North American temperature and precipitation are compared with AdaptWest, dewpoint and all other places with TerraClimate.</caption></table></div>")
 
 
 def hindcast_html() -> str:
@@ -43,26 +43,30 @@ def hindcast_html() -> str:
     if not f.exists():
         return "<p>The hindcast has not been run for this build.</p>"
     H = json.load(open(f))
-    a, d = H["all"], H["detectable_change"]
+    a, d = H["all"], H["largest_change_third"]
     (a0, a1), (b0, b1) = H["windows"]
 
     def row(lab, x):
-        if not x:
-            return ""
-        z = x["at_predicted_analog"]
-        return (f'<tr><td>{lab}</td><td class="n">{x["n"]}</td><td class="n">{x["persistence_sigma_median"]:.2f}</td><td class="n">{x["projection_sigma_median"]:.2f}</td>'
-                f'<td class="n">{z["median"]:.2f}</td><td class="n">{z["share_under_1"]:.0%}</td><td class="n">{x["oracle_median"]:.2f}</td>'
-                f'<td class="n">{x["own_cell_median"]:.2f}</td><td class="n">{x["naive_lat_shift_median"]:.2f}</td><td class="n">{x["share_beats_naive"]:.0%}</td></tr>')
-    return (f"<p>{a['n']} places sampled from all {H.get('n_candidates', 'the')} target places (half farthest-point in climate space, half random). "
-            f"Median warming between the windows: {a['median_warming_C']:.2f} °C.</p>"
-            '<div class="tw"><table class="res"><thead><tr><th>Subset</th><th class="n">Places</th><th class="n">No-change error (σ)</th><th class="n">Projection error (σ)</th>'
-            '<th class="n">Truth to predicted analog (σ)</th><th class="n">Under 1σ</th><th class="n">Best possible (σ)</th><th class="n">Own cell (σ)</th>'
-            '<th class="n">Latitude shift (σ)</th><th class="n">Beats latitude shift</th></tr></thead><tbody>'
-            + row("All sampled places", a) + row("Places whose change exceeded 1σ", d) +
-            f"</tbody><caption>Table H. Medians. Errors are σ distances to the climate that actually occurred in {b0}–{b1}.</caption></table></div>"
-            f"<p>The predicted analog was {a['km_predicted_to_oracle_median']:,.0f} km (median) from the best possible analog, and "
-            f"{a['share_predicted_within_500km_of_oracle']:.0%} of predicted analogs were within 500 km of it. "
-            f"The predicted analog was equatorward of the place for {a['share_equatorward']:.0%} of places.</p>")
+        return (f'<tr><td>{lab}</td><td class="n">{x["n"]}</td><td class="n">{x["persistence_d"]:.2f}</td><td class="n">{x["projection_d"]:.2f}</td>'
+                f'<td class="n">{x["at_predicted_analog_d"]:.2f}</td><td class="n">{x["oracle_d"]:.2f}</td>'
+                f'<td class="n">{x["own_cell_d"]:.2f}</td><td class="n">{x["naive_lat_shift_d"]:.2f}</td><td class="n">{x["share_beats_naive"]:.0%}</td></tr>')
+    z = a["at_predicted_analog"]
+    return (f"<p>{a['n']} places sampled from {H['n_candidates']:,} (half farthest-point in climate space, half random). "
+            f"Median warming of the annual mean between the windows was {a['median_warming_C']:.2f}&nbsp;&deg;C.</p>"
+            '<div class="tw"><table class="res"><thead><tr><th>Subset</th><th class="n">Places</th><th class="n">No change</th><th class="n">Projection</th>'
+            '<th class="n">Predicted analog</th><th class="n">Best possible analog</th><th class="n">Own 0.5&deg; cell</th>'
+            '<th class="n">Latitude shift</th><th class="n">Analog beats latitude shift</th></tr></thead><tbody>'
+            + row("All sampled places", a) + row("Third with the largest change", d) +
+            f"</tbody><caption>Table H. Median distance from the climate that actually occurred in {b0}&ndash;{b1}, as the root-mean-square difference in units of the "
+            "place's own year-to-year standard deviation (0 = identical; two random years of the same place differ by about 1.4). "
+            "The last column is the share of places where the predicted analog was closer to the truth than the latitude-shifted cell.</caption></table></div>"
+            f"<p>In the method's own units, the actual {b0}&ndash;{b1} climate lay a median of {z['median']:.2f}&sigma; from the predicted analog "
+            f"({z['share_under_1']:.0%} of places under 1&sigma;, {z['share_under_2']:.0%} under 2&sigma;, 90th percentile {z['p90']:.1f}&sigma;). "
+            f"The predicted analog was within 500&nbsp;km of the best possible analog for {a['share_predicted_within_500km_of_oracle']:.0%} of places "
+            f"(median {a['km_predicted_to_oracle_median']:,.0f}&nbsp;km apart), and the projection was closer to the truth than &ldquo;nothing changes&rdquo; "
+            f"at {a['share_projection_beats_persistence']:.0%} of places. Predicted analogs lay a median of {a['median_move_km']:,.0f}&nbsp;km from the place, "
+            f"equatorward for {a['share_equatorward']:.0%} of them. Skill against the latitude-shift baseline (1 minus the ratio of median distances) was {a['skill_vs_naive']:.0%}, "
+            f"and against staying put {a['skill_vs_own_cell']:.0%}.</p>")
 
 
 def run(cfg=None):

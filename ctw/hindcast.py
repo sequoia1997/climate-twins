@@ -21,11 +21,11 @@ from . import era5 as E
 MON = ("tmax", "tmin", "ppt", "vap")
 
 
-def _sigma(sm, midx, A, B):
-    """Sigma distance from each row of A to each row of B (A: (n,16) raw, B: (m,16) raw) under model sm."""
+def _dist(sm, midx, A, B):
+    """Mahalanobis distance from each row of A to each row of B (raw 16-vectors) under the place's model sm."""
     pa = sm.project(C.transform(A)[:, midx]); pb = sm.project(C.transform(B)[:, midx])
     D = np.sqrt(np.maximum((pa ** 2).sum(1)[:, None] - 2 * pa @ pb.T + (pb ** 2).sum(1)[None], 0))
-    return C.chi_to_sigma(D.ravel(), sm.k).reshape(D.shape)
+    return D
 
 
 def _box_mean(grid, lat0, lon0, w, half=2.5):
@@ -113,9 +113,10 @@ def run(cfg=None):
         P = C.seasonalize({"tmax": tx, "tmin": tn, "ppt": M0[k]["ppt"] * np.clip(rp, lo_r, hi_r),
                            "vap": M0[k]["vap"] * np.clip(rv, vlo, vhi)})
         v0, v1 = V0[k][None], V1[k][None]
-        sP = _sigma(sm, midx, P[None], pool)[0]            # predicted-climate to every pool cell
-        sT = _sigma(sm, midx, v1, pool)[0]                 # truth to every pool cell
-        ip, io = int(np.argmin(sP)), int(np.argmin(sT))
+        kk = np.sqrt(sm.k)
+        dP = _dist(sm, midx, P[None], pool)[0]             # projected climate to every pool cell (Mahalanobis distance)
+        dT = _dist(sm, midx, v1, pool)[0]                  # truth to every pool cell
+        ip, io = int(np.argmin(dP)), int(np.argmin(dT))
         # naive: same meridian (within 1 deg), equatorward of the place (or level), closest annual mean temperature
         ann = lambda X: X[..., 0:8].mean(-1)
         cand = np.where((np.abs((plon - lon + 180) % 360 - 180) <= 1.0) & (np.abs(plat) <= abs(lat) + 0.5))[0]
@@ -123,36 +124,43 @@ def run(cfg=None):
             cand = np.array([int(np.argmin(C.haversine_km(plat, plon, lat, lon)))])
         inaive = int(cand[np.argmin(np.abs(ann(pool[cand]) - ann(V1[k])))])
         iown = int(np.argmin(C.haversine_km(plat, plon, lat, lon)))
+        dpers, dproj = _dist(sm, midx, v0, v1)[0, 0], _dist(sm, midx, P[None], v1)[0, 0]
+        sg = lambda D: float(C.chi_to_sigma(D, sm.k)[0])
         rows.append(dict(
             place=str(T.label[k]), lat=round(lat, 2), lon=round(lon, 2),
             dT=round(float(ann(V1[k]) - ann(V0[k])), 2),
-            persist=float(_sigma(sm, midx, v0, v1)[0, 0]),
-            proj_err=float(_sigma(sm, midx, P[None], v1)[0, 0]),
-            at_pred=float(sT[ip]), oracle=float(sT[io]), naive=float(sT[inaive]), own=float(sT[iown]),
+            # d = Mahalanobis distance / sqrt(measures): RMS difference in units of the place's year-to-year SD
+            persist_d=float(dpers / kk), proj_d=float(dproj / kk), at_pred_d=float(dT[ip] / kk), oracle_d=float(dT[io] / kk),
+            naive_d=float(dT[inaive] / kk), own_d=float(dT[iown] / kk),
+            persist=sg(dpers), proj_err=sg(dproj), at_pred=sg(dT[ip]), oracle=sg(dT[io]), naive=sg(dT[inaive]), own=sg(dT[iown]),
             km_pred_oracle=float(C.haversine_km(plat[ip], plon[ip], plat[io], plon[io])),
             km_move=float(C.haversine_km(plat[ip], plon[ip], lat, lon)),
-            equatorward=bool(abs(plat[ip]) < abs(lat) - 0.25), pred_sigma=float(sP[ip])))
+            equatorward=bool(abs(plat[ip]) < abs(lat) - 0.25)))
     q = lambda x, p: float(np.percentile(x, p))
-    col = lambda key, r=rows: np.array([x[key] for x in r])
-    det = [r for r in rows if r["persist"] >= 1.0]
+    col = lambda key, r: np.array([x[key] for x in r])
+    thr = float(np.percentile(col("persist_d", rows), 67)) if rows else 0.0
+    big = [r for r in rows if r["persist_d"] >= thr]
+
     def summ(r):
         if not r:
             return {}
+        c = lambda k2: col(k2, r)
         return dict(n=len(r),
-                    persistence_sigma_median=q(col("persist", r), 50), projection_sigma_median=q(col("proj_err", r), 50),
-                    share_projection_beats_persistence=float(np.mean(col("proj_err", r) < col("persist", r))),
-                    at_predicted_analog=dict(p25=q(col("at_pred", r), 25), median=q(col("at_pred", r), 50), p75=q(col("at_pred", r), 75), p90=q(col("at_pred", r), 90),
-                                             share_under_1=float(np.mean(col("at_pred", r) < 1)), share_under_2=float(np.mean(col("at_pred", r) < 2))),
-                    oracle_median=q(col("oracle", r), 50), naive_lat_shift_median=q(col("naive", r), 50), own_cell_median=q(col("own", r), 50),
-                    share_beats_naive=float(np.mean(col("at_pred", r) < col("naive", r))),
-                    share_beats_own_cell=float(np.mean(col("at_pred", r) < col("own", r))),
-                    skill_vs_naive=float(1 - np.median(col("at_pred", r)) / np.median(col("naive", r))),
-                    skill_vs_own_cell=float(1 - np.median(col("at_pred", r)) / np.median(col("own", r))),
-                    km_predicted_to_oracle_median=q(col("km_pred_oracle", r), 50),
-                    share_predicted_within_500km_of_oracle=float(np.mean(col("km_pred_oracle", r) < 500)),
-                    median_move_km=q(col("km_move", r), 50), share_equatorward=float(np.mean([x["equatorward"] for x in r])),
-                    median_warming_C=q(col("dT", r), 50))
-    out = dict(windows=hc["windows"], pool_cells=int(len(cells)), n_candidates=int(len(good)), all=summ(rows), detectable_change=summ(det),
+                    persistence_d=q(c("persist_d"), 50), projection_d=q(c("proj_d"), 50), at_predicted_analog_d=q(c("at_pred_d"), 50),
+                    oracle_d=q(c("oracle_d"), 50), own_cell_d=q(c("own_d"), 50), naive_lat_shift_d=q(c("naive_d"), 50),
+                    persistence_sigma=q(c("persist"), 50), projection_sigma=q(c("proj_err"), 50),
+                    at_predicted_analog=dict(p25=q(c("at_pred"), 25), median=q(c("at_pred"), 50), p75=q(c("at_pred"), 75), p90=q(c("at_pred"), 90),
+                                             share_under_1=float(np.mean(c("at_pred") < 1)), share_under_2=float(np.mean(c("at_pred") < 2))),
+                    share_projection_beats_persistence=float(np.mean(c("proj_d") < c("persist_d"))),
+                    share_beats_naive=float(np.mean(c("at_pred_d") < c("naive_d"))),
+                    share_beats_own_cell=float(np.mean(c("at_pred_d") < c("own_d"))),
+                    skill_vs_naive=float(1 - np.median(c("at_pred_d")) / np.median(c("naive_d"))),
+                    skill_vs_own_cell=float(1 - np.median(c("at_pred_d")) / np.median(c("own_d"))),
+                    km_predicted_to_oracle_median=q(c("km_pred_oracle"), 50),
+                    share_predicted_within_500km_of_oracle=float(np.mean(c("km_pred_oracle") < 500)),
+                    median_move_km=q(c("km_move"), 50), share_equatorward=float(np.mean([x["equatorward"] for x in r])),
+                    median_warming_C=q(c("dT"), 50))
+    out = dict(windows=hc["windows"], pool_cells=int(len(cells)), n_candidates=int(len(good)), all=summ(rows), largest_change_third=summ(big), largest_change_threshold_d=thr,
                places=[{k2: (round(v, 3) if isinstance(v, float) else v) for k2, v in r.items()} for r in rows],
                source="ERA5 daily (ARCO-ERA5 aggregation), 0.25 degree, place values bilinear, pool 0.5 degree block means")
     (C.DATA / "hindcast.json").write_text(json.dumps(out, separators=(",", ":"), ensure_ascii=False))

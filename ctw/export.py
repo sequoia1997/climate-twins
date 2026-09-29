@@ -198,7 +198,7 @@ def run(cfg=None):
                 med = np.nanmedian(sub, axis=0)
             return {"tmax": med[0:4].round(2).tolist(), "tmin": med[4:8].round(2).tolist(), "ppt": med[8:12].round(1).tolist(),
                     "dew": med[12:16].round(2).tolist()}
-        summary["era5"] = dict(median=round(float(np.median(fin)), 3), n=int(len(fin)), p90=round(float(np.percentile(fin, 90)), 3),
+        summary["era5"] = dict(median=round(float(np.median(fin)), 3), raw_median=round(float(np.nanmedian(R["era5_raw"][~bad])), 2), n=int(len(fin)), p90=round(float(np.percentile(fin, 90)), 3),
                                over_fair=round(float(np.mean(fin > cfg["era5"]["agree_fair"])), 4),
                                over_poor=round(float(np.mean(fin > cfg["era5"]["agree_poor"])), 4),
                                thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]],

@@ -27,6 +27,19 @@ EPOCH = np.datetime64("1959-01-01")
 NLAT, NLON = 721, 1440
 
 
+def load_lsm(ar):
+    """Land-sea mask (0..1) on the 0.25 degree grid. The hourly store keeps this static field in a time-shaped array that is
+    only filled at some steps (the first is empty), so look for a step that holds data."""
+    la = ar["land_sea_mask"]
+    if la.ndim == 2:
+        return np.asarray(la[:], "float32")
+    for i in (500000, 600000, 700000, 400000, 300000, 900000, 1000000, 200000, 100000):
+        x = np.asarray(la[i], "float32")
+        if np.isfinite(x).all():
+            return x
+    raise RuntimeError("no land-sea mask found in the ARCO-ERA5 store")
+
+
 def _open(cfg):
     import gcsfs, zarr
     fs = gcsfs.GCSFileSystem(token="anon")
@@ -84,8 +97,8 @@ def run(var: str, cfg=None):
     g = _open(cfg)
     import gcsfs, zarr
     ar = zarr.open(gcsfs.GCSFileSystem(token="anon").get_mapper(LSM_STORE), mode="r")   # static fields live in the hourly store
-    la = ar["land_sea_mask"]
-    lsm = np.asarray(la[0] if la.ndim == 3 else la[:], "float32")
+    lsm = load_lsm(ar)
+    assert 0.2 < lsm.mean() < 0.4, "land-sea mask looks wrong"
     I, J, W = interp_weights(T.lat.values, T.lon.values, lsm)
     years = years_needed(cfg)
     hw = cfg["hindcast"]["windows"]
@@ -169,7 +182,23 @@ def baseline_vectors(d, b0, b1):
     return out
 
 
-def agreement(sm, midx, a, b):
-    """Sigma distance between two 16-vectors under a place's variability model (same metric as the matching)."""
-    pa, pb = sm.project(C.transform(a)[midx])[0], sm.project(C.transform(b)[midx])[0]
+def offsets(base, era, groups):
+    """Typical ERA5 minus baseline difference per measure (in the metric's space: precipitation as log ratio), the median
+    over places of each group (0 = AdaptWest places, 1 = TerraClimate places). ERA5 has systematic offsets against the
+    gridded observational datasets (warm nights, slightly cool days, wet bias); left in, they would flag most places, so
+    the agreement measures how far a place departs from that typical offset."""
+    diff = C.transform(era) - C.transform(base)
+    off = np.zeros((2, C.NV))
+    for g in (0, 1):
+        ok = (groups == g) & np.isfinite(diff).all(1)
+        if ok.sum() >= 3:
+            off[g] = np.median(diff[ok], 0)
+    return off
+
+
+def agreement(sm, midx, a, b, off=None):
+    """Sigma distance between two 16-vectors under a place's variability model (same metric as the matching);
+    off (16,) is subtracted from b's transformed vector first (the typical dataset offset)."""
+    tb = C.transform(b) - (0 if off is None else off)
+    pa, pb = sm.project(C.transform(a)[midx])[0], sm.project(tb[midx])[0]
     return float(C.chi_to_sigma(np.sqrt(((pa - pb) ** 2).sum()), sm.k)[0])

@@ -296,10 +296,15 @@ def run(cfg=None):
         C.log.warning("no ERA5 files in work/era5: baseline agreement not computed")
     else:
         eb = E.baseline_vectors(e5, b0, b1)
-        for k in np.where(~bad)[0]:
-            if np.isfinite(eb[k, midx]).all():
-                era5_sig[k] = E.agreement(SH[k], midx, base[k], eb[k])
-                era5_diff[k] = eb[k] - base[k]
+        ok5 = ~bad & np.isfinite(eb[:, midx]).all(1) & np.isfinite(base[:, midx]).all(1)
+        e5off = E.offsets(base[ok5], eb[ok5], G[ok5])
+        era5_raw = np.full(NT, np.nan, "float32")
+        for k in np.where(ok5)[0]:
+            era5_sig[k] = E.agreement(SH[k], midx, base[k], eb[k], e5off[G[k]])
+            era5_raw[k] = E.agreement(SH[k], midx, base[k], eb[k])
+            era5_diff[k] = eb[k] - base[k]
+        C.log.info("ERA5 typical offsets (transformed units) NA %s | world %s", np.round(e5off[0], 2).tolist(), np.round(e5off[1], 2).tolist())
+        C.log.info("ERA5 raw agreement median %.2f sigma", np.nanmedian(era5_raw))
         C.log.info("ERA5 baseline agreement: median %.2f sigma, %d places over %.1f, %d over %.1f", np.nanmedian(era5_sig),
                    int((era5_sig > cfg["era5"]["agree_fair"]).sum()), cfg["era5"]["agree_fair"],
                    int((era5_sig > cfg["era5"]["agree_poor"]).sum()), cfg["era5"]["agree_poor"])   # END era5-agreement
@@ -311,7 +316,7 @@ def run(cfg=None):
            Mtr=np.array([TR[k].M(K) if TR[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            kdef=np.array([TR[k].k if TR[k] else 0 for k in range(NT)]), alpha=np.array([SH[k].alpha if SH[k] else np.nan for k in range(NT)]),
            best_idx=best_idx, best_sig=best_sig, sites=sites, site_sig=site_sig, area2=area2, own=own, agree=agree, selfchk=selfchk,
-           tc_check=tc_check, era5_sig=era5_sig, era5_diff=era5_diff, recent=ref.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
+           tc_check=tc_check, era5_sig=era5_sig, era5_diff=era5_diff, era5_raw=era5_raw if e5 is not None else np.full(NT, np.nan, "float32"), recent=ref.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
            floored=np.array([f"{a}:{b}" for a, b in floored]), cc_fill=np.array(cc_fill),
            f_now_kg=fnow["kg"], f_now_zone=fnow["zone"], f_now_ffp=fnow["ffp"],
            f_fut_kg=ffut["kg"], f_fut_zone=ffut["zone"], f_fut_ffp=ffut["ffp"],
