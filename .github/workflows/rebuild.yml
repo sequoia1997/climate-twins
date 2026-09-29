@@ -142,6 +142,9 @@ jobs:
           prev=""; [ -f /tmp/previous_summary.json ] && prev="--previous /tmp/previous_summary.json"
           python -m ctw validate $prev
           echo "status=$(cat site/data/status.txt)" >> "$GITHUB_OUTPUT"
+      - name: Record the data update in the changelog
+        if: ${{ env.CTW_SMOKE == '' }}
+        run: python -m ctw changelog && python -m ctw site
       - name: Test the page in a browser
         run: |
           pip install playwright && python -m playwright install --with-deps chromium
@@ -157,7 +160,7 @@ jobs:
           b="data-update-$v"
           git config user.name "climate-twins-bot"; git config user.email "actions@users.noreply.github.com"
           git checkout -b "$b"
-          git add site data/sealevel.json 2>/dev/null || git add site
+          git add site CHANGELOG.md data/sealevel.json 2>/dev/null || git add site CHANGELOG.md
           git commit -m "Data update $v (${{ steps.check.outputs.status }})"
           git push -f origin "$b"
           label="${{ steps.check.outputs.status }}"
