@@ -457,6 +457,7 @@ let NV=12,K=12,MI=[0,1,2,3,4,5,6,7,8,9,10,11],HAS10=false,kgNow,zoneNow,ffpNow,k
 const isP=i=>i>=8&&i<12,decT=(v,i)=>isP(i)?v/1000:v/100,decR=(v,i)=>isP(i)?Math.exp(v/1000)-1:v/100;
 const OPEN=new Set();const op=k=>OPEN.has(k)?" open":"";
 let D,NP,NT,NM,pool,poolRaw,cellRC,plat,plon,base,fut,sd,Msh,Mtr,bestIdx,bestSig,sigTab,places,cellPlace,cellCity;
+let OVS,OVP;   // overview: per place x 32 (period, scenario, ensemble, method): sigma x100 (65535 = none), best-match lat/lon x100
 let POOLS=[],PI=0,NTNA=0,worldState="none"; // PI: 0 = North America 15 km pool, 1 = global 0.5° pool
 const MBW={w:-180,e:180,s:-60,n:84,W:2160,H:0};let heatW=null,hctxW,heatImgW,heat32W,lutW=null,gridToCellW;
 const S={mode:"year",gi:1,per:1,gsel:-1,darkMap:false,cmp:0,sel:-1,ssp:1,ens:"tcr_likely",pm:0,metric:false,showModels:true,showAll:true,hover:null};
@@ -554,7 +555,14 @@ async function fetchCTW(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.o
   const u=new Uint8Array(await r.arrayBuffer());let buf=u.buffer;
   if(u[0]===0x1f&&u[1]===0x8b)buf=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
   return unpackWorld(buf);}
-async function load(){return fetchCTW("data/na.dat");}
+async function fetchJSON(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.ok)throw new Error("HTTP "+r.status+" for "+url);return r.json();}
+// Startup needs three small-or-fixed-size files: index.json (every place), overview.dat (every place's best match, for the
+// arrows shown before a pick) and na.dat (the North American pool). Per-place data comes in shards (data/p/*.dat) when a place is
+// picked; the world pool (world.dat) when the first world place is picked (or after a quiet moment on a fast connection).
+async function load(){
+  const[d,idx,ov]=await Promise.all([fetchCTW("data/na.dat"),fetchJSON("data/index.json"),fetchCTW("data/overview.dat")]);
+  if(idx.v!==d.data_version||ov.v!==d.data_version)throw new Error("the data files come from different builds (reload the page)");
+  d.idx=idx;d.ov=ov;return d;}
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 function hav(a1,o1,a2,o2){const r=Math.PI/180,dl=(a2-a1)*r,dn=(o2-o1)*r;const h=Math.sin(dl/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dn/2)**2;return 12742.0176*Math.asin(Math.min(1,Math.sqrt(h)));}
 function bearing(a1,o1,a2,o2){const r=Math.PI/180,dx=(o2-o1)*Math.cos((a1+a2)/2*r),dy=a2-a1;return(Math.atan2(dx,dy)/r+360)%360;}
@@ -568,40 +576,64 @@ function init(d){
   applyTheme(savedTheme()?savedTheme()==="dark":sysDark.matches,false);
   document.getElementById("themebtn").onclick=()=>applyTheme(!S.darkMap,true,true);
   sysDark.addEventListener("change",e=>{if(!savedTheme())applyTheme(e.matches,false,true);});
-  D=d;NP=d.NP;NT=d.targets.length;NM=d.models.length;
+  D=d;NP=d.NP;NM=d.models.length;
+  if(!d.idx)throw new Error("data/index.json is missing");
+  {const cols=d.idx.cols;d.targets=d.idx.rows.map(r=>{const o={};for(let j=0;j<cols.length;j++)o[cols[j]]=r[j];return o;});}   // {n,lat,lon,pop,c,icv,k,g,s,i}
+  NT=d.targets.length;NTNA=d.idx.na;d.glob={};d.gglob={};
   NV=d.nv||12;MI=d.midx||MI;K=MI.length;HAS10=NV>=16;
   const p16=arr(d.pool,Int16Array);pool=new Float32Array(NV*NP);poolRaw=new Float32Array(NV*NP);
   for(let i=0;i<NV;i++)for(let p=0;p<NP;p++){const v=p16[i*NP+p];pool[i*NP+p]=decT(v,i);poolRaw[i*NP+p]=decR(v,i);}
   const m=b64u8(d.mask);cellRC=new Uint32Array(NP);let c=0;
   for(let g=0;g<d.nx*d.ny;g++){if(m[g>>3]&(128>>(g&7)))cellRC[c++]=g;}
   plat=arr(d.plat,Float32Array);plon=arr(d.plon,Float32Array);
-  base=arr(d.base,Int16Array);
-  if(d.fut_d){fut=unplane16(d.fut_d);const per=fut.length/base.length;for(let t=0;t<base.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)fut[o+i]+=base[t*NV+i];}}else fut=arr(d.fut,Int16Array);
-  const z8=n=>new Uint8Array(n),z16=n=>new Uint16Array(n),nt=d.targets.length,nc=nt*16;
-  kgNow=d.kg_now?arr(d.kg_now,Uint8Array):z8(nt);zoneNow=d.zone_now?arr(d.zone_now,Uint8Array):z8(nt);ffpNow=d.ffp_now?arr(d.ffp_now,Uint16Array):z16(nt);
-  kgFut=d.kg_fut?arr(d.kg_fut,Uint8Array):z8(nc);zoneFut=d.zone_fut?arr(d.zone_fut,Uint8Array):z8(nc);ffpFut=d.ffp_fut?arr(d.ffp_fut,Uint16Array):z16(nc);
-  recentA=d.recent?arr(d.recent,Int16Array):new Int16Array(nt*NV);recSig=d.rec_sig?arr(d.rec_sig,Float32Array):new Float32Array(nt);
-  Msh=arr(d.Msh,Float32Array);Mtr=arr(d.Mtr,Float32Array);sd=arr(d.icvsd,Float32Array);
-  bestIdx=arr(d.best_idx,Int32Array);bestSig=arr(d.best_sig,Float32Array);
-  gwlLoad(d,base);
+  // Per-place arrays are allocated for every place (about 9 kB each) and filled shard by shard as places are picked (ingestShard).
+  const nt=NT,nc=nt*16,pp=2*4*NM;                   // pp: 2 periods x 4 scenarios x models
+  base=new Int16Array(nt*NV);fut=new Int16Array(nt*pp*NV);
+  kgNow=new Uint8Array(nt);zoneNow=new Uint8Array(nt);ffpNow=new Uint16Array(nt);
+  kgFut=new Uint8Array(nc);zoneFut=new Uint8Array(nc);ffpFut=new Uint16Array(nc);
+  recentA=new Int16Array(nt*NV);recSig=new Float32Array(nt);
+  Msh=new Float32Array(nt*K*K);Mtr=new Float32Array(nt*K*K);sd=new Float32Array(nt*NV);
+  bestIdx=new Int32Array(nt*32).fill(-1);bestSig=new Float32Array(nt*32);
+  gwlLoad(d);
+  {const o=d.ov,n=o.n;OVS=arr(o.sig,Uint16Array);const p=arr(o.pos,Int16Array);OVP=p;if(OVS.length!==n*32)throw new Error("overview does not match the place list");}
   sigTab=arr(d.sig_tab,Float32Array);places=d.places;
   cellPlace=arr(d.cell_place,Uint16Array);cellCity=arr(d.cell_city,Uint16Array);
-  d.targets.forEach(t=>t.g=0);NTNA=NT;
   POOLS[0]={g:0,NP,pool,poolRaw,cellRC,plat,plon,places,cellPlace,cellCity,kg:d.kg_pool?arr(d.kg_pool,Uint8Array):null,zone:d.zone_pool?arr(d.zone_pool,Uint8Array):null,ffp:d.ffp_pool?arr(d.ffp_pool,Uint16Array):null,sep:150,region:"North America",area:c=>225};
   buildLUT();
-  const dl=document.getElementById("places");
-  d.targets.forEach((t,i)=>{const o=document.createElement("option");o.value=t.n;dl.appendChild(o);});
   document.getElementById("modelslist").textContent="Models: "+d.models.map((m,i)=>{const r=d.tcr?d.tcr[i]:null;return m+(d.ens.tcr_likely.includes(i)?"":r==null?" (no TCR)":r>2.2?" (hot)":" (cool)");}).join(", ")+". Marked models are outside the default mid-range screen.";
 }
-// ---------- world cities (global 0.5° pool), fetched after the North American payload
+// ---------- world pool (global 0.5°), place shards: fetched on demand
 function usePool(g){const P=POOLS[g];if(!P)return;PI=g;({NP,pool,poolRaw,cellRC,plat,plon,places,cellPlace,cellCity}=P);ppCache={key:null,Pp:null};}
 function cat(A,B){const o=new A.constructor(A.length+B.length);o.set(A,0);o.set(B,A.length);return o;}
-async function loadWorld(){
-  const st=document.getElementById("wstat");worldState="loading";st.textContent="Loading world cities…";
-  try{
-    addWorld(await fetchCTW("data/world.dat"));worldState="ready";st.textContent="";
-  }catch(e){worldState="failed";st.textContent="World cities could not load, so only North America is available. ("+e.message+")";}
-}
+// The world pool (world.dat, ~2 MB) loads once, when a world place is first picked or after a quiet moment on a fast connection.
+let worldP=null,busy=0;
+function setWStat(msg){const st=document.getElementById("wstat");if(st)st.textContent=msg||"";}
+function ensureWorld(){if(worldP)return worldP;worldState="loading";
+  worldP=fetchCTW("data/world.dat").then(w=>{addWorld(w);worldState="ready";}).catch(e=>{worldState="failed";worldP=null;throw e;});return worldP;}
+// Per-place data lives in shards (data/p/*.dat, ~50 places each). ensureShard(n) fetches one at most once (retrying after a failure).
+function ensureShard(n){const s=D.idx.shards[n];if(s.done)return Promise.resolve();
+  if(!s.p)s.p=fetchCTW("data/"+s.f).then(w=>{ingestShard(w);s.done=true;}).catch(e=>{s.p=null;throw e;});return s.p;}
+const placeReady=t=>{const r=D.targets[t];return !!D.idx.shards[r.s].done&&(r.g===0||worldState==="ready");};
+// Everything a place needs before it can be shown: its shard, and the world pool for world places.
+function ensurePlace(t){if(placeReady(t))return Promise.resolve();const r=D.targets[t];
+  busy++;setWStat("Loading data for "+r.n+"…");
+  const ps=[ensureShard(r.s)];if(r.g===1)ps.push(ensureWorld());
+  return Promise.all(ps).then(()=>{}).finally(()=>{if(--busy<=0){busy=0;setWStat("");}});}
+// Copy a shard's per-place arrays into the page-wide arrays at each place's index (w.ids[slot] = page index).
+function ingestShard(w){const ids=w.ids,n=ids.length;
+  const put=(dst,src,st)=>{for(let j=0;j<n;j++)dst.set(src.subarray(j*st,(j+1)*st),ids[j]*st);};
+  const b=warr(w.base,Int16Array);if(b.length!==n*NV)throw new Error("place data uses a different set of measures");
+  const f=unplane16(w.fut_d),per=f.length/b.length;                                            // per = 2 periods x 4 SSPs x NM models
+  for(let t=0;t<n;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)f[o+i]+=b[t*NV+i];}
+  put(base,b,NV);put(fut,f,per*NV);
+  put(Msh,warr(w.Msh,Float32Array),K*K);put(Mtr,warr(w.Mtr,Float32Array),K*K);put(sd,warr(w.icvsd,Float32Array),NV);
+  put(bestIdx,warr(w.best_idx,Int32Array),32);put(bestSig,warr(w.best_sig,Float32Array),32);
+  put(kgNow,arr(w.kg_now,Uint8Array),1);put(zoneNow,arr(w.zone_now,Uint8Array),1);put(ffpNow,arr(w.ffp_now,Uint16Array),1);
+  put(kgFut,arr(w.kg_fut,Uint8Array),16);put(zoneFut,arr(w.zone_fut,Uint8Array),16);put(ffpFut,arr(w.ffp_fut,Uint16Array),16);
+  put(recentA,arr(w.recent,Int16Array),NV);put(recSig,arr(w.rec_sig,Float32Array),1);
+  for(const j in (w.sl||{}))D.targets[ids[+j]].sl=w.sl[j];
+  gwlIngest(w,put,b);
+  Object.assign(D.glob,w.glob||{});Object.assign(D.gglob,w.gglob||{});}
 // world.dat = [gzip] "CTW1" | uint32 header length | JSON header | 4-byte-aligned binary arrays referenced as {"$b":[offset,nbytes]}
 function unpackWorld(buf){const dv=new DataView(buf),u=new Uint8Array(buf);
   const mg=String.fromCharCode(u[0],u[1],u[2],u[3]);if(mg!=="CTW1"&&mg!=="CTW2")throw new Error("unexpected data format");
@@ -621,22 +653,9 @@ function addWorld(w){
   gridToCellW=new Int32Array(w.nx*w.ny).fill(-1);for(let p=0;p<NPw;p++)gridToCellW[rc[p]]=p;
   POOLS[1]={g:1,NP:NPw,pool:pl,poolRaw:pr,cellRC:rc,plat:la,plon:lo,places:w.places,cellPlace:warr(w.cell_place,Uint16Array),cellCity:warr(w.cell_city,Uint16Array),kg:w.kg_pool?arr(w.kg_pool,Uint8Array):null,zone:w.zone_pool?arr(w.zone_pool,Uint8Array):null,ffp:w.ffp_pool?arr(w.ffp_pool,Uint16Array):null,
     sep:300,region:"the world",nx:w.nx,ny:w.ny,res:w.res,area:p=>ckm*Math.cos(la[p]*Math.PI/180)*lf[p]/255};
-  const wb=warr(w.base,Int16Array),wf=unplane16(w.fut_d),per=wf.length/wb.length;       // per = 2 periods x 4 SSPs x NM models
-  for(let t=0;t<wb.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)wf[o+i]+=wb[t*NV+i];}
-  const wt=w.targets.length,cz=(x,T,n)=>x?arr(x,T):new T(n);
-  kgNow=cat(kgNow,cz(w.kg_now,Uint8Array,wt));zoneNow=cat(zoneNow,cz(w.zone_now,Uint8Array,wt));ffpNow=cat(ffpNow,cz(w.ffp_now,Uint16Array,wt));
-  kgFut=cat(kgFut,cz(w.kg_fut,Uint8Array,wt*16));zoneFut=cat(zoneFut,cz(w.zone_fut,Uint8Array,wt*16));ffpFut=cat(ffpFut,cz(w.ffp_fut,Uint16Array,wt*16));
-  recentA=cat(recentA,cz(w.recent,Int16Array,wt*NV));recSig=cat(recSig,cz(w.rec_sig,Float32Array,wt));
-  gwlAdd(w,wb);
-  base=cat(base,wb);fut=cat(fut,wf);Msh=cat(Msh,warr(w.Msh,Float32Array));Mtr=cat(Mtr,warr(w.Mtr,Float32Array));
-  sd=cat(sd,warr(w.icvsd,Float32Array));bestIdx=cat(bestIdx,warr(w.best_idx,Int32Array));bestSig=cat(bestSig,warr(w.best_sig,Float32Array));
-  const dl=document.getElementById("places");
-  w.targets.forEach(t=>{D.targets.push(t);const o=document.createElement("option");o.value=t.n;dl.appendChild(o);});
-  NT=D.targets.length;popOrder=null;
   heatW=document.createElement("canvas");const r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2));
   MBW.H=Math.round(MBW.W*(my(MBW.n)-my(MBW.s))/((MBW.e-MBW.w)*r));heatW.width=MBW.W;heatW.height=MBW.H;
   D.fallbackWorld=w.fallback||null;if(usingFallback)setBaseStyle();else if(mapReady)addWorldHeat();
-  const h=decodeURIComponent(location.hash.slice(1));if(h&&S.sel<0){const i=D.targets.findIndex(t=>t.n===h);if(i>=0)select(i,true);}
   legend();draw();
 }
 function buildWorldLUT(){const W=MBW.W,H=MBW.H,P=POOLS[1],r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2)),yN=my(MBW.n),yS=my(MBW.s);
@@ -655,15 +674,17 @@ function toRaw(v){return Array.from(v,(x,i)=>isP(i)?Math.exp(x)-1:x);}
    the year it reaches a level of global warming above 1850-1900, pooled over the scenarios that reach it (see methods).
    Data: D.gwl {levels, ref, now, n[ens][level], ok[level][ens], when[ens][level][ssp], reach[level][model]} and per place
    gfut_d, gbest_idx, gbest_sig, gkg/gzone/gffp (page order of ensembles: 0 all, 1 likely-range). */
+let OVGS=null,OVGP=null;   // overview for warming levels: per place x NG x 2 x 2
 let gFut=null,gBestIdx=null,gBestSig=null,gKg=null,gZone=null,gFfp=null,NG=0;
 function gwlOn(){return S.mode==="gwl"&&!!gFut&&!!D.gwl;}
 function gwlDec(x,b,n){const per=n*NM;for(let t=0;t<b.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)x[o+i]+=b[t*NV+i];}return x;}
-function gwlLoad(d,b){if(!d.gwl||!d.gfut_d)return;NG=d.gwl.levels.length;
-  gFut=gwlDec(unplane16(d.gfut_d),b,NG);gBestIdx=arr(d.gbest_idx,Int32Array);gBestSig=arr(d.gbest_sig,Float32Array);
-  gKg=arr(d.gkg,Uint8Array);gZone=arr(d.gzone,Uint8Array);gFfp=arr(d.gffp,Uint16Array);}
-function gwlAdd(w,wb){if(!gFut)return;if(!w.gfut_d){gFut=null;return;}
-  gFut=cat(gFut,gwlDec(unplane16(w.gfut_d),wb,NG));gBestIdx=cat(gBestIdx,warr(w.gbest_idx,Int32Array));gBestSig=cat(gBestSig,warr(w.gbest_sig,Float32Array));
-  gKg=cat(gKg,warr(w.gkg,Uint8Array));gZone=cat(gZone,warr(w.gzone,Uint8Array));gFfp=cat(gFfp,warr(w.gffp,Uint16Array));}
+function gwlLoad(d){if(!d.gwl)return;NG=d.gwl.levels.length;const nt=NT;      // preallocated for every place; shards fill it (gwlIngest)
+  gFut=new Int16Array(nt*NG*NM*NV);gBestIdx=new Int32Array(nt*NG*4).fill(-1);gBestSig=new Float32Array(nt*NG*4);
+  gKg=new Uint8Array(nt*NG*2);gZone=new Uint8Array(nt*NG*2);gFfp=new Uint16Array(nt*NG*2);
+  if(d.ov.gsig){OVGS=arr(d.ov.gsig,Uint16Array);OVGP=arr(d.ov.gpos,Int16Array);}}
+function gwlIngest(w,put,b){if(!gFut||!w.gfut_d)return;
+  put(gFut,gwlDec(unplane16(w.gfut_d),b,NG),NG*NM*NV);put(gBestIdx,warr(w.gbest_idx,Int32Array),NG*4);put(gBestSig,warr(w.gbest_sig,Float32Array),NG*4);
+  put(gKg,warr(w.gkg,Uint8Array),NG*2);put(gZone,warr(w.gzone,Uint8Array),NG*2);put(gFfp,warr(w.gffp,Uint16Array),NG*2);}
 function gFutVec(t,gi,mi){const o=new Float64Array(NV),b=((t*NG+gi)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(gFut[b+i],i);return o;}
 function bestAt(t,ei,pm){return gwlOn()?gBestIdx[((t*NG+S.gi)*2+ei)*2+pm]:bestIdx[(((t*2+S.per)*4+S.ssp)*2+ei)*2+pm];}
 function bestSigAt(t,ei,pm){return gwlOn()?gBestSig[((t*NG+S.gi)*2+ei)*2+pm]:bestSig[(((t*2+S.per)*4+S.ssp)*2+ei)*2+pm];}
@@ -790,9 +811,9 @@ function draw(){
   const lim=overviewLimit(z),shown=new Uint8Array(NT);
   if(S.showAll&&!cur){ctx.lineCap="butt";
     let nOn=0;for(let n=0;n<NT&&nOn<lim;n++){const t=popOrder[n];const tt=D.targets[t];const[a,b]=toScr(tt.lon,tt.lat);
-      if(a<-8||a>W+8||b<-8||b>H+8)continue;nOn++;shown[t]=1;const c=bestAt(t,ei,S.pm);if(c<0)continue;
-      const Pg=POOLS[tt.g];const[x,y]=toScr(wrapLon(Pg.plon[c],tt.lon),Pg.plat[c]);
-      const sg=bestSigAt(t,ei,S.pm);if(sg>=4||(sg>=2&&Math.hypot(x-a,y-b)<4)){ctx.beginPath();ctx.arc(a,b,6,0,7);ctx.lineWidth=3.4;ctx.strokeStyle=m.casing;ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle=RAMP[5];ctx.stroke();continue;}
+      if(a<-8||a>W+8||b<-8||b>H+8)continue;nOn++;shown[t]=1;const gw=gwlOn()&&OVGS,oo=gw?((t*NG+S.gi)*2+ei)*2+S.pm:t*32+((S.per*4+S.ssp)*2+ei)*2+S.pm,sq=(gw?OVGS:OVS)[oo];if(sq===65535)continue;
+      const OP=gw?OVGP:OVP,[x,y]=toScr(wrapLon(OP[oo*2+1]/100,tt.lon),OP[oo*2]/100);
+      const sg=sq/100;if(sg>=4||(sg>=2&&Math.hypot(x-a,y-b)<4)){ctx.beginPath();ctx.arc(a,b,6,0,7);ctx.lineWidth=3.4;ctx.strokeStyle=m.casing;ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle=RAMP[5];ctx.stroke();continue;}
       const dash=sg>=2;arrow(a,b,x,y,colorFor(sg)||"#5a6675",1.8,8,dash,m.casing,0.9);}}
   const r0=z<3.5?2:z<5?2.8:3.6;
   for(let t=0;t<NT;t++){const tt=D.targets[t];const[x,y]=toScr(tt.lon,tt.lat);if(x<-10||y<-10||x>W+10||y>H+10)continue;
@@ -1157,7 +1178,13 @@ const COMBO=(()=>{let sr,ul,pickFn,items=[],act=-1,ALL=null,justFocused=false,la
     ul.addEventListener("pointerdown",e=>{const li=e.target.closest("li[data-i]");if(!li)return;e.preventDefault();choose(+li.dataset.i);});
     sr.addEventListener("blur",()=>setTimeout(()=>show(false),120));}
   return{init};})();
-function select(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
+// Picking a place first makes sure its data is here (its shard, plus the world pool for a world place), then shows it.
+// Returns a promise that settles once the place is shown; a newer pick cancels an older one that is still loading.
+let selTok=0;
+function select(t,focus){const tok=++selTok;
+  if(t<0||placeReady(t)){selectNow(t,focus);return Promise.resolve();}
+  return ensurePlace(t).then(()=>{if(tok===selTok)selectNow(t,focus);},e=>{if(tok===selTok)setWStat("The data for "+D.targets[t].n+" could not load. Check your connection and try again. ("+e.message+")");});}
+function selectNow(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
   if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
 function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
@@ -1190,7 +1217,7 @@ function segs(){
   document.getElementById("optAll").onchange=ev=>{S.showAll=ev.target.checked;legend();draw();};
   document.getElementById("optUnits").onchange=ev=>{S.metric=ev.target.checked;panel();};
   document.getElementById("optHot").onchange=ev=>{S.ens=ev.target.checked?"all":"tcr_likely";refresh();};
-  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim(),worldState==="loading");};
+  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim(),false);};
   document.addEventListener("click",e=>{const b=e.target.closest("[data-fb]");if(b){e.preventDefault();openFeedback(b.dataset.fb);}});
   document.getElementById("fbform").addEventListener("submit",sendFeedback);document.getElementById("fbcancel").onclick=()=>document.getElementById("fbdlg").close();
   document.getElementById("fbform").message.addEventListener("input",()=>{const m=document.getElementById("fbmsg");if(m.classList.contains("err")){m.textContent="";m.className="small";}});
@@ -1314,7 +1341,7 @@ load().then(d=>{
   const r=wrap.getBoundingClientRect();if(r.width>=20&&r.height>=20)fitted=true;
   const h=decodeURIComponent(location.hash.slice(1));if(h==="feedback"){history.replaceState(null,"",location.pathname+location.search);openFeedback("");}
   const i=h&&h!=="feedback"?D.targets.findIndex(t=>t.n===h):-1;if(i>=0)select(i,true);
-  loadWorld();
+  {const c=navigator.connection||{};if(!c.saveData&&(!c.effectiveType||c.effectiveType==="4g"))setTimeout(()=>{if(!worldP)ensureWorld().catch(()=>{});},4000);}   // world pool: quiet prefetch, not on slow or data-saving connections
 }).catch(err=>{const l=document.getElementById("loading");if(l)l.textContent="The map could not start: "+err.message+". It needs a current browser with WebGL.";});
 </script>
 </body>

@@ -94,6 +94,9 @@ world_res = 0.5
 world_landfrac_min = 0.25
 world_lat_min = -60.0
 
+[export]
+shard_places = 48              # places per per-place download file (site/data/p/*.dat); the page fetches one when a place is picked
+
 [extremes]
 # Extreme-day indicators from NASA NEX-GDDP-CMIP6 daily data (separate "Extreme days" workflow, see ctw/extremes.py).
 # Each model-year is four ~245 MB files, so the job samples years: year_stride = 2 uses every second year of each
