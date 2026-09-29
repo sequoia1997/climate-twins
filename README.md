@@ -92,6 +92,12 @@ One-time setup (in this order):
 4. GitHub repository secret **`FEEDBACK_TO`** = that verified address. It is never stored in the repository.
 5. Upload the files and let **Deploy site** run. It hands `FEEDBACK_TO` to the Worker.
 
+## Changelog
+
+`CHANGELOG.md` is the public "What's new" page (`/changelog.html`, linked from the panel and the methods page).
+Add entries in plain language under a `## date` heading, newest first, just below the `<!-- entries -->` line.
+Each data rebuild adds its own dated entry automatically (once per data version) and includes it in its pull request.
+
 ## Running locally
 
 ```
