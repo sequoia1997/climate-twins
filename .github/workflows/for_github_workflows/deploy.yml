@@ -1,0 +1,48 @@
+# Publishes the site to Cloudflare whenever the page (web/) or the data (site/) changes on main.
+# Once release-10 data is in place, the page is rebuilt from web/ first, so page edits go live on their own.
+name: Deploy site
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "web/**", "worker/**", "wrangler.jsonc", "CHANGELOG.md"]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      HAS_DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN != '' }}
+      HAS_FEEDBACK_TO: ${{ secrets.FEEDBACK_TO != '' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: requirements-site.txt }
+      - name: Build the page from web/
+        run: |
+          if [ -f site/data/summary.json ]; then
+            # a short list, patient retries, and one more try after a pause if the package server hiccups
+            pip install --retries 10 --timeout 60 -r requirements-site.txt || { sleep 60; pip install --retries 10 --timeout 60 -r requirements-site.txt; }
+            python -m ctw site
+          else
+            echo "No release-10 data yet: publishing site/ as it is."
+          fi
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: deploy
+      - name: Give the Worker its GitHub token (for place requests)
+        if: ${{ env.HAS_DISPATCH_TOKEN == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+        run: printf '%s' "$DISPATCH_TOKEN" | npx --yes wrangler@4 secret put DISPATCH_TOKEN
+      - name: Give the Worker the feedback address (kept private)
+        if: ${{ env.HAS_FEEDBACK_TO == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          FEEDBACK_TO: ${{ secrets.FEEDBACK_TO }}
+        run: printf '%s' "$FEEDBACK_TO" | npx --yes wrangler@4 secret put FEEDBACK_TO
