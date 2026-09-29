@@ -83,6 +83,7 @@ def run(cfg=None):
         periods=[{"key": k, "label": k, "years": f"{a}–{b}"} for k, (a, b) in zip(cfg["periods"]["keys"], cfg["periods"]["years"])],
         baseline=cfg["baseline"]["years"], data_version=version, method_version=cfg["release"]["method_version"],
         kg=F.KG, kg_name=[F.KG_NAME[c] for c in F.KG], recent_years=R["rec_years"].tolist(), humidity=bool(cfg["matching"]["humidity"]),
+        era5_thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]],      # era5-agreement
         calibration={"hardiness": {k: v for k, v in cal["hardiness"].items() if k != "coef"}, "ffp": {k: v for k, v in cal["ffp"].items() if k != "coef"}},
     )
     Dg = np.arange(0, 60.0001, 0.02)
@@ -114,13 +115,17 @@ def run(cfg=None):
             ffp_fut=pk.add(R["f_fut_ffp"][sel][:, :, :, eord]),
             recent=pk.add(np.round(np.nan_to_num(R["recent"][sel]) * 100).astype("int16")),        # °C x100, log ratio x100
             rec_sig=pk.add(np.nan_to_num(R["rec_sig"][sel]).astype("float32")),
+            # BEGIN era5-agreement: sigma between the place's baseline and its ERA5 baseline; -1 = not available
+            era5=pk.add(np.nan_to_num(R["era5_sig"][sel], nan=-1.0).astype("float32")),
+            # END era5-agreement
         )
         for j, k in enumerate(idx):
             summary["places"][T.label[k]] = {
                 "g": g, "sig": np.round(R["best_sig"][k][:, :, eord, 0], 3).tolist(),
                 "ll": np.round(np.stack([(R["na_lat"] if g == 0 else R["w_lat"])[R["best_idx"][k][:, :, eord, 0]],
                                          (R["na_lon"] if g == 0 else R["w_lon"])[R["best_idx"][k][:, :, eord, 0]]], -1), 3).tolist(),
-                "selfchk": round(float(R["selfchk"][k]), 3), "rec_sig": round(float(R["rec_sig"][k]), 3)}
+                "selfchk": round(float(R["selfchk"][k]), 3), "rec_sig": round(float(R["rec_sig"][k]), 3),
+                "era5": None if not np.isfinite(R["era5_sig"][k]) else round(float(R["era5_sig"][k]), 3)}      # era5-agreement
         return blk
 
     # ------------------------------------------------------------ North America
@@ -180,6 +185,25 @@ def run(cfg=None):
     summary.update(selfchk_median=round(float(np.nanmedian(R["selfchk"])), 3), tc_check_median=round(float(np.nanmedian(R["tc_check"])), 3),
                    unusable=T.label[bad].tolist(), floored=R["floored"].tolist(), cc_fill=R["cc_fill"].tolist(),
                    recent_years=R["rec_years"].tolist(), n_models=len(ms), sealevel_places=len(sl["places"]) if sl else 0)
+    # BEGIN era5-agreement: bias table (ERA5 minus baseline, median over places) and agreement shares for methods.html
+    e5 = R["era5_sig"][~bad]
+    if np.isfinite(e5).any():
+        fin = e5[np.isfinite(e5)]
+        diff = R["era5_diff"][~bad]
+        isna = T.g.values[~bad] == 0
+
+        def bias(sub):
+            with np.errstate(all="ignore"), __import__("warnings").catch_warnings():
+                __import__("warnings").simplefilter("ignore")
+                med = np.nanmedian(sub, axis=0)
+            return {"tmax": med[0:4].round(2).tolist(), "tmin": med[4:8].round(2).tolist(), "ppt": med[8:12].round(1).tolist(),
+                    "dew": med[12:16].round(2).tolist()}
+        summary["era5"] = dict(median=round(float(np.median(fin)), 3), n=int(len(fin)), p90=round(float(np.percentile(fin, 90)), 3),
+                               over_fair=round(float(np.mean(fin > cfg["era5"]["agree_fair"])), 4),
+                               over_poor=round(float(np.mean(fin > cfg["era5"]["agree_poor"])), 4),
+                               thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]],
+                               bias={"North America": bias(diff[isna]), "World cities": bias(diff[~isna])})
+    # END era5-agreement
     json.dump(summary, open(C.SITE / "data" / "summary.json", "w"), separators=(",", ":"))
 
 

@@ -438,6 +438,7 @@ const SSP_DESC=["Strong mitigation: warming held near 2 °C this century.","Midd
 const SEAS=["Winter","Spring","Summer","Fall"],SEASM=["Dec–Feb","Mar–May","Jun–Aug","Sep–Nov"];
 function seasons(lat){return lat<23.5?SEASM:SEAS;}
 function measNames(lat){const S4=seasons(lat),f=x=>S4===SEAS?x.toLowerCase():x;return[...S4.map(x=>f(x)+" highs"),...S4.map(x=>f(x)+" lows"),...S4.map(x=>f(x)+(S4===SEAS?" rain":" precipitation")),...S4.map(x=>f(x)+" dewpoint")];}
+/* BEGIN era5-agreement */let era5Sig=new Float32Array(0);/* END era5-agreement */
 let NV=12,K=12,MI=[0,1,2,3,4,5,6,7,8,9,10,11],HAS10=false,kgNow,zoneNow,ffpNow,kgFut,zoneFut,ffpFut,recentA,recSig;
 const isP=i=>i>=8&&i<12,decT=(v,i)=>isP(i)?v/1000:v/100,decR=(v,i)=>isP(i)?Math.exp(v/1000)-1:v/100;
 const OPEN=new Set();const op=k=>OPEN.has(k)?" open":"";
@@ -566,6 +567,7 @@ function init(d){
   kgNow=d.kg_now?arr(d.kg_now,Uint8Array):z8(nt);zoneNow=d.zone_now?arr(d.zone_now,Uint8Array):z8(nt);ffpNow=d.ffp_now?arr(d.ffp_now,Uint16Array):z16(nt);
   kgFut=d.kg_fut?arr(d.kg_fut,Uint8Array):z8(nc);zoneFut=d.zone_fut?arr(d.zone_fut,Uint8Array):z8(nc);ffpFut=d.ffp_fut?arr(d.ffp_fut,Uint16Array):z16(nc);
   recentA=d.recent?arr(d.recent,Int16Array):new Int16Array(nt*NV);recSig=d.rec_sig?arr(d.rec_sig,Float32Array):new Float32Array(nt);
+  /* BEGIN era5-agreement */era5Sig=d.era5?arr(d.era5,Float32Array):new Float32Array(nt).fill(-1);/* END era5-agreement */
   Msh=arr(d.Msh,Float32Array);Mtr=arr(d.Mtr,Float32Array);sd=arr(d.icvsd,Float32Array);
   bestIdx=arr(d.best_idx,Int32Array);bestSig=arr(d.best_sig,Float32Array);
   sigTab=arr(d.sig_tab,Float32Array);places=d.places;
@@ -611,6 +613,7 @@ function addWorld(w){
   kgNow=cat(kgNow,cz(w.kg_now,Uint8Array,wt));zoneNow=cat(zoneNow,cz(w.zone_now,Uint8Array,wt));ffpNow=cat(ffpNow,cz(w.ffp_now,Uint16Array,wt));
   kgFut=cat(kgFut,cz(w.kg_fut,Uint8Array,wt*16));zoneFut=cat(zoneFut,cz(w.zone_fut,Uint8Array,wt*16));ffpFut=cat(ffpFut,cz(w.ffp_fut,Uint16Array,wt*16));
   recentA=cat(recentA,cz(w.recent,Int16Array,wt*NV));recSig=cat(recSig,cz(w.rec_sig,Float32Array,wt));
+  /* BEGIN era5-agreement */era5Sig=cat(era5Sig,w.era5?cz(w.era5,Float32Array,wt):new Float32Array(wt).fill(-1));/* END era5-agreement */
   base=cat(base,wb);fut=cat(fut,wf);Msh=cat(Msh,warr(w.Msh,Float32Array));Mtr=cat(Mtr,warr(w.Mtr,Float32Array));
   sd=cat(sd,warr(w.icvsd,Float32Array));bestIdx=cat(bestIdx,warr(w.best_idx,Int32Array));bestSig=cat(bestSig,warr(w.best_sig,Float32Array));
   const dl=document.getElementById("places");
@@ -796,11 +799,17 @@ function panel(){
       :`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
     h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
-    const lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
+    let lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
+    /* BEGIN era5-agreement: independent ERA5 baseline check; a poor agreement lowers the badge one level */
+    const e5=era5Sig[cur.t],e5t=D.era5_thr||[2,3.5],e5poor=e5>e5t[1];
+    if(e5poor)lvl=lvl==="high"?"medium":"low";
+    const e5line=e5<0?"":e5poor?`<br>ERA5, an independent dataset, describes this place's present climate quite differently (${e5.toFixed(1)}σ), so confidence is lowered.`
+      :e5>e5t[0]?`<br>ERA5, an independent dataset, differs somewhat on this place's present climate (${e5.toFixed(1)}σ).`:`<br>ERA5, an independent dataset, agrees on this place's present climate.`;
+    /* END era5-agreement */
     let why=`${agree} of ${ensN} models point to this area`;
     why+=mAgree?(lvl==="high"?", and a second statistical method agrees.":". A second statistical method agrees."):`. A second statistical method picks ${esc(describeCell(oc))}, ${Math.round(kmU(od))} ${distU()} away.`;
     if(lvl==="low")why+=" Treat the arrow as one of several plausible answers, and see the other matches below.";
-    h+=`<p class="conf"><strong>Confidence: ${lvl}.</strong> ${why}</p>`;
+    h+=`<p class="conf"><strong>Confidence: ${lvl}.</strong> ${why}${e5line}</p>`;
   }
   h+=`<details class="more" data-k="facts"${op("facts")}><summary>More about this result</summary><dl class="facts">
   <dt>Change from its own 1991–2020 climate</dt><dd>${cur.own.toFixed(1)}σ</dd>

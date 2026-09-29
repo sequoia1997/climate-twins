@@ -5,6 +5,7 @@ requests>=2.32
 xarray>=2024.6
 zarr>=2.17,<3
 fsspec>=2024.6
+gcsfs>=2024.6
 aiohttp>=3.9
 dask>=2024.6
 netCDF4>=1.7

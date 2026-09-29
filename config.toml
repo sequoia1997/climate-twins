@@ -103,3 +103,16 @@ esgf_search = "https://esgf.ceda.ac.uk/esg-search/search"
 moved_km = 500                 # a best match "moved" if it is this far from last release's
 max_moved_share = 0.10         # routine if at most this share of best matches moved
 max_median_dsigma = 0.25       # routine if the median change in best sigma is at most this
+
+[era5]
+# Independent cross-check of every place's present climate against ERA5 (ctw/era5.py).
+# Baseline agreement = sigma distance between the place's TerraClimate/AdaptWest baseline and its ERA5 baseline,
+# measured with the place's own year-to-year variability (the matching metric).
+agree_fair = 2.0               # above this the page says the two datasets differ noticeably
+agree_poor = 3.5               # above this the confidence badge drops one level
+
+[hindcast]
+# ERA5 hindcast (ctw/hindcast.py): start window, target window
+windows = [[1961, 1990], [1991, 2020]]
+n_places = 100
+seed = 20260929

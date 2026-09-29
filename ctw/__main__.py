@@ -9,6 +9,8 @@ def main(argv=None):
     sub.add_parser("plan", help="print the job matrix (models, TerraClimate variables, latest year) as JSON")
     a = sub.add_parser("cmip6"); a.add_argument("--model", required=True)
     a = sub.add_parser("terraclimate"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
+    a = sub.add_parser("era5"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
+    sub.add_parser("hindcast", help="ERA5 1961-90 vs 1991-2020 hindcast test of the analog method")
     sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer"); sub.add_parser("sealevel")
     sub.add_parser("analogs"); sub.add_parser("export")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
@@ -28,6 +30,10 @@ def main(argv=None):
         from . import cmip6; cmip6.run(args.model, cfg)
     elif args.step == "terraclimate":
         from . import terraclimate; terraclimate.run(args.var, cfg)
+    elif args.step == "era5":
+        from . import era5; era5.run(args.var, cfg)
+    elif args.step == "hindcast":
+        from . import hindcast; hindcast.run(cfg)
     elif args.step == "adaptwest":
         from . import adaptwest; adaptwest.run(cfg)
     elif args.step == "prism":

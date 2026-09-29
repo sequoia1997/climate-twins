@@ -12,6 +12,7 @@ from pyproj import Transformer
 from scipy.spatial import cKDTree
 from . import common as C
 from . import features as F
+from . import era5 as E
 
 MON = ("tmax", "tmin", "ppt", "vap")
 
@@ -288,6 +289,21 @@ def run(cfg=None):
     C.log.info("recent climate %d-%d; self-check median %.2f sigma; TerraClimate vs AdaptWest median %.2f sigma",
                rec_years[0], rec_years[-1], np.nanmedian(selfchk), np.nanmedian(tc_check))
 
+    # ---------------------------------------------------------------- baseline agreement with ERA5 (independent dataset)
+    era5_sig = np.full(NT, np.nan, "float32"); era5_diff = np.full((NT, C.NV), np.nan, "float32")   # BEGIN era5-agreement
+    e5 = E.load_series(T)
+    if e5 is None:
+        C.log.warning("no ERA5 files in work/era5: baseline agreement not computed")
+    else:
+        eb = E.baseline_vectors(e5, b0, b1)
+        for k in np.where(~bad)[0]:
+            if np.isfinite(eb[k, midx]).all():
+                era5_sig[k] = E.agreement(SH[k], midx, base[k], eb[k])
+                era5_diff[k] = eb[k] - base[k]
+        C.log.info("ERA5 baseline agreement: median %.2f sigma, %d places over %.1f, %d over %.1f", np.nanmedian(era5_sig),
+                   int((era5_sig > cfg["era5"]["agree_fair"]).sum()), cfg["era5"]["agree_fair"],
+                   int((era5_sig > cfg["era5"]["agree_poor"]).sum()), cfg["era5"]["agree_poor"])   # END era5-agreement
+
     gk = sorted(glob)
     C.save(C.work("results.npz"),
            midx=midx, bad=bad, icv_src=icv_src, base=base.astype("float32"), fut=fut, icvsd=icvsd.astype("float32"),
@@ -295,7 +311,7 @@ def run(cfg=None):
            Mtr=np.array([TR[k].M(K) if TR[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            kdef=np.array([TR[k].k if TR[k] else 0 for k in range(NT)]), alpha=np.array([SH[k].alpha if SH[k] else np.nan for k in range(NT)]),
            best_idx=best_idx, best_sig=best_sig, sites=sites, site_sig=site_sig, area2=area2, own=own, agree=agree, selfchk=selfchk,
-           tc_check=tc_check, recent=ref.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
+           tc_check=tc_check, era5_sig=era5_sig, era5_diff=era5_diff, recent=ref.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
            floored=np.array([f"{a}:{b}" for a, b in floored]), cc_fill=np.array(cc_fill),
            f_now_kg=fnow["kg"], f_now_zone=fnow["zone"], f_now_ffp=fnow["ffp"],
            f_fut_kg=ffut["kg"], f_fut_zone=ffut["zone"], f_fut_ffp=ffut["ffp"],

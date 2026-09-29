@@ -41,6 +41,20 @@ def run(cfg=None, previous=None) -> int:
         out.append(("✅ " if ok else "❌ ") + msg)
         if not ok:
             problems.append(msg)
+    # BEGIN era5-agreement: independent ERA5 cross-check of the baselines (advisory, never fails the build)
+    E5 = S.get("era5")
+    if E5:
+        ok5 = E5["median"] <= 1.0 and E5["over_poor"] <= 0.15
+        out.append(f"{'✅' if ok5 else '⚠️'} ERA5 baseline agreement: median {E5['median']:.2f}σ over {E5['n']:,} places; "
+                   f"{E5['over_fair']:.0%} above {E5['thr'][0]}σ, {E5['over_poor']:.0%} above {E5['thr'][1]}σ (confidence lowered there)")
+        if not ok5:
+            notes.append("ERA5 disagrees with the baselines more than expected (median above 1σ or over 15% of places above the poor threshold): "
+                         "check the bias table in summary.json before trusting either dataset.")
+        worst5 = sorted(((v["era5"], k) for k, v in S["places"].items() if v.get("era5") is not None), reverse=True)[:8]
+        notes.append("Largest ERA5 disagreements: " + "; ".join(f"{k} ({v:.1f}σ)" for v, k in worst5))
+    else:
+        notes.append("⚠️ No ERA5 cross-check in this build (the era5 jobs did not produce data); the page shows no baseline-agreement line.")
+    # END era5-agreement
     notes.append(f"Recent-climate years: {S['recent_years'][0]}–{S['recent_years'][1]}")
     if S["sealevel_places"]:
         notes.append(f"Coastal places with sea-level projections: {S['sealevel_places']}")
