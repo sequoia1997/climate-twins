@@ -175,9 +175,11 @@ land_max_km = 50               # also sets which cells the terraclimate step ave
 # How the independent sources are combined. "corroborated": a place is only flagged when two sources both disagree (the
 # second-largest disagreement counts; one source alone never lowers the badge). "worst": the largest disagreement counts.
 # "corroborated" was set after the first full rebuild, when the point comparison put 33% of places over 3.5 sigma (small
-# islands and coasts that the 0.25 degree grid smears into the ocean). With match = "cell" that mismatch is gone, so the
-# worst source counts again; switch back to "corroborated" if the matched check still flags many places.
-combine = "worst"
+# islands and coasts that the 0.25 degree grid smears into the ocean). match = "cell" (2026-09-29 smoke, 70 hard places
+# mostly islands and coasts) cut the median from 6.8 to 3.8 sigma and fixes inland cities (Sydney 7.7 -> 0.2, Cape Town
+# 10.2 -> 0.6), but coasts keep a real ERA5 warm-night bias of 2-3 degrees C (Honolulu, Kingston, Dakar), so one source
+# alone still is not trusted to lower the badge.
+combine = "corroborated"
 # The same thresholds apply to the combined agreement: the largest disagreement over the independent sources (ERA5 on all measures,
 # CHIRPS on precipitation, CHELSA on highs, lows and precipitation), each with its own typical offset removed (ctw/baselines.py).
 
