@@ -6,6 +6,7 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 ## 29 September 2026
 
+- **"About this map and σ" starts closed.** The panel opens straight to the search box, and one tap on that line opens the explanation whenever you want it.
 - **A simpler search box.** The prompt now just says "Search for a city or town" and fits on every screen, instead of being cut off mid-word.
 
 ## 28 September 2026
