@@ -1,0 +1,31 @@
+# Temporary: looks for CHELSA's current download location. Deleted after use.
+name: Probe CHELSA
+on:
+  push:
+    paths: [".github/workflows/probe-chelsa.yml"]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        run: |
+          set +e
+          echo "== envicloud front page and its script bundle: hunt for hosts/paths"
+          curl -sL -m 30 https://envicloud.wsl.ch/ -o /tmp/index.html; head -c 1500 /tmp/index.html; echo
+          for js in $(grep -o 'src=[^ >]*\.js' /tmp/index.html | sed 's/src=//;s/"//g' | head -5); do
+            echo "-- bundle $js"; curl -sL -m 30 "https://envicloud.wsl.ch/$js" -o /tmp/b.js; grep -o 'https\?://[A-Za-z0-9._/-]*' /tmp/b.js | sort -u | grep -i "zhdk\|swift\|s3\|chelsa\|envicloud\|os\." | head -20
+          done
+          echo "== candidate URLs (status, redirect target)"
+          p() { printf "%-110s " "$1"; curl -sIL -m 25 -o /dev/null -w "%{http_code} -> %{url_effective}\n" "$1" || echo FAIL; }
+          p "https://envicloud.wsl.ch/chelsa/chelsa_V2/GLOBAL/climatologies/1981-2010/tas/CHELSA_tas_01_1981-2010_V.2.1.tif"
+          p "https://envicloud.wsl.ch/chelsav2/GLOBAL/climatologies/1981-2010/tas/CHELSA_tas_01_1981-2010_V.2.1.tif"
+          p "https://envicloud.wsl.ch/#/?prefix=chelsa%2Fchelsa_V2%2FGLOBAL%2Fclimatologies%2F1981-2010%2Ftas%2F"
+          p "https://os.zhdk.ch/"
+          p "https://zhdk.ch/"
+          p "https://chelsa-climate.org/"
+          p "https://www.chelsa-climate.org/downloads/"
+          getent hosts os.zhdk.ch || echo "os.zhdk.ch: no DNS"
+          getent hosts envicloud.wsl.ch
+          for h in os.zhdk.ch s3.zhdk.ch objects.zhdk.ch storage.zhdk.ch; do getent hosts $h || echo "$h: no DNS"; done
+          echo "== chelsa docs page links"
+          curl -sL -m 30 https://chelsa-climate.org/downloads/ | grep -o 'https\?://[A-Za-z0-9._/~%-]*' | sort -u | grep -i "chelsa\|envicloud\|zhdk\|wsl" | head -30
