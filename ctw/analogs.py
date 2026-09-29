@@ -377,7 +377,7 @@ def run(cfg=None):
     ggk = sorted(gglob)
     ns = mcfg["sites"]
     C.save(C.work("results.npz"),
-           midx=midx, bad=bad, icv_src=icv_src, base=base.astype("float32"), fut=fut, icvsd=icvsd.astype("float32"),
+           midx=midx, bad=bad, icv_src=icv_src, base=base.astype("float32"), base_mon=np.stack([base_m[v] for v in MON]).astype("float32"), fut=fut, icvsd=icvsd.astype("float32"),
            Msh=np.array([SH[k].M() if SH[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            Mtr=np.array([TR[k].M(K) if TR[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            kdef=np.array([TR[k].k if TR[k] else 0 for k in range(NT)]), alpha=np.array([SH[k].alpha if SH[k] else np.nan for k in range(NT)]),

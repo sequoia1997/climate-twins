@@ -4,6 +4,10 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 29 September 2026 (model resolution)
+
+- **A caution when the result depends on model resolution.** Once a year we now repeat every projection with NASA's higher-resolution, bias-corrected NEX-GDDP-CMIP6 climate changes and compare. Where the two futures differ noticeably (1σ or more, or the best match would jump a long way), the panel adds one line saying so. Most places never show it. The methods page explains what the check does and does not tell you.
+
 ## 29 September 2026
 
 - **New: a "Warming level" view.** Instead of choosing a year and an emissions scenario, you can choose how much the world has warmed (+1.5, +2, +3 or +4 °C above 1850–1900) and see where today's climate matches that future. The view pools every scenario and model that reaches the level; the panel says how many models do and roughly when they get there. Switch between the two under "View" above the map. Sea-level projections still belong to the year-and-scenario view.

@@ -13,6 +13,7 @@ def main(argv=None):
     a = sub.add_parser("extremes", help="extreme-day indicators (NEX-GDDP-CMIP6): --model M | --plan | --aggregate")
     a.add_argument("--model"); a.add_argument("--plan", action="store_true"); a.add_argument("--aggregate", action="store_true")
     sub.add_parser("analogs"); sub.add_parser("export")
+    sub.add_parser("nexcheck", help="sensitivity of projections to GCM resolution (NEX-GDDP-CMIP6 deltas vs main deltas)")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
     sub.add_parser("site"); sub.add_parser("watch")
     sub.add_parser("changelog", help="add this build's data update to CHANGELOG.md (once per data version)")
@@ -51,6 +52,8 @@ def main(argv=None):
             p.error("extremes needs --model, --plan or --aggregate")
     elif args.step == "analogs":
         from . import analogs; analogs.run(cfg)
+    elif args.step == "nexcheck":
+        from . import nexcheck; nexcheck.run(cfg)
     elif args.step == "export":
         from . import export; export.run(cfg)
     elif args.step == "validate":

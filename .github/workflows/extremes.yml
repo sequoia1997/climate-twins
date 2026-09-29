@@ -3,6 +3,9 @@
 # site/data/extremes.json and opens its own pull request. The page loads that file lazily and hides the
 # "Extreme days" block when it is absent.
 #
+# It also folds the monthly climatologies of the same files into data/nexdeltas.npz (committed; ~few MB), which the
+# "Rebuild data" workflow reads in its `nexcheck` step (flag: does the projection depend on GCM resolution?).
+#
 # Cost: every model-year is four ~245 MB files (one whole globe per day, so a single place costs as much as all
 # places). With year_stride = 2 (config.toml [extremes]) that is ~220 files (~54 GB) per model; about 30-45 minutes
 # per model on a 4-core runner, 13 models in parallel. Public repositories run Actions free; private ones use
@@ -78,9 +81,9 @@ jobs:
           n=$(ls work/extremes/*.npz | wc -l); echo "models present: $n"
           [ "$n" -ge 6 ] || [ -n "$CTW_SMOKE" ] || { echo "too few models"; exit 1; }
           python -m ctw extremes --aggregate
-          ls -l site/data/extremes.json
+          ls -l site/data/extremes.json data/nexdeltas.npz
       - uses: actions/upload-artifact@v6
-        with: { name: extremes-json, path: site/data/extremes.json, retention-days: 30 }
+        with: { name: extremes-json, path: "site/data/extremes.json\ndata/nexdeltas.npz", retention-days: 30 }
       - name: Open a pull request
         if: ${{ env.CTW_SMOKE == '' }}
         env:
@@ -89,10 +92,10 @@ jobs:
           d=$(date +%F); b="extremes-update-$d"
           git config user.name "climate-twins-bot"; git config user.email "actions@users.noreply.github.com"
           git checkout -b "$b"
-          git add site/data/extremes.json
+          git add site/data/extremes.json data/nexdeltas.npz
           git commit -m "Extreme days update $d (NEX-GDDP-CMIP6, $(ls work/extremes/*.npz | wc -l) models)"
           git push -f origin "$b"
-          body="Yearly refresh of \`site/data/extremes.json\` from NASA NEX-GDDP-CMIP6 daily data ($(ls work/extremes/*.npz | wc -l) models). Only this file changes. Merging deploys it; the main data rebuild is not affected."
+          body="Yearly refresh of \`site/data/extremes.json\` from NASA NEX-GDDP-CMIP6 daily data ($(ls work/extremes/*.npz | wc -l) models). Only these two files change (\`data/nexdeltas.npz\` holds the monthly NEX-GDDP changes the next data rebuild uses for its model-resolution check, \`python -m ctw nexcheck\`). Merging deploys extremes.json; the main data rebuild is not affected."
           gh pr create --title "Extreme days update $d" --body "$body" --base main --head "$b" || gh pr edit "$b" --body "$body"
 
   report-failure:

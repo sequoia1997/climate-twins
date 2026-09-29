@@ -865,6 +865,7 @@ function panel(){
     if(lvl==="low")why+=" Treat the arrow as one of several plausible answers, and see the other matches below.";
     h+=`<p class="conf"><strong>Confidence: ${lvl}.</strong> ${why}</p>`;
   }
+  h+=nexHTML(tt);
   h+=`<details class="more" data-k="facts"${op("facts")}><summary>More about this result</summary><dl class="facts">
   <dt>Change from its own 1991–2020 climate</dt><dd>${cur.own.toFixed(1)}σ</dd>
   <dt>Land area within 2σ (outlined)</dt><dd>${cur.area>=500?Math.round(cur.area*(S.metric?1:0.386102)/1000).toLocaleString()+"k "+(S.metric?"km²":"mi²"):"none"}</dd>
@@ -925,6 +926,14 @@ function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!
   const dir=a=>a[1]>=0?"rise":"fall",a5=v["2050"],a1=v["2100"];
   const r=(a,verb)=>`${verb?dir(a)+" ":""}${n(a[1])}${un} (${rng(a)})`;
   return `<p class="slr"><strong>Sea level:</strong> projected to ${r(a5,true)} by 2050 and ${r(a1,dir(a1)!==dir(a5))} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, ${sl.km<3?"projection for a tide gauge here":`nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away`}).</p>`;}
+/* BEGIN nexcheck (nexcheck.json): one line, only where the projection is highly sensitive to model resolution (see methods) */
+let NEXC;   // undefined: not requested; null: loading or unavailable; object: loaded
+function nexLoad(){NEXC=null;fetch("data/nexcheck.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places){NEXC=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
+function nexHTML(tt){
+  if(NEXC===undefined){nexLoad();return"";}
+  const q=NEXC&&NEXC.places[tt.lat.toFixed(4)+","+tt.lon.toFixed(4)];
+  return q&&q.gcm_res_sensitivity==="high"?`<p class="small muted">Sensitive to model resolution: higher-resolution climate data give a noticeably different future here, so treat this result with extra caution. <a href="methods.html#resolution">Why</a></p>`:"";}
+/* END nexcheck */
 /* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
    or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5 only (see methods). */
 let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded

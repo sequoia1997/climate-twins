@@ -105,6 +105,15 @@ workers = 3
 wet_bulb_c = 28.0
 dry_mm = 1.0
 
+[nexcheck]
+# Does the ensemble's projection change when the NEX-GDDP-CMIP6 changes (25 km, bias-corrected) replace the native-grid CMIP6
+# changes? Flag per place, worst case over periods and SSP2-4.5 / SSP5-8.5 (see ctw/nexcheck.py). 1 sigma = as alike as two ordinary years.
+sigma_moderate = 0.5           # projected climates this far apart: "moderate"
+sigma_high = 1.0               # this far apart: "high" (also high: moderate distance and the best match moves more than moved_km)
+moved_km = 500
+min_models = 6
+high_share_note = 0.15         # validate's report warns if more than this share of places is "high"
+
 [recent]
 years = 10                     # "already happening": the latest N complete years vs the baseline
 end = "auto"                   # latest complete TerraClimate year, or a year number

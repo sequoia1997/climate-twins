@@ -41,6 +41,14 @@ def run(cfg=None, previous=None) -> int:
         out.append(("✅ " if ok else "❌ ") + msg)
         if not ok:
             problems.append(msg)
+    try:                                                       # optional: sensitivity to model resolution (nexcheck)
+        from . import nexcheck
+        nx = json.load(open(d / "nexcheck.json"))
+        tot = max(sum(nx["summary"][k] for k in ("ok", "moderate", "high")), 1)
+        hi = nx["summary"]["high"] / tot > nexcheck.settings(cfg)["high_share_note"]
+        notes.append(("⚠️ " if hi else "") + nexcheck.summary_line(nx) + (" (informational; does not change the status)" if hi else ""))
+    except Exception:  # noqa: BLE001 - file absent when the Extreme days job has not produced nexdeltas.npz yet
+        pass
     notes.append(f"Recent-climate years: {S['recent_years'][0]}–{S['recent_years'][1]}")
     if S["sealevel_places"]:
         notes.append(f"Coastal places with sea-level projections: {S['sealevel_places']}")

@@ -10,7 +10,10 @@ disk, reads all places out of every daily chunk in one pass and deletes it (~5 s
 Per model (one matrix job): for every sampled year of baseline / period / scenario, four files -> seven annual
 indices per place (see INDICES) -> window means. Writes work/extremes/<model>.npz:
   base (NI, NT)   fut (nper, nscen, NI, NT)
-`aggregate` folds the models into site/data/extremes.json (ensemble median and min-max)."""
+  mon_base (4, NT, 12)   mon_fut (nper, nscen, 4, NT, 12)      monthly means of tasmax, tasmin (deg C), pr (mm/day), hurs (%)
+The monthly climatologies come out of the same pass over the same files (no extra downloads); nexcheck.py uses them.
+`aggregate` folds the models into site/data/extremes.json (ensemble median and min-max) and, from the monthly
+climatologies, writes data/nexdeltas.npz (per-model monthly changes, see nexcheck.pack_deltas)."""
 from __future__ import annotations
 import json, math, os, re, time, warnings
 from concurrent.futures import ProcessPoolExecutor
@@ -94,6 +97,35 @@ def annual_indices(tx_c, tn_c, pr_mm, rh, wb_thresh=28.0, dry_mm=1.0):
     out[6] = pr_mm.max(0)
     bad = np.isnan(tx_c).any(0) | np.isnan(tn_c).any(0) | np.isnan(pr_mm).any(0) | np.isnan(rh).any(0)
     out[:, bad] = np.nan
+    return out
+
+
+MONVARS = ("tasmax", "tasmin", "pr", "hurs")
+_NOLEAP = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+
+
+def month_index(n):
+    """Month (0-11) of each day of an n-day model year: 360-day (12 x 30), 365-day and 366-day calendars; any other
+    length is spread evenly."""
+    if n == 360:
+        d = [30] * 12
+    elif n == 365:
+        d = list(_NOLEAP)
+    elif n == 366:
+        d = [31, 29] + list(_NOLEAP[2:])
+    else:
+        return np.minimum((np.arange(n) * 12) // n, 11)
+    return np.repeat(np.arange(12), d)
+
+
+def monthly_means(tx_c, tn_c, pr_mm, rh):
+    """Monthly means of one year, (4, 12, places): tasmax, tasmin (deg C), pr (mm/day), hurs (%). Inputs (days, places).
+    Any NaN in a place-month makes that place-month NaN."""
+    mi = month_index(tx_c.shape[0])
+    out = np.empty((4, 12, tx_c.shape[1]), "float32")
+    for v, a in enumerate((tx_c, tn_c, pr_mm, rh)):
+        for m in range(12):
+            out[v, m] = a[mi == m].mean(0)
     return out
 
 
@@ -227,11 +259,12 @@ def read_var(key, var, ii, jj, tmp):
 
 
 def year_job(args):
-    """All four variables of one year -> (NI, places) indices."""
+    """All four variables of one year -> ((NI, places) indices, (4, 12, places) monthly means)."""
     keys, ii, jj, tmp, wb, dry = args
     v = {var: read_var(k, var, ii, jj, tmp) for var, k in keys.items()}
     n = min(x.shape[0] for x in v.values())
-    return annual_indices(v["tasmax"][:n], v["tasmin"][:n], v["pr"][:n], v["hurs"][:n], wb, dry)
+    a = [v[k][:n] for k in MONVARS]
+    return annual_indices(a[0], a[1], a[2], a[3], wb, dry), monthly_means(*a)
 
 
 def valid_mask(key, tmp):
@@ -297,10 +330,10 @@ def run(model: str, cfg=None, years_override=None):
                 jobs.append(keys_of(fs[sc], y)); tags.append(("fut", pi, si, y))
     C.log.info("%s: %d year-jobs (4 files each)", model, len(jobs))
     args = [(k, ii2, jj2, tmp, s["wet_bulb_c"], s["dry_mm"]) for k in jobs]
-    res = []
+    res, mres = [], []
     with ProcessPoolExecutor(max_workers=int(s["workers"])) as ex:
         for n, r in enumerate(ex.map(year_job, args)):
-            res.append(r)
+            res.append(r[0]); mres.append(r[1])
             if n % 10 == 0:
                 C.log.info("%s: %d/%d years, %.0fs", model, n + 1, len(jobs), time.time() - t0)
     NT = len(T)
@@ -310,9 +343,19 @@ def run(model: str, cfg=None, years_override=None):
         for si in range(len(scen)):
             sel = [r for r, t in zip(res, tags) if t[0] == "fut" and t[1] == pi and t[2] == si]
             fut[pi, si] = np.nanmean(sel, axis=0)
+    mon_base = np.nanmean([r for r, t in zip(mres, tags) if t[0] == "base"], axis=0)          # (4, 12, NT)
+    mon_fut = np.full((len(pers), len(scen), 4, 12, NT), np.nan, "float32")
+    for pi in range(len(pers)):
+        for si in range(len(scen)):
+            sel = [r for r, t in zip(mres, tags) if t[0] == "fut" and t[1] == pi and t[2] == si]
+            mon_fut[pi, si] = np.nanmean(sel, axis=0)
+    mon_base = np.moveaxis(mon_base, 1, 2)                                                        # (4, NT, 12)
+    mon_fut = np.moveaxis(mon_fut, 3, 4)                                                          # (nper, nscen, 4, NT, 12)
     base[:, ~ok] = np.nan
     fut[..., ~ok] = np.nan
-    C.save(out_f, base=base.astype("float32"), fut=fut, ids=np.array(IDS), scen=np.array(scen),
+    mon_base[:, ~ok] = np.nan
+    mon_fut[..., ~ok, :] = np.nan
+    C.save(out_f, base=base.astype("float32"), fut=fut, mon_base=mon_base.astype("float32"), mon_fut=mon_fut, ids=np.array(IDS), scen=np.array(scen),
            labels=T.label.values.astype(str), n_years=np.array([len(base_years), len(jobs)]))
     try:
         for f in os.listdir(tmp):
@@ -370,5 +413,11 @@ def aggregate(cfg=None, out=None):
     path = out or (C.SITE / "data" / "extremes.json")
     path.parent.mkdir(parents=True, exist_ok=True)
     json.dump(doc, open(path, "w"), separators=(",", ":"), ensure_ascii=False)
+    if all("mon_base" in z for z in Z):                        # monthly climatologies from the same pass -> nexcheck
+        try:
+            from . import nexcheck
+            nexcheck.write_deltas(Z, names, T, cfg)
+        except Exception as e:  # noqa: BLE001 - optional product, never blocks extremes.json
+            C.log.warning("nexdeltas.npz not written: %s", e)
     C.log.info("extremes.json: %d places, %d models, %.0f kB", len(places), len(names), path.stat().st_size / 1024)
     return path

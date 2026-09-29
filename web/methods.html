@@ -411,6 +411,15 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
   </section>
   <!-- END extreme-days -->
 
+  <!-- BEGIN nexcheck -->
+  <section id="resolution">
+    <h2>Sensitivity to model resolution</h2>
+    <p>Climate models run on grids of roughly 100 to 250 km, so a place's projected change is really the change of one large grid cell. NASA's NEX-GDDP-CMIP6 (the dataset behind the extreme-day counts) offers a bias-corrected 25 km version of most of the same models for SSP2-4.5 and SSP5-8.5. Once a year we rebuild each place's future climate a second time with the changes from that dataset (temperature added, precipitation and humidity scaled and limited to the same ranges, averaged over the models it shares with this analysis) and compare it with the projection used on the page.</p>
+    <p>A place is marked <strong>moderate</strong> if the two projected climates differ by 0.5σ or more in its own year-to-year variability (or the best match would move more than 500 km), and <strong>high</strong> if they differ by 1σ or more (or 0.5σ or more with a best match that moves more than 500 km). The worst case over both periods and both scenarios counts. Only “high” is shown on the page, as one line under the answer; the full list is in <code>data/nexcheck.json</code>.</p>
+    <p><strong>Limits.</strong> This tests one thing: whether the answer would change with a finer, bias-corrected version of the same models' changes. It is not a check against observations and not a validation of the method. Scenarios other than SSP2-4.5 and SSP5-8.5 are not tested, and the flag from those two is shown for all four. The comparison uses one simulation per model and the NEX-GDDP models only, while the page averages up to three simulations per model, so part of a difference can be internal variability rather than resolution. Places without a land cell in the 25 km grid are not tested. The thresholds are judgement calls and are set in <code>config.toml</code>.</p>
+  </section>
+  <!-- END nexcheck -->
+
   <section id="updates">
     <h2>Updates and versions</h2>
     <p>The data are rebuilt from the original sources each year by a public, automated pipeline ({{REPO_LINK}}). Each rebuild is checked before release: counts of places, grid cells and models; a self-check that today's climate at each place finds itself (current median {{SELFCHK}}σ); and a comparison with the previous release, flagging for review if more than 10% of best matches move over 500 km or the median change in σ exceeds 0.25. A browser test loads the page with the new data. Nothing is published until the rebuild is reviewed. A monthly check watches for a new TerraClimate year, corrected or withdrawn CMIP6 datasets and the arrival of CMIP7 projections. This page describes method version {{RELEASE}}, data version {{DATA_VERSION}}, using {{N_MODELS}} models.</p>
