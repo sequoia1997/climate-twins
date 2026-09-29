@@ -82,6 +82,9 @@ world_res = 0.5
 world_landfrac_min = 0.25
 world_lat_min = -60.0
 
+[export]
+shard_places = 48              # places per per-place download file (site/data/p/*.dat); the page fetches one when a place is picked
+
 [recent]
 years = 10                     # "already happening": the latest N complete years vs the baseline
 end = "auto"                   # latest complete TerraClimate year, or a year number

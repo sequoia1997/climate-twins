@@ -21,9 +21,18 @@ def _members(url):
     return rz, rz.namelist()
 
 
-def run(cfg=None):
+def run(cfg=None, if_stale=False):
+    """if_stale: do nothing when data/sealevel.json was made for the current number of places (the place lists grew
+    since it was written: coastal places added later have no projection until it is rebuilt)."""
     cfg = cfg or C.config()
     dest = C.DATA / "sealevel.json"
+    if if_stale and dest.exists():
+        try:
+            if json.load(open(dest)).get("n_places") == len(C.targets()):
+                C.log.info("sea level data is current for %d places", len(C.targets()))
+                return
+        except Exception:  # noqa: BLE001
+            pass
     try:
         _run(cfg, dest)
     except Exception as e:  # noqa: BLE001
@@ -81,5 +90,5 @@ def _run(cfg, dest):
         raise RuntimeError("no coastal places found; archive layout may have changed")
     out = {k: v for k, v in out.items() if len(v["v"]) == len(cfg["scenarios"]["ids"])}   # every scenario or none
     json.dump({"source": "IPCC AR6 sea level projections (Garner et al. 2021), medium confidence, relative to 1995-2014",
-               "quantiles": QUANTS, "units": "m", "places": out}, open(dest, "w"), separators=(",", ":"), allow_nan=False)
+               "quantiles": QUANTS, "units": "m", "n_places": len(T), "places": out}, open(dest, "w"), separators=(",", ":"), allow_nan=False)
     C.log.info("sea level: %d coastal places written to %s", len(out), dest)

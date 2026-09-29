@@ -4,7 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Climate Twins: methods, data and references</title>
-<meta name="description" content="How Climate Twins finds present-day climate analogs for projected 2050 and 2100 climates: data, method, validation, limitations and full references.">
+<link rel="canonical" href="https://climatetwins.org/methods.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Climate Twins">
+<meta property="og:title" content="How Climate Twins works: methods, data and references">
+<meta property="og:description" content="How Climate Twins matches future climates to places today: data, method, checks, limitations and references.">
+<meta property="og:url" content="https://climatetwins.org/methods.html">
+<meta property="og:image" content="https://climatetwins.org/og-image.png">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1260">
+<meta property="og:image:alt" content="Dark map of North America with gold arrows running from each city to the place whose climate today matches its projected climate around 2100.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How Climate Twins works: methods, data and references">
+<meta name="twitter:description" content="How Climate Twins matches future climates to places today: data, method, checks, limitations and references.">
+<meta name="twitter:image" content="https://climatetwins.org/og-image.png">
+<meta name="twitter:image:alt" content="Dark map of North America with gold arrows running from each city to the place whose climate today matches its projected climate around 2100.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="description" content="How Climate Twins finds present-day analogs for projected 2050 and 2100 climates: data, matching method, validation, limitations and references.">
 <script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,7 +185,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
   </div>
   <div class="head">
     <h1>How Climate Twins finds a place's future climate today</h1>
-    <p class="sub">Methods, data, validation and references for an interactive map of present-day climate analogs, for 789 places in North America and 823 cities worldwide, under four CMIP6 emissions scenarios.</p>
+    <p class="sub">Methods, data, validation and references for an interactive map of present-day climate analogs, for 790 places in North America and 823 cities worldwide, under four CMIP6 emissions scenarios.</p>
     <p class="meta"><span id="m-author"></span>. Version <span class="v-rel"></span>, data version <span class="v-data"></span>.</p>
   </div>
   <div class="scale" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -191,6 +209,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <li><a href="#recent">Already happening</a></li>
     <li><a href="#sealevel">Sea level</a></li>
     <li><a href="#updates">Updates and versions</a></li>
+    <li><a href="#tropics">Why many tropical places have no match</a></li>
     <li><a href="#limits">Limitations</a></li>
     <li><a href="#software">Software</a></li>
     <li><a href="#data">Data and attribution</a></li>
@@ -201,7 +220,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
 <article>
   <section id="summary" class="un">
     <div class="abstract">
-      <p>For any of 1,612 places, Climate Twins asks where on Earth today's climate most resembles the climate that place is projected to have around 2050 (2041–2060) or 2100 (2081–2100). Projected climates are built by adding changes simulated by 24 CMIP6 global climate models to observed 1991–2020 climate. Each projection is compared with present-day climate in every land grid cell, 97,488 cells of 15 km across the United States, Canada and Mexico and 64,958 cells of 0.5° worldwide, using seasonal measures of temperature, precipitation and humidity. Each place also shows its climate type, an estimated hardiness zone and growing season, how its last ten years compare with 1991–2020 and, on the coast, projected sea-level rise.</p>
+      <p>For any of 1,613 places, Climate Twins asks where on Earth today's climate most resembles the climate that place is projected to have around 2050 (2041–2060) or 2100 (2081–2100). Projected climates are built by adding changes simulated by 24 CMIP6 global climate models to observed 1991–2020 climate. Each projection is compared with present-day climate in every land grid cell, 97,488 cells of 15 km across the United States, Canada and Mexico and 64,958 cells of 0.5° worldwide, using seasonal measures of temperature, precipitation and humidity. Each place also shows its climate type, an estimated hardiness zone and growing season, how its last ten years compare with 1991–2020 and, on the coast, projected sea-level rise.</p>
       <p>Similarity is expressed as sigma dissimilarity (Mahony et al. 2017): a Mahalanobis distance scaled by each place's own year-to-year variability, with Ledoit–Wolf shrinkage of the variability correlations, converted to units of standard deviation. The approach follows Fitzpatrick &amp; Dunn (2019), extended to Canada, Mexico and 823 cities worldwide, to four emissions scenarios, and to an ensemble screened by transient climate response (Hausfather et al. 2022).</p>
     </div>
     <div class="cite" id="cite">
@@ -236,8 +255,9 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
 
   <section id="places">
     <h2>Places</h2>
-    <p><strong>North America (789 places):</strong> 634 in the contiguous United States, 23 in Alaska, 56 in Canada and 76 in Mexico, drawn from the GeoNames gazetteer. Places were selected greedily by population with a minimum spacing that widens as population falls (in the United States: 100,000 people at 25 km spacing, then 25,000 at 45 km, 8,000 at 75 km and 1,000 at 120 km; in Canada and Mexico: 250,000 at 35 km, 40,000 at 110 km and 5,000 at 220 km), so that large cities are all present and rural regions still have coverage. Two North Carolina places were added by hand.</p>
+    <p><strong>North America (790 places):</strong> 635 in the contiguous United States, 23 in Alaska, 56 in Canada and 76 in Mexico, drawn from the GeoNames gazetteer. Places were selected greedily by population with a minimum spacing that widens as population falls (in the United States: 100,000 people at 25 km spacing, then 25,000 at 45 km, 8,000 at 75 km and 1,000 at 120 km; in Canada and Mexico: 250,000 at 35 km, 40,000 at 110 km and 5,000 at 220 km), so that large cities are all present and rural regions still have coverage. Two North Carolina places were added by hand.</p>
     <p><strong>World (823 cities):</strong> every city of at least one million people outside the United States, Canada and Mexico; all 202 national capitals (Natural Earth); Honolulu, which lies outside the North American grid; and cities chosen by population with minimum spacing to cover sparsely populated regions. Together they span 192 countries and territories. Country names come from Natural Earth, shortened to common forms.</p>
+    <p>The world list was later extended from GeoNames with two rules. First, every country or territory has at least three places wherever GeoNames has them. Second, further places were added greedily by population, each at least a minimum distance from every place already listed. Elsewhere that distance runs from 80 km for cities of a million people to 480 km for towns of 40,000; in Africa, Latin America, Central Asia, Oceania and the Middle East, where the first list was sparse, it runs from 70 km for cities of 300,000 to 400 km for towns of 5,000. A place is kept only if its 0.5° cell, or a neighbouring one, is a land cell of the world grid, and the grid stops at 60° S. Places on very small islands are included only to reach the three-per-country minimum.</p>
   </section>
 
   <section id="present">
@@ -367,7 +387,23 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
 
   <section id="updates">
     <h2>Updates and versions</h2>
-    <p>The data are rebuilt from the original sources each year by a public, automated pipeline (<a href="https://github.com/sequoia1997/climate-twins">https://github.com/sequoia1997/climate-twins</a>). Each rebuild is checked before release: counts of places, grid cells and models; a self-check that today's climate at each place finds itself (current median 0.00σ); and a comparison with the previous release, flagging for review if more than 10% of best matches move over 500 km or the median change in σ exceeds 0.25. A browser test loads the page with the new data. Nothing is published until the rebuild is reviewed. A monthly check watches for a new TerraClimate year, corrected or withdrawn CMIP6 datasets and the arrival of CMIP7 projections. This page describes method version 10.0, data version 2026-09-26, using 24 models.</p>
+    <p>The data are rebuilt from the original sources each year by a public, automated pipeline (source code in the project repository). Each rebuild is checked before release: counts of places, grid cells and models; a self-check that today's climate at each place finds itself (current median 0.00σ); and a comparison with the previous release, flagging for review if more than 10% of best matches move over 500 km or the median change in σ exceeds 0.25. A browser test loads the page with the new data. Nothing is published until the rebuild is reviewed. A monthly check watches for a new TerraClimate year, corrected or withdrawn CMIP6 datasets and the arrival of CMIP7 projections. This page describes method version 10.0, data version 2026-09-26, using 24 models.</p>
+  </section>
+
+  <section id="tropics">
+    <h2>Why many tropical places have no match</h2>
+    <p>Places near the equator are far more likely to have no present-day match. Around 2100 under SSP2-4.5 (models in the likely range):</p>
+    <div class="tablewrap"><table class="data">
+      <thead><tr><th>Latitude</th><th>Places</th><th>No match (4σ or more)</th><th>Partial or no match (2σ or more)</th></tr></thead>
+      <tbody><tr><td>0–15°</td><td>231</td><td>66%</td><td>85%</td></tr><tr><td>15–25°</td><td>194</td><td>49%</td><td>65%</td></tr><tr><td>25–35°</td><td>416</td><td>14%</td><td>40%</td></tr><tr><td>35–45°</td><td>529</td><td>2%</td><td>13%</td></tr><tr><td>45° and poleward</td><td>243</td><td>2%</td><td>8%</td></tr></tbody>
+    </table></div>
+    <p>This is mainly physics, not a gap in the data or an effect of wealth: rich tropical and desert cities such as Singapore, Dubai and Darwin have no match either. Two things combine.</p>
+    <ul>
+      <li><strong>There is nowhere warmer to point to.</strong> A mid-latitude city's future climate usually exists today somewhere closer to the equator. The hottest places on Earth have no hotter place to match, so their future climates are new to the planet. Williams et al. (2007) found such novel climates concentrated in the tropics and subtropics.</li>
+      <li><strong>Tropical climates vary little from year to year.</strong> σ measures change against a place's own normal swings, so a given warming stands out far more where years are steady. This is why tropical climates are expected to leave their historical range first (Mora et al. 2013). It also means the change is large relative to what local ecosystems and people are adapted to.</li>
+    </ul>
+    <p>Data play a smaller part. Where weather stations are sparse, TerraClimate can understate year-to-year variability, which inflates σ; the variability floor (above) limits this, but some tropical results are more uncertain than mid-latitude ones.</p>
+    <p>The pattern also has a moral dimension. The places facing climates with no present-day equivalent are largely those that have contributed least to the emissions causing the change (King &amp; Harrington 2018).</p>
   </section>
 
   <section id="limits">
@@ -424,8 +460,10 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
       <li>Garner, G. G., Hermans, T., Kopp, R. E., Slangen, A. B. A., Edwards, T. L., Levermann, A., et al. (2021). <em>IPCC AR6 sea level projections</em> (Version 20210809) [Data set]. Zenodo. <a href="https://doi.org/10.5281/zenodo.5914709">https://doi.org/10.5281/zenodo.5914709</a></li>
       <li>Hausfather, Z., Marvel, K., Schmidt, G. A., Nielsen-Gammon, J. W., &amp; Zelinka, M. (2022). Climate simulations: recognize the ‘hot model’ problem. <em>Nature, 605</em>, 26–29. <a href="https://doi.org/10.1038/d41586-022-01192-2">https://doi.org/10.1038/d41586-022-01192-2</a></li>
       <li>Ledoit, O., &amp; Wolf, M. (2004). A well-conditioned estimator for large-dimensional covariance matrices. <em>Journal of Multivariate Analysis, 88</em>(2), 365–411. <a href="https://doi.org/10.1016/S0047-259X(03)00096-4">https://doi.org/10.1016/S0047-259X(03)00096-4</a></li>
+      <li>King, A. D., &amp; Harrington, L. J. (2018). The inequality of climate change from 1.5 to 2°C of global warming. <em>Geophysical Research Letters, 45</em>(10), 5030–5033. <a href="https://doi.org/10.1029/2018GL078430">https://doi.org/10.1029/2018GL078430</a></li>
       <li>Mahony, C. R., Cannon, A. J., Wang, T., &amp; Aitken, S. N. (2017). A closer look at novel climates: new methods and insights at continental to landscape scales. <em>Global Change Biology, 23</em>(9), 3934–3955. <a href="https://doi.org/10.1111/gcb.13645">https://doi.org/10.1111/gcb.13645</a></li>
       <li>Maraun, D., &amp; Widmann, M. (2018). <em>Statistical Downscaling and Bias Correction for Climate Research</em>. Cambridge University Press. <a href="https://doi.org/10.1017/9781107588783">https://doi.org/10.1017/9781107588783</a></li>
+      <li>Mora, C., Frazier, A. G., Longman, R. J., Dacks, R. S., Walton, M. M., Tong, E. J., et al. (2013). The projected timing of climate departure from recent variability. <em>Nature, 502</em>(7470), 183–187. <a href="https://doi.org/10.1038/nature12540">https://doi.org/10.1038/nature12540</a></li>
       <li>O'Neill, B. C., Tebaldi, C., van Vuuren, D. P., Eyring, V., Friedlingstein, P., Hurtt, G., Knutti, R., Kriegler, E., Lamarque, J.-F., Lowe, J., Meehl, G. A., Moss, R., Riahi, K., &amp; Sanderson, B. M. (2016). The Scenario Model Intercomparison Project (ScenarioMIP) for CMIP6. <em>Geoscientific Model Development, 9</em>(9), 3461–3482. <a href="https://doi.org/10.5194/gmd-9-3461-2016">https://doi.org/10.5194/gmd-9-3461-2016</a></li>
       <li>Peel, M. C., Finlayson, B. L., &amp; McMahon, T. A. (2007). Updated world map of the Köppen-Geiger climate classification. <em>Hydrology and Earth System Sciences, 11</em>(5), 1633–1644. <a href="https://doi.org/10.5194/hess-11-1633-2007">https://doi.org/10.5194/hess-11-1633-2007</a></li>
       <li>PRISM Climate Group &amp; USDA Agricultural Research Service. (2023). <em>2023 USDA Plant Hardiness Zone Map GIS data, 1991–2020 mean annual extreme minimum temperature</em>. Oregon State University. <a href="https://prism.oregonstate.edu/phzm">https://prism.oregonstate.edu/phzm</a></li>
@@ -436,6 +474,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
       <li>Williams, J. W., Jackson, S. T., &amp; Kutzbach, J. E. (2007). Projected distributions of novel and disappearing climates by 2100 AD. <em>Proceedings of the National Academy of Sciences, 104</em>(14), 5738–5742. <a href="https://doi.org/10.1073/pnas.0606292104">https://doi.org/10.1073/pnas.0606292104</a></li>
     </ol>
     <footer class="end">
+      <p>See <a href="changelog.html">what's new</a> for every change to the site and its data. Spotted a problem or have a question? <a href="./#feedback">Send feedback</a>. It goes privately to the author; nothing is published or tracked.</p>
       <p>Climate Twins, version <span class="v-rel"></span> (data version <span class="v-data"></span>). Baseline 1991–2020; CMIP6 projections; SSP1-2.6 to SSP5-8.5. <a href="./">Open the map</a>.</p>
     </footer>
   </section>

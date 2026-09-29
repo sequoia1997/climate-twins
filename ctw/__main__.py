@@ -9,7 +9,8 @@ def main(argv=None):
     sub.add_parser("plan", help="print the job matrix (models, TerraClimate variables, latest year) as JSON")
     a = sub.add_parser("cmip6"); a.add_argument("--model", required=True)
     a = sub.add_parser("terraclimate"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
-    sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer"); sub.add_parser("sealevel")
+    sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer")
+    a = sub.add_parser("sealevel"); a.add_argument("--if-stale", action="store_true", help="skip when data/sealevel.json is current for the place list")
     sub.add_parser("analogs"); sub.add_parser("export")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
     sub.add_parser("site"); sub.add_parser("watch")
@@ -35,7 +36,7 @@ def main(argv=None):
     elif args.step == "gazetteer":
         from . import gazetteer; gazetteer.run(cfg)
     elif args.step == "sealevel":
-        from . import sealevel; sealevel.run(cfg)
+        from . import sealevel; sealevel.run(cfg, args.if_stale)
     elif args.step == "analogs":
         from . import analogs; analogs.run(cfg)
     elif args.step == "export":

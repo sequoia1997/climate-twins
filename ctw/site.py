@@ -20,6 +20,17 @@ def tropics_rows(S) -> str:
     return "".join(rows)
 
 
+def place_counts(S) -> dict:
+    """Place counts for the methods page, from the places actually in the build (summary.json) and the place lists."""
+    T = C.targets()
+    T = T[T.label.isin(S["places"])]
+    na, w = T[T.g == 0], T[T.g == 1]
+    n = lambda x: f"{int(x):,}"                                                    # noqa: E731
+    return {"N_PLACES": n(len(T)), "N_NA": n(len(na)), "N_WORLD": n(len(w)), "N_COUNTRIES": n(w.country.nunique()),
+            "N_CONUS": n((na.domain == "conus").sum()), "N_AK": n(((na.country == "US") & (na.domain == "na")).sum()),
+            "N_CA": n((na.country == "CA").sum()), "N_MX": n((na.country == "MX").sum())}
+
+
 def run(cfg=None):
     cfg = cfg or C.config()
     S = json.load(open(C.SITE / "data" / "summary.json"))
@@ -42,6 +53,7 @@ def run(cfg=None):
              "SELFCHK": f"{S['selfchk_median']:.2f}", "SL_N": str(S["sealevel_places"]),
              "REPO_LINK": (f'<a href="{cfg["release"]["repo_url"]}">{cfg["release"]["repo_url"]}</a>' if cfg["release"].get("repo_url") else "source code in the project repository")}
     fills["TROPICS_TABLE"] = tropics_rows(S)
+    fills.update(place_counts(S))
     for k, v in fills.items():
         m = m.replace("{{" + k + "}}", v)
     m = m.replace("__SITE_URL__", url)
