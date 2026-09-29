@@ -19,7 +19,8 @@ def main(seed=1):
     rng = np.random.default_rng(seed)
     cfg = C.config()
     T = C.targets()
-    NT, NM, NV = len(T), len(C.models(cfg)), C.NV
+    XN = C.extra_names(cfg); C.use_extras(XN)                             # CTW_EXTRA=pet,srad exercises the extra measures
+    NT, NM, NV = len(T), len(C.models(cfg)), C.nvx()
     P, S, E = len(cfg["periods"]["keys"]), len(cfg["scenarios"]["ids"]), 2
     midx = C.match_idx(cfg); K = len(midx)
     g = cfg["grids"]
@@ -33,6 +34,8 @@ def main(seed=1):
         x[:, 4:8] = x[:, 0:4] - 9
         x[:, 8:12] = rng.uniform(20, 400, (len(la), 4))
         x[:, 12:16] = x[:, 4:8] - 3
+        for j, n in enumerate(XN):
+            x[:, 16 + 4 * j:20 + 4 * j] = rng.uniform(5, 300, (len(la), 4)) if n == "pet" else rng.uniform(60, 330, (len(la), 4))
         return x
 
     base = climate(lat)
@@ -65,7 +68,7 @@ def main(seed=1):
              best_idx=best_idx, best_sig=best_sig, area2=rng.uniform(0, 1e6, (NT, P, S, E)).astype("float32"),
              selfchk=rng.uniform(0, .1, NT).astype("float32"), tc_check=rng.uniform(0, .5, NT).astype("float32"),
              recent=rng.normal(0, .3, (NT, NV)).astype("float32"), rec_sig=rng.uniform(0, 2, NT).astype("float32"),
-             rec_years=np.array([2016, 2025]), floored=np.array([], str), cc_fill=np.array([], str),
+             rec_years=np.array([2016, 2025]), x_names=np.array(XN, dtype=str), floored=np.array([], str), cc_fill=np.array([], str),
              f_now_kg=fk(NT), f_now_zone=fk(NT), f_now_ffp=rng.integers(30, 365, NT).astype("uint16"),
              f_fut_kg=fk(NT, P, S, E), f_fut_zone=fk(NT, P, S, E), f_fut_ffp=rng.integers(30, 365, (NT, P, S, E)).astype("uint16"),
              na_cells=na_cells, na_lat=na_lat, na_lon=na_lon, na_raw=climate(na_lat).astype("float32"),

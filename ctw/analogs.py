@@ -15,7 +15,7 @@ from pyproj import Transformer
 from scipy.spatial import cKDTree
 from . import common as C
 from . import features as F
-from . import era5 as E
+from . import era5 as ERA5                            # (not E: run() uses E for the number of ensembles)
 
 MON = ("tmax", "tmin", "ppt", "vap")
 CORE3 = ("tmax", "tmin", "ppt")
@@ -468,18 +468,18 @@ def run(cfg=None):
 
     # ---------------------------------------------------------------- baseline agreement with ERA5 (independent dataset)
     era5_sig = np.full(NT, np.nan, "float32"); era5_diff = np.full((NT, NVX), np.nan, "float32")   # BEGIN era5-agreement
-    e5 = E.load_series(T)
+    e5 = ERA5.load_series(T)
     if e5 is None:
         C.log.warning("no ERA5 files in work/era5: baseline agreement not computed")
     else:
-        eb = E.baseline_vectors(e5, b0, b1)
+        eb = ERA5.baseline_vectors(e5, b0, b1)
         eb[:, C.NV:] = base[:, C.NV:]                       # extras (pet, srad) have no ERA5 counterpart here: zero difference, so agreement reflects the standard measures
         ok5 = ~bad & np.isfinite(eb[:, midx]).all(1) & np.isfinite(base[:, midx]).all(1)
-        e5off = E.offsets(base[ok5], eb[ok5], G[ok5])
+        e5off = ERA5.offsets(base[ok5], eb[ok5], G[ok5])
         era5_raw = np.full(NT, np.nan, "float32")
         for k in np.where(ok5)[0]:
-            era5_sig[k] = E.agreement(SH[k], midx, base[k], eb[k], e5off[G[k]])
-            era5_raw[k] = E.agreement(SH[k], midx, base[k], eb[k])
+            era5_sig[k] = ERA5.agreement(SH[k], midx, base[k], eb[k], e5off[G[k]])
+            era5_raw[k] = ERA5.agreement(SH[k], midx, base[k], eb[k])
             era5_diff[k] = eb[k] - base[k]
         C.log.info("ERA5 typical offsets (transformed units) NA %s | world %s", np.round(e5off[0], 2).tolist(), np.round(e5off[1], 2).tolist())
         C.log.info("ERA5 raw agreement median %.2f sigma", np.nanmedian(era5_raw))
