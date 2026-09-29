@@ -203,6 +203,11 @@ details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{
 .axis{position:relative;height:18px;margin-left:var(--lw)}
 .axis span{position:absolute;top:2px;transform:translateX(-50%);font-size:.68rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .cmp .cap{font-size:.8rem;color:var(--muted);margin:4px 0 0}
+/* BEGIN extreme-days (extremes.json) */
+.ext-tab{margin-top:4px} .ext-tab th{font-size:.76rem;white-space:nowrap} .ext-tab th:first-child{white-space:normal;font-weight:400;color:var(--muted)} .ext-tab td:not(:first-child){width:19%} .ext-tab td,.ext-tab th{padding:4px 3px;text-align:center} .ext-tab td:first-child,.ext-tab th:first-child{text-align:left}
+.ext-tab td small{color:var(--muted);font-size:.72rem;white-space:nowrap} .ext-tab td{font-variant-numeric:tabular-nums}
+.ext-none{margin:6px 0 0;color:var(--muted);font-size:.85rem}
+/* END extreme-days */
 details.exact{margin:14px 0 0} details.exact summary{font-weight:400;color:var(--muted);font-size:.9rem}
 table.ex{margin-top:6px} table.ex th{font-size:.76rem} table.ex td,table.ex th{padding:4px 3px}
 table.ex tr.grp th{text-align:left;font-weight:700;padding-top:10px;border-bottom:1.5px solid var(--ink);font-size:.82rem;color:var(--ink)}
@@ -920,6 +925,35 @@ function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!
   const dir=a=>a[1]>=0?"rise":"fall",a5=v["2050"],a1=v["2100"];
   const r=(a,verb)=>`${verb?dir(a)+" ":""}${n(a[1])}${un} (${rng(a)})`;
   return `<p class="slr"><strong>Sea level:</strong> projected to ${r(a5,true)} by 2050 and ${r(a1,dir(a1)!==dir(a5))} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, ${sl.km<3?"projection for a tide gauge here":`nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away`}).</p>`;}
+/* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
+   or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5 only (see methods). */
+let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded
+function extLoad(){EXT=null;fetch("data/extremes.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places&&j.indices){EXT=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
+function extHTML(tt,topic,S3,M){
+  if(!tt)return"";
+  if(EXT===undefined){extLoad();return"";}
+  if(!EXT)return"";
+  const P=EXT.places[tt.lat.toFixed(4)+","+tt.lon.toFixed(4)],pk=EXT.periods[S.per];
+  if(!P||!P.f||!P.f[pk])return `<p class="ext-none">Extreme-day counts are not available for this place (the daily-data grid has no land cell here).</p>`;
+  const want=D.ssps[S.ssp],ids=EXT.scenarios,order=["ssp126","ssp245","ssp370","ssp585"];
+  let sid=ids.find(i=>EXT.labels[i]===want),near=false;
+  if(!sid){near=true;sid=ids.slice().sort((a,b)=>Math.abs(order.indexOf(a)-S.ssp)-Math.abs(order.indexOf(b)-S.ssp)||order.indexOf(b)-order.indexOf(a))[0];}
+  const avail=ids.map(i=>EXT.labels[i]).join(" and "),slab=EXT.labels[sid];
+  const num=(v,k)=>v==null?"–":(k==="rx1"?(M?Math.round(v):(v/25.4).toFixed(1)):Math.round(v)).toLocaleString();
+  const cell=(a,k)=>a[0]==null?"–":`${num(a[0],k)}<br><small>${num(a[1],k)}–${num(a[2],k)}</small>`;
+  const rows=EXT.indices.map((ix,i)=>{const now=[P.b[i],P.br[i][0],P.br[i][1]],c5=P.f[EXT.periods[0]][sid][i],c1=P.f[EXT.periods[EXT.periods.length-1]][sid][i];return{ix,i,now,c5,c1};})
+    .filter(r=>[r.now,r.c5,r.c1].some(a=>a[0]!=null&&a[0]>=0.5));
+  if(!rows.length)return"";
+  const fut=r=>P.f[pk][sid][r.i];
+  const head=rows.find(r=>r.ix.id==="tx35"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tx30"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tr20")||rows.find(r=>r.ix.id==="fd")||rows[0];
+  const unit=r=>r.ix.id==="rx1"?(M?"mm":"inches"):r.ix.unit;
+  const short=id=>({tx35:"Days over 35 °C (95 °F)",tx30:"Days over 30 °C (86 °F)",tr20:"Tropical nights (low 20 °C+)",fd:"Frost days (low below 0 °C)",wb28:"Hot-humid days (wet-bulb 28 °C+)",cdd:"Longest dry spell",rx1:"Wettest day"})[id];
+  let h=topic("ext","Extreme days",`${short(head.ix.id)}, per year`,[num(head.now[0],head.ix.id),num(fut(head)[0],head.ix.id),"–"]);
+  h+=`<table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
+  for(const r of rows)h+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
+  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected), available for ${avail} only${near?`, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
+  return h;}
+/* END extreme-days */
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const SN=seasons(lat);
   const M=S.metric,TU=M?"°C":"°F",C=v=>M?v:v*9/5+32,dC=v=>M?v:v*9/5,P=mm=>M?mm:mm/25.4;
@@ -973,6 +1007,7 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
     S3.forEach(([k, , ,v],j)=>{h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:0;width:${PX(v[8+q])}%"><b class="hi">${pv(v[8+q])}</b></div>`;});
     h+=`</div></div>`;}
   h+=`</div><p class="cap">Total precipitation in each season, rain and snow as water.</p></div></details>`;
+  h+=extHTML(tt,topic,S3,M);   // extreme-days block: see "BEGIN extreme-days" below
   if(feat)h+=featHTML(feat,S3,topic);
   // exact values, also the accessible version of the charts
   const cols=[now,fu,an];

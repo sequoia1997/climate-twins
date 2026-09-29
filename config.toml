@@ -94,6 +94,17 @@ world_res = 0.5
 world_landfrac_min = 0.25
 world_lat_min = -60.0
 
+[extremes]
+# Extreme-day indicators from NASA NEX-GDDP-CMIP6 daily data (separate "Extreme days" workflow, see ctw/extremes.py).
+# Each model-year is four ~245 MB files, so the job samples years: year_stride = 2 uses every second year of each
+# window (10 of 20 in the future periods). Set 1 for every year (about twice the runtime).
+scenarios = ["ssp245", "ssp585"]
+year_stride = 2
+ensemble = "tcr_likely"        # same likely-TCR model set as the main analysis, where NEX-GDDP publishes the model
+workers = 3
+wet_bulb_c = 28.0
+dry_mm = 1.0
+
 [recent]
 years = 10                     # "already happening": the latest N complete years vs the baseline
 end = "auto"                   # latest complete TerraClimate year, or a year number
