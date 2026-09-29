@@ -48,6 +48,10 @@ def run(cfg=None):
     left = re.findall(r"\{\{[A-Z_0-9]+\}\}", m)
     assert not left, f"unfilled methods placeholders: {left}"
     (C.SITE / "methods.html").write_text(m)
+    from . import changelog                                            # the public changelog page
+    md = changelog.PATH.read_text() if changelog.PATH.exists() else "# What's new\n\nNo entries yet.\n"
+    page = (web / "changelog.html").read_text().replace("{{INTRO}}", changelog.intro(md)).replace("{{CHANGELOG}}", changelog.render(md))
+    (C.SITE / "changelog.html").write_text(page.replace("__SITE_URL__", url))
     manifest = {"data_version": S["data_version"], "method_version": S["method_version"], "recent_years": S["recent_years"]}
     old = C.SITE / "data" / "manifest.json"
     if old.exists():                                               # a page-only rebuild keeps the recorded versions
