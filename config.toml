@@ -110,19 +110,32 @@ world_lat_min = -60.0
 shard_places = 48              # places per per-place download file (site/data/p/*.dat); the page fetches one when a place is picked
 
 [extremes]
-# Extreme-day indicators from NASA NEX-GDDP-CMIP6 daily data (separate "Extreme days" workflow, see ctw/extremes.py).
+# Extreme-day indicators and the NEX-GDDP monthly changes (data/nexdeltas.npz, see [deltas]) from NASA NEX-GDDP-CMIP6 daily
+# data (separate "Extreme days" workflow, see ctw/extremes.py). One Actions job per model x part (baseline, or one scenario).
 # Each model-year is four ~245 MB files, so the job samples years: year_stride = 2 uses every second year of each
-# window (10 of 20 in the future periods). Set 1 for every year (about twice the runtime).
-scenarios = ["ssp245", "ssp585"]
+# window (15 of 30 baseline years, 10 of 20 in each future period). Set 1 for every year (about twice the runtime; still
+# far below the 6 h job limit: ~0.5 h per scenario job).
+scenarios = ["ssp126", "ssp245", "ssp370", "ssp585"]
 year_stride = 2
-ensemble = "tcr_likely"        # same likely-TCR model set as the main analysis, where NEX-GDDP publishes the model
+extract = "all"                # models to process: every configured model NEX-GDDP publishes ("all") or an ensemble name
+ensemble = "tcr_likely"        # models in the page's extreme-day counts (site/data/extremes.json): the likely-TCR set
 workers = 3
 wet_bulb_c = 28.0
 dry_mm = 1.0
 
+[deltas]
+# Where each model's projected change comes from. "nex": NASA NEX-GDDP-CMIP6 (0.25°, bias-corrected; Thrasher et al. 2022) monthly
+# changes from data/nexdeltas.npz wherever that file has the model, scenario and place (temperature added, precipitation ratio
+# limited by [matching] ppt_ratio, humidity from NEX hurs + temperature, limited by vap_ratio), else the native-grid CMIP6 change.
+# "cmip6": native-grid CMIP6 changes only. Without data/nexdeltas.npz both give the CMIP6-only result. The warming-level view
+# always uses CMIP6 (NEX-GDDP starts in 1950, after the 1850-1900 reference). Ensembles keep the same models either way.
+source = "nex"
+
 [nexcheck]
-# Does the ensemble's projection change when the NEX-GDDP-CMIP6 changes (25 km, bias-corrected) replace the native-grid CMIP6
-# changes? Flag per place, worst case over periods and SSP2-4.5 / SSP5-8.5 (see ctw/nexcheck.py). 1 sigma = as alike as two ordinary years.
+# Does the ensemble's projection depend on model resolution? With [deltas] source = "nex" the main projection (NEX-GDDP changes) is
+# compared with the native-grid CMIP6 projection of the same models; otherwise NEX-GDDP is compared with the CMIP6 main projection.
+# WorldClim / AdaptWest are always compared with the main projection. Flag per place, worst case over periods, scenarios and sources
+# (see ctw/nexcheck.py). 1 sigma = as alike as two ordinary years.
 sigma_moderate = 0.5           # projected climates this far apart: "moderate"
 sigma_high = 1.0               # this far apart: "high" (also high: moderate distance and the best match moves more than moved_km)
 moved_km = 500

@@ -344,6 +344,8 @@ def run(cfg=None):
     summary.update(selfchk_median=round(float(np.nanmedian(R["selfchk"])), 3), tc_check_median=round(float(np.nanmedian(R["tc_check"])), 3),
                    unusable=T.label[bad].tolist(), floored=R["floored"].tolist(), cc_fill=R["cc_fill"].tolist(),
                    recent_years=R["rec_years"].tolist(), n_models=len(ms), gwl_now=common["gwl"]["now"], sealevel_places=len(sl["places"]) if sl else 0)
+    from . import nexcheck as NEXC                                  # source of each model's change (NEX-GDDP or CMIP6), read by validate/site
+    summary["deltas"] = NEXC.delta_summary(cfg, R, [m["name"] for m in ms], bad, T.g.values)
     if XN and C.work("extra_sensitivity.json").exists():
         summary["extra"] = json.load(open(C.work("extra_sensitivity.json")))      # read by validate.py
     # BEGIN era5-agreement: bias table (ERA5 minus baseline, median over places) and agreement shares for methods.html

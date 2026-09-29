@@ -231,8 +231,9 @@ jobs:
         with: { name: hindcast, path: data }
       - name: Keep the current release's summary for comparison
         run: cp site/data/summary.json /tmp/previous_summary.json 2>/dev/null || true
+      # analogs uses data/nexdeltas.npz (from the Extreme days workflow) as each model's change where it has it ([deltas] source)
       - run: python -m ctw analogs
-      - name: Model-resolution check (NEX-GDDP, WorldClim, AdaptWest changes vs main; skipped if no delta file exists)
+      - name: Model-resolution check (main vs native-grid CMIP6 or NEX-GDDP, WorldClim, AdaptWest; skipped if no delta file exists)
         continue-on-error: true
         run: python -m ctw nexcheck
       - run: python -m ctw export

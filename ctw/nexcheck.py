@@ -16,6 +16,12 @@ single member. Flag per place, worst case over the periods and the two scenarios
   ok        otherwise
 1 sigma is "as alike as two ordinary years" (the badge on the page); 0.5 is well inside that noise.
 
+Main source NEX-GDDP ([deltas] source = "nex", the default once data/nexdeltas.npz exists): the main projection then already uses
+the NEX-GDDP changes, so the NEX-vs-main comparison is replaced by main vs the native-grid CMIP6 projection of the same models
+(source "cmip6", compare_raw; results.npz keeps that projection as fut_cmip6). WorldClim and AdaptWest are still compared with
+the main projection. This module also loads the NEX-GDDP changes for the main projection (load_main, blend) and summarises which
+source each model used (delta_summary, delta_line).
+
 Multi-source: the same comparison is repeated for each downscaled source that exists and the flag is the worst case
 over sources (combine); the entry lists which source(s) flagged it ("flagged_by") and each source's own flag:
   nex  NASA NEX-GDDP-CMIP6 (data/nexdeltas.npz; also humidity)
@@ -36,7 +42,7 @@ MON = ("tmax", "tmin", "ppt", "vap")
 DEFAULTS = {"sigma_moderate": 0.5, "sigma_high": 1.0, "moved_km": 500.0, "min_models": 6, "high_share_note": 0.15}
 DELTAS = C.DATA / "nexdeltas.npz"
 DOWN = C.DATA / "downdeltas.npz"
-SRC_LABEL = {"nex": "NEX-GDDP-CMIP6", "wc": "WorldClim 2.1", "aw": "AdaptWest"}
+SRC_LABEL = {"nex": "NEX-GDDP-CMIP6", "wc": "WorldClim 2.1", "aw": "AdaptWest", "cmip6": "native-grid CMIP6"}
 RANK = {"ok": 0, "moderate": 1, "high": 2}
 OUT = C.SITE / "data" / "nexcheck.json"
 
@@ -70,9 +76,126 @@ def write_deltas(Z, names, T, cfg, path=None):
     path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path, dtx=dtx.astype("float16"), dtn=dtn.astype("float16"), rp=rp.astype("float16"), rv=rv.astype("float16"),
                         models=np.array(names), scen=np.array([str(x) for x in Z[0]["scen"]]), periods=np.array(cfg["periods"]["keys"]),
-                        labels=np.array(T.label.values.astype(str)), lat=T.lat.values.astype("float32"), lon=T.lon.values.astype("float32"))
+                        labels=np.array(T.label.tolist(), dtype=str), lat=T.lat.values.astype("float32"), lon=T.lon.values.astype("float32"))
     C.log.info("nexdeltas.npz: %d models, %d places, %.1f MB", len(names), len(T), path.stat().st_size / 1e6)
     return path
+
+
+class MainDeltas:
+    """NEX-GDDP-CMIP6 monthly changes as the main projection's source ([deltas] source = "nex", used by analogs.run).
+    get(model, p, ssp) -> (dtx, dtn, rp, rv) float64 (NT, 12) in the current place order (NaN where the file has no value for a
+    place: not on a land cell, a place added after the Extreme days run, a model without hurs for rv), or None when the file has
+    no such model / scenario / period."""
+
+    def __init__(self, Z, T, cfg):
+        self.models = [str(x) for x in Z["models"]]
+        self.scen = [str(x) for x in Z["scen"]]
+        ix = {l: i for i, l in enumerate(str(x) for x in Z["labels"])}
+        self.srcx = np.array([ix.get(l, -1) for l in T.label])
+        self.arrays = {k: Z[k] for k in ("dtx", "dtn", "rp", "rv")}
+        self.nper = self.arrays["dtx"].shape[1]
+
+    def get(self, model, p, ssp):
+        if model not in self.models or ssp not in self.scen or p >= self.nper:
+            return None
+        j, si = self.models.index(model), self.scen.index(ssp)
+        have = self.srcx >= 0
+        s0 = np.where(have, self.srcx, 0)
+        out = tuple(np.where(have[:, None], self.arrays[k][j, p, si].astype("float64")[s0], np.nan) for k in ("dtx", "dtn", "rp", "rv"))
+        return out if np.isfinite(out[0]).any() else None
+
+
+def load_main(cfg, T, path=None):
+    """The NEX-GDDP deltas for the main projection, or None: [deltas] source = "cmip6", no data/nexdeltas.npz (then the build is
+    exactly the CMIP6-only one), or a file built for other periods."""
+    src = str(cfg.get("deltas", {}).get("source", "nex")).lower()
+    if src != "nex":
+        return None
+    path = path or DELTAS
+    if not path.exists():
+        C.log.info("deltas: %s not found; every model uses its native-grid CMIP6 change", path.name)
+        return None
+    Z = C.load(path)
+    if "periods" in Z and [str(x) for x in Z["periods"]] != [str(x) for x in cfg["periods"]["keys"]]:
+        C.log.warning("deltas: %s was built for periods %s, not %s; using CMIP6 changes", path.name, list(Z["periods"]), cfg["periods"]["keys"])
+        return None
+    return MainDeltas(Z, T, cfg)
+
+
+def blend(d_cm, d_nx, mcfg):
+    """The main projection's change for one model / period / scenario: NEX-GDDP where it has temperature and precipitation for a
+    place (ratios limited like the CMIP6 ones), else the CMIP6 change d_cm. Humidity: the NEX-GDDP vapour-pressure ratio (from
+    hurs and temperature) where finite, else the CMIP6 huss ratio (NaN there -> constant relative humidity, as before). Any
+    further entries of d_cm (the rsds ratio for the optional extras) stay CMIP6. Returns (d, used (NT,) bool)."""
+    lo, hi = mcfg["ppt_ratio"]
+    vlo, vhi = mcfg["vap_ratio"]
+    dtx, dtn, rp, rv = d_nx
+    used = np.isfinite(dtx).all(1) & np.isfinite(dtn).all(1) & np.isfinite(rp).all(1)
+    u = used[:, None]
+    rvn = np.clip(rv, vlo, vhi)
+    rv_ok = u & np.isfinite(rvn).all(1)[:, None]
+    d = (np.where(u, dtx, d_cm[0]), np.where(u, dtn, d_cm[1]), np.where(u, np.clip(rp, lo, hi), d_cm[2]), np.where(rv_ok, rvn, d_cm[3]))
+    return d + tuple(d_cm[4:]), used
+
+
+def delta_summary(cfg, R, names, bad, G=None):
+    """summary.json["deltas"] (export) and manifest.json["delta_sources"] (site): which source each model's change came from and,
+    when NEX-GDDP was used, how much that moved the answer against the CMIP6-only projection of the same run (validate's report).
+    models[name][scenario] = share of usable places whose change came from NEX-GDDP (minimum over the periods)."""
+    want = str(cfg.get("deltas", {}).get("source", "nex")).lower()
+    sc = cfg["scenarios"]["ids"]
+    if "delta_nex_share" not in R:
+        why = "configured" if want == "cmip6" else "no data/nexdeltas.npz"
+        return {"source": "cmip6", "why": why, "models": {n: {s: 0.0 for s in sc} for n in names},
+                "label": {n: "cmip6" for n in names}}
+    sh = np.asarray(R["delta_nex_share"])
+    models = {n: {s: round(float(sh[mi, :, si].min()), 3) for si, s in enumerate(sc)} for mi, n in enumerate(names)}
+    label = {n: ("nex" if all(v > 0 for v in d.values()) else "cmip6" if not any(v > 0 for v in d.values()) else "mixed")
+             for n, d in models.items()}
+    ok = ~np.asarray(bad)
+    km, db, ds = (np.asarray(R[k])[ok] for k in ("src_km", "src_dbest", "src_dist"))
+    thr = float(cfg["gates"]["moved_km"])
+
+    def st(km, db, ds):
+        f = np.isfinite(km)
+        if not f.any():
+            return None
+        pl = np.isfinite(km[:, :, :, 0]).any((1, 2))
+        return dict(n_places=int(pl.sum()), moved_share=round(float((km[f] > thr).mean()), 4),
+                    places_moved_share=round(float(np.nanmax(np.where(np.isfinite(km[:, :, :, 0]), km[:, :, :, 0] > thr, 0), axis=(1, 2))[pl].mean()), 4),
+                    median_abs_dbest=round(float(np.median(np.abs(db[f]))), 3), median_dbest=round(float(np.median(db[f])), 3),
+                    median_dist=round(float(np.median(ds[np.isfinite(ds)])), 3), p90_dist=round(float(np.percentile(ds[np.isfinite(ds)], 90)), 3))
+    eff = {"all": st(km, db, ds)}
+    if G is not None:
+        g = np.asarray(G)[ok]
+        for reg, m in (("north_america", g == 0), ("world", g == 1)):
+            if m.any():
+                eff[reg] = st(km[m], db[m], ds[m])
+    return {"source": "nex", "models": models, "label": label, "moved_km": thr, "effect": eff,
+            "n_nex": int(sum(v != "cmip6" for v in label.values())), "n_models": len(names)}
+
+
+def delta_line(D) -> str | None:
+    """validate's report: the NEX-source vs CMIP6-source effect, or None."""
+    if not D:
+        return None
+    if D.get("source") != "nex":
+        return f"Projected changes: native-grid CMIP6 for every model ({D.get('why', 'configured')})."
+    nx = ", ".join(n for n, v in D["label"].items() if v != "cmip6")
+    cm = ", ".join(n for n, v in D["label"].items() if v == "cmip6")
+    E = (D.get("effect") or {}).get("all")
+    line = f"Projected changes from NEX-GDDP-CMIP6 for {D['n_nex']} of {D['n_models']} models ({nx})" + (f"; native-grid CMIP6 for {cm}" if cm else "")
+    if E:
+        line += (f". Effect against the CMIP6-only projection of the same run: best match moved more than {D['moved_km']:.0f} km in "
+                 f"{E['moved_share']:.1%} of place x period x scenario x ensemble combinations ({E['places_moved_share']:.1%} of {E['n_places']} "
+                 f"places in at least one period/scenario of the likely-range ensemble); median change in best-match sigma {E['median_dbest']:+.2f} "
+                 f"(median |change| {E['median_abs_dbest']:.2f}); median sigma distance between the two projected climates {E['median_dist']:.2f} "
+                 f"(90th percentile {E['p90_dist']:.2f})")
+        for reg, lab in (("north_america", "North America"), ("world", "world")):
+            r = D["effect"].get(reg)
+            if r:
+                line += f"; {lab}: moved {r['moved_share']:.1%}, median |dsigma| {r['median_abs_dbest']:.2f}, distance {r['median_dist']:.2f}"
+    return line
 
 
 def project(base_mon, d, mcfg):
@@ -213,6 +336,45 @@ def compare(src, ctx, s):
     return dsig, moved, info
 
 
+def compare_raw(ctx, s):
+    """When the main projection already uses NEX-GDDP changes ([deltas] source = "nex"), the NEX-vs-main comparison would compare a
+    source with itself. This keeps the resolution sensitivity instead: the main projection against the same models projected from
+    their native-grid CMIP6 changes (results.npz fut_cmip6, same run), per period and scenario, over the models whose change came
+    from NEX-GDDP there. Same outputs as compare(); source name "cmip6"."""
+    import warnings
+    R, T, cfg = ctx["R"], ctx["T"], ctx["cfg"]
+    sh = np.asarray(R["delta_nex_share"])                                    # (NM, P, S)
+    names = [m["name"] for m in C.models(cfg)]
+    NT, P, S = len(T), sh.shape[1], sh.shape[2]
+    midx, Msh, bad, G, pools = ctx["midx"], ctx["Msh"], ctx["bad"], ctx["G"], ctx["pools"]
+    dsig = np.full((NT, P, S), np.nan, "float32")
+    moved = np.full((NT, P, S), np.nan, "float32")
+    used_any = sorted({mi for mi in range(sh.shape[0]) if sh[mi].max() > 0})
+    if not used_any:
+        return None
+    for p in range(P):
+        for si in range(S):
+            use = [mi for mi in used_any if sh[mi, p, si] > 0]
+            if not use:
+                continue
+            A = np.moveaxis(np.asarray(R["fut_cmip6"][:, p, si][:, use], "float64"), 1, 0)
+            B = np.moveaxis(np.asarray(R["fut"][:, p, si][:, use], "float64"), 1, 0)
+            f = np.isfinite(A).all(-1) & np.isfinite(B).all(-1)
+            with warnings.catch_warnings(), np.errstate(invalid="ignore"):
+                warnings.simplefilter("ignore")
+                Am = np.nanmean(np.where(f[..., None], A, np.nan), axis=0)
+                Bm = np.nanmean(np.where(f[..., None], B, np.nan), axis=0)
+                dsig[:, p, si] = sigma_between(Am, Bm, Msh, midx)
+            for k in np.where(~bad & np.isfinite(Am).all(1) & np.isfinite(Bm).all(1))[0]:
+                tr, la, lo = pools[int(G[k])]
+                i1, i2 = best_cell(Am[k], Msh[k], tr, midx), best_cell(Bm[k], Msh[k], tr, midx)
+                moved[k, p, si] = float(C.haversine_km(la[i1], lo[i1], la[i2], lo[i2]))
+    sc = cfg["scenarios"]["ids"]
+    info = {"name": "cmip6", "label": SRC_LABEL["cmip6"], "mode": "overlap", "n_models": len(used_any),
+            "models": [names[mi] for mi in used_any], "scenarios": [sc[si] for si in range(S) if sh[:, :, si].max() > 0]}
+    return dsig, moved, info
+
+
 def summary_line(doc) -> str:
     """One line for validate's report."""
     S = doc["summary"]
@@ -223,7 +385,9 @@ def summary_line(doc) -> str:
     srcs = doc.get("sources")
     names = " + ".join(f"{x['label']} ({x['n_models']} {'models' if x['mode'] == 'overlap' else 'model mean'})" for x in srcs) if srcs \
         else f"NEX-GDDP-CMIP6 ({doc['n_models']} models)"
-    line = (f"Sensitivity to model resolution (downscaled changes vs the main CMIP6 changes; {names}; worst case over sources; {n} places): "
+    what = ("main projection from NEX-GDDP-CMIP6 changes vs the native-grid CMIP6 changes and other downscaled sources" if doc.get("main") == "nex"
+            else "downscaled changes vs the main CMIP6 changes")
+    line = (f"Sensitivity to model resolution ({what}; {names}; worst case over sources; {n} places): "
             f"{S['ok'] / n:.0%} ok, {S['moderate'] / n:.0%} moderate (≥ {th['sigma_moderate']}σ or best match moved > {th['moved_km']:.0f} km), "
             f"{S['high'] / n:.0%} high (≥ {th['sigma_high']}σ); median difference {S['median_dsigma']}σ, 95th percentile {S['p95_dsigma']}σ")
     if srcs and len(srcs) > 1:
@@ -244,6 +408,10 @@ def run(cfg=None, deltas_path=None, out=None, down_path=None):
         C.log.warning("nexcheck: neither %s nor %s found (the Extreme days / Downscaled changes jobs have not produced them yet); skipped", DELTAS, DOWN)
         return None
     R = C.load(C.work("results.npz"))
+    main_nex = "fut_cmip6" in R and float(np.max(R["delta_nex_share"])) > 0     # the main projection already uses NEX-GDDP changes
+    if main_nex:
+        C.log.info("nexcheck: main projection uses NEX-GDDP-CMIP6 changes; comparing it with the native-grid CMIP6 projection instead of NEX-GDDP")
+        sources = [x for x in sources if x.name != "nex"] + [Source("cmip6", [], [], [], {})]
     if "base_mon" not in R:
         raise RuntimeError("results.npz has no base_mon: rerun the analogs step")
     T = C.targets()
@@ -255,7 +423,7 @@ def run(cfg=None, deltas_path=None, out=None, down_path=None):
     NT, bad = len(T), R["bad"]
     res = {}
     for src in sources:
-        r = compare(src, ctx, s)
+        r = compare_raw(ctx, s) if src.name == "cmip6" else compare(src, ctx, s)
         if r is None:
             C.log.warning("nexcheck: source %s has no models; skipped", src.name)
         else:
@@ -290,7 +458,7 @@ def run(cfg=None, deltas_path=None, out=None, down_path=None):
         return round(float(np.percentile(a, q)), 3) if len(a) else None
     allfin = np.concatenate([r[0][np.isfinite(r[0])] for r in res.values()])
     srcs = [{**info, "summary": {**per[n], "median_dsigma": stat(dsig, 50), "p95_dsigma": stat(dsig, 95)}} for n, (dsig, moved, info) in res.items()]
-    doc = {"generated": time.strftime("%Y-%m-%d"), "n_models": max(x["n_models"] for x in srcs),
+    doc = {"generated": time.strftime("%Y-%m-%d"), "main": "nex" if main_nex else "cmip6", "n_models": max(x["n_models"] for x in srcs),
            "models": srcs[0]["models"], "scenarios": srcs[0]["scenarios"],
            "thresholds": {k: s[k] for k in ("sigma_moderate", "sigma_high", "moved_km")},
            "summary": {**counts, "median_dsigma": stat(allfin, 50), "p95_dsigma": stat(allfin, 95)},

@@ -12,7 +12,7 @@ This repository holds everything: the data pipeline, the page, and the automatio
 | What | When | What you do |
 |---|---|---|
 | **Rebuild data** (`.github/workflows/rebuild.yml`) | Every March 15, or by hand | Nothing until it opens a pull request. Read the report in the pull request, then merge. |
-| **Extreme days** (`.github/workflows/extremes.yml`) | Every April 20, or by hand | Separate from the rebuild. Downloads NEX-GDDP-CMIP6 daily data (about 54 GB per model, 13 models) and opens a pull request that changes only `site/data/extremes.json`. Optional: the page hides the block without it. |
+| **Extreme days** (`.github/workflows/extremes.yml`) | Every April 20, or by hand | Separate from the rebuild. Downloads NEX-GDDP-CMIP6 daily data (one job per model x baseline/scenario, ~100 jobs; about 93 GB per model, 20 models, all four scenarios) and opens a pull request that changes only `site/data/extremes.json` and `data/nexdeltas.npz`. Merging it also changes the main answer at the next rebuild: `config.toml [deltas] source = "nex"` makes each model's projected change come from these 25 km, bias-corrected data where they exist (native-grid CMIP6 otherwise; `"cmip6"` switches back). The rebuild report says which source each model used and how far matches moved. |
 | **Deploy site** (`deploy.yml`) | Whenever `site/` changes on `main` | Nothing: merging a rebuild publishes it. |
 | **Watch upstream data** (`watch.yml`) | The 1st of each month | Read the issue it opens, if any (a new TerraClimate year, a corrected climate-model dataset, CMIP7 arriving). |
 
@@ -119,6 +119,8 @@ ctw/                   the pipeline, one module per step (python -m ctw <step>)
   terraclimate.py      world climate, humidity, recent years (per variable, in parallel)
   adaptwest.py prism.py gazetteer.py sealevel.py
   analogs.py           the matching; features.py (climate type, hardiness zone, growing season)
+  extremes.py          NEX-GDDP-CMIP6 daily data: extreme-day counts and data/nexdeltas.npz (the downscaled monthly changes)
+  nexcheck.py          uses those changes in the projection ([deltas]) and checks sensitivity to model resolution
   export.py            packs results for the page: index.json, two core pools, per-place shards (site/data/p/)
   validate.py site.py watch.py
   expand.py regions.py reshard.py  one-off tools (not in the workflow): grow the world place list, region table, convert old data files

@@ -107,6 +107,13 @@ def run(cfg=None, previous=None) -> int:
             notes.append("CHIRPS interannual precipitation variability relative to the place model (detrended SD of log seasonal totals, median, DJF MAM JJA SON): "
                          + ", ".join(f"{x:.2f}" for x in AG["chirps_icv_ratio"]))
     # END baseline-agreement
+    try:                                                       # source of the projected changes (NEX-GDDP or CMIP6) and its effect
+        from .nexcheck import delta_line
+        dl = delta_line(S.get("deltas"))
+        if dl:
+            notes.append(dl)
+    except Exception:  # noqa: BLE001 - informational only
+        pass
     try:                                                       # optional: sensitivity to model resolution (nexcheck)
         from . import nexcheck
         nx = json.load(open(d / "nexcheck.json"))
