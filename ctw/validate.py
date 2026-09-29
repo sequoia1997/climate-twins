@@ -14,6 +14,25 @@ def header(path):
     return json.loads(raw[8:8 + n]), len(raw) - 8 - n
 
 
+def check_shards(d, index):
+    """None if every place in index.json is found at its shard/slot, else a short description of the first problem."""
+    ids = {}
+    for n, sh in enumerate(index["shards"]):
+        try:
+            h, _ = header(d / sh["f"])
+        except Exception as e:  # noqa: BLE001
+            return f"{sh['f']} unreadable: {e}"
+        if len(h["ids"]) != sh["n"]:
+            return f"{sh['f']} holds {len(h['ids'])} places, index says {sh['n']}"
+        ids[n] = h["ids"]
+    ci, si = index["cols"].index("s"), index["cols"].index("i")
+    for t, r in enumerate(index["rows"]):
+        lst = ids.get(r[ci], [])
+        if r[si] >= len(lst) or lst[r[si]] != t:
+            return f"place {t} ({r[0]}) is not at shard {r[ci]} slot {r[si]}"
+    return None
+
+
 def run(cfg=None, previous=None) -> int:
     cfg = cfg or C.config()
     G = cfg["gates"]
@@ -22,15 +41,23 @@ def run(cfg=None, previous=None) -> int:
     try:
         na, nb = header(d / "na.dat"); w, wb = header(d / "world.dat")
         S = json.load(open(d / "summary.json"))
+        index = json.load(open(d / "index.json"))
+        ov, _ = header(d / "overview.dat")
     except Exception as e:  # noqa: BLE001
         (d / "report.md").write_text(f"# Build check: FAILED\n\nCould not read the new data files: {e}\n")
         (d / "status.txt").write_text("fail")
         return 1
     T = C.targets()
     n_na, n_w = int((T.g == 0).sum()), int((T.g == 1).sum())
+    gi = index["cols"].index("g")
+    i_na = sum(1 for r in index["rows"] if r[gi] == 0)
+    i_w = len(index["rows"]) - i_na
+    shard_problem = check_shards(d, index)
     chk = [
-        (len(na["targets"]) >= n_na - 5, f"North American places: {len(na['targets'])} of {n_na}"),
-        (len(w["targets"]) >= n_w - 10, f"World cities: {len(w['targets'])} of {n_w}"),
+        (i_na >= n_na - 5, f"North American places: {i_na} of {n_na}"),
+        (i_w >= n_w - max(10, n_w // 50), f"World cities: {i_w} of {n_w}"),
+        (ov["n"] == len(index["rows"]), f"Overview covers {ov['n']} of {len(index['rows'])} places"),
+        (shard_problem is None, f"Place data files: {len(index['shards'])} shards" + (f" ({shard_problem})" if shard_problem else "")),
         (na["NP"] > 90000, f"North American pool cells: {na['NP']:,}"),
         (w["NP"] > 60000, f"World pool cells: {w['NP']:,}"),
         (len(na["models"]) == len(C.models(cfg)), f"Climate models: {len(na['models'])} of {len(C.models(cfg))}"),
@@ -41,7 +68,34 @@ def run(cfg=None, previous=None) -> int:
         out.append(("✅ " if ok else "❌ ") + msg)
         if not ok:
             problems.append(msg)
+    # BEGIN era5-agreement: independent ERA5 cross-check of the baselines (advisory, never fails the build)
+    E5 = S.get("era5")
+    if E5:
+        ok5 = E5["median"] <= 1.0 and E5["over_poor"] <= 0.25
+        out.append(f"{'✅' if ok5 else '⚠️'} ERA5 baseline agreement: median {E5['median']:.2f}σ over {E5['n']:,} places; "
+                   f"{E5['over_fair']:.0%} above {E5['thr'][0]}σ, {E5['over_poor']:.0%} above {E5['thr'][1]}σ (confidence lowered there)")
+        if not ok5:
+            notes.append("ERA5 disagrees with the baselines more than expected (median above 1σ or over 25% of places above the poor threshold): "
+                         "check the bias table in summary.json before trusting either dataset.")
+        worst5 = sorted(((v["era5"], k) for k, v in S["places"].items() if v.get("era5") is not None), reverse=True)[:8]
+        notes.append("Largest ERA5 disagreements: " + "; ".join(f"{k} ({v:.1f}σ)" for v, k in worst5))
+    else:
+        notes.append("⚠️ No ERA5 cross-check in this build (the era5 jobs did not produce data); the page shows no baseline-agreement line.")
+    # END era5-agreement
+    try:                                                       # optional: sensitivity to model resolution (nexcheck)
+        from . import nexcheck
+        nx = json.load(open(d / "nexcheck.json"))
+        tot = max(sum(nx["summary"][k] for k in ("ok", "moderate", "high")), 1)
+        hi = nx["summary"]["high"] / tot > nexcheck.settings(cfg)["high_share_note"]
+        notes.append(("⚠️ " if hi else "") + nexcheck.summary_line(nx) + (" (informational; does not change the status)" if hi else ""))
+    except Exception:  # noqa: BLE001 - file absent when the Extreme days job has not produced nexdeltas.npz yet
+        pass
     notes.append(f"Recent-climate years: {S['recent_years'][0]}–{S['recent_years'][1]}")
+    sz = [s["b"] for s in index["shards"] if "b" in s]
+    if sz:
+        notes.append(f"Page downloads: index {(d / 'index.json').stat().st_size / 1e3:.0f} kB, North America core {(d / 'na.dat').stat().st_size / 1e6:.1f} MB, "
+                     f"world core {(d / 'world.dat').stat().st_size / 1e6:.1f} MB, then one of {len(sz)} place files "
+                     f"(median {sorted(sz)[len(sz) // 2] / 1e3:.0f} kB, largest {max(sz) / 1e3:.0f} kB) per place picked.")
     if S["sealevel_places"]:
         notes.append(f"Coastal places with sea-level projections: {S['sealevel_places']}")
     else:

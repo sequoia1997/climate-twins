@@ -28,6 +28,11 @@ labels = ["SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5"]
 # Transient climate response (°C), IPCC AR6 WG1 Table 7.SM.5 as compiled by Hausfather et al. (2022).
 # The default ensemble keeps models whose TCR lies in the AR6 likely range. tcr = -1 means no published value.
 tcr_likely = [1.4, 2.2]
+# Initial-condition members averaged per model (the configured member first, then others with the same physics/forcing
+# indices that have every needed variable and scenario in the Pangeo archive). Averaging shrinks internal variability
+# in 20-year windows. Each extra member adds about one more single-member download to that model's job;
+# 1 = the earlier single-member method. A model entry may set its own members_max.
+members_max = 3
 list = [
   { name = "ACCESS-CM2",       member = "r1i1p1f1", grid = "gn", tcr = 2.10 },
   { name = "AWI-CM-1-1-MR",    member = "r1i1p1f1", grid = "gn", tcr = 2.06 },
@@ -54,6 +59,13 @@ list = [
   { name = "MRI-ESM2-0",       member = "r1i1p1f1", grid = "gn", tcr = 1.64 },
   { name = "UKESM1-0-LL",      member = "r1i1p1f2", grid = "gn", tcr = 2.79 },
 ]
+
+[gwl]
+# Warming-level view: the 20-year window centred on the first year the running 20-year global mean tas of a model is
+# this many degrees above its own 1850-1900 mean (IPCC AR6 convention), pooled over the scenarios that reach it.
+levels = [1.5, 2.0, 3.0, 4.0]
+reference = [1850, 1900]
+min_models = 3                 # a level is shown for an ensemble only if at least this many of its models reach it
 
 [matching]
 # 12 temperature and precipitation measures (seasonal mean daily high, low, total precipitation),
@@ -94,6 +106,29 @@ world_res = 0.5
 world_landfrac_min = 0.25
 world_lat_min = -60.0
 
+[export]
+shard_places = 48              # places per per-place download file (site/data/p/*.dat); the page fetches one when a place is picked
+
+[extremes]
+# Extreme-day indicators from NASA NEX-GDDP-CMIP6 daily data (separate "Extreme days" workflow, see ctw/extremes.py).
+# Each model-year is four ~245 MB files, so the job samples years: year_stride = 2 uses every second year of each
+# window (10 of 20 in the future periods). Set 1 for every year (about twice the runtime).
+scenarios = ["ssp245", "ssp585"]
+year_stride = 2
+ensemble = "tcr_likely"        # same likely-TCR model set as the main analysis, where NEX-GDDP publishes the model
+workers = 3
+wet_bulb_c = 28.0
+dry_mm = 1.0
+
+[nexcheck]
+# Does the ensemble's projection change when the NEX-GDDP-CMIP6 changes (25 km, bias-corrected) replace the native-grid CMIP6
+# changes? Flag per place, worst case over periods and SSP2-4.5 / SSP5-8.5 (see ctw/nexcheck.py). 1 sigma = as alike as two ordinary years.
+sigma_moderate = 0.5           # projected climates this far apart: "moderate"
+sigma_high = 1.0               # this far apart: "high" (also high: moderate distance and the best match moves more than moved_km)
+moved_km = 500
+min_models = 6
+high_share_note = 0.15         # validate's report warns if more than this share of places is "high"
+
 [recent]
 years = 10                     # "already happening": the latest N complete years vs the baseline
 end = "auto"                   # latest complete TerraClimate year, or a year number
@@ -117,3 +152,16 @@ max_moved_share = 0.10         # routine if at most this share of best matches m
 max_median_dsigma = 0.25       # routine if the median change in best sigma is at most this
 extra_max_places_moved = 0.15   # optional extras (see [matching] extra): adopt-worthy if at most this share of places moved
 extra_max_median_dsigma = 0.30 # ... and the median |change in best sigma| is at most this
+
+[era5]
+# Independent cross-check of every place's present climate against ERA5 (ctw/era5.py).
+# Baseline agreement = sigma distance between the place's TerraClimate/AdaptWest baseline and its ERA5 baseline,
+# measured with the place's own year-to-year variability (the matching metric).
+agree_fair = 2.0               # above this the page says the two datasets differ noticeably
+agree_poor = 3.5               # above this the confidence badge drops one level
+
+[hindcast]
+# ERA5 hindcast (ctw/hindcast.py): start window, target window
+windows = [[1961, 1990], [1991, 2020]]
+n_places = 100
+seed = 20260929

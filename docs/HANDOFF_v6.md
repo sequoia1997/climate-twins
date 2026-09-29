@@ -8,7 +8,7 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   collapses to the colour bar on phones), attribution shortened to "Methods & Sources · © OpenStreetMap"
   (full basemap credits on the methods page and in the link's hover text).
 - **10.0** (produced by the first *Rebuild data* run): humidity in the matching, climate type, estimated
-  hardiness zone and growing season, "already happening", sea level, page loads `data/na.dat` + `data/world.dat`.
+  hardiness zone and growing season, "already happening", sea level, page loads `data/na.dat` + `data/world.dat` (since the sharding change: see "Sharded data" below).
 
 ## Page changes waiting for 10.0 (in web/index.html)
 - Layout: intro folds into "About this map and σ" after a pick; period/scenario in a compact bar pinned while scrolling;
@@ -94,18 +94,33 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   passes at 1440 px light and 390 px dark. Screens reviewed.
 
 ## Not yet run at full scale
-- `analogs` with humidity on all 1,612 places (first GitHub rebuild does it). Expect the "needs review" label:
+- `analogs` with humidity on every place in the lists (first GitHub rebuild does it; 790 + 1,596 after the world expansion). Expect the "needs review" label:
   method version changed and there is no previous summary.
 - Checks and results section of methods.html (Table 2) still quotes v9 numbers; regenerate from the first
   v10 summary.
 
 ## Deferred
-- Heat days (days over 95 °F, NEX-GDDP daily data): terabyte-scale; would need a separate job design.
+- Heat days: DONE as the separate `extremes` job (ctw/extremes.py, .github/workflows/extremes.yml). Each NEX-GDDP file is one variable-year with a whole globe per daily chunk, so place extraction still costs the whole file; solved by sampling every second year and one matrix job per model (~54 GB each). Only SSP2-4.5 and SSP5-8.5 are processed.
 
 ## Operating notes
-- Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.
+- Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|era5 --var V (ERA5 cross-check, about 10 min per variable)|hindcast (needs the four era5 files)|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.
   `CTW_WORK` = scratch dir, `CTW_SMOKE=1` = quick run.
 - `web/` holds page templates; `site/` is build output (deployed). Page edits go in `web/`, then `python -m ctw site`.
 - Gazetteer falls back to data/places_snapshot.json.gz when GeoNames is unreachable.
 - Sandbox: 1 CPU / 3 GB. Running two TerraClimate passes plus CMIP6 at once crashed the VM; run one heavy job at a time.
   Background jobs stop when a turn ends; all steps checkpoint and resume.
+
+## Sharded data and the expanded world list (added after v6 notes)
+- Export layout (ctw/export.py): `site/data/index.json` (all places + shard table), `overview.dat` (each place's best match for
+  the arrows drawn before a pick, ~100 B/place), core `na.dat` / `world.dat` (pools only, size independent of place count) and
+  `p/<na|w>-<group>-NN.dat` shards of per-place arrays (about `[export] shard_places` = 48 places, grouped by country / world
+  region in ctw/regions.py and ordered along a Z-curve). The page's place index t = row in index.json (NA first, then world,
+  CSV order, unusable places dropped): same semantics as before. Startup downloads index + overview + na.dat (~3.3 MB);
+  a shard (~250 kB) is fetched when a place is picked; world.dat (~1.9 MB) when the first world place is picked or after 4 s
+  on a fast connection. Per-place arrays in the page are preallocated for every place (~9 kB each) and filled per shard.
+- `select(t)` now returns a promise (loads the shard first); `selectNow` is the old synchronous body.
+- validate.py checks index, overview and every shard's ids; export clears `site/data/p/` before writing.
+- ctw/reshard.py converts old monolithic na.dat/world.dat to this layout without rebuilding (used once for the committed data).
+- ctw/expand.py (not in any workflow) grew data/world_targets.csv from 823 to 1,596 places (208 countries/territories).
+- tests/make_fixture.py builds a synthetic results.npz so export -> site -> validate -> tests/test_page.py run offline.
+- Not done: growing the North American list; making the North American pool lazy too (it is the fixed ~3 MB of startup).

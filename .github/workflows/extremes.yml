@@ -1,0 +1,110 @@
+# Extreme-day indicators (days over 35 C, tropical nights, frost days, hot-humid days, dry spells, wettest day)
+# from NASA NEX-GDDP-CMIP6 daily data. Separate from "Rebuild data" so it never blocks it: it writes only
+# site/data/extremes.json and opens its own pull request. The page loads that file lazily and hides the
+# "Extreme days" block when it is absent.
+#
+# It also folds the monthly climatologies of the same files into data/nexdeltas.npz (committed; ~few MB), which the
+# "Rebuild data" workflow reads in its `nexcheck` step (flag: does the projection depend on GCM resolution?).
+#
+# Cost: every model-year is four ~245 MB files (one whole globe per day, so a single place costs as much as all
+# places). With year_stride = 2 (config.toml [extremes]) that is ~220 files (~54 GB) per model; about 30-45 minutes
+# per model on a 4-core runner, 13 models in parallel. Public repositories run Actions free; private ones use
+# roughly 8-10 runner-hours per run. The bucket is a public open-data bucket: no cost for downloads.
+name: Extreme days
+on:
+  schedule:
+    - cron: "0 5 20 4 *"
+  workflow_dispatch:
+    inputs:
+      smoke:
+        description: "Quick test run (1 model, 12 places, 1 year per window) - opens no pull request"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+concurrency:
+  group: extremes
+  cancel-in-progress: false
+env:
+  CTW_WORK: ${{ github.workspace }}/work
+  CTW_SMOKE: ${{ inputs.smoke && '1' || '' }}
+  CTW_SMOKE_MODELS: MIROC6
+  PYTHONUNBUFFERED: "1"
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.p.outputs.models }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - id: p
+        run: echo "models=$(python -m ctw extremes --plan)" >> "$GITHUB_OUTPUT"
+
+  extract:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 13
+      matrix:
+        model: ${{ fromJson(needs.plan.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw extremes --model "${{ matrix.model }}"
+      - uses: actions/upload-artifact@v6
+        with: { name: "extremes-${{ matrix.model }}", path: work/extremes/*.npz, retention-days: 7 }
+
+  aggregate:
+    needs: [plan, extract]
+    # a model that failed is left out (the ensemble just has fewer members); at least 6 must be present
+    if: ${{ !cancelled() && needs.extract.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v7
+        with: { pattern: "extremes-*", path: work/extremes, merge-multiple: true }
+      - name: Fold the models into site/data/extremes.json
+        run: |
+          n=$(ls work/extremes/*.npz | wc -l); echo "models present: $n"
+          [ "$n" -ge 6 ] || [ -n "$CTW_SMOKE" ] || { echo "too few models"; exit 1; }
+          python -m ctw extremes --aggregate
+          ls -l site/data/extremes.json data/nexdeltas.npz
+      - uses: actions/upload-artifact@v6
+        with: { name: extremes-json, path: "site/data/extremes.json\ndata/nexdeltas.npz", retention-days: 30 }
+      - name: Open a pull request
+        if: ${{ env.CTW_SMOKE == '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          d=$(date +%F); b="extremes-update-$d"
+          git config user.name "climate-twins-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout -b "$b"
+          git add site/data/extremes.json data/nexdeltas.npz
+          git commit -m "Extreme days update $d (NEX-GDDP-CMIP6, $(ls work/extremes/*.npz | wc -l) models)"
+          git push -f origin "$b"
+          body="Yearly refresh of \`site/data/extremes.json\` from NASA NEX-GDDP-CMIP6 daily data ($(ls work/extremes/*.npz | wc -l) models). Only these two files change (\`data/nexdeltas.npz\` holds the monthly NEX-GDDP changes the next data rebuild uses for its model-resolution check, \`python -m ctw nexcheck\`). Merging deploys extremes.json; the main data rebuild is not affected."
+          gh pr create --title "Extreme days update $d" --body "$body" --base main --head "$b" || gh pr edit "$b" --body "$body"
+
+  report-failure:
+    needs: [aggregate]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create -R "${{ github.repository }}" --title "Extreme days update failed ($(date +%F))" \
+            --body "The extreme-days job did not finish. Open the run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. The live site is unchanged; the page simply keeps the previous extremes.json."

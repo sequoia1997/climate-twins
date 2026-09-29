@@ -9,8 +9,14 @@ def main(argv=None):
     sub.add_parser("plan", help="print the job matrix (models, TerraClimate variables, latest year) as JSON")
     a = sub.add_parser("cmip6"); a.add_argument("--model", required=True)
     a = sub.add_parser("terraclimate"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap", "pet", "srad"])
-    sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer"); sub.add_parser("sealevel")
+    a = sub.add_parser("era5"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
+    sub.add_parser("hindcast", help="ERA5 1961-90 vs 1991-2020 hindcast test of the analog method")
+    sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer")
+    a = sub.add_parser("sealevel"); a.add_argument("--if-stale", action="store_true", help="skip when data/sealevel.json is current for the place list")
+    a = sub.add_parser("extremes", help="extreme-day indicators (NEX-GDDP-CMIP6): --model M | --plan | --aggregate")
+    a.add_argument("--model"); a.add_argument("--plan", action="store_true"); a.add_argument("--aggregate", action="store_true")
     sub.add_parser("analogs"); sub.add_parser("export")
+    sub.add_parser("nexcheck", help="sensitivity of projections to GCM resolution (NEX-GDDP-CMIP6 deltas vs main deltas)")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
     sub.add_parser("site"); sub.add_parser("watch")
     sub.add_parser("changelog", help="add this build's data update to CHANGELOG.md (once per data version)")
@@ -28,6 +34,10 @@ def main(argv=None):
         from . import cmip6; cmip6.run(args.model, cfg)
     elif args.step == "terraclimate":
         from . import terraclimate; terraclimate.run(args.var, cfg)
+    elif args.step == "era5":
+        from . import era5; era5.run(args.var, cfg)
+    elif args.step == "hindcast":
+        from . import hindcast; hindcast.run(cfg)
     elif args.step == "adaptwest":
         from . import adaptwest; adaptwest.run(cfg)
     elif args.step == "prism":
@@ -35,9 +45,22 @@ def main(argv=None):
     elif args.step == "gazetteer":
         from . import gazetteer; gazetteer.run(cfg)
     elif args.step == "sealevel":
-        from . import sealevel; sealevel.run(cfg)
+        from . import sealevel; sealevel.run(cfg, args.if_stale)
+    elif args.step == "extremes":
+        from . import extremes
+        if args.plan:
+            import json
+            print(json.dumps(extremes.available_models(cfg)))
+        elif args.aggregate:
+            extremes.aggregate(cfg)
+        elif args.model:
+            extremes.run(args.model, cfg)
+        else:
+            p.error("extremes needs --model, --plan or --aggregate")
     elif args.step == "analogs":
         from . import analogs; analogs.run(cfg)
+    elif args.step == "nexcheck":
+        from . import nexcheck; nexcheck.run(cfg)
     elif args.step == "export":
         from . import export; export.run(cfg)
     elif args.step == "validate":
