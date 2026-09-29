@@ -126,8 +126,14 @@ dry_mm = 1.0
 sigma_moderate = 0.5           # projected climates this far apart: "moderate"
 sigma_high = 1.0               # this far apart: "high" (also high: moderate distance and the best match moves more than moved_km)
 moved_km = 500
-min_models = 6
+min_models = 6                 # models a source must share with the main ensemble to be compared model by model; else its mean is used
 high_share_note = 0.15         # validate's report warns if more than this share of places is "high"
+
+[downdeltas]
+# Extra downscaled CMIP6 changes for the nexcheck cross-check (ctw/downdeltas.py, .github/workflows/downdeltas.yml):
+# WorldClim 2.1 CMIP6 (global) and AdaptWest (North America). Other keys (URLs, radius) have defaults in the module.
+scenarios = ["ssp245", "ssp585"]
+wc_res = "10m"                 # WorldClim resolution: 10m (18 km), 5m or 2.5m; 10m is plenty for a place value at GCM-cell scale
 
 [recent]
 years = 10                     # "already happening": the latest N complete years vs the baseline

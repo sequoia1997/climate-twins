@@ -4,6 +4,10 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 30 September 2026 (model resolution, more sources)
+
+- **The model-resolution caution now checks three downscaled sources.** Besides NASA's NEX-GDDP-CMIP6, each projection is repeated with the WorldClim 2.1 CMIP6 changes (global) and the AdaptWest downscaled CMIP6 changes (North America), and the worst case counts. The line under the answer, still shown only where the futures differ noticeably, now says which source(s) disagree. See "Sensitivity to model resolution" on the methods page.
+
 ## 29 September 2026 (model resolution)
 
 - **A caution when the result depends on model resolution.** Once a year we now repeat every projection with NASA's higher-resolution, bias-corrected NEX-GDDP-CMIP6 climate changes and compare. Where the two futures differ noticeably (1σ or more, or the best match would jump a long way), the panel adds one line saying so. Most places never show it. The methods page explains what the check does and does not tell you.

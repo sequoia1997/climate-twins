@@ -963,7 +963,8 @@ function nexLoad(){NEXC=null;fetch("data/nexcheck.json?v="+DATA_VERSION).then(r=
 function nexHTML(tt){
   if(NEXC===undefined){nexLoad();return"";}
   const q=NEXC&&NEXC.places[tt.lat.toFixed(4)+","+tt.lon.toFixed(4)];
-  return q&&q.gcm_res_sensitivity==="high"?`<p class="small muted">Sensitive to model resolution: higher-resolution climate data give a noticeably different future here, so treat this result with extra caution. <a href="methods.html#resolution">Why</a></p>`:"";}
+  const NM={nex:"NASA NEX-GDDP",wc:"WorldClim",aw:"AdaptWest"},by=q&&q.flagged_by&&q.flagged_by.length?" ("+q.flagged_by.map(x=>NM[x]||x).join(", ")+")":"";
+  return q&&q.gcm_res_sensitivity==="high"?`<p class="small muted">Sensitive to model resolution: higher-resolution climate data${by} give a noticeably different future here, so treat this result with extra caution. <a href="methods.html#resolution">Why</a></p>`:"";}
 /* END nexcheck */
 /* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
    or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5 only (see methods). */

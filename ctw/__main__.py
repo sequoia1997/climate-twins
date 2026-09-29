@@ -15,6 +15,9 @@ def main(argv=None):
     a = sub.add_parser("sealevel"); a.add_argument("--if-stale", action="store_true", help="skip when data/sealevel.json is current for the place list")
     a = sub.add_parser("extremes", help="extreme-day indicators (NEX-GDDP-CMIP6): --model M | --plan | --aggregate")
     a.add_argument("--model"); a.add_argument("--plan", action="store_true"); a.add_argument("--aggregate", action="store_true")
+    a = sub.add_parser("downdeltas", help="WorldClim 2.1 / AdaptWest downscaled CMIP6 changes: --list | --plan | --job J | --aggregate | --table")
+    a.add_argument("--list", action="store_true"); a.add_argument("--plan", action="store_true"); a.add_argument("--job")
+    a.add_argument("--aggregate", action="store_true"); a.add_argument("--table", action="store_true"); a.add_argument("--source", default="all", choices=["all", "wc", "aw"])
     sub.add_parser("analogs"); sub.add_parser("export")
     sub.add_parser("nexcheck", help="sensitivity of projections to GCM resolution (NEX-GDDP-CMIP6 deltas vs main deltas)")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
@@ -57,6 +60,21 @@ def main(argv=None):
             extremes.run(args.model, cfg)
         else:
             p.error("extremes needs --model, --plan or --aggregate")
+    elif args.step == "downdeltas":
+        from . import downdeltas as D
+        if args.list:
+            D.list_sources(cfg, args.source)
+        elif args.plan:
+            import json
+            print(json.dumps(D.plan(cfg, args.source)))
+        elif args.job:
+            D.run_job(args.job, cfg)
+        elif args.aggregate:
+            D.aggregate(cfg)
+        elif args.table:
+            D.table()
+        else:
+            p.error("downdeltas needs --list, --plan, --job, --aggregate or --table")
     elif args.step == "analogs":
         from . import analogs; analogs.run(cfg)
     elif args.step == "nexcheck":
