@@ -29,7 +29,8 @@ SOURCES = ("era5", "chirps", "chelsa")
 COLS = {"era5": np.arange(16), "chirps": np.arange(8, 12), "chelsa": np.arange(12)}
 LABEL = {"era5": "ERA5", "chirps": "CHIRPS", "chelsa": "CHELSA"}
 CHIRPS_URL = "https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/chirps-v2.0.{y}.{m:02d}.tif.gz"
-CHELSA_URL = ("https://os.zhdk.ch/envicloud/chelsa/chelsa_V2/GLOBAL/climatologies/1981-2010/{v}/"
+# CHELSA moved from os.zhdk.ch/envicloud (retired) to the SWITCH object store in 2026 (layout checked 2026-09-29).
+CHELSA_URL = ("https://os.unil.cloud.switch.ch/chelsa02/chelsa/global/climatologies/{v}/1981-2010/"
               "CHELSA_{v}_{m:02d}_1981-2010_V.2.1.tif")
 CHELSA_VARS = {"tasmax": "tmax", "tasmin": "tmin", "pr": "ppt"}
 
