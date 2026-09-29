@@ -37,6 +37,9 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   latitude table filled by site.py (tropics_rows, ~2100 SSP2-4.5 likely range) and refs Mora 2013, King & Harrington 2018.
 - Basemap: stateLines() restyles positron's boundary_3 to admin_level 4 only (states/provinces/territories) from zoom 2,
   dashed, lighter than national borders (#98a1ab light, #6f7c89 dark); runs after style load and every theme switch.
+- Changelog: CHANGELOG.md -> site/changelog.html (ctw/changelog.py renders a small Markdown subset; template
+  web/changelog.html). rebuild.yml runs `ctw changelog` (adds a data-update entry once per data version) and commits it.
+- Preview card and Instagram images re-shot on real tiles (labels hidden) with state lines, 2026-09-28.
 - Map view buttons: Home (start over: clear selection, starting view; also Esc) and World, 29 px icon buttons styled
   like the MapLibre +/- group directly beneath it. The old "US" button was dropped (Home covers it).
 - Worker redirects page loads to https://climatetwins.org (http, www and the old workers.dev address); var CANONICAL_HOST.
