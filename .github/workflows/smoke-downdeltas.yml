@@ -51,12 +51,16 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
-      - name: What exists (AdaptWest bucket)
+      - name: What exists (AdaptWest; the bucket cannot be listed, so docs pages and URL probes)
         run: |
-          curl -sS "https://s3-us-west-2.amazonaws.com/www.cacpd.org?prefix=CMIP6v73/&delimiter=/" | sed 's/></>\n</g' | grep -E "^<(Prefix|Key)>" | head -60 || true
+          for u in https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6/ https://adaptwest.databasin.org/pages/adaptwest-climatena/ https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6-downscaled/ ; do
+            echo "== $u"; curl -sSL -m 60 -w "HTTP %{http_code}\n" "$u" -o /tmp/p.html || true
+            grep -o 'https\?://[^"<> )]*\(cacpd\|databasin\)[^"<> )]*' /tmp/p.html | sort -u | head -80 || true
+          done
+          curl -sSI "https://s3-us-west-2.amazonaws.com/www.cacpd.org/CMIP6v73/normals/Normal_1991_2020_monthly.zip" | head -5
           time python -m ctw downdeltas --list --source aw
-      - name: Plan
-        run: time python -m ctw downdeltas --plan --source aw
+      - name: Plan (empty unless [downdeltas] aw = true)
+        run: python -m ctw downdeltas --plan --source aw
       - name: Extract (base and first product)
         run: |
           time python -m ctw downdeltas --job aw-base

@@ -71,6 +71,56 @@ def test_parse_aw_key_and_products():
     assert len(mem) == 36 and mem[("ppt", 12)] == "x/PPT12.tif"
 
 
+def _write_tif(path, arr, x0=-180.0, y0=90.0, res=10.0):
+    import rasterio
+    from rasterio.transform import from_origin
+    with rasterio.open(path, "w", driver="GTiff", height=arr.shape[1], width=arr.shape[2], count=arr.shape[0], dtype="float32",
+                       crs="EPSG:4326", transform=from_origin(x0, y0, res, res), nodata=-3.4e38) as r:
+        r.write(arr.astype("float32"))
+
+
+def test_base_months_zip_of_singles_and_multiband():
+    import tempfile, zipfile
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    H, W = 18, 36
+    T = pd.DataFrame({"label": ["a", "b", "c"], "lat": [45.0, -5.0, 89.0], "lon": [-100.0, 5.0, 0.0], "g": 0})
+    mon = np.arange(12, dtype="float32")[:, None, None] * np.ones((12, H, W), "float32") + 100
+    mon[:, 0, :] = -3.4e38                                                    # polar row is nodata
+    # (a) the WorldClim base layout: a zip of 12 single-band monthly tifs
+    z1 = tmp / "tmax.zip"
+    with zipfile.ZipFile(z1, "w") as z:
+        for m in range(12):
+            _write_tif(tmp / f"wc2.1_10m_tmax_{m + 1:02d}.tif", mon[m:m + 1])
+            z.write(tmp / f"wc2.1_10m_tmax_{m + 1:02d}.tif", f"wc2.1_10m_tmax_{m + 1:02d}.tif")
+    out = D.base_months(z1, D.WCSampler(T, 3))
+    assert out.shape == (3, 12) and np.allclose(out[1], np.arange(12) + 100) and np.isfinite(out[2]).all()   # polar place: nearest valid row
+    # (b) one 12-band tif in a zip
+    _write_tif(tmp / "all.tif", mon)
+    z2 = tmp / "multi.zip"
+    with zipfile.ZipFile(z2, "w") as z:
+        z.write(tmp / "all.tif", "wc2.1_10m_tmax.tif")
+    out2 = D.base_months(z2, D.WCSampler(T, 3))
+    assert out2.shape == (3, 12) and np.allclose(out2, out)
+    # (c) a plain 12-band tif (future files) through _wc_arr + sampler
+    a, grid = D._wc_arr(tmp / "all.tif")
+    assert a.shape == (12, H, W) and grid == (-180.0, 90.0, 10.0, 10.0)
+    assert np.allclose(D.WCSampler(T, 3)(a, grid), out)
+    # (d) something that is neither raises
+    z3 = tmp / "bad.zip"
+    with zipfile.ZipFile(z3, "w") as z:
+        z.write(tmp / "wc2.1_10m_tmax_01.tif", "one.tif")
+    try:
+        D.base_months(z3, D.WCSampler(T, 3)); raise AssertionError("should fail")
+    except RuntimeError:
+        pass
+
+
+def test_aw_disabled_by_default_and_templates():
+    s = {**D.DEFAULTS}
+    assert s["aw"] is False
+    assert "aw-base" not in D.plan({"downdeltas": {"wc_gcms": []}, "models": C.config()["models"]}, "aw")     # AdaptWest off: no jobs
+
+
 def synth_files(tmp, src, names, T, dt=3.0, base_t=10.0):
     NT = len(T)
     lab = T.label.values.astype(str)

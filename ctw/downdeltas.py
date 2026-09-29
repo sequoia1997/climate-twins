@@ -46,6 +46,9 @@ DEFAULTS = {
     "aw_bucket": "https://s3-us-west-2.amazonaws.com/www.cacpd.org",
     "aw_prefix": "CMIP6v73/",
     "aw_exclude": "normals|Normal_",
+    "aw": False,                       # AdaptWest jobs in the plan; off until a downloadable future product is found (see aw_probe)
+    "aw_pages": ["https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6/", "https://adaptwest.databasin.org/pages/adaptwest-climatena/"],
+    "aw_urls": {},                     # {label: URL template with {ssp} and {per}} once the object names are known
     "aw_max_gb": 3.0,                  # skip a single AdaptWest file larger than this (a runner has 14 GB)
     "radius_px": 3,                    # WorldClim: nearest valid pixel within this many pixels (coastal places)
     "aw_radius_m": 10000,              # AdaptWest: mean of the 1 km cells within this distance (as adaptwest.py)
@@ -158,7 +161,15 @@ def wc_gcms(s):
 
 
 def aw_keys(s, prefix=None):
-    """[(key, size)] of the AdaptWest bucket under the prefix (S3 ListObjectsV2, paginated)."""
+    """[(key, size)] of the AdaptWest bucket under the prefix (S3 ListObjectsV2, paginated); [] if the bucket refuses listing (it does: 403)."""
+    try:
+        return _aw_keys(s, prefix)
+    except Exception as e:  # noqa: BLE001
+        C.log.warning("AdaptWest bucket listing unavailable (%s)", e)
+        return []
+
+
+def _aw_keys(s, prefix=None):
     out, tok = [], None
     while True:
         p = {"list-type": "2", "prefix": prefix or s["aw_prefix"], "max-keys": "1000"}
@@ -176,10 +187,20 @@ def aw_keys(s, prefix=None):
 
 def aw_products(s, cfg, keys=None):
     """{label: {(ssp, period key): (key, size)}} for the configured scenarios and the two periods; only what parses."""
-    keys = keys if keys is not None else aw_keys(s)
+    keys = list(keys if keys is not None else aw_keys(s))
+    for lab, tmpl in (s.get("aw_urls") or {}).items():                  # explicit URL templates: {ssp}, {per} (e.g. 2041-2060)
+        for ssp in s["scenarios"]:
+            for pk, per in PERIODS.items():
+                url = tmpl.format(ssp=ssp, per=per, label=lab)
+                try:
+                    r = C.http().head(url, timeout=30, allow_redirects=True)
+                except Exception:  # noqa: BLE001
+                    continue
+                if r.status_code == 200:
+                    keys.append((url, int(r.headers.get("content-length", 0))))
     ex = re.compile(s["aw_exclude"], re.I) if s["aw_exclude"] else None
     gcms = [m["name"] for m in C.models(cfg)] + list(s["wc_gcms"])
-    starts = {int(v.split("-")[0]): k for k, v in PERIODS.items()}
+    starts = {int(v.split("-")[0]): k for k, v in PERIODS.items()} | {2071: "2100"}   # AdaptWest may publish 30-year windows (2041-2070, 2071-2100)
     out = {}
     for key, size in keys:
         if ex and ex.search(key) or not re.search(r"\.(zip|tif)$", key, re.I):
@@ -191,6 +212,49 @@ def aw_products(s, cfg, keys=None):
             if cur is None or ("monthly" in key.lower() and "monthly" not in cur[0].lower()):
                 out[label][(ssp, starts[per])] = (key, size)
     return out
+
+
+def aw_probe(s, cfg):
+    """The bucket cannot be listed, so find AdaptWest's future products by (a) grepping its documentation pages for links and
+    (b) HEAD-probing likely object names under the bucket prefix. Prints what answers 200."""
+    from concurrent.futures import ThreadPoolExecutor
+    import itertools
+    for page in s["aw_pages"]:
+        try:
+            html = _get(page, timeout=60).text
+            links = sorted(set(re.findall(r'https?://[^\s"\'<>)]*(?:cacpd\.org|adaptwest)[^\s"\'<>)]*', html)))
+            print(f"page {page}: {len(html)} bytes, {len(links)} adaptwest/cacpd links")
+            for u in links[:80]:
+                print("  ", u)
+            sub = sorted(set(re.findall(r'href="(/pages/[^"]+|https://adaptwest\.databasin\.org/pages/[^"]+)"', html)))
+            print("  sub-pages:", sub[:30])
+        except Exception as e:  # noqa: BLE001
+            print(f"page {page}: {e}")
+    base = f"{s['aw_bucket']}/{s['aw_prefix']}"
+    labs = ["ensemble", "Ensemble", "13GCMs_ensemble", "8GCMs_ensemble", "13GCMs", "8GCMs", "MIROC6", "ACCESS-ESM1-5", "GFDL-ESM4"]
+    folders = ["", "ensemble/", "futures/", "future/", "Futures/", "gcm/", "ensembles/", "ClimateNA/", "monthly/"]
+    pers = ["2041-2060", "2041_2060", "2041-2070", "2041_2070", "2071-2100", "2071_2100", "2081-2100"]
+    ssps = ["ssp245", "SSP245", "ssp2-45"]
+    cands = []
+    for f, lab, per, ssp in itertools.product(folders, labs, pers, ssps):
+        for pat in ("{f}{lab}_{ssp}_{per}_monthly.zip", "{f}{lab}_{ssp}_{per}.zip", "{f}{lab}/{lab}_{ssp}_{per}_monthly.zip", "{f}{ssp}/{lab}_{per}_monthly.zip"):
+            cands.append(base + pat.format(f=f, lab=lab, ssp=ssp, per=per))
+    cands += [base + x for x in ("", "index.html", "README.txt", "readme.txt", "normals/", "normals/Normal_1991_2020_bioclim.zip", "normals/Normal_1991_2020_monthly.zip")]
+    print(f"probing {len(cands)} candidate URLs under {base}")
+
+    def head(u):
+        try:
+            r = C.http().head(u, timeout=20, allow_redirects=True)
+            return u, r.status_code, int(r.headers.get("content-length", 0))
+        except Exception as e:  # noqa: BLE001
+            return u, type(e).__name__, 0
+    codes = {}
+    with ThreadPoolExecutor(24) as ex:
+        for u, c, n in ex.map(head, cands):
+            codes[c] = codes.get(c, 0) + 1
+            if c == 200:
+                print(f"  200  {n / 1e6:9.1f} MB  {u}")
+    print("status counts:", codes)
 
 
 def list_sources(cfg, source="all"):
@@ -212,6 +276,7 @@ def list_sources(cfg, source="all"):
             r = C.http().head(url, timeout=30, allow_redirects=True)
             print(f"  base {v}: HTTP {r.status_code} {int(r.headers.get('content-length', 0)) / 1e6:.1f} MB  {url}")
     if source in ("all", "aw"):
+        aw_probe(s, cfg)
         keys = aw_keys(s)
         print(f"AdaptWest {s['aw_prefix']}: {len(keys)} objects, {sum(k[1] for k in keys) / 1e9:.1f} GB")
         tops = {}
@@ -235,7 +300,7 @@ def plan(cfg, source="all"):
     jobs = []
     if source in ("all", "wc"):
         jobs += ["wc-base"] + [f"wc:{g}" for g in wc_gcms(s)]
-    if source in ("all", "aw"):
+    if source in ("all", "aw") and s["aw"]:
         pr = aw_products(s, cfg)
         if pr:
             jobs += ["aw-base"] + [f"aw:{lab}" for lab in sorted(pr)]
@@ -268,6 +333,31 @@ def _wc_read(url, tmp, tries=4):
             time.sleep(10)
 
 
+def base_months(zp, sm):
+    """(NT, 12) monthly values at the places from a WorldClim base zip: 12 single-band monthly tifs (..._01.tif ... _12.tif) or
+    one 12-band tif. sm is a WCSampler; rasters are always handled as (bands, H, W)."""
+    import zipfile
+    with zipfile.ZipFile(zp) as z:
+        tifs = sorted(n for n in z.namelist() if n.lower().endswith(".tif"))
+    if not tifs:
+        raise RuntimeError(f"no tif in {zp}")
+    mon = {}
+    for n in tifs:
+        m = re.search(r"_(\d{2})\.tif$", n, re.I)
+        if m and 1 <= int(m.group(1)) <= 12:
+            mon[int(m.group(1))] = n
+    if len(mon) == 12:
+        cols = []
+        for m in range(1, 13):
+            a, grid = _wc_arr(f"zip://{zp}!{mon[m]}")
+            cols.append(sm(a[:1], grid)[:, 0])
+        return np.stack(cols, axis=1)
+    a, grid = _wc_arr(f"zip://{zp}!{tifs[0]}")
+    if a.shape[0] != 12:
+        raise RuntimeError(f"{tifs[0]}: {a.shape[0]} bands, expected 12 (or 12 monthly files, found {len(mon)})")
+    return sm(a, grid)
+
+
 class WCSampler:
     """Nearest-valid-pixel sampling with the pixel choice fixed from the first raster read (so base and future use the same pixel)."""
 
@@ -286,11 +376,8 @@ def run_wc_base(cfg, T=None):
     sm, out, t0 = WCSampler(T, s["radius_px"]), {}, time.time()
     for v in VARS:
         zp = C.download(s["wc_base_url"].format(res=s["wc_res"], var=WC_VAR[v]), C.work("downloads", f"wc_base_{v}.zip"))
-        cols = []
-        for m in range(1, 13):
-            a, grid = _wc_arr(f"zip://{zp}!wc2.1_{s['wc_res']}_{WC_VAR[v]}_{m:02d}.tif")
-            cols.append(sm(a[None], grid)[:, 0])
-        out[v] = np.stack(cols, axis=1)
+        cols = base_months(zp, sm)
+        out[v] = cols
         zp.unlink()
         C.log.info("wc base %s %.0fs", v, time.time() - t0)
     C.save(C.work(OUTDIR, "wc-base.npz"), labels=T.label.values.astype(str), **out)
