@@ -15,8 +15,8 @@ def main(argv=None):
     sub.add_parser("hindcast", help="ERA5 1961-90 vs 1991-2020 hindcast test of the analog method")
     sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer")
     a = sub.add_parser("sealevel"); a.add_argument("--if-stale", action="store_true", help="skip when data/sealevel.json is current for the place list")
-    a = sub.add_parser("extremes", help="extreme-day indicators (NEX-GDDP-CMIP6): --model M | --plan | --aggregate")
-    a.add_argument("--model"); a.add_argument("--plan", action="store_true"); a.add_argument("--aggregate", action="store_true")
+    a = sub.add_parser("extremes", help="extreme-day indicators and NEX-GDDP monthly changes: --model M[__part] [--part base|sspXXX] | --plan | --aggregate")
+    a.add_argument("--model"); a.add_argument("--part", default=None); a.add_argument("--plan", action="store_true"); a.add_argument("--aggregate", action="store_true")
     a = sub.add_parser("downdeltas", help="WorldClim 2.1 / AdaptWest downscaled CMIP6 changes: --list | --plan | --job J | --aggregate | --table")
     a.add_argument("--list", action="store_true"); a.add_argument("--plan", action="store_true"); a.add_argument("--job")
     a.add_argument("--aggregate", action="store_true"); a.add_argument("--table", action="store_true"); a.add_argument("--source", default="all", choices=["all", "wc", "aw"])
@@ -59,11 +59,11 @@ def main(argv=None):
         from . import extremes
         if args.plan:
             import json
-            print(json.dumps(extremes.available_models(cfg)))
+            print(json.dumps(extremes.plan(cfg)))                 # jobs "<model>__<part>" (part = base or a scenario)
         elif args.aggregate:
             extremes.aggregate(cfg)
         elif args.model:
-            extremes.run(args.model, cfg)
+            extremes.run(args.model, cfg, part=args.part)
         else:
             p.error("extremes needs --model, --plan or --aggregate")
     elif args.step == "downdeltas":

@@ -7,6 +7,11 @@ present climate, so both sides of that comparison come from one dataset.
 Every search runs twice over: for each (period, scenario) and, in the warming-level view, for each global warming level
 (gwl.py, cmip6.py): each model's change over the 20-year window centred on the year it reaches the level, pooled over
 the scenarios that reach it; ensembles average the models that reach the level.
+Each model's change for a period and scenario comes from NEX-GDDP-CMIP6 (data/nexdeltas.npz, [deltas] source = "nex") where that
+file has the model, scenario and place, else from the model's native-grid CMIP6 data (nexcheck.load_main / blend). With NEX-GDDP in
+use the run also keeps the CMIP6-only projection (fut_cmip6) and searches its ensemble means, so validate can report how far the
+best matches moved (src_km, src_dbest, src_dist). Without the file the results are byte-identical to the CMIP6-only build.
+Warming levels always use the CMIP6 changes (NEX-GDDP has no 1850-1900 reference period).
 Writes work/results.npz, which export.py packs for the page."""
 from __future__ import annotations
 import json, time
@@ -17,6 +22,7 @@ from . import common as C
 from . import features as F
 from . import baselines as BL
 from . import era5 as ERA5                            # (not E: run() uses E for the number of ensembles)
+from . import nexcheck as NEXC
 
 MON = ("tmax", "tmin", "ppt", "vap")
 CORE3 = ("tmax", "tmin", "ppt")
@@ -274,6 +280,13 @@ def run(cfg=None):
     gfut = np.full((NT, NG, NM, NVX), np.nan, "float32"); gfutTC = np.full((NT, NG, NM, NVX), np.nan, "float32")
     gens_mon = np.zeros((NG, len(EN), 3, NT, 12)); greach = np.zeros((NG, NM), bool)
     gyear = np.zeros((NG, NM, S), "int16"); gwl_now = np.full(NM, np.nan)
+    # Source of each model's change ([deltas] source): NEX-GDDP-CMIP6 (0.25°, bias-corrected; data/nexdeltas.npz from the Extreme
+    # days job) where it has the model / scenario / place, else the native-grid CMIP6 change. Without the file nothing below differs
+    # from the CMIP6-only build. The warming-level view always uses CMIP6 (NEX-GDDP starts in 1950, after the 1850-1900 reference).
+    NX = NEXC.load_main(cfg, T)
+    if NX is not None:
+        fut_c = np.full((NT, P, S, NM, NVX), np.nan, "float32")        # the same projection from the CMIP6 changes (validation, nexcheck)
+        nx_share = np.zeros((NM, P, S), "float32")                      # share of places whose change came from NEX-GDDP
     for mi, m in enumerate(ms):
         cm = C.load(C.work("cmip6", f"{m['name']}.npz"))
         assert list(cm["labels"]) == T.label.tolist(), f"{m['name']} was built for different places"
@@ -283,7 +296,14 @@ def run(cfg=None):
         for p in range(P):
             for s in range(S):
                 b, f = cm["base"][s].astype("float64"), cm["fut"][p, s].astype("float64")     # (4, NT, 12)
-                d = deltas(b, f, mcfg, ri if XN else False); rv = d[3]
+                d = deltas(b, f, mcfg, ri if XN else False)
+                if NX is not None:
+                    fut_c[:, p, s, mi] = C.seasonalize({v: apply_delta(base_m, d, XN, T.lat.values, mcfg)[v].T for v in ALLM}).T
+                    dn = NX.get(m["name"], p, cfg["scenarios"]["ids"][s])
+                    if dn is not None:
+                        d, used = NEXC.blend(d, dn, mcfg)
+                        nx_share[mi, p, s] = used[~bad].mean() if (~bad).any() else 0.0
+                rv = d[3]
                 for which, bm in ((fut, base_m), (futTC, tcbase)):
                     mon = apply_delta(bm, d, XN, T.lat.values, mcfg); tx, tn = mon["tmax"], mon["tmin"]
                     which[:, p, s, mi] = C.seasonalize({v: mon[v].T for v in ALLM}).T
@@ -318,6 +338,9 @@ def run(cfg=None):
         for e in range(len(EN)):
             gens_mon[gi, e] /= max(gn[gi, e], 1)
     C.log.info("projections done (%.0fs); humidity filled by constant relative humidity for: %s", time.time() - t0, cc_fill)
+    if NX is not None:
+        C.log.info("deltas: NEX-GDDP-CMIP6 for %d of %d models (share of places, mean over periods x scenarios): %s", int((nx_share.max((1, 2)) > 0).sum()), NM,
+                   {m["name"]: round(float(nx_share[mi].mean()), 3) for mi, m in enumerate(ms)})
     C.log.info("warming levels %s: models reaching each (all, tcr_likely): %s", levels, gn.tolist())
 
     # ---------------------------------------------------------------- searches
@@ -329,6 +352,9 @@ def run(cfg=None):
     gbest_idx = np.full((NT, NG, E, 2), -1, "int32"); gbest_sig = np.full((NT, NG, E, 2), np.nan, "float32")
     garea2 = np.zeros((NT, NG, E), "float32")
     glob, gglob = {}, {}
+    if NX is not None:                                                  # NEX-source vs CMIP6-source best match of each ensemble mean
+        src_km = np.full((NT, P, S, E), np.nan, "float32"); src_dbest = np.full((NT, P, S, E), np.nan, "float32")
+        src_dist = np.full((NT, P, S, E), np.nan, "float32")
     notNA = ~np.isin(wl["iso"], ["US", "CA", "MX"]) & (wl["iso"] != "")
     gsub = np.nonzero(notNA)[0]
     for k in np.where(~bad)[0]:
@@ -347,9 +373,19 @@ def run(cfg=None):
                 for s in range(S):
                     fv = fut[k, p, s].astype("float64")
                     evs = np.stack([fv[ens[en]].mean(0) for en in EN])
+                    if NX is not None and meth == 0:                    # also the ensemble means from the CMIP6 changes alone
+                        fc = fut_c[k, p, s].astype("float64")
+                        evs = np.vstack([evs, np.stack([fc[ens[en]].mean(0) for en in EN])])
                     Q = sm.project(C.transform(np.vstack([fv, evs]))[:, midx]).astype("float32")
                     D2 = pn[:, None] - 2 * Pp @ Q.T + (Q ** 2).sum(1)[None]
                     am = D2.argmin(0)
+                    if NX is not None and meth == 0 and nx_share[:, p, s].max() > 0:     # combinations where some model used NEX-GDDP
+                        for e in range(E):
+                            ic = int(am[NM + E + e]); i = int(am[NM + e])
+                            src_km[k, p, s, e] = C.haversine_km(pool["lat"][i], pool["lon"][i], pool["lat"][ic], pool["lon"][ic])
+                            src_dbest[k, p, s, e] = (C.chi_to_sigma(np.sqrt(max(D2[i, NM + e], 0)), sm.k)[0]
+                                                     - C.chi_to_sigma(np.sqrt(max(D2[ic, NM + E + e], 0)), sm.k)[0])
+                            src_dist[k, p, s, e] = C.chi_to_sigma(np.sqrt(((Q[NM + e] - Q[NM + E + e]) ** 2).sum()), sm.k)[0]
                     for e, en in enumerate(EN):
                         D = np.sqrt(np.maximum(D2[:, NM + e], 0))
                         i = int(am[NM + e])
@@ -515,6 +551,8 @@ def run(cfg=None):
                    np.round(loff[0, :12], 2).tolist(), np.round(loff[1, :12], 2).tolist(), np.nanmedian(agr_sig[:, 2]), int(np.isfinite(agr_sig[:, 2]).sum()))
     C.log.info("baseline agreement sources available: %s", [n for n, c in zip(BL.SOURCES, agr_sig.T) if np.isfinite(c).any()])   # END baseline-agreement
 
+    nxkw = {} if NX is None else dict(fut_cmip6=fut_c, delta_nex_share=nx_share, delta_nex_models=np.array(NX.models, dtype=str),
+                                      src_km=src_km, src_dbest=src_dbest, src_dist=src_dist)       # absent in a CMIP6-only build
     gk = sorted(glob)
     ggk = sorted(gglob)
     ns = mcfg["sites"]
@@ -543,5 +581,5 @@ def run(cfg=None):
            gglob_a=np.array([gglob[x]["a"] for x in ggk], "int32"), gglob_n=np.array([gglob[x]["n"] for x in ggk], "int32"),
            gglob_cells=np.array([gglob[x]["cells"] + [-1] * (ns - len(gglob[x]["cells"])) for x in ggk], "int32").reshape(-1, ns),
            gglob_sig=np.array([gglob[x]["sig"] + [np.nan] * (ns - len(gglob[x]["sig"])) for x in ggk], "float32").reshape(-1, ns),
-           latest=np.array(latest), data_years=np.array([b0, b1]))
+           latest=np.array(latest), data_years=np.array([b0, b1]), **nxkw)
     C.log.info("analogs done (%.0fs)", time.time() - t0)

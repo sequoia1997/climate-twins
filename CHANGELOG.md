@@ -4,6 +4,11 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 1 October 2026 (downscaled climate changes)
+
+- **Projected climates now use higher-resolution, bias-corrected changes where they exist.** For the 20 of our 24 climate models that NASA's NEX-GDDP-CMIP6 dataset covers (Thrasher et al. 2022), each place's projected change in temperature, precipitation and humidity now comes from that 25 km, bias-corrected version of the model instead of the model's own 100–250 km grid, for all four scenarios. Coasts, mountains and valleys are better represented. The other four models, and anything the dataset lacks, keep the model's own change; the ensembles contain the same models as before. This takes effect with the first data rebuild after the yearly "Extreme days" job has produced the downscaled changes; that rebuild's report shows how many best matches moved and by how much. The warming-level view keeps the models' own changes (the downscaled data start in 1950, after the 1850–1900 reference). The model-resolution caution now compares the page's projection with the models' own coarse-grid changes.
+- Extreme-day counts now cover all four scenarios instead of two.
+
 ## 30 September 2026 (model resolution, more sources)
 
 - **The model-resolution caution now checks three downscaled sources.** Besides NASA's NEX-GDDP-CMIP6, each projection is repeated with the WorldClim 2.1 CMIP6 changes (global) and the AdaptWest downscaled CMIP6 changes (North America), and the worst case counts. The line under the answer, still shown only where the futures differ noticeably, now says which source(s) disagree. See "Sensitivity to model resolution" on the methods page.

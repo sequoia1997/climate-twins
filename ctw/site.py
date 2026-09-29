@@ -189,6 +189,8 @@ def run(cfg=None):
     old = C.SITE / "data" / "manifest.json"
     if old.exists():                                               # a page-only rebuild keeps the recorded versions
         manifest = {**json.load(open(old)), **manifest}
+    if S.get("deltas"):                                            # per model and scenario: share of places projected with NEX-GDDP changes
+        manifest["delta_sources"] = {"source": S["deltas"]["source"], "models": S["deltas"]["models"], "label": S["deltas"]["label"]}
     try:
         vers, mems = {}, {}
         for mm in C.models(cfg):

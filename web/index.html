@@ -979,11 +979,11 @@ function nexLoad(){NEXC=null;fetch("data/nexcheck.json?v="+DATA_VERSION).then(r=
 function nexHTML(tt){
   if(NEXC===undefined){nexLoad();return"";}
   const q=NEXC&&NEXC.places[tt.lat.toFixed(4)+","+tt.lon.toFixed(4)];
-  const NM={nex:"NASA NEX-GDDP",wc:"WorldClim",aw:"AdaptWest"},by=q&&q.flagged_by&&q.flagged_by.length?" ("+q.flagged_by.map(x=>NM[x]||x).join(", ")+")":"";
-  return q&&q.gcm_res_sensitivity==="high"?`<p class="small muted">Sensitive to model resolution: higher-resolution climate data${by} give a noticeably different future here, so treat this result with extra caution. <a href="methods.html#resolution">Why</a></p>`:"";}
+  const NM={nex:"NASA NEX-GDDP",wc:"WorldClim",aw:"AdaptWest",cmip6:"the coarse model grids"},by=q&&q.flagged_by&&q.flagged_by.length?" ("+q.flagged_by.map(x=>NM[x]||x).join(", ")+")":"";
+  return q&&q.gcm_res_sensitivity==="high"?`<p class="small muted">Sensitive to model resolution: climate data at another resolution${by} give a noticeably different future here, so treat this result with extra caution. <a href="methods.html#resolution">Why</a></p>`:"";}
 /* END nexcheck */
 /* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
-   or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5 only (see methods). */
+   or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, the scenarios listed in the file (see methods). */
 let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded
 function extLoad(){EXT=null;fetch("data/extremes.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places&&j.indices){EXT=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
 function extHTML(tt,topic,S3,M){
@@ -1008,7 +1008,7 @@ function extHTML(tt,topic,S3,M){
   let h=topic("ext","Extreme days",`${short(head.ix.id)}, per year`,[num(head.now[0],head.ix.id),num(fut(head)[0],head.ix.id),"–"]);
   h+=`<table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
   for(const r of rows)h+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
-  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected), available for ${avail} only${near?`, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
+  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected)${near?`, available for ${avail} only, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
   return h;}
 /* END extreme-days */
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){

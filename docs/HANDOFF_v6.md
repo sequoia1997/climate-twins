@@ -100,7 +100,7 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   v10 summary.
 
 ## Deferred
-- Heat days: DONE as the separate `extremes` job (ctw/extremes.py, .github/workflows/extremes.yml). Each NEX-GDDP file is one variable-year with a whole globe per daily chunk, so place extraction still costs the whole file; solved by sampling every second year and one matrix job per model (~54 GB each). Only SSP2-4.5 and SSP5-8.5 are processed.
+- Heat days: DONE as the separate `extremes` job (ctw/extremes.py, .github/workflows/extremes.yml). Each NEX-GDDP file is one variable-year with a whole globe per daily chunk, so place extraction still costs the whole file; solved by sampling every second year and one matrix job per model x part (see "NEX-GDDP changes as the main projection source"). All four SSPs are processed.
 
 ## Operating notes
 - Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|era5 --var V (ERA5 cross-check, about 10 min per variable)|hindcast (needs the four era5 files)|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.
@@ -124,6 +124,23 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
 - ctw/expand.py (not in any workflow) grew data/world_targets.csv from 823 to 1,596 places (208 countries/territories).
 - tests/make_fixture.py builds a synthetic results.npz so export -> site -> validate -> tests/test_page.py run offline.
 - Not done: growing the North American list; making the North American pool lazy too (it is the fixed ~3 MB of startup).
+
+## NEX-GDDP changes as the main projection source ([deltas] source = "nex")
+- extremes.yml: one job per model x part (`<model>__base`, `<model>__ssp126` ... from `ctw extremes --plan`), all four SSPs,
+  every configured model NEX publishes (20 of 24: not AWI-CM-1-1-MR, CNRM-CM6-1-HR, CanESM5-CanOE, EC-Earth3-Veg; BCC-CSM2-MR has no
+  hurs -> its NEX humidity change is missing and the CMIP6 huss ratio is used). extremes.json keeps the likely-TCR models
+  ([extremes] ensemble); data/nexdeltas.npz gets every extracted model. Estimate at year_stride 2: base job 60 files (~10-15 min),
+  scenario job 80 files (~12-20 min); ~100 jobs, ~1.9 TB, ~17-25 runner-hours. Timing in the sandbox is not representative.
+- analogs: per model/period/scenario, NEX change where nexdeltas.npz has it (per place; NaN places fall back to CMIP6); results.npz
+  gains fut_cmip6, delta_nex_share (NM, P, S), src_km/src_dbest/src_dist (NEX vs CMIP6 best match of each ensemble mean) only
+  when NEX is used. No file -> byte-identical results.npz (checked on the synthetic smoke fixture, 84 arrays).
+- export: summary.json "deltas" (per model x scenario share of places on NEX, effect stats); site: manifest.json "delta_sources";
+  validate: one note line. nexcheck: with NEX as the main source, the "nex" source is replaced by "cmip6" (main vs native-grid).
+- GWL stays on CMIP6: NEX-GDDP historical starts 1950, so no 1850-1900 reference (tas is published but cannot be used for this).
+- Out-of-sample test skipped deliberately: NEX-GDDP is bias-corrected against GMFD over 1960-2014, so any 1991-2020 hindcast is in
+  sample, and 1991-2020 vs 2001-2020 windows overlap and differ by less than internal variability.
+- method_version not bumped (results only change once nexdeltas.npz is merged); bump it in the PR that merges the first nexdeltas.npz
+  if you want the rebuild's "method changed" note.
 
 ## Multi-source model-resolution cross-check (downdeltas)
 - `nexcheck` compares the main projection with NEX-GDDP (data/nexdeltas.npz), WorldClim 2.1 CMIP6 and AdaptWest downscaled CMIP6 (data/downdeltas.npz, from ctw/downdeltas.py, workflow `downdeltas.yml`); flag = worst case over sources, `flagged_by` lists them; page line names them.
