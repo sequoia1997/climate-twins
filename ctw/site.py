@@ -20,6 +20,38 @@ def tropics_rows(S) -> str:
     return "".join(rows)
 
 
+def extra_section(cfg, S) -> tuple[str, str]:
+    """(contents entry, section) for the optional extra matched variables; both empty while [matching] extra = []."""
+    names = C.extra_names(cfg)
+    if not names:
+        return "", ""
+    seas = ["Dec–Feb", "Mar–May", "Jun–Aug", "Sep–Nov"]
+    used = " and ".join(seas[int(i)] for i in cfg["matching"].get("extra_seasons", [0, 2]))
+    K = len(C.match_idx(cfg))
+    paras = [f"<p>In addition to temperature, precipitation and dewpoint, {K} measures in all are matched. The extra measures are taken for {used}, "
+             "with the same year-to-year variability scaling, shrinkage and degrees of freedom as the others; like humidity, present-day values come "
+             "from TerraClimate everywhere, including North America, because the North American temperature and precipitation dataset does not include them.</p>"]
+    if "pet" in names:
+        paras.append("<p><strong>Potential evapotranspiration</strong> (TerraClimate, Penman–Monteith; log(mm + 1)) is the atmosphere's thirst. Together with "
+                     "precipitation it separates places that are dry because little rain falls from places that are dry because the air demands a lot, which "
+                     "temperature alone does not. Future values scale the observed PET by the ratio of Hargreaves–Samani PET (Hargreaves &amp; Samani 1985) computed from "
+                     "each model's projected and baseline monthly highs and lows, limited to 0.5–3. This captures warming and changes in daily range but not "
+                     "humidity, wind, radiation or plant water-use responses, and temperature-based PET is known to overstate future increases "
+                     "(Milly &amp; Dunne 2016), so this measure is best read as an upper bound on drying.</p>")
+    if "srad" in names:
+        paras.append("<p><strong>Solar radiation</strong> (TerraClimate srad, W/m², matched in units of 10 W/m²) separates sunny from cloudy climates that share "
+                     "the same temperature and rainfall. Future values scale the observed radiation by each model's change in downwelling shortwave radiation "
+                     "(rsds), limited to 0.8–1.25; models without rsds contribute no change. Cloud changes are among the least certain model outputs, so this "
+                     "measure mostly anchors the present-day climate.</p>")
+    paras.append("<p>Near-surface wind was considered and left out: reanalysis-derived TerraClimate winds are coarse, model wind speeds are poorly constrained "
+                 "by observations, and the change is small relative to its uncertainty.</p>")
+    x = S.get("extra")
+    if x:
+        paras.append(f"<p>Effect of these measures in this release: the best match moved by more than {x['moved_km']} km in {x['moved_share']:.0%} of "
+                     f"place–period–scenario combinations, and the best-match σ changed by a median of {x['median_abs_dsigma']:.2f}.</p>")
+    return '<li><a href="#extra">Extra variables</a></li>', '<section id="extra">\n    <h2>Extra variables</h2>\n    ' + "\n    ".join(paras) + "\n  </section>\n"
+
+
 def run(cfg=None):
     cfg = cfg or C.config()
     S = json.load(open(C.SITE / "data" / "summary.json"))
@@ -42,6 +74,7 @@ def run(cfg=None):
              "SELFCHK": f"{S['selfchk_median']:.2f}", "SL_N": str(S["sealevel_places"]),
              "REPO_LINK": (f'<a href="{cfg["release"]["repo_url"]}">{cfg["release"]["repo_url"]}</a>' if cfg["release"].get("repo_url") else "source code in the project repository")}
     fills["TROPICS_TABLE"] = tropics_rows(S)
+    fills["EXTRA_TOC"], fills["EXTRA_SECTION"] = extra_section(cfg, S)
     for k, v in fills.items():
         m = m.replace("{{" + k + "}}", v)
     m = m.replace("__SITE_URL__", url)

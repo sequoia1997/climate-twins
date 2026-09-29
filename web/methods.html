@@ -200,6 +200,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <li><a href="#places">Places</a></li>
     <li><a href="#present">Present-day climate</a></li>
     <li><a href="#humidity">Humidity</a></li>
+    {{EXTRA_TOC}}
     <li><a href="#future">Projected climate</a></li>
     <li><a href="#models">Climate models</a></li>
     <li><a href="#distance">Measuring similarity</a></li>
@@ -276,6 +277,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <p>Future humidity applies each model's change in near-surface specific humidity (huss), as a ratio limited to 0.5–3, to the observed vapour pressure. One model provides no humidity output for one scenario (FGOALS-g3 under SSP1-2.6); there, vapour pressure is scaled with that model's temperature change at constant relative humidity, following the Clausius–Clapeyron relation.</p>
   </section>
 
+  {{EXTRA_SECTION}}
   <section id="future">
     <h2>Projected climate</h2>
     <p>Projected climate follows the change-factor (delta) approach (e.g. Maraun &amp; Widmann 2018): each model's simulated change is added to the observed present climate at the place, which removes the model's own bias in the baseline.</p>

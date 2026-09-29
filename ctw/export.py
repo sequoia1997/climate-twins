@@ -75,10 +75,12 @@ def run(cfg=None):
     cal = F.calibration()
     ms = C.models(cfg); ens = C.ensembles(cfg); EN = list(ens)
     midx = R["midx"]; K = len(midx)
+    XN = list(R["x_names"]) if "x_names" in R else []      # optional extra matched variables (default none)
+    C.use_extras(XN); NVX = C.nvx()
     bad = R["bad"]
     version = dt.date.today().isoformat()
     common = dict(
-        nv=C.NV, midx=midx.tolist(), K=K, models=[m["name"] for m in ms], tcr=[m["tcr"] if m["tcr"] > 0 else None for m in ms],
+        nv=NVX, xlog=[bool(C.EXTRAS[n]["log"]) for n in XN for _ in range(4)], xscale=C.ENC_SCALE, extra=XN, midx=midx.tolist(), K=K, models=[m["name"] for m in ms], tcr=[m["tcr"] if m["tcr"] > 0 else None for m in ms],
         ens={e: ens[e] for e in ("tcr_likely", "all")}, ssps=cfg["scenarios"]["labels"],
         periods=[{"key": k, "label": k, "years": f"{a}–{b}"} for k, (a, b) in zip(cfg["periods"]["keys"], cfg["periods"]["years"])],
         baseline=cfg["baseline"]["years"], data_version=version, method_version=cfg["release"]["method_version"],
@@ -86,7 +88,7 @@ def run(cfg=None):
         calibration={"hardiness": {k: v for k, v in cal["hardiness"].items() if k != "coef"}, "ffp": {k: v for k, v in cal["ffp"].items() if k != "coef"}},
     )
     Dg = np.arange(0, 60.0001, 0.02)
-    sig_tab = np.stack([C.chi_to_sigma(Dg, k) for k in range(1, C.NV + 1)]).astype("float32")
+    sig_tab = np.stack([C.chi_to_sigma(Dg, k) for k in range(1, max(C.NV, K) + 1)]).astype("float32")
     E = len(EN)
     eord = [EN.index("all"), EN.index("tcr_likely")]             # page order (v9 convention): all = 0, tcr_likely = 1
     summary = {"data_version": version, "method_version": cfg["release"]["method_version"], "places": {}}
@@ -155,7 +157,7 @@ def run(cfg=None):
             _, ti = wtree.query(C.unit_xyz(np.array([la]), np.array([lo])))
             town = wplaces[int(ti[0])]
             sites.append([round(la, 3), round(lo, 3), round(float(sg), 2), town[0].rsplit(", ", 1)[0], town[0].rsplit(", ", 1)[-1],
-                          int(round(float(C.haversine_km(la, lo, town[1], town[2])))), np.round(R["w_raw"][j].astype(float), 2).tolist(),
+                          int(round(float(C.haversine_km(la, lo, town[1], town[2])))), np.round(R["w_raw"][j].astype(float)[:C.NV], 2).tolist(),
                           int(R["w_kg"][j]), int(R["w_zone"][j]), int(R["w_ffp"][j])])
         glob[f"{p}|{pos[k]}|{s}|{eord.index(e)}"] = dict(s=round(float(R["glob_s"][row]), 2), a=int(R["glob_a"][row]), n=int(R["glob_n"][row]), sites=sites)
     na["glob"] = glob
@@ -180,6 +182,8 @@ def run(cfg=None):
     summary.update(selfchk_median=round(float(np.nanmedian(R["selfchk"])), 3), tc_check_median=round(float(np.nanmedian(R["tc_check"])), 3),
                    unusable=T.label[bad].tolist(), floored=R["floored"].tolist(), cc_fill=R["cc_fill"].tolist(),
                    recent_years=R["rec_years"].tolist(), n_models=len(ms), sealevel_places=len(sl["places"]) if sl else 0)
+    if XN and C.work("extra_sensitivity.json").exists():
+        summary["extra"] = json.load(open(C.work("extra_sensitivity.json")))      # read by validate.py
     json.dump(summary, open(C.SITE / "data" / "summary.json", "w"), separators=(",", ":"))
 
 

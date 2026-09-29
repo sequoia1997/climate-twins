@@ -4,7 +4,7 @@ Abernathey et al. 2021). Variables: tasmax, tasmin, pr and huss (specific humidi
 Windows: baseline = historical 1991-2014 joined to each scenario's 2015-2020 (weighted by years), and the
 future periods of every scenario. Each place gets a land-weighted Gaussian average of nearby model cells
 (length scale one grid spacing, cut off at two). Writes work/cmip6/<model>.npz:
-  base (nssp, 4, NT, 12)   fut (nper, nssp, 4, NT, 12)   variable order tasmax, tasmin, pr, huss
+  base (nssp, 4, NT, 12)   fut (nper, nssp, 4, NT, 12)   variable order tasmax, tasmin, pr, huss (then rsds when solar radiation is an extra)
 A variable a model does not provide for a scenario is NaN; the analog step fills humidity by
 constant relative humidity (Clausius-Clapeyron) in that case."""
 from __future__ import annotations
@@ -14,17 +14,24 @@ import pandas as pd
 from . import common as C
 
 VARS = ("tasmax", "tasmin", "pr", "huss")
+EXTRA_VARS = {"srad": "rsds"}          # CMIP6 variable behind each optional matched extra (pet needs only tasmax/tasmin)
+
+
+def vars_for(cfg) -> tuple:
+    """The four standard variables, plus rsds when solar radiation is a matched extra ([matching] extra)."""
+    return VARS + tuple(EXTRA_VARS[n] for n in C.extra_names(cfg) if n in EXTRA_VARS)
 warnings.filterwarnings("ignore")
 
 
 class Archive:
     def __init__(self, cfg):
-        slim = C.work("downloads", "pangeo_cmip6_slim.csv")
+        self.vars = vars_for(cfg)
+        slim = C.work("downloads", "pangeo_cmip6_slim.csv" if self.vars == VARS else "pangeo_cmip6_slim_x.csv")
         if not slim.exists():
             raw = C.download(cfg["sources"]["pangeo_catalog"], C.work("downloads", "pangeo-cmip6.csv"))
             cols = ["source_id", "experiment_id", "member_id", "table_id", "variable_id", "grid_label", "zstore", "version"]
             df = pd.read_csv(raw, usecols=cols)
-            keep = ((df.table_id == "Amon") & df.variable_id.isin(VARS)) | ((df.table_id == "fx") & (df.variable_id == "sftlf"))
+            keep = ((df.table_id == "Amon") & df.variable_id.isin(self.vars)) | ((df.table_id == "fx") & (df.variable_id == "sftlf"))
             df = df[keep & df.experiment_id.isin(("historical", "piControl") + tuple(cfg["scenarios"]["ids"]))]
             df = df.sort_values("version").groupby(["source_id", "experiment_id", "member_id", "table_id", "variable_id", "grid_label"]).tail(1)
             df.to_csv(slim, index=False)
@@ -46,7 +53,7 @@ class Archive:
         out = {}
         for m in models:
             for e in ("historical",) + tuple(scen):
-                for v in VARS:
+                for v in self.vars:
                     r = self.row(m["name"], e, m["member"], v, m["grid"])
                     if r is not None:
                         out[f"{m['name']}|{e}|{v}"] = int(r.version)
@@ -164,6 +171,7 @@ def run(model: str, cfg=None):
     b0, b1 = cfg["baseline"]["years"]
     hist_end = min(b1, 2014)
     NT = len(T)
+    VARS = arch.vars
     base = np.full((len(scen), len(VARS), NT, 12), np.nan, "float32")
     fut = np.full((len(pers), len(scen), len(VARS), NT, 12), np.nan, "float32")
     W = None
@@ -199,7 +207,7 @@ def run(model: str, cfg=None):
         C.log.info("%s %s done %.0fs", model, var, time.time() - t0)
     if W is None:
         raise RuntimeError(f"{model}: no data")
-    if any(x.split(":")[1] != "huss" for x in missing):
+    if any(x.split(":")[1] not in ("huss", "rsds") for x in missing):
         raise RuntimeError(f"{model}: missing required data {missing}")
     C.save(out_f, base=base, fut=fut, vars=np.array(VARS), labels=T.label.values.astype(str),
            missing=np.array(missing), landfrac_src=np.array(lfsrc), grid=np.array([len(lat), len(lon)]),

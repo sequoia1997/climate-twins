@@ -11,6 +11,10 @@ on:
         description: "Quick test run (2 models, 12 places, few years) - opens no pull request"
         type: boolean
         default: false
+      extra:
+        description: "Try extra matched variables, comma-separated (pet, srad); the report gets a sensitivity note. Empty = config.toml"
+        type: string
+        default: ""
 permissions:
   contents: write
   pull-requests: write
@@ -21,6 +25,7 @@ concurrency:
 env:
   CTW_WORK: ${{ github.workspace }}/work
   CTW_SMOKE: ${{ inputs.smoke && '1' || '' }}
+  CTW_EXTRA: ${{ inputs.extra }}
   PYTHONUNBUFFERED: "1"
 jobs:
   plan:
@@ -28,6 +33,7 @@ jobs:
     outputs:
       models: ${{ steps.p.outputs.models }}
       latest: ${{ steps.p.outputs.latest }}
+      tcvars: ${{ steps.p.outputs.tcvars }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -37,6 +43,7 @@ jobs:
         run: |
           python -m ctw plan > plan.json
           echo "models=$(python -c 'import json;print(json.dumps(json.load(open("plan.json"))["models"]))')" >> "$GITHUB_OUTPUT"
+          echo "tcvars=$(python -c 'import json;print(json.dumps(json.load(open("plan.json"))["tc_vars"]))')" >> "$GITHUB_OUTPUT"
           echo "latest=$(python -c 'import json;print(json.load(open("plan.json"))["latest_year"])')" >> "$GITHUB_OUTPUT"
 
   cmip6:
@@ -67,7 +74,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        var: [tmax, tmin, ppt, vap]
+        var: ${{ fromJson(needs.plan.outputs.tcvars) }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6

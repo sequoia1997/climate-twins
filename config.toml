@@ -7,7 +7,7 @@ author_family = "Schweitzer"
 author_given = "Forest Meyer"
 author_initials = "F. M."
 # Bump the method version when the method changes. The data version is the build date.
-method_version = "10.0"
+method_version = "10.0"           # bump to 11.0 (and add a CHANGELOG entry) in the same change that sets [matching] extra
 # Public address of this repository, shown on the methods page (e.g. "https://github.com/yourname/climate-twins").
 repo_url = ""
 # Public address of the site, used in link previews. Change it here if you move to your own domain.
@@ -66,6 +66,18 @@ vap_ratio = [0.5, 3.0]         # limits on model humidity change ratios
 sites = 5
 sep_km_na = 150
 sep_km_world = 300
+# Optional extra matched variables, OFF by default so results are unchanged until validated (see methods "Extra variables").
+#   "pet"  potential evapotranspiration: TerraClimate pet (Penman-Monteith), projected with the Hargreaves-Samani ratio
+#          from each model's tasmax/tasmin (aridity enters through precipitation and PET together);
+#   "srad" surface solar radiation: TerraClimate srad x each model's rsds ratio (an extra CMIP6 variable per model).
+# Each adds 4 seasonal columns; extra_seasons picks the matched ones by index (0 DJF, 1 MAM, 2 JJA, 3 SON).
+# A rebuild can also try them without editing this file: run "Rebuild data" with the "extra" input, e.g. pet,srad.
+extra = []
+extra_seasons = [0, 2]         # Dec-Feb and Jun-Aug, as for dewpoint
+pet_ratio = [0.5, 3.0]         # limits on the projected / baseline Hargreaves PET ratio
+srad_ratio = [0.8, 1.25]       # limits on model rsds change ratios
+extra_report = true            # with extras on, `ctw analogs` also refits the standard metric and writes the sensitivity summary
+extra_report_stride = 1        # test every Nth place only (2 halves the extra run time)
 agree_km = 500
 agree_km_world = 1000
 glob_trigger_sigma = 2.0       # search worldwide for a North American place when its best match is this poor
@@ -103,3 +115,5 @@ esgf_search = "https://esgf.ceda.ac.uk/esg-search/search"
 moved_km = 500                 # a best match "moved" if it is this far from last release's
 max_moved_share = 0.10         # routine if at most this share of best matches moved
 max_median_dsigma = 0.25       # routine if the median change in best sigma is at most this
+extra_max_places_moved = 0.15   # optional extras (see [matching] extra): adopt-worthy if at most this share of places moved
+extra_max_median_dsigma = 0.30 # ... and the median |change in best sigma| is at most this

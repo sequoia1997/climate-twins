@@ -51,6 +51,19 @@ def run(cfg=None, previous=None) -> int:
         notes.append("Humidity change filled at constant relative humidity (model lacks humidity output): " + ", ".join(S["cc_fill"]))
     if S["unusable"]:
         notes.append("Places without usable data: " + ", ".join(S["unusable"]))
+    if S.get("extra"):
+        X = S["extra"]
+        notes.append(f"Extra matched variables {X['extras']} (seasons {X['seasons']}), compared with the standard metric on the same run: "
+                     f"best match moved more than {X['moved_km']} km in {X['moved_share']:.1%} of place x period x scenario x ensemble combinations "
+                     f"({X['places_moved_share']:.1%} of {X['places']} places moved in most combinations), median km moved {X['median_moved_km']:.0f}, "
+                     f"median |change in best sigma| {X['median_abs_dsigma']:.2f} (signed median {X['median_dsigma']:+.2f}); "
+                     f"components {X['k_core']} to {X['k_with_extras']}, Ledoit-Wolf shrinkage {X['alpha_core']:.2f} to {X['alpha_with_extras']:.2f}.")
+        okx = X["places_moved_share"] <= G.get("extra_max_places_moved", 0.15) and X["median_abs_dsigma"] <= G.get("extra_max_median_dsigma", 0.30)
+        notes.append(("Extras verdict: change is small enough to adopt if the sanity checks in the extras section of the methods hold (spot-check arid and cloudy places)."
+                      if okx else "Extras verdict: the extras change many best matches; review individual places before adopting them."))
+        if X.get("north_america") and X.get("world"):
+            notes.append(f"Extras, North America: moved {X['north_america']['moved_share']:.1%}, median |dsigma| {X['north_america']['median_abs_dsigma']:.2f}; "
+                         f"world: moved {X['world']['moved_share']:.1%}, median |dsigma| {X['world']['median_abs_dsigma']:.2f}")
     status = "fail" if problems else "routine"
     if previous and not problems:
         P = json.load(open(previous))

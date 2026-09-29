@@ -2,7 +2,8 @@
   normals05   (12, 360, 720)  baseline-period monthly normals on the 0.5° world grid (block means of land pixels)
   land05      (360, 720)      land fraction of each 0.5° cell
   series      (NT, ny, 12)    10 km neighbourhood mean at every place, for every year (Dec of year 0 feeds DJF)
-  laea        (12, ny, nx)    baseline normals sampled at the North American 15 km grid cells (humidity only)
+  laea        (12, ny, nx)    baseline normals sampled at the North American 15 km grid cells (vap, and the optional
+                              extras pet and srad: AdaptWest has none of them, so North America uses TerraClimate)
 Files are fetched one year ahead of processing and deleted after use; progress is checkpointed after every year."""
 from __future__ import annotations
 import queue, threading, time
@@ -12,6 +13,7 @@ from pyproj import Transformer
 from . import common as C
 
 NLAT, NLON, B = 4320, 8640, 12
+LAEA_VARS = ("vap", "pet", "srad")            # variables also sampled on the North American 15 km grid
 LAT = np.linspace(89.979164, -89.979164, NLAT)
 LON = np.linspace(-179.97917, 179.97917, NLON)
 
@@ -84,7 +86,7 @@ def run(var: str, cfg=None):
     ck = C.work("terraclimate", f"{var}.ckpt.npz")
     II, JJ, DD = neighbourhoods(T.lat.values, T.lon.values)
     LI = LJ = shp = None
-    if var == "vap":
+    if var in LAEA_VARS:
         LI, LJ, shp = laea_pixels(cfg)
     NY, NX = NLAT // B, NLON // B
     if ck.exists():

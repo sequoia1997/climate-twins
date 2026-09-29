@@ -439,7 +439,8 @@ const SEAS=["Winter","Spring","Summer","Fall"],SEASM=["Dec–Feb","Mar–May","J
 function seasons(lat){return lat<23.5?SEASM:SEAS;}
 function measNames(lat){const S4=seasons(lat),f=x=>S4===SEAS?x.toLowerCase():x;return[...S4.map(x=>f(x)+" highs"),...S4.map(x=>f(x)+" lows"),...S4.map(x=>f(x)+(S4===SEAS?" rain":" precipitation")),...S4.map(x=>f(x)+" dewpoint")];}
 let NV=12,K=12,MI=[0,1,2,3,4,5,6,7,8,9,10,11],HAS10=false,kgNow,zoneNow,ffpNow,kgFut,zoneFut,ffpFut,recentA,recSig;
-const isP=i=>i>=8&&i<12,decT=(v,i)=>isP(i)?v/1000:v/100,decR=(v,i)=>isP(i)?Math.exp(v/1000)-1:v/100;
+// columns >= 16 are optional extra matched variables (D.xlog flags log-transformed ones), stored x D.xscale
+const isP=i=>(i>=8&&i<12)||(i>=16&&!!D.xlog[i-16]),decT=(v,i)=>i>=16?v/D.xscale:isP(i)?v/1000:v/100,decR=(v,i)=>i>=16?(D.xlog[i-16]?Math.exp(v/D.xscale)-1:v/D.xscale):isP(i)?Math.exp(v/1000)-1:v/100;
 const OPEN=new Set();const op=k=>OPEN.has(k)?" open":"";
 let D,NP,NT,NM,pool,poolRaw,cellRC,plat,plon,base,fut,sd,Msh,Mtr,bestIdx,bestSig,sigTab,places,cellPlace,cellCity;
 let POOLS=[],PI=0,NTNA=0,worldState="none"; // PI: 0 = North America 15 km pool, 1 = global 0.5° pool
