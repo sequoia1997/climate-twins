@@ -228,7 +228,7 @@ jobs:
       - name: Keep the current release's summary for comparison
         run: cp site/data/summary.json /tmp/previous_summary.json 2>/dev/null || true
       - run: python -m ctw analogs
-      - name: Model-resolution check (NEX-GDDP deltas vs main deltas; skipped if data/nexdeltas.npz is absent)
+      - name: Model-resolution check (NEX-GDDP, WorldClim, AdaptWest changes vs main; skipped if no delta file exists)
         continue-on-error: true
         run: python -m ctw nexcheck
       - run: python -m ctw export

@@ -16,9 +16,17 @@ single member. Flag per place, worst case over the periods and the two scenarios
   ok        otherwise
 1 sigma is "as alike as two ordinary years" (the badge on the page); 0.5 is well inside that noise.
 
-Inputs: work/results.npz (analogs step), data/nexdeltas.npz (written by `extremes --aggregate`, committed by the
-Extreme days job). Output: site/data/nexcheck.json (only moderate/high places are listed; absent = ok or no data) and
-work/nexcheck.npz. If the deltas file is missing the step logs that and does nothing."""
+Multi-source: the same comparison is repeated for each downscaled source that exists and the flag is the worst case
+over sources (combine); the entry lists which source(s) flagged it ("flagged_by") and each source's own flag:
+  nex  NASA NEX-GDDP-CMIP6 (data/nexdeltas.npz; also humidity)
+  wc   WorldClim 2.1 CMIP6 (data/downdeltas.npz; change = future - WorldClim baseline 1970-2000, see ctw/downdeltas.py)
+  aw   AdaptWest downscaled CMIP6, North America (data/downdeltas.npz)
+Models: a source's models that the main pipeline also has (mode "overlap", needs [nexcheck] min_models of them), else the
+source's own multi-model mean against the main ensemble mean over the likely-TCR models (mode "mean", e.g. an ensemble product).
+
+Inputs: work/results.npz (analogs step), data/nexdeltas.npz (Extreme days job) and data/downdeltas.npz (Downscaled changes job),
+whichever exist. Output: site/data/nexcheck.json (only moderate/high places are listed; absent = ok or no data) and
+work/nexcheck.npz. With no deltas file the step logs that and does nothing."""
 from __future__ import annotations
 import json, time
 import numpy as np
@@ -27,6 +35,9 @@ from . import common as C
 MON = ("tmax", "tmin", "ppt", "vap")
 DEFAULTS = {"sigma_moderate": 0.5, "sigma_high": 1.0, "moved_km": 500.0, "min_models": 6, "high_share_note": 0.15}
 DELTAS = C.DATA / "nexdeltas.npz"
+DOWN = C.DATA / "downdeltas.npz"
+SRC_LABEL = {"nex": "NEX-GDDP-CMIP6", "wc": "WorldClim 2.1", "aw": "AdaptWest"}
+RANK = {"ok": 0, "moderate": 1, "high": 2}
 OUT = C.SITE / "data" / "nexcheck.json"
 
 
@@ -105,92 +116,189 @@ def classify(dsig, moved, sm=0.5, sh=1.0):
     return "ok"
 
 
+# --------------------------------------------------------------------------- sources
+class Source:
+    """One downscaled set of monthly changes: name, model names, scenarios, place labels (file order) and get(k, j, p, si) ->
+    (n_places_in_file, 12) array of change k in ("dtx", "dtn", "rp", "rv") of model j; rv is NaN where the source has no humidity
+    (constant relative humidity is then assumed by analogs.apply_delta, as the main pipeline does for a model without huss)."""
+
+    def __init__(self, name, models, scen, labels, arrays):
+        self.name, self.models, self.scen, self.labels, self.arrays = name, list(models), list(scen), list(labels), arrays
+
+    def get(self, k, j, p, si):
+        a = self.arrays.get(k)
+        if a is None:
+            return np.full(self.arrays["dtx"].shape[-2:], np.nan)
+        return a[j, p, si].astype("float64")
+
+
+def load_sources(nex_path=None, down_path=None):
+    """The available sources: NEX-GDDP (data/nexdeltas.npz) and WorldClim / AdaptWest (data/downdeltas.npz), whichever exist."""
+    out = []
+    nex_path, down_path = nex_path or DELTAS, down_path or DOWN
+    if nex_path.exists():
+        Z = C.load(nex_path)
+        out.append(Source("nex", [str(x) for x in Z["models"]], [str(x) for x in Z["scen"]], [str(x) for x in Z["labels"]],
+                          {k: Z[k] for k in ("dtx", "dtn", "rp", "rv")}))
+    if down_path.exists():
+        Z = C.load(down_path)
+        for n in ("wc", "aw"):
+            if f"{n}_dtx" in Z:
+                out.append(Source(n, [str(x) for x in Z[f"{n}_models"]], [str(x) for x in Z[f"{n}_scen"]], [str(x) for x in Z["labels"]],
+                                  {k: Z[f"{n}_{k}"] for k in ("dtx", "dtn", "rp")}))
+    return out
+
+
+def combine(flags):
+    """Worst case over sources. flags {name: "ok"/"moderate"/"high"/None} -> (flag, [names at that level]); (None, []) without data."""
+    f = {k: v for k, v in flags.items() if v}
+    if not f:
+        return None, []
+    w = max(f.values(), key=RANK.get)
+    return w, [k for k, v in f.items() if v == w]
+
+
+def select_models(src, mnames, ens, min_models):
+    """Which models to compare: the source's models that the main pipeline also has (mode "overlap"), or, when fewer than
+    min_models overlap (a multi-model product such as an AdaptWest ensemble), the source's own mean against the main
+    ensemble mean over its likely-TCR models (mode "mean"). Returns (source indices, main indices, mode)."""
+    use = [(j, mnames.index(n)) for j, n in enumerate(src.models) if n in mnames]
+    if len(use) >= min_models:
+        return [u[0] for u in use], [u[1] for u in use], "overlap"
+    return list(range(len(src.models))), list(ens), "mean"
+
+
+def compare(src, ctx, s):
+    """Sigma distance and best-analog movement between the main projection and one source's, per place, period and scenario.
+    ctx: dict with R, T, cfg, bm, Msh, bad, G, pools, midx. Returns dsig, moved_km (NT, P, S_src) and info, or None."""
+    import warnings
+    R, T, cfg = ctx["R"], ctx["T"], ctx["cfg"]
+    mnames = [m["name"] for m in C.models(cfg)]
+    nj, mj, mode = select_models(src, mnames, C.ensembles(cfg)["tcr_likely"], s["min_models"])
+    if not nj:
+        return None
+    ix = {l: i for i, l in enumerate(src.labels)}
+    srcx = np.array([ix.get(l, -1) for l in T.label])                       # place order of the file -> current order
+    have = srcx >= 0
+    src0 = np.where(have, srcx, 0)
+    sc_ids = cfg["scenarios"]["ids"]
+    NT, P, S = len(T), len(cfg["periods"]["keys"]), len(src.scen)
+    mcfg, midx, bm, Msh, bad, G, pools = cfg["matching"], ctx["midx"], ctx["bm"], ctx["Msh"], ctx["bad"], ctx["G"], ctx["pools"]
+    dsig = np.full((NT, P, S), np.nan, "float32")
+    moved = np.full((NT, P, S), np.nan, "float32")
+    t0 = time.time()
+    for p in range(P):
+        for si, ssp in enumerate(src.scen):
+            if ssp not in sc_ids:
+                continue
+            s_main = sc_ids.index(ssp)
+            A = np.array([project(bm, tuple(np.where(have[:, None], src.get(k, j, p, si)[src0], np.nan) for k in ("dtx", "dtn", "rp", "rv")), mcfg)
+                          for j in nj])
+            B = np.array([R["fut"][:, p, s_main, m].astype("float64") for m in mj])
+            fa, fb = np.isfinite(A).all(-1), np.isfinite(B).all(-1)
+            if mode == "overlap":
+                fa = fb = fa & fb                                             # the same models on both sides at every place
+            with warnings.catch_warnings(), np.errstate(invalid="ignore"):
+                warnings.simplefilter("ignore")
+                Am = np.nanmean(np.where(fa[..., None], A, np.nan), axis=0)
+                Bm = np.nanmean(np.where(fb[..., None], B, np.nan), axis=0)
+                dsig[:, p, si] = sigma_between(Am, Bm, Msh, midx)
+            for k in np.where(have & ~bad & np.isfinite(Am).all(1) & np.isfinite(Bm).all(1))[0]:
+                tr, la, lo = pools[int(G[k])]
+                i1, i2 = best_cell(Am[k], Msh[k], tr, midx), best_cell(Bm[k], Msh[k], tr, midx)
+                moved[k, p, si] = float(C.haversine_km(la[i1], lo[i1], la[i2], lo[i2]))
+        C.log.info("nexcheck %s: period %d done (%.0fs)", src.name, p, time.time() - t0)
+    info = {"name": src.name, "label": SRC_LABEL.get(src.name, src.name), "mode": mode, "n_models": len(nj),
+            "models": [src.models[j] for j in nj], "scenarios": [x for x in src.scen if x in sc_ids]}
+    return dsig, moved, info
+
+
 def summary_line(doc) -> str:
     """One line for validate's report."""
     S = doc["summary"]
     n = S["ok"] + S["moderate"] + S["high"]
     if not n:
-        return "Sensitivity to model resolution (NEX-GDDP-CMIP6 vs main deltas): no places compared"
+        return "Sensitivity to model resolution (downscaled CMIP6 changes vs the main CMIP6 changes): no places compared"
     th = doc["thresholds"]
-    return (f"Sensitivity to model resolution (NEX-GDDP-CMIP6 changes vs the main CMIP6 changes, {doc['n_models']} models, {n} places): "
+    srcs = doc.get("sources")
+    names = " + ".join(f"{x['label']} ({x['n_models']} {'models' if x['mode'] == 'overlap' else 'model mean'})" for x in srcs) if srcs \
+        else f"NEX-GDDP-CMIP6 ({doc['n_models']} models)"
+    line = (f"Sensitivity to model resolution (downscaled changes vs the main CMIP6 changes; {names}; worst case over sources; {n} places): "
             f"{S['ok'] / n:.0%} ok, {S['moderate'] / n:.0%} moderate (≥ {th['sigma_moderate']}σ or best match moved > {th['moved_km']:.0f} km), "
             f"{S['high'] / n:.0%} high (≥ {th['sigma_high']}σ); median difference {S['median_dsigma']}σ, 95th percentile {S['p95_dsigma']}σ")
+    if srcs and len(srcs) > 1:
+        tot = lambda m: max(m["ok"] + m["moderate"] + m["high"], 1)
+        line += "; high by source: " + ", ".join(f"{x['label']} {x['summary']['high'] / tot(x['summary']):.0%}" for x in srcs)
+    return line
 
 
 # --------------------------------------------------------------------------- the step
-def run(cfg=None, deltas_path=None, out=None):
+def run(cfg=None, deltas_path=None, out=None, down_path=None):
     cfg = cfg or C.config()
     s = settings(cfg)
     if C.extra_names(cfg):
-        C.log.warning("nexcheck: skipped while [matching] extra is set (NEX-GDDP deltas here cover tasmax, tasmin, pr and huss only; pet and srad are not checked)")
+        C.log.warning("nexcheck: skipped while [matching] extra is set (the downscaled changes cover tmax, tmin, precipitation and, for NEX-GDDP, humidity only; pet and srad are not checked)")
         return None
-    deltas_path = deltas_path or DELTAS
-    if not deltas_path.exists():
-        C.log.warning("nexcheck: %s not found (the Extreme days job has not produced it yet); skipped", deltas_path)
+    sources = load_sources(deltas_path, down_path)
+    if not sources:
+        C.log.warning("nexcheck: neither %s nor %s found (the Extreme days / Downscaled changes jobs have not produced them yet); skipped", DELTAS, DOWN)
         return None
-    t0 = time.time()
     R = C.load(C.work("results.npz"))
     if "base_mon" not in R:
         raise RuntimeError("results.npz has no base_mon: rerun the analogs step")
-    Z = C.load(deltas_path)
     T = C.targets()
-    names = [str(x) for x in Z["models"]]
-    mnames = [m["name"] for m in C.models(cfg)]
-    use = [(j, mnames.index(n)) for j, n in enumerate(names) if n in mnames]
-    if len(use) < s["min_models"]:
-        C.log.warning("nexcheck: only %d NEX-GDDP models, need %d; skipped", len(use), s["min_models"])
+    midx = R["midx"]
+    ctx = {"R": R, "T": T, "cfg": cfg, "midx": midx, "bm": {v: R["base_mon"][i].astype("float64") for i, v in enumerate(MON)},
+           "Msh": R["Msh"].astype("float64"), "bad": R["bad"], "G": T.g.values,
+           "pools": {0: (C.transform(R["na_raw"].astype("float64"))[:, midx], R["na_lat"], R["na_lon"]),
+                     1: (C.transform(R["w_raw"].astype("float64"))[:, midx], R["w_lat"], R["w_lon"])}}
+    NT, bad = len(T), R["bad"]
+    res = {}
+    for src in sources:
+        r = compare(src, ctx, s)
+        if r is None:
+            C.log.warning("nexcheck: source %s has no models; skipped", src.name)
+        else:
+            res[src.name] = r
+    if not res:
         return None
-    nj, mj = [u[0] for u in use], [u[1] for u in use]
-    lab = [str(x) for x in Z["labels"]]
-    src = np.array([lab.index(l) if l in lab else -1 for l in T.label])           # place order of the file -> current order
-    have = src >= 0
-    src0 = np.where(have, src, 0)
-    sc_ids = cfg["scenarios"]["ids"]
-    scen = [str(x) for x in Z["scen"]]
-    sidx = [sc_ids.index(x) for x in scen]
-    NT, P, S = len(T), len(cfg["periods"]["keys"]), len(scen)
-    mcfg, midx = cfg["matching"], R["midx"]
-    bm = {v: R["base_mon"][i].astype("float64") for i, v in enumerate(MON)}
-    Msh, bad, G = R["Msh"].astype("float64"), R["bad"], T.g.values
-    pools = {0: (C.transform(R["na_raw"].astype("float64"))[:, midx], R["na_lat"], R["na_lon"]),
-             1: (C.transform(R["w_raw"].astype("float64"))[:, midx], R["w_lat"], R["w_lon"])}
-    dsig = np.full((NT, P, S), np.nan, "float32")
-    moved_km = np.full((NT, P, S), np.nan, "float32")
-    for p in range(P):
-        for si, s_main in enumerate(sidx):
-            ens_nex, ens_main = [], []
-            for j, m in zip(nj, mj):
-                d = tuple(np.where(have[:, None], Z[k][j, p, si].astype("float64")[src0], np.nan) for k in ("dtx", "dtn", "rp", "rv"))
-                ens_nex.append(project(bm, d, mcfg))
-                ens_main.append(R["fut"][:, p, s_main, m].astype("float64"))
-            A, B = np.mean(ens_nex, axis=0), np.mean(ens_main, axis=0)          # NEX-based and main projection, same models
-            with np.errstate(invalid="ignore"):
-                dsig[:, p, si] = sigma_between(A, B, Msh, midx)
-            for k in np.where(have & ~bad & np.isfinite(A).all(1) & np.isfinite(B).all(1))[0]:
-                tr, la, lo = pools[int(G[k])]
-                i1, i2 = best_cell(A[k], Msh[k], tr, midx), best_cell(B[k], Msh[k], tr, midx)
-                moved_km[k, p, si] = float(C.haversine_km(la[i1], lo[i1], la[i2], lo[i2]))
-        C.log.info("nexcheck: period %d done (%.0fs)", p, time.time() - t0)
     from .extremes import place_key
     places, counts = {}, {"ok": 0, "moderate": 0, "high": 0, "nodata": 0}
+    per = {n: {"ok": 0, "moderate": 0, "high": 0, "nodata": 0} for n in res}
+
+    def mx(a):
+        return float(np.nanmax(a)) if np.isfinite(a).any() else 0.0
     for k in range(NT):
-        f = None if (bad[k] or not have[k]) else classify(dsig[k], moved_km[k] > s["moved_km"], s["sigma_moderate"], s["sigma_high"])
-        if f is None:
+        fl = {}
+        for n, (dsig, moved, info) in res.items():
+            f = None if bad[k] else classify(dsig[k], moved[k] > s["moved_km"], s["sigma_moderate"], s["sigma_high"])
+            fl[n] = f
+            per[n]["nodata" if f is None else f] += 1
+        worst, by = combine(fl)
+        if worst is None:
             counts["nodata"] += 1
             continue
-        counts[f] += 1
-        if f != "ok":
-            places[place_key(T.lat[k], T.lon[k])] = {"gcm_res_sensitivity": f, "dsig": round(float(np.nanmax(dsig[k])), 2),
-                                                     "moved_km": int(np.nanmax(moved_km[k])) if np.isfinite(moved_km[k]).any() else 0}
-    fin = dsig[np.isfinite(dsig)]
-    doc = {"generated": time.strftime("%Y-%m-%d"), "n_models": len(use), "models": [names[j] for j in nj],
-           "scenarios": scen, "thresholds": {k: s[k] for k in ("sigma_moderate", "sigma_high", "moved_km")},
-           "summary": {**counts, "median_dsigma": round(float(np.median(fin)), 3) if len(fin) else None,
-                       "p95_dsigma": round(float(np.percentile(fin, 95)), 3) if len(fin) else None},
-           "places": places}
+        counts[worst] += 1
+        if worst != "ok":
+            places[place_key(T.lat[k], T.lon[k])] = {
+                "gcm_res_sensitivity": worst, "flagged_by": by,
+                "dsig": round(max(mx(res[n][0][k]) for n in res), 2), "moved_km": int(max(mx(res[n][1][k]) for n in res)),
+                "sources": {n: {"f": f, "dsig": round(mx(res[n][0][k]), 2), "moved_km": int(mx(res[n][1][k]))} for n, f in fl.items() if f and f != "ok"}}
+
+    def stat(a, q):
+        a = a[np.isfinite(a)]
+        return round(float(np.percentile(a, q)), 3) if len(a) else None
+    allfin = np.concatenate([r[0][np.isfinite(r[0])] for r in res.values()])
+    srcs = [{**info, "summary": {**per[n], "median_dsigma": stat(dsig, 50), "p95_dsigma": stat(dsig, 95)}} for n, (dsig, moved, info) in res.items()]
+    doc = {"generated": time.strftime("%Y-%m-%d"), "n_models": max(x["n_models"] for x in srcs),
+           "models": srcs[0]["models"], "scenarios": srcs[0]["scenarios"],
+           "thresholds": {k: s[k] for k in ("sigma_moderate", "sigma_high", "moved_km")},
+           "summary": {**counts, "median_dsigma": stat(allfin, 50), "p95_dsigma": stat(allfin, 95)},
+           "sources": srcs, "places": places}
     out = out or OUT
     out.parent.mkdir(parents=True, exist_ok=True)
     json.dump(doc, open(out, "w"), separators=(",", ":"), ensure_ascii=False)
-    C.save(C.work("nexcheck.npz"), dsig=dsig, moved_km=moved_km, labels=T.label.values.astype(str))
+    C.save(C.work("nexcheck.npz"), labels=T.label.values.astype(str),
+           **{f"dsig_{n}": r[0] for n, r in res.items()}, **{f"moved_km_{n}": r[1] for n, r in res.items()})
     C.log.info(summary_line(doc))
     return doc

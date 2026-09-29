@@ -124,3 +124,7 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
 - ctw/expand.py (not in any workflow) grew data/world_targets.csv from 823 to 1,596 places (208 countries/territories).
 - tests/make_fixture.py builds a synthetic results.npz so export -> site -> validate -> tests/test_page.py run offline.
 - Not done: growing the North American list; making the North American pool lazy too (it is the fixed ~3 MB of startup).
+
+## Multi-source model-resolution cross-check (downdeltas)
+- `nexcheck` compares the main projection with NEX-GDDP (data/nexdeltas.npz), WorldClim 2.1 CMIP6 and AdaptWest downscaled CMIP6 (data/downdeltas.npz, from ctw/downdeltas.py, workflow `downdeltas.yml`); flag = worst case over sources, `flagged_by` lists them; page line names them.
+- Written without network access: the extraction (WorldClim URLs/GCM list, AdaptWest bucket layout parsing in `parse_aw_key`/`aw_products`) is verified only by `.github/workflows/smoke-downdeltas.yml` on Actions; adjust `[downdeltas]` / DEFAULTS in the module to what the listing shows.
