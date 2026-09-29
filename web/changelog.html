@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What's new: Climate Twins</title>
+<meta name="description" content="Every change to Climate Twins, newest first: new features, fixes and data updates.">
+<link rel="canonical" href="__SITE_URL__/changelog.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Climate Twins">
+<meta property="og:title" content="What's new in Climate Twins">
+<meta property="og:description" content="Every change to Climate Twins, newest first: new features, fixes and data updates.">
+<meta property="og:url" content="__SITE_URL__/changelog.html">
+<meta property="og:image" content="__SITE_URL__/og-image.png">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1260">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#f3f5f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11181e" media="(prefers-color-scheme: dark)">
+<script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f6;--panel:#fff;--ink:#1d2730;--muted:#5b6670;--rule:#d8dde1;--accent:#d6412c;--chip:#eef1f3;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-head:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#11181e;--panel:#172028;--ink:#e7ecef;--muted:#9aa6b0;--rule:#2c3943;--accent:#ff6b4a;--chip:#1d2831}}
+:root[data-theme="dark"]{--bg:#11181e;--panel:#172028;--ink:#e7ecef;--muted:#9aa6b0;--rule:#2c3943;--accent:#ff6b4a;--chip:#1d2831}
+*,*::before,*::after{box-sizing:inherit}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--font-body)}
+main{max-width:720px;margin:0 auto;padding:28px 22px 56px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:.92rem;margin-bottom:26px}
+a{color:inherit;text-decoration-color:var(--accent);text-underline-offset:3px}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:3px}
+.brand{font:700 1rem var(--font-head);text-decoration:none}
+h1{font:700 clamp(2rem,6vw,2.7rem)/1.08 var(--font-head);margin:0 0 10px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0 0 30px}
+h2{font:700 1.3rem/1.3 var(--font-head);margin:34px 0 10px;padding-top:18px;border-top:1px solid var(--rule)}
+h3{font:700 1.05rem var(--font-head);margin:20px 0 6px}
+ul{margin:0;padding-left:1.2em} li{margin:0 0 10px} li::marker{color:var(--muted)}
+code{font-size:.9em;background:var(--chip);border-radius:4px;padding:1px 5px}
+footer{margin-top:42px;padding-top:18px;border-top:1px solid var(--rule);font-size:.92rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <nav class="top" aria-label="Site"><a class="brand" href="./">← Climate Twins map</a><a href="methods.html">Methods and sources</a></nav>
+  <h1>What's new</h1>
+  <p class="lead">{{INTRO}}</p>
+  {{CHANGELOG}}
+  <footer>Something you'd like changed or added? <a href="./#feedback">Send feedback</a>.</footer>
+</main>
+</body>
+</html>
