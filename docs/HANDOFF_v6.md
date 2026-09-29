@@ -103,7 +103,7 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
 - Heat days (days over 95 °F, NEX-GDDP daily data): terabyte-scale; would need a separate job design.
 
 ## Operating notes
-- Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.
+- Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|era5 --var V (ERA5 cross-check, about 10 min per variable)|hindcast (needs the four era5 files)|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.
   `CTW_WORK` = scratch dir, `CTW_SMOKE=1` = quick run.
 - `web/` holds page templates; `site/` is build output (deployed). Page edits go in `web/`, then `python -m ctw site`.
 - Gazetteer falls back to data/places_snapshot.json.gz when GeoNames is unreachable.

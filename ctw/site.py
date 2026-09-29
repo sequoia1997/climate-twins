@@ -66,7 +66,10 @@ def hindcast_html() -> str:
             f"(median {a['km_predicted_to_oracle_median']:,.0f}&nbsp;km apart), and the projection was closer to the truth than &ldquo;nothing changes&rdquo; "
             f"at {a['share_projection_beats_persistence']:.0%} of places. Predicted analogs lay a median of {a['median_move_km']:,.0f}&nbsp;km from the place, "
             f"equatorward for {a['share_equatorward']:.0%} of them. Skill against the latitude-shift baseline (1 minus the ratio of median distances) was {a['skill_vs_naive']:.0%}, "
-            f"and against staying put {a['skill_vs_own_cell']:.0%}.</p>")
+            f"and against the place's own 0.5&deg; cell {a['skill_vs_own_cell']:.0%}. The predicted analog was only "
+            f"{1 - a['at_predicted_analog_d'] / a['persistence_d']:.0%} closer to the truth than the place's own 1961&ndash;{a1} climate (Table H, &ldquo;No change&rdquo;), "
+            "which is what a small change against large year-to-year swings implies: the test shows that the search finds essentially the best place there is, "
+            "not that moving to it is warranted.</p>")
 
 
 def run(cfg=None):
