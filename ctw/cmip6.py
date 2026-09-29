@@ -100,7 +100,9 @@ class Archive:
         return out
 
 
-def open_da(url, var):
+def open_da(url, var, soft=False):
+    """Open one variable of a CMIP6 zarr store. With soft=True (used for the extra ensemble members only), a store that
+    lacks the variable returns None instead of raising, so a mislabelled catalogue entry cannot fail the whole model."""
     import aiohttp, xarray as xr
     so = {"client_kwargs": {"timeout": aiohttp.ClientTimeout(total=1800, sock_connect=60, sock_read=300)}}
     for attempt in range(6):
@@ -112,6 +114,9 @@ def open_da(url, var):
             time.sleep(30 * (attempt + 1))
     else:
         raise RuntimeError(f"cannot open {url}")
+    if soft and var not in ds:
+        C.log.warning("soft skip: %s has no variable %s (has %s)", url, var, list(ds.data_vars))
+        return None
     da = ds[var]
     ren = {k: v for k, v in (("latitude", "lat"), ("longitude", "lon"), ("nav_lat", "lat"), ("nav_lon", "lon")) if k in da.coords or k in da.dims}
     da = da.rename(ren) if ren else da
@@ -258,12 +263,19 @@ def run(model: str, cfg=None):
         u = arch.url(model, "historical", mem, "tas", m["grid"])
         if u is None:
             continue
-        hg = annual_gmean(open_da(u, "tas"), TAS_YEARS)
+        soft = mem != members[0]
+        hda = open_da(u, "tas", soft=soft)
+        if hda is None:
+            continue
+        hg = annual_gmean(hda, TAS_YEARS)
         for si, s in enumerate(scen):
             us = arch.url(model, s, mem, "tas", m["grid"])
             if us is None:
                 continue
-            sg = annual_gmean(open_da(us, "tas"), TAS_YEARS)
+            sda = open_da(us, "tas", soft=soft)
+            if sda is None:
+                continue
+            sg = annual_gmean(sda, TAS_YEARS)
             both = {**hg, **sg}
             tas_all[mi, si] = [both.get(int(y), np.nan) for y in tas_years]
     full = np.isfinite(tas_all[..., TAS_YEARS - 1850]).all(-1)                  # (members, scenarios): complete series
@@ -294,7 +306,11 @@ def run(model: str, cfg=None):
             if u is None:
                 missing.append(f"{mem}:historical:{var}")
                 continue
-            h = open_da(u, var)
+            soft = mem != members[0]
+            h = open_da(u, var, soft=soft)
+            if h is None:
+                missing.append(f"{mem}:historical:{var}")
+                continue
             if W is None:
                 lat, lon = h["lat"].values.astype("float64"), h["lon"].values.astype("float64")
                 lf, lfsrc = landfrac(arch, model, m["grid"], lat, lon)
@@ -311,7 +327,11 @@ def run(model: str, cfg=None):
                 wins = {"early": (2015, b1)} if b1 >= 2015 else {}
                 wins.update({f"p{pi}": tuple(p) for pi, p in enumerate(pers)})
                 wins.update({f"g{li}": (max(y0, 2015), y1) for (li, sj), (y0, y1) in gwin.items() if sj == si and y1 >= 2015})
-                sc = clims(open_da(u, var), wins)
+                sda = open_da(u, var, soft=soft)
+                if sda is None:
+                    missing.append(f"{mem}:{s}:{var}")
+                    continue
+                sc = clims(sda, wins)
                 if "early" in sc:
                     bf = (hc["hist"] * hc["hist_n"] + sc["early"] * sc["early_n"]) / (hc["hist_n"] + sc["early_n"])
                 else:
