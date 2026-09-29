@@ -802,8 +802,8 @@ function panel(){
     let lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
     /* BEGIN era5-agreement: independent ERA5 baseline check; a poor agreement lowers the badge one level */
     const e5=era5Sig[cur.t],e5t=D.era5_thr||[2,3.5],e5poor=e5>e5t[1];
-    if(e5poor)lvl=lvl==="high"?"medium":"low";
-    const e5line=e5<0?"":e5poor?`<br>ERA5, an independent dataset, describes this place's present climate quite differently (${e5.toFixed(1)}σ), so confidence is lowered.`
+    const lvl0=lvl;if(e5poor)lvl=lvl==="high"?"medium":"low";
+    const e5line=e5<0?"":e5poor?`<br>ERA5, an independent dataset, describes this place's present climate quite differently (${e5.toFixed(1)}σ)${lvl!==lvl0?", so confidence is lowered one level":""}.`
       :e5>e5t[0]?`<br>ERA5, an independent dataset, differs somewhat on this place's present climate (${e5.toFixed(1)}σ).`:`<br>ERA5, an independent dataset, agrees on this place's present climate.`;
     /* END era5-agreement */
     let why=`${agree} of ${ensN} models point to this area`;
