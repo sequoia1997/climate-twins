@@ -12,6 +12,7 @@ This repository holds everything: the data pipeline, the page, and the automatio
 | What | When | What you do |
 |---|---|---|
 | **Rebuild data** (`.github/workflows/rebuild.yml`) | Every March 15, or by hand | Nothing until it opens a pull request. Read the report in the pull request, then merge. |
+| **Extreme days** (`.github/workflows/extremes.yml`) | Every April 20, or by hand | Separate from the rebuild. Downloads NEX-GDDP-CMIP6 daily data (about 54 GB per model, 13 models) and opens a pull request that changes only `site/data/extremes.json`. Optional: the page hides the block without it. |
 | **Deploy site** (`deploy.yml`) | Whenever `site/` changes on `main` | Nothing: merging a rebuild publishes it. |
 | **Watch upstream data** (`watch.yml`) | The 1st of each month | Read the issue it opens, if any (a new TerraClimate year, a corrected climate-model dataset, CMIP7 arriving). |
 

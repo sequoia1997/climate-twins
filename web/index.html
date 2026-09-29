@@ -203,6 +203,11 @@ details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{
 .axis{position:relative;height:18px;margin-left:var(--lw)}
 .axis span{position:absolute;top:2px;transform:translateX(-50%);font-size:.68rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .cmp .cap{font-size:.8rem;color:var(--muted);margin:4px 0 0}
+/* BEGIN extreme-days (extremes.json) */
+.ext-tab{margin-top:4px} .ext-tab th{font-size:.76rem;white-space:nowrap} .ext-tab th:first-child{white-space:normal;font-weight:400;color:var(--muted)} .ext-tab td:not(:first-child){width:19%} .ext-tab td,.ext-tab th{padding:4px 3px;text-align:center} .ext-tab td:first-child,.ext-tab th:first-child{text-align:left}
+.ext-tab td small{color:var(--muted);font-size:.72rem;white-space:nowrap} .ext-tab td{font-variant-numeric:tabular-nums}
+.ext-none{margin:6px 0 0;color:var(--muted);font-size:.85rem}
+/* END extreme-days */
 details.exact{margin:14px 0 0} details.exact summary{font-weight:400;color:var(--muted);font-size:.9rem}
 table.ex{margin-top:6px} table.ex th{font-size:.76rem} table.ex td,table.ex th{padding:4px 3px}
 table.ex tr.grp th{text-align:left;font-weight:700;padding-top:10px;border-bottom:1.5px solid var(--ink);font-size:.82rem;color:var(--ink)}
@@ -294,6 +299,10 @@ aside a:hover{text-decoration-thickness:2px}
 }
 @media (max-width:820px) and (orientation:landscape),(orientation:landscape) and (max-height:520px){:root{--aside-w:min(340px,46vw)} #minibar{max-width:calc(100% - 130px)} #mb-title{font-size:.88rem}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+/* GWL-BEGIN: warming-level view styles */
+.gw-off{display:none!important}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+/* GWL-END */
 </style>
 </head>
 <body>
@@ -305,6 +314,7 @@ aside a:hover{text-decoration-thickness:2px}
       <span id="mb-title">Climate twins</span>
       <select class="pk-per" aria-label="Time period"></select>
       <select class="pk-ssp" aria-label="Emissions scenario"></select>
+      <!-- GWL-BEGIN --><select class="pk-mode gw-off" aria-label="View: year and scenario, or warming level"></select><select class="pk-gwl gw-off" aria-label="Global warming level"></select><!-- GWL-END -->
     </div>
     <button id="themebtn" type="button" aria-pressed="false" aria-label="Dark map" title="Dark map"></button>
     <div id="zoom" role="group" aria-label="Map views"><button id="zreset" type="button" aria-label="Start over: clear the place and show the starting view" title="Start over (Esc)"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 9.3 10 3.6l6.8 5.7M5 8v8.2h3.7v-4.6h2.6v4.6H15V8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="zworld" type="button" aria-label="Show the whole world" title="Whole world"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7.2"/><ellipse cx="10" cy="10" rx="3.1" ry="7.2"/><path d="M2.8 10h14.4M4 6.3h12M4 13.7h12" stroke-linecap="round"/></g></svg></button></div>
@@ -321,6 +331,7 @@ aside a:hover{text-decoration-thickness:2px}
         <span id="sh-title">Climate twins</span>
         <select id="mper" aria-label="Time period"></select>
         <select id="mssp" aria-label="Emissions scenario"></select>
+        <!-- GWL-BEGIN --><select class="pk-mode gw-off" aria-label="View: year and scenario, or warming level"></select><select class="pk-gwl gw-off" aria-label="Global warming level"></select><!-- GWL-END -->
         <button id="sh-tog" type="button" aria-label="Hide the panel" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 9l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
@@ -351,8 +362,12 @@ aside a:hover{text-decoration-thickness:2px}
       <datalist id="places"></datalist>
     </div>
     <div id="ctlbar">
-      <div class="ctl"><div class="small" id="per-label">Period</div><div class="seg" id="per" role="group" aria-labelledby="per-label"></div></div>
-      <div class="ctl"><div class="small" id="ssp-label">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="ssp-label"></div></div>
+      <!-- GWL-BEGIN: view toggle and warming-level buttons (filled and shown by gwlInit() when the data has them) -->
+      <div class="ctl gw-off" id="gwl-mode-ctl"><div class="small" id="mode-label">View</div><div class="seg" id="gwl-mode" role="group" aria-labelledby="mode-label"></div></div>
+      <div class="ctl gw-off" id="gwl-ctl"><div class="small" id="gwl-label">Warming</div><div class="seg" id="gwl-seg" role="group" aria-labelledby="gwl-label"></div></div>
+      <!-- GWL-END -->
+      <div class="ctl" id="per-ctl"><div class="small" id="per-label">Period</div><div class="seg" id="per" role="group" aria-labelledby="per-label"></div></div>
+      <div class="ctl" id="ssp-ctl"><div class="small" id="ssp-label">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="ssp-label"></div></div>
     </div>
     <div class="small" id="ssp-desc"></div>
     <details class="settings" data-k="settings"><summary>Settings</summary>
@@ -445,7 +460,7 @@ let D,NP,NT,NM,pool,poolRaw,cellRC,plat,plon,base,fut,sd,Msh,Mtr,bestIdx,bestSig
 let OVS,OVP;   // overview: per place x 32 (period, scenario, ensemble, method): sigma x100 (65535 = none), best-match lat/lon x100
 let POOLS=[],PI=0,NTNA=0,worldState="none"; // PI: 0 = North America 15 km pool, 1 = global 0.5° pool
 const MBW={w:-180,e:180,s:-60,n:84,W:2160,H:0};let heatW=null,hctxW,heatImgW,heat32W,lutW=null,gridToCellW;
-const S={per:1,gsel:-1,darkMap:false,cmp:0,sel:-1,ssp:1,ens:"tcr_likely",pm:0,metric:false,showModels:true,showAll:true,hover:null};
+const S={mode:"year",gi:1,per:1,gsel:-1,darkMap:false,cmp:0,sel:-1,ssp:1,ens:"tcr_likely",pm:0,metric:false,showModels:true,showAll:true,hover:null};
 let cur=null; // current computation
 // ---------- theme: saved choice, else the system setting
 const THEME_KEY="ct-theme",sysDark=matchMedia("(prefers-color-scheme: dark)");
@@ -564,7 +579,7 @@ function init(d){
   D=d;NP=d.NP;NM=d.models.length;
   if(!d.idx)throw new Error("data/index.json is missing");
   {const cols=d.idx.cols;d.targets=d.idx.rows.map(r=>{const o={};for(let j=0;j<cols.length;j++)o[cols[j]]=r[j];return o;});}   // {n,lat,lon,pop,c,icv,k,g,s,i}
-  NT=d.targets.length;NTNA=d.idx.na;d.glob={};
+  NT=d.targets.length;NTNA=d.idx.na;d.glob={};d.gglob={};
   NV=d.nv||12;MI=d.midx||MI;K=MI.length;HAS10=NV>=16;
   const p16=arr(d.pool,Int16Array);pool=new Float32Array(NV*NP);poolRaw=new Float32Array(NV*NP);
   for(let i=0;i<NV;i++)for(let p=0;p<NP;p++){const v=p16[i*NP+p];pool[i*NP+p]=decT(v,i);poolRaw[i*NP+p]=decR(v,i);}
@@ -579,6 +594,7 @@ function init(d){
   recentA=new Int16Array(nt*NV);recSig=new Float32Array(nt);
   Msh=new Float32Array(nt*K*K);Mtr=new Float32Array(nt*K*K);sd=new Float32Array(nt*NV);
   bestIdx=new Int32Array(nt*32).fill(-1);bestSig=new Float32Array(nt*32);
+  gwlLoad(d);
   {const o=d.ov,n=o.n;OVS=arr(o.sig,Uint16Array);const p=arr(o.pos,Int16Array);OVP=p;if(OVS.length!==n*32)throw new Error("overview does not match the place list");}
   sigTab=arr(d.sig_tab,Float32Array);places=d.places;
   cellPlace=arr(d.cell_place,Uint16Array);cellCity=arr(d.cell_city,Uint16Array);
@@ -616,7 +632,8 @@ function ingestShard(w){const ids=w.ids,n=ids.length;
   put(kgFut,arr(w.kg_fut,Uint8Array),16);put(zoneFut,arr(w.zone_fut,Uint8Array),16);put(ffpFut,arr(w.ffp_fut,Uint16Array),16);
   put(recentA,arr(w.recent,Int16Array),NV);put(recSig,arr(w.rec_sig,Float32Array),1);
   for(const j in (w.sl||{}))D.targets[ids[+j]].sl=w.sl[j];
-  Object.assign(D.glob,w.glob||{});}
+  gwlIngest(w,put,b);
+  Object.assign(D.glob,w.glob||{});Object.assign(D.gglob,w.gglob||{});}
 // world.dat = [gzip] "CTW1" | uint32 header length | JSON header | 4-byte-aligned binary arrays referenced as {"$b":[offset,nbytes]}
 function unpackWorld(buf){const dv=new DataView(buf),u=new Uint8Array(buf);
   const mg=String.fromCharCode(u[0],u[1],u[2],u[3]);if(mg!=="CTW1"&&mg!=="CTW2")throw new Error("unexpected data format");
@@ -648,11 +665,59 @@ function buildWorldLUT(){const W=MBW.W,H=MBW.H,P=POOLS[1],r=Math.PI/180,my=l=>Ma
     const o=row*P.nx;for(let i=0;i<W;i++)lutW[j*W+i]=gridToCellW[o+col[i]];}}
 function wrapLon(lon,ref){while(lon-ref>180)lon-=360;while(lon-ref<-180)lon+=360;return lon;}
 // ---------- climate vectors (transformed space: temps °C, precip log(mm+1))
-function PER(){return D.periods[S.per];}
-function futVec(t,si,mi,per=S.per){const o=new Float64Array(NV);const b=(((t*2+per)*4+si)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(fut[b+i],i);return o;}
-function ensVec(t,si,ens,per=S.per){const ml=D.ens[ens];const o=new Float64Array(NV);for(const mi of ml){const v=futVec(t,si,mi,per);for(let i=0;i<NV;i++)o[i]+=isP(i)?Math.exp(v[i])-1:v[i];}for(let i=0;i<NV;i++){o[i]/=ml.length;if(isP(i))o[i]=Math.log(o[i]+1);}return o;}
+function PER(){return gwlOn()?gwlPer():D.periods[S.per];}
+function futVec(t,si,mi,per){if(per===undefined){if(gwlOn())return gFutVec(t,S.gi,mi);per=S.per;}const o=new Float64Array(NV);const b=(((t*2+per)*4+si)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(fut[b+i],i);return o;}
+function ensVec(t,si,ens,per){const ml=per===undefined&&gwlOn()?D.ens[ens].filter(mi=>D.gwl.reach[S.gi][mi]):D.ens[ens];const o=new Float64Array(NV);for(const mi of ml){const v=futVec(t,si,mi,per);for(let i=0;i<NV;i++)o[i]+=isP(i)?Math.exp(v[i])-1:v[i];}for(let i=0;i<NV;i++){o[i]/=ml.length;if(isP(i))o[i]=Math.log(o[i]+1);}return o;}
 function baseVec(t){const o=new Float64Array(NV);for(let i=0;i<NV;i++)o[i]=decT(base[t*NV+i],i);return o;}
 function toRaw(v){return Array.from(v,(x,i)=>isP(i)?Math.exp(x)-1:x);}
+/* GWL-BEGIN: warming-level view. Alternative to (period, scenario): each model's change over the 20-year window centred on
+   the year it reaches a level of global warming above 1850-1900, pooled over the scenarios that reach it (see methods).
+   Data: D.gwl {levels, ref, now, n[ens][level], ok[level][ens], when[ens][level][ssp], reach[level][model]} and per place
+   gfut_d, gbest_idx, gbest_sig, gkg/gzone/gffp (page order of ensembles: 0 all, 1 likely-range). */
+let OVGS=null,OVGP=null;   // overview for warming levels: per place x NG x 2 x 2
+let gFut=null,gBestIdx=null,gBestSig=null,gKg=null,gZone=null,gFfp=null,NG=0;
+function gwlOn(){return S.mode==="gwl"&&!!gFut&&!!D.gwl;}
+function gwlDec(x,b,n){const per=n*NM;for(let t=0;t<b.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)x[o+i]+=b[t*NV+i];}return x;}
+function gwlLoad(d){if(!d.gwl)return;NG=d.gwl.levels.length;const nt=NT;      // preallocated for every place; shards fill it (gwlIngest)
+  gFut=new Int16Array(nt*NG*NM*NV);gBestIdx=new Int32Array(nt*NG*4).fill(-1);gBestSig=new Float32Array(nt*NG*4);
+  gKg=new Uint8Array(nt*NG*2);gZone=new Uint8Array(nt*NG*2);gFfp=new Uint16Array(nt*NG*2);
+  if(d.ov.gsig){OVGS=arr(d.ov.gsig,Uint16Array);OVGP=arr(d.ov.gpos,Int16Array);}}
+function gwlIngest(w,put,b){if(!gFut||!w.gfut_d)return;
+  put(gFut,gwlDec(unplane16(w.gfut_d),b,NG),NG*NM*NV);put(gBestIdx,warr(w.gbest_idx,Int32Array),NG*4);put(gBestSig,warr(w.gbest_sig,Float32Array),NG*4);
+  put(gKg,warr(w.gkg,Uint8Array),NG*2);put(gZone,warr(w.gzone,Uint8Array),NG*2);put(gFfp,warr(w.gffp,Uint16Array),NG*2);}
+function gFutVec(t,gi,mi){const o=new Float64Array(NV),b=((t*NG+gi)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(gFut[b+i],i);return o;}
+function bestAt(t,ei,pm){return gwlOn()?gBestIdx[((t*NG+S.gi)*2+ei)*2+pm]:bestIdx[(((t*2+S.per)*4+S.ssp)*2+ei)*2+pm];}
+function bestSigAt(t,ei,pm){return gwlOn()?gBestSig[((t*NG+S.gi)*2+ei)*2+pm]:bestSig[(((t*2+S.per)*4+S.ssp)*2+ei)*2+pm];}
+function ensModels(){return gwlOn()?D.ens[S.ens].filter(mi=>D.gwl.reach[S.gi][mi]):D.ens[S.ens];}
+const gwlNum=L=>Number.isInteger(L)?String(L):L.toFixed(1);
+function gwlLab(i=S.gi){return "+"+gwlNum(D.gwl.levels[i])+" °C";}
+function gwlPer(){return{label:gwlLab(),years:gwlNum(D.gwl.levels[S.gi])+" °C above 1850–1900"};}
+function PL(){return gwlOn()?"at "+gwlLab():"~"+PER().label;}
+function WHEN(){return gwlOn()?`a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900`:`${PER().years} under ${D.ssps[S.ssp]}`;}
+function UNDER(){return gwlOn()?` at ${gwlLab()} of global warming`:` under ${D.ssps[S.ssp]}`;}
+function BY(){return gwlOn()?`In a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900,`:`By ~${PER().label} under ${D.ssps[S.ssp]},`;}
+function gwlDesc(){const g=D.gwl,ei=S.ens==="tcr_likely"?1:0,L=g.levels[S.gi],w=g.when[ei][S.gi].map((y,s)=>y?{y,s:D.ssps[s]}:null).filter(Boolean).sort((a,b)=>a.y-b.y);
+  return `Global warming of ${gwlNum(L)} °C above the 1850–1900 average (1991–2020 is already about +${(+g.now).toFixed(1)} °C). ${g.n[ei][S.gi]} of ${D.ens[S.ens].length} models reach it`+(w.length?`, around ${w[0].y} (${w[0].s}) to ${w[w.length-1].y} (${w[w.length-1].s}).`:".")+" Results pool every scenario that gets there.";}
+function gwlSync(){if(!D||!D.gwl||!gFut)return;const g=D.gwl,ei=S.ens==="tcr_likely"?1:0,on=gwlOn();
+  if(!g.ok[S.gi][ei]){const j=g.ok.map((r,i)=>r[ei]?i:-1).filter(i=>i>=0);if(j.length)S.gi=j.reduce((a,b)=>Math.abs(b-S.gi)<Math.abs(a-S.gi)?b:a);}
+  const $=id=>document.getElementById(id),tg=(el,off)=>{if(el)el.classList.toggle("gw-off",off);};
+  [...$("gwl-mode").children].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===S.mode)));
+  [...$("gwl-seg").children].forEach((b,i)=>{const ok=!!g.ok[i][ei];b.disabled=!ok;b.setAttribute("aria-pressed",String(i===S.gi));
+    b.title=ok?`${gwlNum(g.levels[i])} °C above 1850–1900, averaged over the 20 years around the year each model reaches it`:`Fewer than ${g.min_models} of the selected models reach ${gwlLab(i)} this century.`+(S.ens==="tcr_likely"?" Try Settings, Include the models outside the likely range.":"");});
+  tg($("per-ctl"),on);tg($("ssp-ctl"),on);tg($("gwl-ctl"),!on);
+  document.querySelectorAll(".pk-per,.pk-ssp,#mper,#mssp").forEach(x=>tg(x,on));
+  document.querySelectorAll(".pk-gwl").forEach(x=>{tg(x,!on);x.value=S.gi;[...x.options].forEach((o,i)=>o.disabled=!g.ok[i][ei]);});
+  document.querySelectorAll(".pk-mode").forEach(x=>x.value=S.mode);
+  $("ssp-desc").textContent=on?gwlDesc():SSP_DESC[S.ssp];}
+function gwlInit(){if(!D.gwl||!gFut)return;const g=D.gwl,$=id=>document.getElementById(id);
+  const setMode=m=>{S.mode=m;refresh();};
+  const modes=[["year","Year & scenario","Pick a future period and an emissions scenario"],["gwl","Warming level","Pick how much the world has warmed (above 1850–1900) and see the climate at that point, whichever year and scenario gets there"]];
+  modes.forEach(([m,l,t])=>{const b=document.createElement("button");b.textContent=l;b.title=t;b.dataset.m=m;b.onclick=()=>setMode(m);$("gwl-mode").appendChild(b);});
+  g.levels.forEach((L,i)=>{const b=document.createElement("button");b.textContent="+"+gwlNum(L)+" °C";b.setAttribute("aria-label",`${gwlNum(L)} degrees Celsius of global warming`);b.onclick=()=>{S.gi=i;refresh();};$("gwl-seg").appendChild(b);});
+  document.querySelectorAll(".pk-mode").forEach(x=>{x.innerHTML=modes.map(([m,l])=>`<option value="${m}">${m==="year"?"Years":"Warming"}</option>`).join("");x.onchange=()=>setMode(x.value);});
+  document.querySelectorAll(".pk-gwl").forEach(x=>{x.innerHTML=g.levels.map((L,i)=>`<option value="${i}">+${gwlNum(L)} °C</option>`).join("");x.onchange=()=>{S.gi=+x.value;refresh();};});
+  $("gwl-mode-ctl").classList.remove("gw-off");document.querySelectorAll(".pk-mode").forEach(x=>x.classList.remove("gw-off"));gwlSync();}
+/* GWL-END */
 function metric(t,pm){const src=pm?Mtr:Msh,k=pm?D.targets[t].k:K;const M=new Float64Array(K*k);for(let i=0;i<K;i++)for(let j=0;j<k;j++)M[i*k+j]=src[t*K*K+i*K+j];return{k,M};}
 function proj(v,mt){const q=new Float64Array(mt.k);for(let j=0;j<mt.k;j++){let s=0;for(let i=0;i<K;i++)s+=v[MI[i]]*mt.M[i*mt.k+j];q[j]=s;}return q;}
 let ppCache={key:null,Pp:null};
@@ -671,7 +736,7 @@ function compute(){
   if(S.sel<0){cur=null;return;}
   const t=S.sel,mt=metric(t,S.pm),k=mt.k,Pp=projectPool(t,S.pm,mt);
   const ev=ensVec(t,S.ssp,S.ens),q=proj(ev,mt);
-  const glob=(D.glob||{})[`${S.per}|${t}|${S.ssp}|${S.ens==="tcr_likely"?1:0}`]||null;
+  const glob=gwlOn()?((D.gglob||{})[`g${S.gi}|${t}|${S.ens==="tcr_likely"?1:0}`]||null):(D.glob||{})[`${S.per}|${t}|${S.ssp}|${S.ens==="tcr_likely"?1:0}`]||null;
   const D2=dist2(Pp,q,k,new Float32Array(NP));
   const sig=new Float32Array(NP);for(let p=0;p<NP;p++)sig[p]=sigma(Math.sqrt(D2[p]),k);
   const best=argmin(D2);
@@ -680,12 +745,12 @@ function compute(){
   const sep=POOLS[PI].sep;const sites=[best];for(let n=0;n<NP&&sites.length<5&&n<40000;n++){const c=idx[n];if(sites.every(s=>hav(plat[c],plon[c],plat[s],plon[s])>=sep))sites.push(c);}
   // models
   const models=[];const tmp=new Float32Array(NP);
-  for(const mi of D.ens[S.ens]){const qm=proj(futVec(t,S.ssp,mi),mt);dist2(Pp,qm,k,tmp);const c=argmin(tmp);models.push({mi,c,s:sigma(Math.sqrt(tmp[c]),k)});}
+  for(const mi of ensModels()){const qm=proj(futVec(t,S.ssp,mi),mt);dist2(Pp,qm,k,tmp);const c=argmin(tmp);models.push({mi,c,s:sigma(Math.sqrt(tmp[c]),k)});}
   const qb=proj(baseVec(t),mt);let dd=0;for(let j=0;j<k;j++)dd+=(q[j]-qb[j])**2;const own=sigma(Math.sqrt(dd),k);
   let area=0;const ar=POOLS[PI].area;for(let p=0;p<NP;p++)if(sig[p]<2)area+=ar(p);
   // other PC mode (precomputed) for robustness
   const ei=S.ens==="tcr_likely"?1:0; // batch order: all=0, tcr_likely=1
-  const bo=(((t*2+S.per)*4+S.ssp)*2+ei)*2+(1-S.pm);const oi=bestIdx[bo],os=bestSig[bo];
+  const oi=bestAt(t,ei,1-S.pm),os=bestSigAt(t,ei,1-S.pm);
   cur={glob,t,k,sig,best,sites,models,own,area,ev,other:{c:oi,s:os}};
   // heat image in Web Mercator via the lookup table
   const cellCol=new Uint32Array(NP);
@@ -746,8 +811,8 @@ function draw(){
   const lim=overviewLimit(z),shown=new Uint8Array(NT);
   if(S.showAll&&!cur){ctx.lineCap="butt";
     let nOn=0;for(let n=0;n<NT&&nOn<lim;n++){const t=popOrder[n];const tt=D.targets[t];const[a,b]=toScr(tt.lon,tt.lat);
-      if(a<-8||a>W+8||b<-8||b>H+8)continue;nOn++;shown[t]=1;const o=t*32+((S.per*4+S.ssp)*2+ei)*2+S.pm,sq=OVS[o];if(sq===65535)continue;
-      const[x,y]=toScr(wrapLon(OVP[o*2+1]/100,tt.lon),OVP[o*2]/100);
+      if(a<-8||a>W+8||b<-8||b>H+8)continue;nOn++;shown[t]=1;const gw=gwlOn()&&OVGS,oo=gw?((t*NG+S.gi)*2+ei)*2+S.pm:t*32+((S.per*4+S.ssp)*2+ei)*2+S.pm,sq=(gw?OVGS:OVS)[oo];if(sq===65535)continue;
+      const OP=gw?OVGP:OVP,[x,y]=toScr(wrapLon(OP[oo*2+1]/100,tt.lon),OP[oo*2]/100);
       const sg=sq/100;if(sg>=4||(sg>=2&&Math.hypot(x-a,y-b)<4)){ctx.beginPath();ctx.arc(a,b,6,0,7);ctx.lineWidth=3.4;ctx.strokeStyle=m.casing;ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle=RAMP[5];ctx.stroke();continue;}
       const dash=sg>=2;arrow(a,b,x,y,colorFor(sg)||"#5a6675",1.8,8,dash,m.casing,0.9);}}
   const r0=z<3.5?2:z<5?2.8:3.6;
@@ -796,7 +861,7 @@ function panel(){
   const tt=D.targets[cur.t],c=cur.best,bs=cur.sig[c];const [ql,qc]=quality(bs);
   const km=hav(tt.lat,tt.lon,plat[c],plon[c]),br=compass(bearing(tt.lat,tt.lon,plat[c],plon[c]));
   const nn=nearName(c),city=cityName(c);
-  const ensN=D.ens[S.ens].length;
+  const ensN=ensModels().length;
   const agree=cur.models.filter(m=>hav(plat[m.c],plon[m.c],plat[c],plon[c])<500).length;
   const oc=cur.other.c,od=oc>=0?hav(plat[oc],plon[oc],plat[c],plon[c]):0;
   const where=nn.km<12?esc(nn.name):`${Math.round(kmU(nn.km))} ${distU()} from ${esc(nn.name)}`;
@@ -805,14 +870,14 @@ function panel(){
   let h=`<h2>${esc(tt.n)}</h2>`;
   if(noMatch){
     h+=`<p class="answer"><strong>${PI?"No place on Earth":"No place in North America"} has this climate today.</strong> `+(selfMatch
-      ?`In ${PER().years} under ${D.ssps[S.ssp]}, its climate is ${cur.own.toFixed(1)}σ from its own present climate, and nowhere else ${PI?"in the world":"on the continent"} comes closer.</p>`
-      :`The closest partial match under ${D.ssps[S.ssp]} is ${where}, ${dirTxt}.</p>`);
+      ?`In ${WHEN()}, its climate is ${cur.own.toFixed(1)}σ from its own present climate, and nowhere else ${PI?"in the world":"on the continent"} comes closer.</p>`
+      :`The closest partial match${UNDER()} is ${where}, ${dirTxt}.</p>`);
     if(cur.glob&&cur.glob.s<2){const g0=cur.glob.sites[0];h+=`<p class="answer">Worldwide, the closest match today is <strong>${gname(g0)}</strong> (${g0[2].toFixed(2)}σ).</p>`;}
     h+=`<span class="badge q-novel">No match, ${bs.toFixed(1)}σ</span>`+tropNote(bs);
   }else{
-    h+=partial?`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
-      :selfMatch?`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, <strong>no place today is a closer match than ${esc(tt.n)} itself.</strong> It will warm, but its weather already varies so much from year to year that the projected change is small by comparison.</p>`
-      :`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
+    h+=partial?`<p class="answer">In ${WHEN()}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
+      :selfMatch?`<p class="answer">In ${WHEN()}, <strong>no place today is a closer match than ${esc(tt.n)} itself.</strong> It will warm, but its weather already varies so much from year to year that the projected change is small by comparison.</p>`
+      :`<p class="answer">In ${WHEN()}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
     h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
     const lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
@@ -835,8 +900,8 @@ function panel(){
     h+=`<ol class="sites" start="1">${li(cur.sites[0],0)}</ol><details class="moresites" data-k="${k}"${op(k)}><summary>${n} more good match${n>1?"es":""}, at least ${Math.round(kmU(POOLS[PI].sep))} ${distU()} apart</summary><ol class="sites" start="2">${cur.sites.slice(1).map((s,i)=>li(s,i+1)).join("")}</ol><p class="small">Matches under 1σ are about equally good. Tap one to compare it below.</p></details>`;}
   // climate comparison
   const cc=cur.sites[S.cmp]??c;const now=toRaw(baseVec(cur.t)),fu=toRaw(cur.ev);let an=[];for(let i=0;i<NV;i++)an.push(poolRaw[i*NP+cc]);
-  const Pf=POOLS[PI],eiF=S.ens==="tcr_likely"?1:0,fo=((cur.t*2+S.per)*4+S.ssp)*2+eiF;
-  let feat=HAS10&&Pf.kg?{now:[kgNow[cur.t],zoneNow[cur.t],ffpNow[cur.t]],fut:[kgFut[fo],zoneFut[fo],ffpFut[fo]],an:[Pf.kg[cc],Pf.zone[cc],Pf.ffp[cc]]}:null;
+  const Pf=POOLS[PI],eiF=S.ens==="tcr_likely"?1:0,fo=((cur.t*2+S.per)*4+S.ssp)*2+eiF,gfo=(cur.t*NG+S.gi)*2+eiF;
+  let feat=HAS10&&Pf.kg?{now:[kgNow[cur.t],zoneNow[cur.t],ffpNow[cur.t]],fut:gwlOn()?[gKg[gfo],gZone[gfo],gFfp[gfo]]:[kgFut[fo],zoneFut[fo],ffpFut[fo]],an:[Pf.kg[cc],Pf.zone[cc],Pf.ffp[cc]]}:null;
   let mname=describeCell(cc),mlab=S.cmp?"Match "+(S.cmp+1):"Best match";
   if(S.gsel>=0&&cur.glob){const q=cur.glob.sites[S.gsel];an=q[6];mname=gname(q);mlab="Worldwide match "+(S.gsel+1);if(feat)feat.an=q.length>9?[q[7],q[8],q[9]]:null;}
   h+=compareHTML(tt.n,tt.lat,now,fu,an,mlab,mname,feat,tt);
@@ -865,7 +930,7 @@ function humidHTML(SN,S3,topic,C,TU,M){const mx=v=>Math.max(v[12],v[13],v[14],v[
 function zoneTxt(z){return z?`${Math.floor(z/2)}${z%2?"b":"a"}`:"–";}
 function featHTML(f,S3,topic){const cols=[f.now,f.fut,f.an];
   const code=i=>D.kg&&i<D.kg.length?`<abbr title="${esc(D.kg_name[i])}">${D.kg[i]}</abbr>`:"–",name=i=>D.kg&&i<D.kg.length?esc(D.kg_name[i]):"–";
-  const lab=[["s-now","Here now"],["s-fut",`Here ~${PER().label}`],["s-mat","Match"]];
+  const lab=[["s-now","Here now"],["s-fut",`Here ${PL()}`],["s-mat","Match"]];
   let h=topic("kg","Climate type","Köppen–Geiger",cols.map(c=>c?code(c[0]):"–"));
   h+=`<ul class="kgl">${lab.map(([k,l],j)=>`<li><i class="sw ${k}"></i>${l}: <strong>${cols[j]?code(cols[j][0]):"–"}</strong> ${cols[j]?name(cols[j][0]):""}</li>`).join("")}</ul><p class="cap">Köppen–Geiger climate types, computed from monthly averages with the rules of Beck et al. (2018).</p></div></details>`;
   h+=topic("zone","Hardiness zone","estimated",cols.map(c=>c?zoneTxt(c[1]):"–"));
@@ -881,6 +946,35 @@ function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!
   const dir=a=>a[1]>=0?"rise":"fall",a5=v["2050"],a1=v["2100"];
   const r=(a,verb)=>`${verb?dir(a)+" ":""}${n(a[1])}${un} (${rng(a)})`;
   return `<p class="slr"><strong>Sea level:</strong> projected to ${r(a5,true)} by 2050 and ${r(a1,dir(a1)!==dir(a5))} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, ${sl.km<3?"projection for a tide gauge here":`nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away`}).</p>`;}
+/* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
+   or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5 only (see methods). */
+let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded
+function extLoad(){EXT=null;fetch("data/extremes.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places&&j.indices){EXT=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
+function extHTML(tt,topic,S3,M){
+  if(!tt)return"";
+  if(EXT===undefined){extLoad();return"";}
+  if(!EXT)return"";
+  const P=EXT.places[tt.lat.toFixed(4)+","+tt.lon.toFixed(4)],pk=EXT.periods[S.per];
+  if(!P||!P.f||!P.f[pk])return `<p class="ext-none">Extreme-day counts are not available for this place (the daily-data grid has no land cell here).</p>`;
+  const want=D.ssps[S.ssp],ids=EXT.scenarios,order=["ssp126","ssp245","ssp370","ssp585"];
+  let sid=ids.find(i=>EXT.labels[i]===want),near=false;
+  if(!sid){near=true;sid=ids.slice().sort((a,b)=>Math.abs(order.indexOf(a)-S.ssp)-Math.abs(order.indexOf(b)-S.ssp)||order.indexOf(b)-order.indexOf(a))[0];}
+  const avail=ids.map(i=>EXT.labels[i]).join(" and "),slab=EXT.labels[sid];
+  const num=(v,k)=>v==null?"–":(k==="rx1"?(M?Math.round(v):(v/25.4).toFixed(1)):Math.round(v)).toLocaleString();
+  const cell=(a,k)=>a[0]==null?"–":`${num(a[0],k)}<br><small>${num(a[1],k)}–${num(a[2],k)}</small>`;
+  const rows=EXT.indices.map((ix,i)=>{const now=[P.b[i],P.br[i][0],P.br[i][1]],c5=P.f[EXT.periods[0]][sid][i],c1=P.f[EXT.periods[EXT.periods.length-1]][sid][i];return{ix,i,now,c5,c1};})
+    .filter(r=>[r.now,r.c5,r.c1].some(a=>a[0]!=null&&a[0]>=0.5));
+  if(!rows.length)return"";
+  const fut=r=>P.f[pk][sid][r.i];
+  const head=rows.find(r=>r.ix.id==="tx35"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tx30"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tr20")||rows.find(r=>r.ix.id==="fd")||rows[0];
+  const unit=r=>r.ix.id==="rx1"?(M?"mm":"inches"):r.ix.unit;
+  const short=id=>({tx35:"Days over 35 °C (95 °F)",tx30:"Days over 30 °C (86 °F)",tr20:"Tropical nights (low 20 °C+)",fd:"Frost days (low below 0 °C)",wb28:"Hot-humid days (wet-bulb 28 °C+)",cdd:"Longest dry spell",rx1:"Wettest day"})[id];
+  let h=topic("ext","Extreme days",`${short(head.ix.id)}, per year`,[num(head.now[0],head.ix.id),num(fut(head)[0],head.ix.id),"–"]);
+  h+=`<table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
+  for(const r of rows)h+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
+  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected), available for ${avail} only${near?`, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
+  return h;}
+/* END extreme-days */
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const SN=seasons(lat);
   const M=S.metric,TU=M?"°C":"°F",C=v=>M?v:v*9/5+32,dC=v=>M?v:v*9/5,P=mm=>M?mm:mm/25.4;
@@ -888,12 +982,12 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const deg=v=>Math.round(C(v))+"°",dd=x=>(M?Math.abs(x).toFixed(1):Math.round(Math.abs(x)))+"°",pv=mm=>M?Math.round(P(mm)).toLocaleString():P(mm).toFixed(1);
   const sgn=x=>(x>=0?"+":"−")+dd(x);
   const ta=v=>M?+C(annT(v)).toFixed(1):Math.round(C(annT(v))),tas=v=>(M?ta(v).toFixed(1):ta(v))+"°",tdel=(a,b)=>{const x=+(ta(a)-ta(b)).toFixed(1);return x===0?null:(x>0?"+":"−")+(M?Math.abs(x).toFixed(1):Math.abs(x))+"°";};
-  const S3=[["s-now","Here now","1991–2020",now],["s-fut",`Here ~${PER().label}`,PER().years,fu],["s-mat",`${mlab} now`,"1991–2020",an]];
+  const S3=[["s-now","Here now","1991–2020",now],["s-fut",`Here ${PL()}`,PER().years,fu],["s-mat",`${mlab} now`,"1991–2020",an]];
   const nm=measNames(lat);
   // plain-language summary
   const dT=ta(fu)-ta(now),pr=annP(fu)/annP(now)-1;
   let big=0;for(let i=1;i<8;i++)if(Math.abs(fu[i]-now[i])>Math.abs(fu[big]-now[big]))big=i;
-  let sum=`By ~${PER().label} under ${D.ssps[S.ssp]}, ${esc(place)} is ${M?Math.abs(dT).toFixed(1):Math.abs(dT)}°${M?"C":"F"} ${dT>=0?"warmer":"cooler"} on average, most in its ${nm[big]} (${sgn(dC(fu[big]-now[big]))}), and `+
+  let sum=`${BY()} ${esc(place)} is ${M?Math.abs(dT).toFixed(1):Math.abs(dT)}°${M?"C":"F"} ${dT>=0?"warmer":"cooler"} on average, most in its ${nm[big]} (${sgn(dC(fu[big]-now[big]))}), and `+
     (Math.abs(pr)<0.03?"about as wet as today.":`${Math.round(Math.abs(pr)*100)}% ${pr>0?"wetter":"drier"} over the year.`);
   let wi=0;for(let i=1;i<8;i++)if(Math.abs(an[i]-fu[i])>Math.abs(an[wi]-fu[wi]))wi=i;
   const wd=dC(an[wi]-fu[wi]),pm=annP(an)/annP(fu)-1,ok=Math.abs(wd)<=(M?1.5:2.5);
@@ -906,10 +1000,10 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
          :` Today the climate ${esc(mname)} ${S.cmp>0||S.gsel>=0?"is also close":"comes closest"}, though its ${nm[wi]} are ${dd(wd)} ${wd>0?"warmer":"cooler"}`;
   sum+=Math.abs(pm)<0.06?", with similar yearly precipitation.":`, with ${Math.round(Math.abs(pm)*100)}% ${pm>0?"more":"less"} precipitation.`;}
   let h=`<section class="cmp" aria-labelledby="cmp-h"><h3 id="cmp-h">How the climates compare</h3><p class="cmp-sum">${sum}</p>`;
-  h+=recentHTML(place,now);if(tt&&tt.sl)h+=seaHTML(tt.sl);
+  h+=recentHTML(place,now);if(tt&&tt.sl&&!gwlOn())h+=seaHTML(tt.sl);
   // temperature: stat blocks + range bars on one axis
   const topic=(k,t,sub,vals)=>`<details class="topic" data-k="t-${k}"${op("t-"+k)}><summary><span class="t">${t}<small>${sub}</small></span>${vals.map(v=>`<span class="v">${v}</span>`).join("")}</summary><div class="tb">`;
-  h+=`<div class="glance-h" aria-hidden="true"><span></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?"~"+PER().label:"Match"}</span>`).join("")}<span></span></div>`;
+  h+=`<div class="glance-h" aria-hidden="true"><span></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?PL():"Match"}</span>`).join("")}<span></span></div>`;
   const stat=(f,dl)=>`<div class="stats">${S3.map(([k,l,y,v],i)=>`<div class="st ${k}"><div class="k">${l}</div><div class="v">${f(v)}</div><div class="d">${dl(i,v,y)}</div></div>`).join("")}</div>`;
   h+=topic("temp","Temperature",`${TU}, yearly average`,S3.map(x=>tas(x[3])));
   let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let i=0;i<8;i++){lo=Math.min(lo,C(v[i]));hi=Math.max(hi,C(v[i]));}
@@ -934,6 +1028,7 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
     S3.forEach(([k, , ,v],j)=>{h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:0;width:${PX(v[8+q])}%"><b class="hi">${pv(v[8+q])}</b></div>`;});
     h+=`</div></div>`;}
   h+=`</div><p class="cap">Total precipitation in each season, rain and snow as water.</p></div></details>`;
+  h+=extHTML(tt,topic,S3,M);   // extreme-days block: see "BEGIN extreme-days" below
   if(feat)h+=featHTML(feat,S3,topic);
   // exact values, also the accessible version of the charts
   const cols=[now,fu,an];
@@ -979,8 +1074,8 @@ function legend(){const el=document.getElementById("legend");if(!el)return;
   if(S.showModels&&cur.models&&cur.models.length)rows.push(["model","Each model’s match"]);
   rows.push(["outline","Outlined: under 2σ, close"]);
   rows.push(["blank","No colour: over 8σ"]);
-  el.innerHTML=`<div class="lg-title">How alike to ${esc(tt.n)}, ~${PER().label} (σ)${info}</div>${bar(7,BOUNDS.slice(0,8))}`+key(rows);}
-function refresh(){{const mp=document.getElementById("mper"),ms=document.getElementById("mssp");if(mp){mp.value=S.per;ms.value=S.ssp;}document.querySelectorAll(".pk-per").forEach(x=>x.value=S.per);document.querySelectorAll(".pk-ssp").forEach(x=>x.value=S.ssp);}S.cmp=0;S.gsel=-1;hideTip();compute();panel();legend();updateMapLayers();draw();}
+  el.innerHTML=`<div class="lg-title">How alike to ${esc(tt.n)}, ${PL()} (σ)${info}</div>${bar(7,BOUNDS.slice(0,8))}`+key(rows);}
+function refresh(){gwlSync();{const mp=document.getElementById("mper"),ms=document.getElementById("mssp");if(mp){mp.value=S.per;ms.value=S.ssp;}document.querySelectorAll(".pk-per").forEach(x=>x.value=S.per);document.querySelectorAll(".pk-ssp").forEach(x=>x.value=S.ssp);}S.cmp=0;S.gsel=-1;hideTip();compute();panel();legend();updateMapLayers();draw();}
 (()=>{const as=document.querySelector("aside"),bar=()=>document.getElementById("ctlbar");if(as)as.addEventListener("scroll",()=>{const b=bar();if(b)b.classList.toggle("stuck",as.scrollTop>(b.offsetTop-30));},{passive:true});})();
 const SIDE=(()=>{const root=document.documentElement,btn=document.getElementById("sidetog");
   const set=h=>{root.classList.toggle("panel-hidden",h);const t=h?"Show the panel":"Hide the panel";
@@ -1011,7 +1106,7 @@ const SHEET=(()=>{const mq=matchMedia("(max-width:820px) and (orientation:portra
   return{set,toResult,get on(){return mq.matches},get state(){return state}};})();
 let fbOpened=0;
 function fbContext(){const p=[];
-  if(cur){const t=D.targets[cur.t];p.push(`Place: ${t.n}`,`Period: ~${PER().label} (${PER().years})`,`Scenario: ${D.ssps[S.ssp]}`,
+  if(cur){const t=D.targets[cur.t];p.push(`Place: ${t.n}`,...(gwlOn()?[`Warming level: ${PER().label} above 1850–1900`]:[`Period: ~${PER().label} (${PER().years})`,`Scenario: ${D.ssps[S.ssp]}`]),
     `Models: ${S.ens==="tcr_likely"?"likely-range models":"all models"}`,`Best match: ${describeCell(cur.best).replace(/^near /,"")} (${cur.sig[cur.best].toFixed(2)}σ)`);}
   else p.push("No place selected");
   p.push(`Screen: ${SHEET.on?"phone, upright":innerWidth<900?"small screen, sideways":"desktop"}, ${S.darkMap?"dark":"light"} map`,`Data version: ${D.data_version||"?"}`);
@@ -1103,6 +1198,7 @@ function segs(){
   const pe=document.getElementById("per");D.periods.forEach((q,i)=>{const b=document.createElement("button");b.textContent="~"+q.label;b.title=q.years;b.setAttribute("aria-label",`${q.label} (${q.years})`);b.setAttribute("aria-pressed",i===S.per);b.onclick=()=>{S.per=i;[...pe.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));refresh();};pe.appendChild(b);});
   const s=document.getElementById("ssp");D.ssps.forEach((n,i)=>{const b=document.createElement("button");b.textContent=n;b.setAttribute("aria-pressed",i===S.ssp);b.onclick=()=>{S.ssp=i;[...s.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));document.getElementById("ssp-desc").textContent=SSP_DESC[i];refresh();};s.appendChild(b);});
   document.getElementById("ssp-desc").textContent=SSP_DESC[S.ssp];
+  gwlInit();
   const mp=document.getElementById("mper"),ms=document.getElementById("mssp");
   mp.innerHTML=D.periods.map((q,i)=>`<option value="${i}">~${q.label}</option>`).join("");ms.innerHTML=D.ssps.map((n,i)=>`<option value="${i}">${n}</option>`).join("");
   mp.value=S.per;ms.value=S.ssp;mp.onchange=()=>pe.children[+mp.value].click();ms.onchange=()=>s.children[+ms.value].click();
@@ -1189,7 +1285,7 @@ function hideTip(){TIP=null;document.getElementById("tip").style.display="none";
 function posTip(){if(!TIP||!map)return;const tip=document.getElementById("tip"),p=map.project([TIP.lng,TIP.lat]),r=wrap.getBoundingClientRect();
   if(p.x<0||p.y<0||p.x>r.width||p.y>r.height){tip.style.display="none";return;}place(tip,p.x,p.y);}
 function tipFor(x,y,near){const t=nearestTarget(x,y,near);if(t>=0)return{t,html:esc(D.targets[t].n)};
-  if(cur){const c=cellAt(x,y);if(c>=0)return{c,html:`${esc(describeCell(c))}<br><strong>${cur.sig[c]>=10?"over 10":cur.sig[c].toFixed(2)}σ</strong> <span class="muted">from ${esc(D.targets[cur.t].n)} ~${PER().label}</span>`};}
+  if(cur){const c=cellAt(x,y);if(c>=0)return{c,html:`${esc(describeCell(c))}<br><strong>${cur.sig[c]>=10?"over 10":cur.sig[c].toFixed(2)}σ</strong> <span class="muted">from ${esc(D.targets[cur.t].n)} ${PL()}</span>`};}
   return null;}
 const ZONE_SIGMA=2,ZONE_KM=700;   // frame the connected patch under ZONE_SIGMA (1 = yellow only), only the part within ZONE_KM of the match
 // Connected patch of cells under ZONE_SIGMA containing the best match -> [minLon,minLat,maxLon,maxLat], longitudes

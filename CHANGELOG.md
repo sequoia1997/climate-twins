@@ -6,6 +6,9 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 ## 29 September 2026
 
+- **New: a "Warming level" view.** Instead of choosing a year and an emissions scenario, you can choose how much the world has warmed (+1.5, +2, +3 or +4 °C above 1850–1900) and see where today's climate matches that future. The view pools every scenario and model that reaches the level; the panel says how many models do and roughly when they get there. Switch between the two under "View" above the map. Sea-level projections still belong to the year-and-scenario view.
+- **More simulations per model.** Each climate model's change is now the average of up to three of its runs (started from different initial conditions) instead of one, which smooths out natural year-to-year swings in the 20-year windows. Projections shift slightly for some places.
+- **Extreme days.** A new "Extreme days" row in the comparison shows, for each place, how many days a year reach 35 °C (95 °F) or 30 °C, tropical nights, frost days, hot-humid days and the longest dry spell, today and around 2050 and 2100, as the median of several climate models with the range beneath. It uses NASA's daily NEX-GDDP-CMIP6 data for SSP2-4.5 and SSP5-8.5 only (the other two scenarios show the nearest one, and say so) and is refreshed by its own yearly job, so it never holds up the main data update.
 - **"About this map and σ" starts closed.** The panel opens straight to the search box, and one tap on that line opens the explanation whenever you want it.
 - **A simpler search box.** The prompt now just says "Search for a city or town" and fits on every screen, instead of being cut off mid-word.
 

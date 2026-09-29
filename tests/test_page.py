@@ -81,6 +81,17 @@ async def main():
                     fails.append(f"{place}: no humidity section")
                 if nv >= 16 and "Hardiness zone" not in txt:
                     fails.append(f"{place}: no climate type / zone table")
+            if await pg.evaluate("!!D.gwl"):                       # warming-level view: data comes from the same shards
+                await pg.evaluate("S.mode='gwl';refresh()")
+                for place in [x for x in PLACES if x in found][:4]:
+                    i = await pg.evaluate(f"D.targets.findIndex(t=>t.n.startsWith({place!r}))")
+                    await pg.evaluate(f"select({i},false)")
+                    await pg.wait_for_timeout(200)
+                    if not await pg.evaluate("gwlOn()"):
+                        fails.append(f"{place}: warming-level view did not switch on")
+                    if "How the climates compare" not in await pg.inner_text("#result"):
+                        fails.append(f"{place}: no comparison in warming-level view")
+                await pg.evaluate("S.mode='year';select(-1,false)")
             if world_picked:
                 ws = await pg.evaluate("worldState")
                 if ws != "ready":

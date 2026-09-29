@@ -28,6 +28,11 @@ labels = ["SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5"]
 # Transient climate response (°C), IPCC AR6 WG1 Table 7.SM.5 as compiled by Hausfather et al. (2022).
 # The default ensemble keeps models whose TCR lies in the AR6 likely range. tcr = -1 means no published value.
 tcr_likely = [1.4, 2.2]
+# Initial-condition members averaged per model (the configured member first, then others with the same physics/forcing
+# indices that have every needed variable and scenario in the Pangeo archive). Averaging shrinks internal variability
+# in 20-year windows. Each extra member adds about one more single-member download to that model's job;
+# 1 = the earlier single-member method. A model entry may set its own members_max.
+members_max = 3
 list = [
   { name = "ACCESS-CM2",       member = "r1i1p1f1", grid = "gn", tcr = 2.10 },
   { name = "AWI-CM-1-1-MR",    member = "r1i1p1f1", grid = "gn", tcr = 2.06 },
@@ -54,6 +59,13 @@ list = [
   { name = "MRI-ESM2-0",       member = "r1i1p1f1", grid = "gn", tcr = 1.64 },
   { name = "UKESM1-0-LL",      member = "r1i1p1f2", grid = "gn", tcr = 2.79 },
 ]
+
+[gwl]
+# Warming-level view: the 20-year window centred on the first year the running 20-year global mean tas of a model is
+# this many degrees above its own 1850-1900 mean (IPCC AR6 convention), pooled over the scenarios that reach it.
+levels = [1.5, 2.0, 3.0, 4.0]
+reference = [1850, 1900]
+min_models = 3                 # a level is shown for an ensemble only if at least this many of its models reach it
 
 [matching]
 # 12 temperature and precipitation measures (seasonal mean daily high, low, total precipitation),
@@ -84,6 +96,17 @@ world_lat_min = -60.0
 
 [export]
 shard_places = 48              # places per per-place download file (site/data/p/*.dat); the page fetches one when a place is picked
+
+[extremes]
+# Extreme-day indicators from NASA NEX-GDDP-CMIP6 daily data (separate "Extreme days" workflow, see ctw/extremes.py).
+# Each model-year is four ~245 MB files, so the job samples years: year_stride = 2 uses every second year of each
+# window (10 of 20 in the future periods). Set 1 for every year (about twice the runtime).
+scenarios = ["ssp245", "ssp585"]
+year_stride = 2
+ensemble = "tcr_likely"        # same likely-TCR model set as the main analysis, where NEX-GDDP publishes the model
+workers = 3
+wet_bulb_c = 28.0
+dry_mm = 1.0
 
 [recent]
 years = 10                     # "already happening": the latest N complete years vs the baseline

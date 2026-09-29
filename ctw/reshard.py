@@ -4,7 +4,7 @@ core na.dat / world.dat, p/*.dat). No pipeline inputs are needed, so it works on
 
     python -m ctw.reshard              # rewrites site/data in place
 
-The numbers are copied, not recomputed. Run it once when the page that loads shards is deployed on top of data built
+The numbers are copied, not recomputed. (Data with warming levels: rebuild with export instead.) Run it once when the page that loads shards is deployed on top of data built
 before sharding; every later "Rebuild data" writes the new layout directly. It refuses to run on already sharded data."""
 from __future__ import annotations
 import gzip, json, shutil
@@ -44,6 +44,8 @@ def run(size=None):
     if (out / "index.json").exists():
         raise SystemExit("site/data is already sharded")
     na_h, na_a, na_raw = read(out / "na.dat")
+    if "gfut_d" in na_h:
+        raise SystemExit("this data has warming-level arrays, which reshard does not convert: run 'ctw export' instead")
     w_h, w_a, w_raw = read(out / "world.dat")
     P, S, E = 2, 4, 2
     NV = na_h["nv"]

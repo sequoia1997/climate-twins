@@ -50,7 +50,7 @@ def run(cfg=None):
              "HZ_R2": f"{na['hardiness']['r2']:.2f}", "HZ_ERR": f"{na['hardiness']['median_abs_err_c']:.1f}",
              "HZ_SAME": f"{na['hardiness']['same_half_zone']:.0%}", "HZ_ONE": f"{na['hardiness']['within_one_half_zone']:.0%}",
              "FFP_R2": f"{na['ffp']['r2']:.2f}", "FFP_ERR": f"{na['ffp']['median_abs_err_days']:.0f}",
-             "SELFCHK": f"{S['selfchk_median']:.2f}", "SL_N": str(S["sealevel_places"]),
+             "SELFCHK": f"{S['selfchk_median']:.2f}", "GWL_NOW": f"{S.get('gwl_now', 0.9):.1f}", "MEMBERS_MAX": str(cfg["models"].get("members_max", 1)), "SL_N": str(S["sealevel_places"]),
              "REPO_LINK": (f'<a href="{cfg["release"]["repo_url"]}">{cfg["release"]["repo_url"]}</a>' if cfg["release"].get("repo_url") else "source code in the project repository")}
     fills["TROPICS_TABLE"] = tropics_rows(S)
     fills.update(place_counts(S))
@@ -69,12 +69,16 @@ def run(cfg=None):
     if old.exists():                                               # a page-only rebuild keeps the recorded versions
         manifest = {**json.load(open(old)), **manifest}
     try:
-        vers = {}
+        vers, mems = {}, {}
         for mm in C.models(cfg):
             z = C.load(C.work("cmip6", f"{mm['name']}.npz"))
             vers.update(json.loads(str(z["versions"])))
+            if "members" in z:                                     # ensemble members averaged for this model
+                mems[mm["name"]] = json.loads(str(z["members"]))["used"]
         if vers:
             manifest["cmip6_versions"] = vers
+        if mems:
+            manifest["cmip6_members"] = mems
     except Exception:  # noqa: BLE001
         pass
     json.dump(manifest, open(C.SITE / "data" / "manifest.json", "w"), indent=1)

@@ -53,6 +53,13 @@ def main(seed=1):
     keys = [(k, p, s, e) for k in np.where(T.g.values == 0)[0][::7] for p in range(P) for s in range(S) for e in range(E)]
     nk = len(keys)
     fk = lambda *s: rng.integers(1, 30, s).astype("uint8")                            # noqa: E731
+    NG = len(cfg["gwl"]["levels"])
+    gwl_fut = (base[:, None, None, :] + rng.normal(1.0, 0.5, (NT, NG, NM, NV)) * (np.arange(NG)[None, :, None, None] + 1)).astype("float32")
+    gbest = np.zeros((NT, NG, E, 2), "int32")
+    for k in range(NT):
+        gbest[k] = rng.integers(0, nna if T.g[k] == 0 else nw, (NG, E, 2))
+    gkeys = [(k, gi, e) for k in np.where(T.g.values == 0)[0][::7] for gi in range(NG) for e in range(E)]
+    ngk = len(gkeys)
     R = dict(midx=midx, bad=np.zeros(NT, bool), icv_src=np.where(T.domain.values == "conus", "PRISM", "TerraClimate"),
              base=base.astype("float32"), fut=fut, icvsd=rng.uniform(.3, 2, (NT, NV)).astype("float32"), Msh=eye, Mtr=eye.copy(), kdef=kdef,
              best_idx=best_idx, best_sig=best_sig, area2=rng.uniform(0, 1e6, (NT, P, S, E)).astype("float32"),
@@ -69,6 +76,16 @@ def main(seed=1):
              glob_a=rng.integers(0, 24, nk).astype("int32"), glob_n=np.full(nk, 14, "int32"),
              glob_cells=rng.integers(0, nw, (nk, cfg["matching"]["sites"])).astype("int32"),
              glob_sig=rng.uniform(2, 6, (nk, cfg["matching"]["sites"])).astype("float32"))
+    ns = cfg["matching"]["sites"]
+    R.update(gwl_levels=np.array(cfg["gwl"]["levels"], "float64"), gwl_fut=gwl_fut, gwl_reach=np.ones((NG, NM), bool),
+             gwl_year=np.tile(np.array([2030, 2045, 2060, 2075])[:NG, None, None], (1, NM, S)).astype("int16"),
+             gwl_n=np.full((NG, E), NM), gwl_ok=np.ones((NG, E), bool), gwl_now=np.full(NM, 0.9),
+             gwl_best_idx=gbest, gwl_best_sig=rng.gamma(2.0, 1.2, (NT, NG, E, 2)).astype("float32"),
+             gwl_area2=rng.uniform(0, 1e6, (NT, NG, E)).astype("float32"),
+             gf_kg=fk(NT, NG, E), gf_zone=fk(NT, NG, E), gf_ffp=rng.integers(30, 365, (NT, NG, E)).astype("uint16"),
+             gglob_keys=np.array(gkeys, "int32").reshape(-1, 3), gglob_s=rng.uniform(2, 6, ngk).astype("float32"),
+             gglob_a=rng.integers(0, 24, ngk).astype("int32"), gglob_n=np.full(ngk, 14, "int32"),
+             gglob_cells=rng.integers(0, nw, (ngk, ns)).astype("int32"), gglob_sig=rng.uniform(2, 6, (ngk, ns)).astype("float32"))
     C.save(C.work("results.npz"), **R)
     snap = json.load(gzip.open(C.DATA / "places_snapshot.json.gz", "rt"))
     json.dump({"na": snap["na"], "world": snap["world"], "source": "fixture", "countries": {}}, open(C.work("gazetteer.json"), "w"))
