@@ -174,9 +174,10 @@ land_frac_min = 0.5
 land_max_km = 50               # also sets which cells the terraclimate step averages (box_cells)
 # How the independent sources are combined. "corroborated": a place is only flagged when two sources both disagree (the
 # second-largest disagreement counts; one source alone never lowers the badge). "worst": the largest disagreement counts.
-# Set after the first full rebuild: ERA5 alone put 33% of places over 3.5 sigma, mostly small islands and coasts that its
-# 0.25 degree grid smears into the ocean, while CHIRPS put 2%.
-combine = "corroborated"
+# "corroborated" was set after the first full rebuild, when the point comparison put 33% of places over 3.5 sigma (small
+# islands and coasts that the 0.25 degree grid smears into the ocean). With match = "cell" that mismatch is gone, so the
+# worst source counts again; switch back to "corroborated" if the matched check still flags many places.
+combine = "worst"
 # The same thresholds apply to the combined agreement: the largest disagreement over the independent sources (ERA5 on all measures,
 # CHIRPS on precipitation, CHELSA on highs, lows and precipitation), each with its own typical offset removed (ctw/baselines.py).
 
