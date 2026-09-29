@@ -4,6 +4,9 @@ North American places search the 15 km North American pool (AdaptWest temperatur
 TerraClimate humidity); world cities search the 0.5° global pool (TerraClimate). North American places whose
 best match is poor are also searched worldwide (outside the US, Canada and Mexico) using their TerraClimate
 present climate, so both sides of that comparison come from one dataset.
+Every search runs twice over: for each (period, scenario) and, in the warming-level view, for each global warming level
+(gwl.py, cmip6.py): each model's change over the 20-year window centred on the year it reaches the level, pooled over
+the scenarios that reach it; ensembles average the models that reach the level.
 Writes work/results.npz, which export.py packs for the page."""
 from __future__ import annotations
 import json, time
@@ -56,6 +59,26 @@ def countries(cfg, lat, lon):
         near = tree.query_nearest([pts[k] for k in miss], max_distance=1.0)
         ci[miss[near[0]]] = near[1]
     return np.array([iso[c] if c >= 0 else "" for c in ci])
+
+
+def deltas(b, f, mcfg):
+    """A model's change from b to f (each (4, NT, 12): tmax, tmin, pr, huss): temperature differences and the
+    precipitation and humidity ratios (limited to the configured range; humidity NaN where the model has none)."""
+    lo_r, hi_r = mcfg["ppt_ratio"]; vlo, vhi = mcfg["vap_ratio"]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        rp = np.clip(np.where(b[2] > 0, f[2] / b[2], 1.0), lo_r, hi_r)
+        rv = np.clip(f[3] / b[3], vlo, vhi)
+    return f[0] - b[0], f[1] - b[1], rp, rv
+
+
+def apply_delta(bm, d):
+    """Present monthly climate bm {tmax, tmin, ppt, vap: (NT, 12)} plus a model change -> projected monthly climate."""
+    dtx, dtn, rp, rv = d
+    tx = bm["tmax"] + dtx
+    tn = np.minimum(bm["tmin"] + dtn, tx - 0.1)
+    tm0 = (bm["tmax"] + bm["tmin"]) / 2
+    rvv = np.where(np.isfinite(rv), rv, C.sat_vap(tm0 + (dtx + dtn) / 2) / C.sat_vap(tm0))   # constant RH
+    return {"tmax": tx, "tmin": tn, "ppt": bm["ppt"] * rp, "vap": bm["vap"] * rvv}
 
 
 def pick_sites(D, plat, plon, n, sep_km, first):
@@ -164,24 +187,20 @@ def run(cfg=None):
     fut = np.full((NT, P, S, NM, C.NV), np.nan, "float32")
     futTC = np.full((NT, P, S, NM, C.NV), np.nan, "float32")          # North American places on TerraClimate footing
     ens_mon = np.zeros((P, S, len(EN), 3, NT, 12))                     # ensemble-mean monthly tmax, tmin, ppt
-    lo_r, hi_r = mcfg["ppt_ratio"]; vlo, vhi = mcfg["vap_ratio"]
     cc_fill = []
+    levels = list(cfg["gwl"]["levels"]); NG = len(levels); gmin = int(cfg["gwl"]["min_models"])
+    gfut = np.full((NT, NG, NM, C.NV), np.nan, "float32"); gfutTC = np.full((NT, NG, NM, C.NV), np.nan, "float32")
+    gens_mon = np.zeros((NG, len(EN), 3, NT, 12)); greach = np.zeros((NG, NM), bool)
+    gyear = np.zeros((NG, NM, S), "int16"); gwl_now = np.full(NM, np.nan)
     for mi, m in enumerate(ms):
         cm = C.load(C.work("cmip6", f"{m['name']}.npz"))
         assert list(cm["labels"]) == T.label.tolist(), f"{m['name']} was built for different places"
         for p in range(P):
             for s in range(S):
                 b, f = cm["base"][s].astype("float64"), cm["fut"][p, s].astype("float64")     # (4, NT, 12)
-                dtx, dtn = f[0] - b[0], f[1] - b[1]
-                with np.errstate(invalid="ignore", divide="ignore"):
-                    rp = np.clip(np.where(b[2] > 0, f[2] / b[2], 1.0), lo_r, hi_r)
-                    rv = np.clip(f[3] / b[3], vlo, vhi)
+                d = deltas(b, f, mcfg); rv = d[3]
                 for which, bm in ((fut, base_m), (futTC, tcbase)):
-                    tx = bm["tmax"] + dtx
-                    tn = np.minimum(bm["tmin"] + dtn, tx - 0.1)
-                    tm0 = (bm["tmax"] + bm["tmin"]) / 2
-                    rvv = np.where(np.isfinite(rv), rv, C.sat_vap(tm0 + (dtx + dtn) / 2) / C.sat_vap(tm0))   # constant RH
-                    mon = {"tmax": tx, "tmin": tn, "ppt": bm["ppt"] * rp, "vap": bm["vap"] * rvv}
+                    mon = apply_delta(bm, d); tx, tn = mon["tmax"], mon["tmin"]
                     which[:, p, s, mi] = C.seasonalize({v: mon[v].T for v in MON}).T
                     if which is fut:
                         for e, en in enumerate(EN):
@@ -190,7 +209,31 @@ def run(cfg=None):
                                 ens_mon[p, s, e, 2] += mon["ppt"] / len(ens[en])
                 if not np.isfinite(rv).all() and p == 0:
                     cc_fill.append(f"{m['name']} {cfg['scenarios']['labels'][s]}")
+        # warming levels: pool the change over the scenarios in which this model reaches each level
+        assert np.allclose(cm["gwl_levels"], levels), f"{m['name']} was built for different warming levels"
+        gyear[:, mi] = cm["gwl_year"]; gwl_now[mi] = float(cm["gwl_now"])
+        for gi in range(NG):
+            ds = [deltas(cm["base"][s].astype("float64"), cm["gwl_fut"][gi, s].astype("float64"), mcfg) for s in range(S) if cm["gwl_year"][gi, s] > 0]
+            if not ds:
+                continue
+            with np.errstate(invalid="ignore"), __import__("warnings").catch_warnings():
+                __import__("warnings").simplefilter("ignore")
+                d = tuple(np.nanmean([x[j] for x in ds], axis=0) for j in range(4))
+            greach[gi, mi] = True
+            for which, bm in ((gfut, base_m), (gfutTC, tcbase)):
+                mon = apply_delta(bm, d)
+                which[:, gi, mi] = C.seasonalize({v: mon[v].T for v in MON}).T
+                if which is gfut:
+                    for e, en in enumerate(EN):
+                        if mi in ens[en]:
+                            gens_mon[gi, e, 0] += mon["tmax"]; gens_mon[gi, e, 1] += mon["tmin"]; gens_mon[gi, e, 2] += mon["ppt"]
+    gn = np.array([[int(sum(greach[gi, mi] for mi in ens[en])) for en in EN] for gi in range(NG)])       # models per level and ensemble
+    gok = gn >= gmin                                                    # levels too few models reach are not offered
+    for gi in range(NG):
+        for e in range(len(EN)):
+            gens_mon[gi, e] /= max(gn[gi, e], 1)
     C.log.info("projections done (%.0fs); humidity filled by constant relative humidity for: %s", time.time() - t0, cc_fill)
+    C.log.info("warming levels %s: models reaching each (all, tcr_likely): %s", levels, gn.tolist())
 
     # ---------------------------------------------------------------- searches
     E = len(EN)
@@ -198,7 +241,9 @@ def run(cfg=None):
     sites = np.full((NT, P, S, E, mcfg["sites"]), -1, "int32"); site_sig = np.full((NT, P, S, E, mcfg["sites"]), np.nan, "float32")
     area2 = np.zeros((NT, P, S, E), "float32"); own = np.full((NT, P, S, E), np.nan, "float32")
     agree = np.full((NT, P, S, E), np.nan, "float32"); selfchk = np.full(NT, np.nan, "float32")
-    glob = {}
+    gbest_idx = np.full((NT, NG, E, 2), -1, "int32"); gbest_sig = np.full((NT, NG, E, 2), np.nan, "float32")
+    garea2 = np.zeros((NT, NG, E), "float32")
+    glob, gglob = {}, {}
     notNA = ~np.isin(wl["iso"], ["US", "CA", "MX"]) & (wl["iso"] != "")
     gsub = np.nonzero(notNA)[0]
     for k in np.where(~bad)[0]:
@@ -234,6 +279,20 @@ def run(cfg=None):
                         pk = pick_sites(D, pool["lat"], pool["lon"], mcfg["sites"], sep, first)
                         sites[k, p, s, e, :len(pk)] = pk
                         site_sig[k, p, s, e, :len(pk)] = C.chi_to_sigma(D[pk], sm.k)
+            for gi in range(NG):                                     # warming levels: ensembles of the models that reach each
+                fv = gfut[k, gi].astype("float64")
+                evs = np.stack([np.nanmean(fv[[i for i in ens[en] if greach[gi, i]]], 0) if gok[gi, e] else np.full(C.NV, np.nan)
+                                for e, en in enumerate(EN)])
+                Q = sm.project(C.transform(np.where(np.isfinite(evs), evs, 0.0))[:, midx]).astype("float32")
+                D2 = pn[:, None] - 2 * Pp @ Q.T + (Q ** 2).sum(1)[None]
+                for e in range(E):
+                    if not gok[gi, e]:
+                        continue
+                    D = np.sqrt(np.maximum(D2[:, e], 0)); i = int(D.argmin())
+                    gbest_idx[k, gi, e, meth] = i
+                    gbest_sig[k, gi, e, meth] = C.chi_to_sigma(D[i], sm.k)[0]
+                    if not meth:
+                        garea2[k, gi, e] = pool["km2"][D < dthr].sum()
         # worldwide matches for North American places whose best North American match is poor
         if G[k] == 0:
             need = [(p, s, e) for p in range(P) for s in range(S) for e in range(E) if best_sig[k, p, s, e, 0] >= mcfg["glob_trigger_sigma"]]
@@ -255,6 +314,25 @@ def run(cfg=None):
                     glob[(k, p, s, e)] = dict(s=float(C.chi_to_sigma(D[i], sm.k)[0]), n=len(ens[EN[e]]),
                                               a=int((C.haversine_km(glat[mb], glon[mb], glat[i], glon[i]) < mcfg["agree_km_world"]).sum()),
                                               cells=[int(gsub[j]) for j in pk], sig=[float(x) for x in C.chi_to_sigma(D[pk], sm.k)])
+            gneed = [(gi, e) for gi in range(NG) for e in range(E) if gok[gi, e] and gbest_sig[k, gi, e, 0] >= mcfg["glob_trigger_sigma"]]
+            if gneed:                                              # the same worldwide search for the warming levels
+                sm = SH[k]
+                Pg = sm.project(wl["tr"][gsub]).astype("float32")
+                pg = (Pg ** 2).sum(1)
+                glat, glon = wl["lat"][gsub], wl["lon"][gsub]
+                for gi, e in gneed:
+                    rm = [i for i in ens[EN[e]] if greach[gi, i]]
+                    fv = gfutTC[k, gi].astype("float64")
+                    Q = sm.project(C.transform(np.vstack([fv, fv[rm].mean(0)]))[:, midx]).astype("float32")
+                    D2 = pg[:, None] - 2 * Pg @ Q.T + (Q ** 2).sum(1)[None]
+                    am = D2.argmin(0)
+                    D = np.sqrt(np.maximum(D2[:, -1], 0))
+                    i = int(am[-1])
+                    mb = am[rm]
+                    pk = pick_sites(D, glat, glon, mcfg["sites"], mcfg["sep_km_world"], 3000)
+                    gglob[(k, gi, e)] = dict(s=float(C.chi_to_sigma(D[i], sm.k)[0]), n=len(rm),
+                                             a=int((C.haversine_km(glat[mb], glon[mb], glat[i], glon[i]) < mcfg["agree_km_world"]).sum()),
+                                             cells=[int(gsub[j]) for j in pk], sig=[float(x) for x in C.chi_to_sigma(D[pk], sm.k)])
         if k % 100 == 0:
             C.log.info("searched %d/%d %s (%.0fs)", k, NT, T.label[k], time.time() - t0)
 
@@ -267,6 +345,13 @@ def run(cfg=None):
                 fe = F.all_features(ens_mon[p, s, e, 0].T, ens_mon[p, s, e, 1].T, ens_mon[p, s, e, 2].T, cal)
                 for kk in fe:
                     ffut[kk][:, p, s, e] = fe[kk]
+    gffut = {kk: np.zeros((NT, NG, E), v.dtype) for kk, v in fnow.items()}          # warming-level features
+    for gi in range(NG):
+        for e in range(E):
+            if gok[gi, e]:
+                fe = F.all_features(gens_mon[gi, e, 0].T, gens_mon[gi, e, 1].T, gens_mon[gi, e, 2].T, cal)
+                for kk in fe:
+                    gffut[kk][:, gi, e] = fe[kk]
     n_rec = cfg["recent"]["years"]
     rec_years = [y for y in range(latest - n_rec + 1, latest + 1) if y in set(years_tc.tolist())]
     base_have = [y for y in base_years if y in set(years_tc.tolist())]
@@ -310,8 +395,10 @@ def run(cfg=None):
                    int((era5_sig > cfg["era5"]["agree_poor"]).sum()), cfg["era5"]["agree_poor"])   # END era5-agreement
 
     gk = sorted(glob)
+    ggk = sorted(gglob)
+    ns = mcfg["sites"]
     C.save(C.work("results.npz"),
-           midx=midx, bad=bad, icv_src=icv_src, base=base.astype("float32"), fut=fut, icvsd=icvsd.astype("float32"),
+           midx=midx, bad=bad, icv_src=icv_src, base=base.astype("float32"), base_mon=np.stack([base_m[v] for v in MON]).astype("float32"), fut=fut, icvsd=icvsd.astype("float32"),
            Msh=np.array([SH[k].M() if SH[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            Mtr=np.array([TR[k].M(K) if TR[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            kdef=np.array([TR[k].k if TR[k] else 0 for k in range(NT)]), alpha=np.array([SH[k].alpha if SH[k] else np.nan for k in range(NT)]),
@@ -328,5 +415,12 @@ def run(cfg=None):
            glob_a=np.array([glob[x]["a"] for x in gk], "int32"), glob_n=np.array([glob[x]["n"] for x in gk], "int32"),
            glob_cells=np.array([glob[x]["cells"] + [-1] * (mcfg["sites"] - len(glob[x]["cells"])) for x in gk], "int32").reshape(-1, mcfg["sites"]),
            glob_sig=np.array([glob[x]["sig"] + [np.nan] * (mcfg["sites"] - len(glob[x]["sig"])) for x in gk], "float32").reshape(-1, mcfg["sites"]),
+           gwl_levels=np.array(levels, "float64"), gwl_fut=gfut, gwl_reach=greach, gwl_year=gyear, gwl_n=gn, gwl_ok=gok, gwl_now=gwl_now,
+           gwl_best_idx=gbest_idx, gwl_best_sig=gbest_sig, gwl_area2=garea2,
+           gf_kg=gffut["kg"], gf_zone=gffut["zone"], gf_ffp=gffut["ffp"],
+           gglob_keys=np.array(ggk, "int32").reshape(-1, 3), gglob_s=np.array([gglob[x]["s"] for x in ggk], "float32"),
+           gglob_a=np.array([gglob[x]["a"] for x in ggk], "int32"), gglob_n=np.array([gglob[x]["n"] for x in ggk], "int32"),
+           gglob_cells=np.array([gglob[x]["cells"] + [-1] * (ns - len(gglob[x]["cells"])) for x in ggk], "int32").reshape(-1, ns),
+           gglob_sig=np.array([gglob[x]["sig"] + [np.nan] * (ns - len(gglob[x]["sig"])) for x in ggk], "float32").reshape(-1, ns),
            latest=np.array(latest), data_years=np.array([b0, b1]))
     C.log.info("analogs done (%.0fs)", time.time() - t0)

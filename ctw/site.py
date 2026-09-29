@@ -72,6 +72,17 @@ def hindcast_html() -> str:
             "not that moving to it is warranted.</p>")
 
 
+def place_counts(S) -> dict:
+    """Place counts for the methods page, from the places actually in the build (summary.json) and the place lists."""
+    T = C.targets()
+    T = T[T.label.isin(S["places"])]
+    na, w = T[T.g == 0], T[T.g == 1]
+    n = lambda x: f"{int(x):,}"                                                    # noqa: E731
+    return {"N_PLACES": n(len(T)), "N_NA": n(len(na)), "N_WORLD": n(len(w)), "N_COUNTRIES": n(w.country.nunique()),
+            "N_CONUS": n((na.domain == "conus").sum()), "N_AK": n(((na.country == "US") & (na.domain == "na")).sum()),
+            "N_CA": n((na.country == "CA").sum()), "N_MX": n((na.country == "MX").sum())}
+
+
 def run(cfg=None):
     cfg = cfg or C.config()
     S = json.load(open(C.SITE / "data" / "summary.json"))
@@ -91,11 +102,12 @@ def run(cfg=None):
              "HZ_R2": f"{na['hardiness']['r2']:.2f}", "HZ_ERR": f"{na['hardiness']['median_abs_err_c']:.1f}",
              "HZ_SAME": f"{na['hardiness']['same_half_zone']:.0%}", "HZ_ONE": f"{na['hardiness']['within_one_half_zone']:.0%}",
              "FFP_R2": f"{na['ffp']['r2']:.2f}", "FFP_ERR": f"{na['ffp']['median_abs_err_days']:.0f}",
-             "SELFCHK": f"{S['selfchk_median']:.2f}", "SL_N": str(S["sealevel_places"]),
+             "SELFCHK": f"{S['selfchk_median']:.2f}", "GWL_NOW": f"{S.get('gwl_now', 0.9):.1f}", "MEMBERS_MAX": str(cfg["models"].get("members_max", 1)), "SL_N": str(S["sealevel_places"]),
              "REPO_LINK": (f'<a href="{cfg["release"]["repo_url"]}">{cfg["release"]["repo_url"]}</a>' if cfg["release"].get("repo_url") else "source code in the project repository")}
     fills["TROPICS_TABLE"] = tropics_rows(S)
     fills["ERA5_BLOCK"] = era5_html(S)                                  # era5-agreement
     fills["HINDCAST_BLOCK"] = hindcast_html()                           # hindcast
+    fills.update(place_counts(S))
     for k, v in fills.items():
         m = m.replace("{{" + k + "}}", v)
     m = m.replace("__SITE_URL__", url)
@@ -111,12 +123,16 @@ def run(cfg=None):
     if old.exists():                                               # a page-only rebuild keeps the recorded versions
         manifest = {**json.load(open(old)), **manifest}
     try:
-        vers = {}
+        vers, mems = {}, {}
         for mm in C.models(cfg):
             z = C.load(C.work("cmip6", f"{mm['name']}.npz"))
             vers.update(json.loads(str(z["versions"])))
+            if "members" in z:                                     # ensemble members averaged for this model
+                mems[mm["name"]] = json.loads(str(z["members"]))["used"]
         if vers:
             manifest["cmip6_versions"] = vers
+        if mems:
+            manifest["cmip6_members"] = mems
     except Exception:  # noqa: BLE001
         pass
     json.dump(manifest, open(C.SITE / "data" / "manifest.json", "w"), indent=1)

@@ -822,3 +822,776 @@ label,country,country_name,admin1,lat,lon,pop,capital
 "Saint George's, Grenada",GD,Grenada,Saint George Parish,12.05288,-61.75226,7500,True
 "Palikir, Micronesia",FM,Micronesia,Pohnpei State,6.92477,158.16109,6942,True
 "Funafuti, Tuvalu",TV,Tuvalu,Funafuti,-8.52425,179.19417,6320,True
+"Al Ain City, UAE",AE,UAE,,24.192,55.761,846747,False
+"Vlorë, Albania",AL,Albania,,40.47,19.484,115261,False
+"Elbasan, Albania",AL,Albania,,41.111,20.082,100903,False
+"Gyumri, Armenia",AM,Armenia,,40.793,43.846,112301,False
+"Kajaran, Armenia",AM,Armenia,,39.151,46.157,6535,False
+"Graz, Austria",AT,Austria,,47.067,15.442,303270,False
+"Hammarland, Åland",AX,Åland,,60.217,19.75,1395,False
+"Bomarsund, Åland",AX,Åland,,60.212,20.24,1016,False
+"Sumqayıt, Azerbaijan",AZ,Azerbaijan,,40.59,49.669,358675,False
+"Ganja, Azerbaijan",AZ,Azerbaijan,,40.682,46.361,335600,False
+"Banja Luka, Bosnia and Herz.",BA,Bosnia and Herz.,,44.779,17.206,221106,False
+"Zenica, Bosnia and Herz.",BA,Bosnia and Herz.,,44.202,17.904,164423,False
+"Antwerpen, Belgium",BE,Belgium,,51.22,4.4,529247,False
+"Gent, Belgium",BE,Belgium,,51.05,3.717,265086,False
+"Koudougou, Burkina Faso",BF,Burkina Faso,,12.253,-2.363,160239,False
+"Plovdiv, Bulgaria",BG,Bulgaria,,42.154,24.75,346893,False
+"Varna, Bulgaria",BG,Bulgaria,,43.219,27.91,312770,False
+"Rumonge, Burundi",BI,Burundi,,-3.974,29.439,55599,False
+"Cibitoke, Burundi",BI,Burundi,,-2.887,29.125,36959,False
+"Abomey-Calavi, Benin",BJ,Benin,,6.449,2.356,385755,False
+"Porto-Novo, Benin",BJ,Benin,,6.496,2.604,264320,False
+"Seria, Brunei",BN,Brunei,,4.606,114.325,30097,False
+"Kiudang, Brunei",BN,Brunei,,4.75,114.733,5063,False
+"West End, Bahamas",BS,Bahamas,,26.687,-78.977,12724,False
+"Cooper’s Town, Bahamas",BS,Bahamas,,26.871,-77.511,8413,False
+"Tsirang, Bhutan",BT,Bhutan,,27.022,90.123,22376,False
+"Punākha, Bhutan",BT,Bhutan,,27.591,89.877,21500,False
+"Francistown, Botswana",BW,Botswana,,-21.17,27.508,103417,False
+"Maun, Botswana",BW,Botswana,,-19.983,23.417,85350,False
+"Punta Gorda, Belize",BZ,Belize,,16.098,-88.81,5406,False
+"Bullet Tree Falls, Belize",BZ,Belize,,17.168,-89.111,3932,False
+"Bimbo, Central African Rep.",CF,Central African Rep.,,4.257,18.416,348802,False
+"Bégoua, Central African Rep.",CF,Central African Rep.,,4.454,18.535,264067,False
+"Dolisie, Congo",CG,Congo,,-4.198,12.667,121000,False
+"Nkayi, Congo",CG,Congo,,-4.184,13.286,103000,False
+"Zürich, Switzerland",CH,Switzerland,,47.367,8.55,415367,False
+"Genève, Switzerland",CH,Switzerland,,46.202,6.146,201741,False
+"Limón, Costa Rica",CR,Costa Rica,,9.991,-83.036,63081,False
+"San Isidro, Costa Rica",CR,Costa Rica,,9.367,-83.697,34877,False
+"Tarrafal, Cabo Verde",CV,Cabo Verde,,15.279,-23.752,13483,False
+"Sal Rei, Cabo Verde",CV,Cabo Verde,,16.176,-22.917,10936,False
+"Willemstad, Curaçao",CW,Curaçao,,12.122,-68.886,125000,False
+"Limassol, Cyprus",CY,Cyprus,,34.684,33.038,154000,False
+"Lefkónoiko, Cyprus",CY,Cyprus,,35.26,33.732,3187,False
+"Brno, Czechia",CZ,Czechia,,49.195,16.608,379466,False
+"Ostrava, Czechia",CZ,Czechia,,49.835,18.282,279791,False
+"Ali Sabih, Djibouti",DJ,Djibouti,,11.156,42.712,50006,False
+"Dikhil, Djibouti",DJ,Djibouti,,11.105,42.37,32801,False
+"Århus, Denmark",DK,Denmark,,56.157,10.211,285273,False
+"Odense, Denmark",DK,Denmark,,55.396,10.388,180863,False
+"Berekua, Dominica",DM,Dominica,,15.233,-61.317,2608,False
+"Calibishie, Dominica",DM,Dominica,,15.593,-61.349,1020,False
+"Santo Domingo Oeste, Dominican Rep.",DO,Dominican Rep.,,18.5,-70.0,701269,False
+"Cuenca, Ecuador",EC,Ecuador,,-2.895,-78.996,636996,False
+"Kuressaare, Estonia",EE,Estonia,,58.254,22.492,12698,False
+"Sillamäe, Estonia",EE,Estonia,,59.397,27.763,12480,False
+"Boujdour, W. Sahara",EH,W. Sahara,,26.131,-14.485,42651,False
+"Laayoune Plage, W. Sahara",EH,W. Sahara,,27.096,-13.416,10450,False
+"Keren, Eritrea",ER,Eritrea,,15.778,38.451,74800,False
+"Himora, Eritrea",ER,Eritrea,,14.304,36.606,46100,False
+"Espoo, Finland",FI,Finland,,60.205,24.652,256760,False
+"Nadi, Fiji",FJ,Fiji,,-17.803,177.416,42284,False
+"Labasa, Fiji",FJ,Fiji,,-16.433,179.365,27949,False
+"Stanley, Falkland Is.",FK,Falkland Is.,,-51.694,-57.857,2213,False
+"Argir, Faeroe Is.",FO,Faeroe Is.,,61.996,-6.772,2504,False
+"Fuglafjørður, Faeroe Is.",FO,Faeroe Is.,,62.244,-6.814,1542,False
+"Vestmanna, Faeroe Is.",FO,Faeroe Is.,,62.154,-7.173,1268,False
+"Port-Gentil, Gabon",GA,Gabon,,-0.719,8.782,164018,False
+"Franceville, Gabon",GA,Gabon,,-1.633,13.584,132895,False
+"Batumi, Georgia",GE,Georgia,,41.641,41.631,186949,False
+"Kutaisi, Georgia",GE,Georgia,,42.268,42.695,135201,False
+"Saint-Laurent-du-Maroni, French Guiana",GF,French Guiana,,5.502,-54.029,24287,False
+"Kourou, French Guiana",GF,French Guiana,,5.163,-52.643,24029,False
+"Apatou, French Guiana",GF,French Guiana,,5.155,-54.343,10059,False
+"Nuuk, Greenland",GL,Greenland,,64.183,-51.722,14798,False
+"Sisimiut, Greenland",GL,Greenland,,66.939,-53.673,5227,False
+"Ilulissat, Greenland",GL,Greenland,,69.22,-51.099,4413,False
+"Sanyang, Gambia",GM,Gambia,,13.267,-16.761,15090,False
+"Demba Kunda, Gambia",GM,Gambia,,13.25,-14.267,4817,False
+"Nzérékoré, Guinea",GN,Guinea,,7.756,-8.818,226426,False
+"Kankan, Guinea",GN,Guinea,,10.385,-9.306,221428,False
+"Bata, Equatorial Guinea",GQ,Equatorial Guinea,,1.864,9.766,173046,False
+"Ebebiyin, Equatorial Guinea",GQ,Equatorial Guinea,,2.152,11.33,24831,False
+"Thessaloníki, Greece",GR,Greece,,40.641,22.935,317778,False
+"Pátra, Greece",GR,Greece,,38.246,21.735,168034,False
+"Cobán, Guatemala",GT,Guatemala,,15.47,-90.375,212047,False
+"Quetzaltenango, Guatemala",GT,Guatemala,,14.845,-91.523,180706,False
+"Gabú, Guinea-Bissau",GW,Guinea-Bissau,,12.28,-14.222,49371,False
+"Bafatá, Guinea-Bissau",GW,Guinea-Bissau,,12.166,-14.662,33502,False
+"Linden, Guyana",GY,Guyana,,6.008,-58.307,44690,False
+"New Amsterdam, Guyana",GY,Guyana,,6.249,-57.516,35039,False
+"Hong Kong, Hong Kong",HK,Hong Kong,,22.278,114.175,7396076,False
+"Sha Tau Kok, Hong Kong",HK,Hong Kong,,22.546,114.224,5001,False
+"Tai O, Hong Kong",HK,Hong Kong,,22.255,113.863,3300,False
+"San Pedro Sula, Honduras",HN,Honduras,,15.506,-88.026,801259,False
+"La Ceiba, Honduras",HN,Honduras,,15.76,-86.782,222055,False
+"Split, Croatia",HR,Croatia,,43.509,16.439,149830,False
+"Rijeka, Croatia",HR,Croatia,,45.327,14.442,107964,False
+"Port-de-Paix, Haiti",HT,Haiti,,19.94,-72.83,306217,False
+"Croix-des-Bouquets, Haiti",HT,Haiti,,18.577,-72.226,229127,False
+"Debrecen, Hungary",HU,Hungary,,47.532,21.624,202402,False
+"Szeged, Hungary",HU,Hungary,,46.253,20.148,160766,False
+"Cork, Ireland",IE,Ireland,,51.898,-8.471,190384,False
+"Tralee, Ireland",IE,Ireland,,52.27,-9.703,22941,False
+"Haifa, Israel",IL,Israel,,32.813,34.999,285316,False
+"Netanya, Israel",IL,Israel,,32.333,34.86,228204,False
+"Peel, Isle of Man",IM,Isle of Man,,54.222,-4.691,5374,False
+"Akureyri, Iceland",IS,Iceland,,65.684,-18.088,19219,False
+"Mosfellsbær, Iceland",IS,Iceland,,64.167,-21.7,12073,False
+"Spanish Town, Jamaica",JM,Jamaica,,17.991,-76.957,145018,False
+"Annotto Bay, Jamaica",JM,Jamaica,,18.272,-76.765,5504,False
+"Zarqa, Jordan",JO,Jordan,,32.073,36.088,792665,False
+"Irbid, Jordan",JO,Jordan,,32.556,35.85,569068,False
+"Osh, Kyrgyzstan",KG,Kyrgyzstan,,40.528,72.799,322164,False
+"Jalal-Abad, Kyrgyzstan",KG,Kyrgyzstan,,40.945,72.993,123239,False
+"Takeo, Cambodia",KH,Cambodia,,10.991,104.785,843931,False
+"Siem Reap, Cambodia",KH,Cambodia,,13.362,103.861,139458,False
+"Banana Village, Kiribati",KI,Kiribati,,1.983,-157.365,1170,False
+"Mramani, Comoros",KM,Comoros,,-12.346,44.529,5126,False
+"Hamhŭng, North Korea",KP,North Korea,,39.918,127.536,559056,False
+"Al Aḩmadī, Kuwait",KW,Kuwait,,29.077,48.084,637411,False
+"Al Jahrā’, Kuwait",KW,Kuwait,,29.337,47.658,24281,False
+"Savannakhet, Laos",LA,Laos,,16.57,104.762,125760,False
+"Pakse, Laos",LA,Laos,,15.12,105.799,88332,False
+"Tripoli, Lebanon",LB,Lebanon,,34.434,35.844,229398,False
+"Tyre, Lebanon",LB,Lebanon,,33.273,35.194,135204,False
+"Maharagama, Sri Lanka",LK,Sri Lanka,,6.848,79.927,195355,False
+"Jaffna, Sri Lanka",LK,Sri Lanka,,9.668,80.007,169102,False
+"Gbarnga, Liberia",LR,Liberia,,6.995,-9.471,86031,False
+"Buchanan, Liberia",LR,Liberia,,5.877,-10.05,75854,False
+"Mafeteng, Lesotho",LS,Lesotho,,-29.823,27.237,45287,False
+"Butha-Buthe, Lesotho",LS,Lesotho,,-28.767,28.249,40599,False
+"Kaunas, Lithuania",LT,Lithuania,,54.902,23.909,289380,False
+"Klaipėda, Lithuania",LT,Lithuania,,55.707,21.139,172292,False
+"Larochette, Luxembourg",LU,Luxembourg,,49.784,6.219,1410,False
+"Daugavpils, Latvia",LV,Latvia,,55.883,26.533,78126,False
+"Sigulda, Latvia",LV,Latvia,,57.154,24.86,14757,False
+"Tiraspol, Moldova",MD,Moldova,,46.843,29.628,157000,False
+"Bălţi, Moldova",MD,Moldova,,47.763,27.929,125000,False
+"Nikšić, Montenegro",ME,Montenegro,,42.773,18.944,58212,False
+"Pljevlja, Montenegro",ME,Montenegro,,43.357,19.358,19489,False
+"Prilep, North Macedonia",MK,North Macedonia,,41.346,21.554,73814,False
+"Veles, North Macedonia",MK,North Macedonia,,41.717,21.772,57873,False
+"Sikasso, Mali",ML,Mali,,11.318,-5.667,349324,False
+"Erdenet, Mongolia",MN,Mongolia,,49.033,104.083,97814,False
+"Darhan, Mongolia",MN,Mongolia,,49.487,105.923,83883,False
+"Nouadhibou, Mauritania",MR,Mauritania,,20.942,-17.038,146048,False
+"Kiffa, Mauritania",MR,Mauritania,,16.621,-11.402,62051,False
+"Salem, Montserrat",MS,Montserrat,,16.751,-62.222,1140,False
+"Bel Air Rivière Sèche, Mauritius",MU,Mauritius,,-20.258,57.75,18036,False
+"Baie aux Huîtres, Mauritius",MU,Mauritius,,-19.694,63.408,2500,False
+"Mzuzu, Malawi",MW,Malawi,,-11.466,34.021,249564,False
+"Rundu, Namibia",NA,Namibia,,-17.918,19.773,75180,False
+"Walvis Bay, Namibia",NA,Namibia,,-22.957,14.505,73598,False
+"Païta, New Caledonia",NC,New Caledonia,,-22.131,166.357,12617,False
+"Wé, New Caledonia",NC,New Caledonia,,-20.917,167.265,10375,False
+"Houaïlou, New Caledonia",NC,New Caledonia,,-21.283,165.617,4562,False
+"León, Nicaragua",NI,Nicaragua,,12.435,-86.879,144538,False
+"Masaya, Nicaragua",NI,Nicaragua,,11.973,-86.096,130113,False
+"The Hague, Netherlands",NL,Netherlands,,52.077,4.299,474292,False
+"Groningen, Netherlands",NL,Netherlands,,53.219,6.567,244807,False
+"Bergen, Norway",NO,Norway,,60.393,5.324,294029,False
+"Trondheim, Norway",NO,Norway,,63.43,10.395,216518,False
+"Pokhara, Nepal",NP,Nepal,,28.267,83.969,599504,False
+"Bharatpur, Nepal",NP,Nepal,,27.677,84.436,369377,False
+"Seeb, Oman",OM,Oman,,23.67,58.189,470878,False
+"Juan Díaz, Panama",PA,Panama,,9.041,-79.441,100636,False
+"Puerto Escondido, Panama",PA,Panama,,9.194,-80.096,12371,False
+"Pueu, Fr. Polynesia",PF,Fr. Polynesia,,-17.738,-149.224,1968,False
+"Lae, Papua New Guinea",PG,Papua New Guinea,,-6.723,146.996,76255,False
+"Saint-Pierre, St. Pierre and Miquelon",PM,St. Pierre and Miquelon,,46.779,-56.177,6200,False
+"Carolina, Puerto Rico",PR,Puerto Rico,,18.381,-65.957,170404,False
+"Ponce, Puerto Rico",PR,Puerto Rico,,18.01,-66.624,137491,False
+"Hebron, Palestine",PS,Palestine,,31.529,35.094,160470,False
+"Nablus, Palestine",PS,Palestine,,32.221,35.254,130326,False
+"Rafaḩ, Palestine",PS,Palestine,,31.297,34.244,126305,False
+"Capiatá, Paraguay",PY,Paraguay,,-25.355,-57.445,198553,False
+"Ar Rayyān, Qatar",QA,Qatar,,25.292,51.424,272465,False
+"Ash Shīḩānīyah, Qatar",QA,Qatar,,25.371,51.223,8380,False
+"Saint-Denis, Réunion",RE,Réunion,,-20.882,55.45,154765,False
+"Saint-Paul, Réunion",RE,Réunion,,-21.01,55.271,105240,False
+"Piton Saint-Leu, Réunion",RE,Réunion,,-21.22,55.315,29278,False
+"Iaşi, Romania",RO,Romania,,47.167,27.6,378954,False
+"Niš, Serbia",RS,Serbia,,43.325,21.903,250000,False
+"Novi Sad, Serbia",RS,Serbia,,45.252,19.837,215400,False
+"Gisenyi, Rwanda",RW,Rwanda,,-1.703,29.256,172357,False
+"Musanze, Rwanda",RW,Rwanda,,-1.5,29.635,153368,False
+"Malango, Solomon Is.",SB,Solomon Is.,,-9.425,160.053,15560,False
+"Malango, Solomon Is.",SB,Solomon Is.,,-9.695,159.717,10532,False
+"Malmö, Sweden",SE,Sweden,,55.606,13.001,362133,False
+"Jurong Town, Singapore",SG,Singapore,,1.334,103.723,262730,False
+"Celje, Slovenia",SI,Slovenia,,46.231,15.26,38059,False
+"Novo Mesto, Slovenia",SI,Slovenia,,45.804,15.169,24446,False
+"Bratislava, Slovakia",SK,Slovakia,,48.148,17.107,423737,False
+"Košice, Slovakia",SK,Slovakia,,48.714,21.258,225044,False
+"Žilina, Slovakia",SK,Slovakia,,49.223,18.739,81219,False
+"Bo, Sierra Leone",SL,Sierra Leone,,7.965,-11.738,174354,False
+"Kenema, Sierra Leone",SL,Sierra Leone,,7.877,-11.19,143137,False
+"Thiès, Senegal",SN,Senegal,,14.789,-16.926,317763,False
+"Lelydorp, Suriname",SR,Suriname,,5.7,-55.233,18223,False
+"Brokopondo, Suriname",SR,Suriname,,5.056,-54.98,14662,False
+"Água Izé, São Tomé and Principe",ST,São Tomé and Principe,,0.22,6.728,7445,False
+"San Miguel, El Salvador",SV,El Salvador,,13.483,-88.182,247126,False
+"Santa Ana, El Salvador",SV,El Salvador,,13.988,-89.557,176661,False
+"Homs, Syria",SY,Syria,,34.724,36.726,775404,False
+"Mbabane, Eswatini",SZ,Eswatini,,-26.317,31.133,76218,False
+"Nhlangano, Eswatini",SZ,Eswatini,,-27.112,31.198,9016,False
+"Providenciales, Turks and Caicos Is.",TC,Turks and Caicos Is.,,21.783,-72.252,23769,False
+"Sokodé, Togo",TG,Togo,,8.983,1.133,117811,False
+"Kara, Togo",TG,Togo,,9.551,1.186,104207,False
+"Chon Buri, Thailand",TH,Thailand,,13.362,100.983,219164,False
+"Isfara, Tajikistan",TJ,Tajikistan,,40.126,70.625,274000,False
+"Istaravshan, Tajikistan",TJ,Tajikistan,,39.914,69.003,273500,False
+"Suai, Timor-Leste",TL,Timor-Leste,,-9.313,125.256,21539,False
+"Maubara, Timor-Leste",TL,Timor-Leste,,-8.612,125.206,16300,False
+"Daşoguz, Turkmenistan",TM,Turkmenistan,,41.836,59.967,166500,False
+"Sfax, Tunisia",TN,Tunisia,,34.741,10.76,280566,False
+"Sousse, Tunisia",TN,Tunisia,,35.825,10.637,221715,False
+"Rio Claro, Trinidad and Tobago",TT,Trinidad and Tobago,,10.306,-61.176,35650,False
+"Arima, Trinidad and Tobago",TT,Trinidad and Tobago,,10.637,-61.282,35000,False
+"Mbarara, Uganda",UG,Uganda,,-0.605,30.649,221300,False
+"Kasangati, Uganda",UG,Uganda,,0.438,32.602,207800,False
+"Rivera, Uruguay",UY,Uruguay,,-30.905,-55.551,64631,False
+"Tacuarembó, Uruguay",UY,Uruguay,,-31.719,-55.979,51854,False
+"Cruz Bay, U.S. Virgin Is.",VI,U.S. Virgin Is.,,18.331,-64.794,2743,False
+"Luganville, Vanuatu",VU,Vanuatu,,-15.52,167.162,13397,False
+"Norsup, Vanuatu",VU,Vanuatu,,-16.065,167.397,2998,False
+"Asau, Samoa",WS,Samoa,,-13.52,-172.638,6643,False
+"Gataivai, Samoa",WS,Samoa,,-13.774,-172.388,1141,False
+"Prizren, Kosovo",XK,Kosovo,,42.214,20.74,171464,False
+"Mitrovicë, Kosovo",XK,Kosovo,,42.883,20.867,107045,False
+"Kitwe, Zambia",ZM,Zambia,,-12.802,28.213,665961,False
+"Chitungwiza, Zimbabwe",ZW,Zimbabwe,,-18.013,31.076,371246,False
+"Zaria, Nigeria",NG,Nigeria,,11.111,7.723,980000,False
+"Enugu, Nigeria",NG,Nigeria,,6.441,7.499,950000,False
+"Taiz, Yemen",YE,Yemen,,13.58,44.021,940600,False
+"Cartagena, Colombia",CO,Colombia,,10.398,-75.493,914552,False
+"Warri, Nigeria",NG,Nigeria,,5.517,5.75,910000,False
+"Naples, Italy",IT,Italy,,40.852,14.268,909048,False
+"Qom, Iran",IR,Iran,,34.64,50.876,900000,False
+"As Sulaymānīyah, Iraq",IQ,Iraq,,35.565,45.433,878146,False
+"Ahvaz, Iran",IR,Iran,,31.319,48.684,841145,False
+"Bouaké, Côte d'Ivoire",CI,Côte d'Ivoire,,7.694,-5.03,832371,False
+"João Pessoa, Brazil",BR,Brazil,,-7.115,-34.863,817511,False
+"Malatya, Turkey",TR,Turkey,,38.35,38.317,806156,False
+"Eskişehir, Turkey",TR,Turkey,,39.777,30.521,789023,False
+"Port Said, Egypt",EG,Egypt,,31.265,32.302,780515,False
+"Bareilly, India",IN,India,,28.367,79.432,745435,False
+"Al Ḩudaydah, Yemen",YE,Yemen,,14.798,42.955,734699,False
+"Akure, Nigeria",NG,Nigeria,,7.253,5.193,730000,False
+"São José dos Campos, Brazil",BR,Brazil,,-23.179,-45.887,729737,False
+"Zanzibar, Tanzania",TZ,Tanzania,,-6.164,39.198,709809,False
+"Latakia, Syria",SY,Syria,,35.531,35.791,709000,False
+"Suez, Egypt",EG,Egypt,,29.974,32.526,699541,False
+"Bauchi, Nigeria",NG,Nigeria,,10.31,9.844,693700,False
+"Katsina, Nigeria",NG,Nigeria,,12.991,7.602,670000,False
+"Frankfurt am Main, Germany",DE,Germany,,50.116,8.684,650000,False
+"Maturín, Venezuela",VE,Venezuela,,9.746,-63.183,647459,False
+"Bikaner, India",IN,India,,28.018,73.315,644406,False
+"Gold Coast, Australia",AU,Australia,,-28.0,153.431,640778,False
+"Likasi, DR Congo",CD,DR Congo,,-10.983,26.738,635768,False
+"Tshikapa, DR Congo",CD,DR Congo,,-6.416,20.8,634529,False
+"Barnaul, Russia",RU,Russia,,53.362,83.728,632372,False
+"Kermanshah, Iran",IR,Iran,,34.314,47.065,621100,False
+"Feira de Santana, Brazil",BR,Brazil,,-12.267,-38.967,619609,False
+"Jambi City, Indonesia",ID,Indonesia,,-1.6,103.617,606200,False
+"Borama, Somalia",SO,Somalia,,9.936,43.183,597842,False
+"Samarkand, Uzbekistan",UZ,Uzbekistan,,39.655,66.964,595200,False
+"Bucaramanga, Colombia",CO,Colombia,,7.125,-73.119,581130,False
+"Orūmīyeh, Iran",IR,Iran,,37.553,45.076,577307,False
+"Tanta, Egypt",EG,Egypt,,30.788,31.002,576648,False
+"Juiz de Fora, Brazil",BR,Brazil,,-21.764,-43.35,573285,False
+"Nakuru, Kenya",KE,Kenya,,-0.307,36.072,570674,False
+"Nasiriyah, Iraq",IQ,Iraq,,31.058,46.257,558400,False
+"Chiclayo, Peru",PE,Peru,,-6.77,-79.855,552508,False
+"Cabinda, Angola",AO,Angola,,-5.562,12.195,550000,False
+"Kolhāpur, India",IN,India,,16.696,74.232,549236,False
+"Kuantan, Malaysia",MY,Malaysia,,3.808,103.326,548014,False
+"Calabar, Nigeria",NG,Nigeria,,4.959,8.327,540000,False
+"Oujda, Morocco",MA,Morocco,,34.681,-1.909,539711,False
+"Ryazan’, Russia",RU,Russia,,54.627,39.704,538962,False
+"Ar Raqqah, Syria",SY,Syria,,35.953,39.008,531952,False
+"Ibagué, Colombia",CO,Colombia,,4.436,-75.203,529635,False
+"Qui Nhon, Vietnam",VN,Vietnam,,13.776,109.224,519208,False
+"Al Fayyum, Egypt",EG,Egypt,,29.31,30.842,519047,False
+"Newcastle, Australia",AU,Australia,,-32.93,151.78,508437,False
+"Arāk, Iran",IR,Iran,,34.095,49.698,503647,False
+"Kota Kinabalu, Malaysia",MY,Malaysia,,5.975,116.072,500421,False
+"Santa Marta, Colombia",CO,Colombia,,11.239,-74.194,499192,False
+"Karagandy, Kazakhstan",KZ,Kazakhstan,,49.802,73.102,497777,False
+"Valledupar, Colombia",CO,Colombia,,10.465,-73.253,490075,False
+"Jianshui, China",CN,China,,24.277,101.224,490000,False
+"Jijiga, Ethiopia",ET,Ethiopia,,9.35,42.8,483000,False
+"Najaf, Iraq",IQ,Iraq,,32.026,44.346,482576,False
+"São José do Rio Preto, Brazil",BR,Brazil,,-20.82,-49.379,480393,False
+"Okene, Nigeria",NG,Nigeria,,7.551,6.236,479178,False
+"Yan’an, China",CN,China,,36.599,109.492,475234,False
+"Murcia, Spain",ES,Spain,,37.987,-1.13,471982,False
+"Morogoro, Tanzania",TZ,Tanzania,,-6.821,37.661,471409,False
+"Joinville, Brazil",BR,Brazil,,-26.304,-48.846,461304,False
+"Kurnool, India",IN,India,,15.829,78.036,460184,False
+"Yola, Nigeria",NG,Nigeria,,9.208,12.481,460000,False
+"Santo Domingo de los Colorados, Ecuador",EC,Ecuador,,-0.254,-79.176,458580,False
+"Nazrēt, Ethiopia",ET,Ethiopia,,8.55,39.267,456900,False
+"Huancayo, Peru",PE,Peru,,-12.069,-75.21,456250,False
+"Kahama, Tanzania",TZ,Tanzania,,-3.833,32.6,453654,False
+"Rāmgundam, India",IN,India,,18.801,79.452,452261,False
+"Batman, Turkey",TR,Turkey,,37.887,41.132,452157,False
+"Şanlıurfa, Turkey",TR,Turkey,,37.167,38.794,449549,False
+"Kursk, Russia",RU,Russia,,51.727,36.185,448733,False
+"Elazığ, Turkey",TR,Turkey,,38.674,39.223,443363,False
+"Manizales, Colombia",CO,Colombia,,5.067,-75.507,434403,False
+"Welkom, South Africa",ZA,South Africa,,-27.977,26.735,431944,False
+"Ismailia, Egypt",EG,Egypt,,30.604,32.272,429465,False
+"Akola, India",IN,India,,20.71,76.998,428857,False
+"Jiuquan, China",CN,China,,39.743,98.517,428346,False
+"Al Kharj, Saudi Arabia",SA,Saudi Arabia,,24.155,47.335,425300,False
+"Minna, Nigeria",NG,Nigeria,,9.615,6.548,425000,False
+"Al Ḩasakah, Syria",SY,Syria,,36.502,40.748,422445,False
+"Chimoio, Mozambique",MZ,Mozambique,,-19.116,33.483,422046,False
+"Daloa, Côte d'Ivoire",CI,Côte d'Ivoire,,6.877,-6.45,421871,False
+"Toyama, Japan",JP,Japan,,36.7,137.217,415844,False
+"Ciudad Bolívar, Venezuela",VE,Venezuela,,8.124,-63.547,412619,False
+"Ardabīl, Iran",IR,Iran,,38.25,48.293,410753,False
+"Caruaru, Brazil",BR,Brazil,,-8.283,-35.976,402290,False
+"Lekki, Nigeria",NG,Nigeria,,6.412,4.095,401272,False
+"Bida, Nigeria",NG,Nigeria,,9.08,6.01,400000,False
+"Barinas, Venezuela",VE,Venezuela,,8.621,-70.231,397279,False
+"Al Hoceïma, Morocco",MA,Morocco,,35.252,-3.937,395644,False
+"Tanga, Tanzania",TZ,Tanzania,,-5.069,39.099,393429,False
+"Santa Fe, Argentina",AR,Argentina,,-31.649,-60.709,391164,False
+"Makurdi, Nigeria",NG,Nigeria,,7.734,8.521,390000,False
+"Takoradi, Ghana",GH,Ghana,,4.898,-1.76,389114,False
+"Khamis Mushait, Saudi Arabia",SA,Saudi Arabia,,18.3,42.733,387553,False
+"Ambato, Ecuador",EC,Ecuador,,-1.249,-78.617,387309,False
+"Kahramanmaraş, Turkey",TR,Turkey,,37.585,36.926,384953,False
+"Caxias do Sul, Brazil",BR,Brazil,,-29.168,-51.179,381270,False
+"Aswān, Egypt",EG,Egypt,,24.091,32.899,379774,False
+"Bauru, Brazil",BR,Brazil,,-22.315,-49.061,379297,False
+"Rustenburg, South Africa",ZA,South Africa,,-25.668,27.242,373695,False
+"Emalahleni, South Africa",ZA,South Africa,,-25.871,29.233,373403,False
+"Tawau, Malaysia",MY,Malaysia,,4.245,117.891,372615,False
+"Uşak, Turkey",TR,Turkey,,38.674,29.406,369433,False
+"Iseyin, Nigeria",NG,Nigeria,,7.97,3.596,365300,False
+"Yenagoa, Nigeria",NG,Nigeria,,4.927,6.268,365000,False
+"Alanya, Turkey",TR,Turkey,,36.544,32.0,364180,False
+"Al Qadarif, Sudan",SD,Sudan,,14.035,35.383,363945,False
+"Blumenau, Brazil",BR,Brazil,,-26.919,-49.066,361855,False
+"Franca, Brazil",BR,Brazil,,-20.539,-47.401,358539,False
+"Taraz, Kazakhstan",KZ,Kazakhstan,,42.898,71.373,358153,False
+"Zanjan, Iran",IR,Iran,,36.676,48.496,357471,False
+"Neiva, Colombia",CO,Colombia,,2.93,-75.28,357392,False
+"Tete, Mozambique",MZ,Mozambique,,-16.156,33.587,357000,False
+"Misratah, Libya",LY,Libya,,32.375,15.093,355657,False
+"Cuíto, Angola",AO,Angola,,-12.383,16.933,355423,False
+"Ras Al Khaimah City, UAE",AE,UAE,,25.79,55.943,351943,False
+"Bahir Dar, Ethiopia",ET,Ethiopia,,11.594,37.391,350000,False
+"Sanandaj, Iran",IR,Iran,,35.315,46.999,349176,False
+"Campina Grande, Brazil",BR,Brazil,,-7.231,-35.881,348936,False
+"Sunshine Coast, Australia",AU,Australia,,-26.657,153.08,346522,False
+"Qitaihe, China",CN,China,,45.768,130.995,345033,False
+"Brest, Belarus",BY,Belarus,,52.109,23.717,344470,False
+"Annaba, Algeria",DZ,Algeria,,36.9,7.767,342703,False
+"Uberaba, Brazil",BR,Brazil,,-19.748,-47.932,337836,False
+"Safi, Morocco",MA,Morocco,,32.299,-9.237,336883,False
+"Qazvin, Iran",IR,Iran,,36.269,50.004,333635,False
+"Wad Medani, Sudan",SD,Sudan,,14.401,33.52,332714,False
+"Khorramabad, Iran",IR,Iran,,33.488,48.356,329825,False
+"Sochi, Russia",RU,Russia,,43.597,39.725,327608,False
+"Chipata, Zambia",ZM,Zambia,,-13.633,32.65,327059,False
+"Al ‘Amārah, Iraq",IQ,Iraq,,31.836,47.145,323302,False
+"Portoviejo, Ecuador",EC,Ecuador,,-1.058,-80.451,321800,False
+"Villavicencio, Colombia",CO,Colombia,,4.132,-73.626,321717,False
+"Holguín, Cuba",CU,Cuba,,20.887,-76.263,319102,False
+"Popayán, Colombia",CO,Colombia,,2.438,-76.613,318059,False
+"Geita, Tanzania",TZ,Tanzania,,-2.873,32.233,318006,False
+"Baicheng, China",CN,China,,45.618,122.833,316970,False
+"Chimbote, Peru",PE,Peru,,-9.075,-78.594,316966,False
+"Al Kūt, Iraq",IQ,Iraq,,32.513,45.818,315162,False
+"Maroua, Cameroon",CM,Cameroon,,10.591,14.316,314122,False
+"Kingston upon Hull, UK",GB,UK,,53.745,-0.335,314018,False
+"Denizli, Turkey",TR,Turkey,,37.774,29.087,313238,False
+"Maringá, Brazil",BR,Brazil,,-23.425,-51.939,311724,False
+"Kurgan, Russia",RU,Russia,,55.449,65.343,309285,False
+"Akita, Japan",JP,Japan,,39.717,140.117,307672,False
+"Solwezi, Zambia",ZM,Zambia,,-12.169,26.389,301370,False
+"Mérida, Venezuela",VE,Venezuela,,8.579,-71.169,300000,False
+"Mwene, DR Congo",CD,DR Congo,,-9.817,22.87,295683,False
+"Al Hufūf, Saudi Arabia",SA,Saudi Arabia,,25.365,49.588,293179,False
+"Semey, Kazakhstan",KZ,Kazakhstan,,50.421,80.25,292780,False
+"Atyrau, Kazakhstan",KZ,Kazakhstan,,47.105,51.884,290700,False
+"Songea, Tanzania",TZ,Tanzania,,-10.683,35.65,286285,False
+"Butembo, DR Congo",CD,DR Congo,,0.142,29.291,286242,False
+"Tacna, Peru",PE,Peru,,-18.015,-70.254,286240,False
+"Santa Maria, Brazil",BR,Brazil,,-29.684,-53.807,283677,False
+"Ica, Peru",PE,Peru,,-14.075,-75.734,282407,False
+"Lichinga, Mozambique",MZ,Mozambique,,-13.313,35.241,281341,False
+"Qarshi, Uzbekistan",UZ,Uzbekistan,,38.861,65.789,278300,False
+"Luena, Angola",AO,Angola,,-11.783,19.917,273675,False
+"Polokwane, South Africa",ZA,South Africa,,-23.904,29.469,272461,False
+"Hafar Al-Batin, Saudi Arabia",SA,Saudi Arabia,,28.433,45.971,271642,False
+"Dessie, Ethiopia",ET,Ethiopia,,11.133,39.633,270400,False
+"Çorum, Turkey",TR,Turkey,,40.549,34.953,269595,False
+"Djelfa, Algeria",DZ,Algeria,,34.673,3.263,265833,False
+"El Daein, Sudan",SD,Sudan,,11.462,26.126,264734,False
+"Mossoró, Brazil",BR,Brazil,,-5.188,-37.344,264577,False
+"Sivas, Turkey",TR,Turkey,,39.748,37.016,264022,False
+"Yei, South Sudan",SS,South Sudan,,4.094,30.676,260720,False
+"Mahajanga, Madagascar",MG,Madagascar,,-15.717,46.317,260556,False
+"Rondonópolis, Brazil",BR,Brazil,,-16.471,-54.636,259167,False
+"Cascavel, Brazil",BR,Brazil,,-24.956,-53.455,257172,False
+"Parakou, Benin",BJ,Benin,,9.337,2.63,255478,False
+"Isiro, DR Congo",CD,DR Congo,,2.774,27.616,255409,False
+"Sari, Iran",IR,Iran,,36.563,53.06,255396,False
+"Mossamedes, Angola",AO,Angola,,-15.196,12.152,255000,False
+"Saint-Louis, Senegal",SN,Senegal,,16.018,-16.49,254171,False
+"Vitória da Conquista, Brazil",BR,Brazil,,-14.866,-40.839,253137,False
+"Richards Bay, South Africa",ZA,South Africa,,-28.783,32.038,252968,False
+"El Fasher, Sudan",SD,Sudan,,13.628,25.349,252609,False
+"Santiago del Estero, Argentina",AR,Argentina,,-27.8,-64.263,252192,False
+"Menongue, Angola",AO,Angola,,-14.659,17.691,251178,False
+"Jimma, Ethiopia",ET,Ethiopia,,7.673,36.834,250900,False
+"Governador Valadares, Brazil",BR,Brazil,,-18.851,-41.949,250878,False
+"Santa Clara, Cuba",CU,Cuba,,22.407,-79.966,250512,False
+"Singa, Sudan",SD,Sudan,,13.148,33.931,250000,False
+"Aksaray, Turkey",TR,Turkey,,38.373,34.025,247147,False
+"Juliaca, Peru",PE,Peru,,-15.5,-70.133,245675,False
+"Gorgān, Iran",IR,Iran,,36.843,54.444,244937,False
+"Trabzon, Turkey",TR,Turkey,,41.005,39.727,244083,False
+"Berbera, Somalia",SO,Somalia,,10.44,45.014,242344,False
+"Man, Côte d'Ivoire",CI,Côte d'Ivoire,,7.413,-7.554,241969,False
+"Nacala, Mozambique",MZ,Mozambique,,-14.563,40.685,239808,False
+"Temuco, Chile",CL,Chile,,-38.736,-72.597,238129,False
+"Kindu, DR Congo",CD,DR Congo,,-2.944,25.922,234651,False
+"Pemba, Mozambique",MZ,Mozambique,,-12.974,40.518,232932,False
+"Singida, Tanzania",TZ,Tanzania,,-4.816,34.744,232459,False
+"Ordu, Turkey",TR,Turkey,,40.978,37.89,229214,False
+"San Fernando de Apure, Venezuela",VE,Venezuela,,7.89,-67.472,229197,False
+"Turkestan, Kazakhstan",KZ,Kazakhstan,,43.295,68.257,227098,False
+"Klerksdorp, South Africa",ZA,South Africa,,-26.852,26.667,227039,False
+"Gusau, Nigeria",NG,Nigeria,,12.17,6.664,226857,False
+"Sabzevar, Iran",IR,Iran,,36.213,57.682,226183,False
+"Rio Verde, Brazil",BR,Brazil,,-17.798,-50.928,225696,False
+"Presidente Prudente, Brazil",BR,Brazil,,-22.126,-51.389,225668,False
+"Juazeiro do Norte, Brazil",BR,Brazil,,-7.213,-39.315,225230,False
+"Esmeraldas, Ecuador",EC,Ecuador,,0.959,-79.654,218727,False
+"Imperatriz, Brazil",BR,Brazil,,-5.526,-47.492,218106,False
+"Porlamar, Venezuela",VE,Venezuela,,10.958,-63.87,216234,False
+"Būkān, Iran",IR,Iran,,36.521,46.209,213331,False
+"Beni Mellal, Morocco",MA,Morocco,,32.337,-6.35,210397,False
+"Kostanay, Kazakhstan",KZ,Kazakhstan,,53.214,63.625,210000,False
+"Sirjan, Iran",IR,Iran,,29.451,55.681,207645,False
+"Hurghada, Egypt",EG,Egypt,,27.257,33.813,207132,False
+"Ifakara, Tanzania",TZ,Tanzania,,-8.133,36.683,205843,False
+"Sumbe, Angola",AO,Angola,,-11.206,13.844,205832,False
+"Ségou, Mali",ML,Mali,,13.44,-6.259,205787,False
+"Itabuna, Brazil",BR,Brazil,,-14.786,-39.28,205660,False
+"Biskra, Algeria",DZ,Algeria,,34.85,5.728,204661,False
+"Mpanda, Tanzania",TZ,Tanzania,,-6.344,31.07,204338,False
+"Fianarantsoa, Madagascar",MG,Madagascar,,-21.453,47.086,203105,False
+"Sobral, Brazil",BR,Brazil,,-3.686,-40.35,203023,False
+"Bandundu Province, DR Congo",CD,DR Congo,,-3.317,17.381,202904,False
+"Arba Minch, Ethiopia",ET,Ethiopia,,6.033,37.55,201000,False
+"Petropavl, Kazakhstan",KZ,Kazakhstan,,54.873,69.151,200920,False
+"Kamina, DR Congo",CD,DR Congo,,-8.735,24.998,200184,False
+"Yanbu, Saudi Arabia",SA,Saudi Arabia,,24.09,38.062,200161,False
+"Chakwama, Nigeria",NG,Nigeria,,11.56,9.664,200000,False
+"Nyingchi, China",CN,China,,29.649,94.355,200000,False
+"Iquique, Chile",CL,Chile,,-20.213,-70.15,199587,False
+"Talca, Chile",CL,Chile,,-35.423,-71.65,197479,False
+"Gemena, DR Congo",CD,DR Congo,,3.257,19.772,197159,False
+"Bīrjand, Iran",IR,Iran,,32.866,59.221,196982,False
+"Huánuco, Peru",PE,Peru,,-9.929,-76.24,196627,False
+"Moundou, Chad",TD,Chad,,8.574,16.077,196124,False
+"Tébessa, Algeria",DZ,Algeria,,35.404,8.124,194461,False
+"Düzce, Turkey",TR,Turkey,,40.839,31.164,194097,False
+"Labuan Bajo, Indonesia",ID,Indonesia,,-8.496,119.888,188724,False
+"George, South Africa",ZA,South Africa,,-33.963,22.462,188580,False
+"Riohacha, Colombia",CO,Colombia,,11.544,-72.907,188014,False
+"Pinar del Río, Cuba",CU,Cuba,,22.416,-83.697,186990,False
+"El Oued, Algeria",DZ,Algeria,,33.356,6.863,186525,False
+"Mopti, Mali",ML,Mali,,14.484,-4.183,186187,False
+"Ad-Damazin, Sudan",SD,Sudan,,11.789,34.359,186051,False
+"Dunhuang, China",CN,China,,40.167,94.683,186027,False
+"Guarapuava, Brazil",BR,Brazil,,-25.39,-51.465,182093,False
+"Edirne, Turkey",TR,Turkey,,41.677,26.556,180002,False
+"Kasama, Zambia",ZM,Zambia,,-10.213,31.181,179636,False
+"Passo Fundo, Brazil",BR,Brazil,,-28.263,-52.407,179529,False
+"Legaspi, Philippines",PH,Philippines,,13.141,123.741,179481,False
+"Tiaret, Algeria",DZ,Algeria,,35.371,1.317,178915,False
+"La Rioja, Argentina",AR,Argentina,,-29.413,-66.856,178872,False
+"Livingstone, Zambia",ZM,Zambia,,-17.842,25.854,178361,False
+"Gulu, Uganda",UG,Uganda,,2.775,32.299,177400,False
+"Marsá Maţrūḩ, Egypt",EG,Egypt,,31.353,27.237,176498,False
+"Béjaïa, Algeria",DZ,Algeria,,36.756,5.084,176139,False
+"Tunja, Colombia",CO,Colombia,,5.545,-73.358,172548,False
+"Kēng Tung, Myanmar",MM,Myanmar,,21.631,99.927,171620,False
+"Mansa, Zambia",ZM,Zambia,,-11.2,28.894,170965,False
+"San Luis, Argentina",AR,Argentina,,-33.291,-66.325,169947,False
+"Gurúè, Mozambique",MZ,Mozambique,,-15.467,36.978,168971,False
+"Poços de Caldas, Brazil",BR,Brazil,,-21.788,-46.561,168641,False
+"Florencia, Colombia",CO,Colombia,,1.615,-75.604,168346,False
+"Porto Seguro, Brazil",BR,Brazil,,-16.45,-39.065,168326,False
+"Calama, Chile",CL,Chile,,-22.457,-68.924,166334,False
+"Bushehr, Iran",IR,Iran,,28.969,50.837,165377,False
+"Béchar, Algeria",DZ,Algeria,,31.617,-2.217,165241,False
+"Mthatha, South Africa",ZA,South Africa,,-31.589,28.784,164848,False
+"Lages, Brazil",BR,Brazil,,-27.816,-50.326,164676,False
+"Musoma, Tanzania",TZ,Tanzania,,-1.5,33.8,164172,False
+"‘Ibrī, Oman",OM,Oman,,23.226,56.516,163473,False
+"Garissa, Kenya",KE,Kenya,,-0.453,39.646,163399,False
+"Geneina, Sudan",SD,Sudan,,13.453,22.447,162981,False
+"Dourados, Brazil",BR,Brazil,,-22.221,-54.806,162202,False
+"Criciúma, Brazil",BR,Brazil,,-28.677,-49.37,161954,False
+"Kunduz, Afghanistan",AF,Afghanistan,,36.729,68.857,161902,False
+"N'dalatando, Angola",AO,Angola,,-9.298,14.912,161584,False
+"Coquimbo, Chile",CL,Chile,,-29.953,-71.339,161317,False
+"Tacheng, China",CN,China,,46.745,82.958,161037,False
+"Kalemie, DR Congo",CD,DR Congo,,-5.947,29.195,160961,False
+"Chapecó, Brazil",BR,Brazil,,-27.096,-52.618,160157,False
+"Tahoua, Niger",NE,Niger,,14.889,5.269,159468,False
+"Tarija, Bolivia",BO,Bolivia,,-21.535,-64.73,159269,False
+"Patos de Minas, Brazil",BR,Brazil,,-18.579,-46.518,159235,False
+"Catamarca, Argentina",AR,Argentina,,-28.47,-65.785,159139,False
+"Gweru, Zimbabwe",ZW,Zimbabwe,,-19.45,29.817,158200,False
+"Itapetininga, Brazil",BR,Brazil,,-23.592,-48.053,157790,False
+"Río Cuarto, Argentina",AR,Argentina,,-33.13,-64.353,157010,False
+"Lampang, Thailand",TH,Thailand,,18.292,99.493,156139,False
+"Nek’emtē, Ethiopia",ET,Ethiopia,,9.083,36.55,156000,False
+"Tauranga, New Zealand",NZ,New Zealand,,-37.686,176.167,155200,False
+"Xai-Xai, Mozambique",MZ,Mozambique,,-25.052,33.644,154356,False
+"Valle de La Pascua, Venezuela",VE,Venezuela,,9.216,-66.007,153136,False
+"Cairns, Australia",AU,Australia,,-16.924,145.766,153075,False
+"Kokshetau, Kazakhstan",KZ,Kazakhstan,,53.284,69.394,150649,False
+"Agadez, Niger",NE,Niger,,16.973,7.991,149549,False
+"Arar, Saudi Arabia",SA,Saudi Arabia,,30.975,41.038,148540,False
+"Shevchenko, Kazakhstan",KZ,Kazakhstan,,43.661,51.174,147443,False
+"Concordia, Argentina",AR,Argentina,,-31.392,-58.017,145210,False
+"Bukoba, Tanzania",TZ,Tanzania,,-1.332,31.812,144938,False
+"Navoiy, Uzbekistan",UZ,Uzbekistan,,40.084,65.379,144158,False
+"Çanakkale, Turkey",TR,Turkey,,40.156,26.413,143622,False
+"Ghardaïa, Algeria",DZ,Algeria,,32.491,3.673,142913,False
+"Kimberley, South Africa",ZA,South Africa,,-28.732,24.762,142089,False
+"Punto Fijo, Venezuela",VE,Venezuela,,11.692,-70.199,141729,False
+"Jahrom, Iran",IR,Iran,,28.5,53.56,141634,False
+"Bondoukou, Côte d'Ivoire",CI,Côte d'Ivoire,,8.04,-2.8,141568,False
+"Tobruk, Libya",LY,Libya,,32.09,23.954,141499,False
+"Ghazni, Afghanistan",AF,Afghanistan,,33.554,68.421,141000,False
+"Mtwara, Tanzania",TZ,Tanzania,,-10.267,40.183,140793,False
+"Debre Mark’os, Ethiopia",ET,Ethiopia,,10.35,37.733,140700,False
+"Ayacucho, Peru",PE,Peru,,-13.164,-74.223,140033,False
+"Parnaíba, Brazil",BR,Brazil,,-2.905,-41.777,138008,False
+"Bertoua, Cameroon",CM,Cameroon,,4.577,13.685,137993,False
+"Irákleion, Greece",GR,Greece,,35.328,25.143,137154,False
+"Cametá, Brazil",BR,Brazil,,-2.244,-49.496,134184,False
+"Valdivia, Chile",CL,Chile,,-39.814,-73.246,133419,False
+"Gao, Mali",ML,Mali,,16.272,-0.045,133110,False
+"M'Sila, Algeria",DZ,Algeria,,35.709,4.537,132975,False
+"Dunedin, New Zealand",NZ,New Zealand,,-45.874,170.504,131800,False
+"Ajdabiya, Libya",LY,Libya,,30.755,20.226,131773,False
+"Iranshahr, Iran",IR,Iran,,27.202,60.685,131232,False
+"Abengourou, Côte d'Ivoire",CI,Côte d'Ivoire,,6.73,-3.496,130810,False
+"Jīroft, Iran",IR,Iran,,28.678,57.741,130429,False
+"Baidoa, Somalia",SO,Somalia,,3.114,43.65,129839,False
+"Al Bayḑā’, Libya",LY,Libya,,32.763,21.755,129439,False
+"Quibdó, Colombia",CO,Colombia,,5.692,-76.658,129237,False
+"Guelmim, Morocco",MA,Morocco,,28.987,-10.057,129200,False
+"Carnot, Central African Rep.",CF,Central African Rep.,,4.943,15.877,129032,False
+"Sakakah, Saudi Arabia",SA,Saudi Arabia,,29.97,40.206,128332,False
+"Jequié, Brazil",BR,Brazil,,-13.859,-40.085,127475,False
+"Wau, South Sudan",SS,South Sudan,,7.701,27.99,127384,False
+"Maxixe, Mozambique",MZ,Mozambique,,-23.86,35.347,126408,False
+"Altamira, Brazil",BR,Brazil,,-3.203,-52.206,126279,False
+"Gashua, Nigeria",NG,Nigeria,,12.874,11.041,125817,False
+"Les Cayes, Haiti",HT,Haiti,,18.192,-73.749,125799,False
+"Kastamonu, Turkey",TR,Turkey,,41.378,33.775,125622,False
+"Ouahigouya, Burkina Faso",BF,Burkina Faso,,13.583,-2.422,124587,False
+"Ji Paraná, Brazil",BR,Brazil,,-10.885,-61.952,124333,False
+"Magangué, Colombia",CO,Colombia,,9.242,-74.755,123982,False
+"Salvaleón de Higüey, Dominican Rep.",DO,Dominican Rep.,,18.615,-68.708,123787,False
+"São Mateus, Brazil",BR,Brazil,,-18.72,-39.859,123752,False
+"Uruguaiana, Brazil",BR,Brazil,,-29.755,-57.088,123480,False
+"Itaituba, Brazil",BR,Brazil,,-4.276,-55.984,123314,False
+"Bragança, Brazil",BR,Brazil,,-1.054,-46.766,123082,False
+"Zābol, Iran",IR,Iran,,31.031,61.495,121989,False
+"Mackay, Australia",AU,Australia,,-21.153,149.166,121691,False
+"Mubende, Uganda",UG,Uganda,,0.558,31.395,121600,False
+"Ondjiva, Angola",AO,Angola,,-17.067,15.733,121537,False
+"Ekibastuz, Kazakhstan",KZ,Kazakhstan,,51.724,75.323,121470,False
+"Ağrı, Turkey",TR,Turkey,,39.715,43.04,120390,False
+"Īz̄eh, Iran",IR,Iran,,31.83,49.868,119399,False
+"Huaraz, Peru",PE,Peru,,-9.526,-77.529,118836,False
+"Queenstown, South Africa",ZA,South Africa,,-31.898,26.875,118599,False
+"San Rafael, Argentina",AR,Argentina,,-34.615,-68.332,118009,False
+"Jalingo, Nigeria",NG,Nigeria,,8.894,11.36,117757,False
+"Ilebo, DR Congo",CD,DR Congo,,-4.331,20.586,117245,False
+"Umuarama, Brazil",BR,Brazil,,-23.766,-53.325,117095,False
+"Taldykorgan, Kazakhstan",KZ,Kazakhstan,,45.016,78.374,116558,False
+"Makumbako, Tanzania",TZ,Tanzania,,-8.85,34.833,116232,False
+"Tshilenge, DR Congo",CD,DR Congo,,-10.967,22.9,116073,False
+"Kissidougou, Guinea",GN,Guinea,,9.185,-10.1,116019,False
+"Tandil, Argentina",AR,Argentina,,-37.329,-59.137,115877,False
+"Mendoza, Argentina",AR,Argentina,,-32.889,-68.846,114893,False
+"Mary, Turkmenistan",TM,Turkmenistan,,37.594,61.83,114680,False
+"Codó, Brazil",BR,Brazil,,-4.455,-43.886,114275,False
+"Kamsar, Guinea",GN,Guinea,,10.65,-14.617,113350,False
+"Paulo Afonso, Brazil",BR,Brazil,,-9.406,-38.215,112870,False
+"Tangará da Serra, Brazil",BR,Brazil,,-14.619,-57.486,112547,False
+"Itacoatiara, Brazil",BR,Brazil,,-3.143,-58.444,112520,False
+"Atbara, Sudan",SD,Sudan,,17.702,33.986,112021,False
+"Resende, Brazil",BR,Brazil,,-22.469,-44.447,111514,False
+"Masindi, Uganda",UG,Uganda,,1.674,31.715,110500,False
+"Lucapa, Angola",AO,Angola,,-8.419,20.745,110000,False
+"Phalaborwa, South Africa",ZA,South Africa,,-23.943,31.141,109468,False
+"San Juan, Argentina",AR,Argentina,,-31.537,-68.526,109123,False
+"Handeni, Tanzania",TZ,Tanzania,,-5.433,38.017,108968,False
+"Birnin Kebbi, Nigeria",NG,Nigeria,,12.454,4.197,108164,False
+"An Nuhūd, Sudan",SD,Sudan,,12.7,28.433,108008,False
+"Labé, Guinea",GN,Guinea,,11.318,-12.283,107571,False
+"Manokwari, Indonesia",ID,Indonesia,,-0.863,134.064,107325,False
+"Thohoyandou, South Africa",ZA,South Africa,,-22.946,30.485,107144,False
+"Breves, Brazil",BR,Brazil,,-1.682,-50.48,106968,False
+"Sirte, Libya",LY,Libya,,31.209,16.589,106705,False
+"Paragominas, Brazil",BR,Brazil,,-2.996,-47.355,105550,False
+"Jizan, Saudi Arabia",SA,Saudi Arabia,,16.889,42.551,105198,False
+"Araguaína, Brazil",BR,Brazil,,-7.191,-48.207,105019,False
+"Lavras, Brazil",BR,Brazil,,-21.245,-45.0,104761,False
+"Angoche, Mozambique",MZ,Mozambique,,-16.233,39.909,104540,False
+"Zhezqazghan, Kazakhstan",KZ,Kazakhstan,,47.794,67.706,104357,False
+"San, Mali",ML,Mali,,13.297,-4.896,103227,False
+"Tanjung Pandan, Indonesia",ID,Indonesia,,-2.734,107.635,103062,False
+"Bendigo, Australia",AU,Australia,,-36.758,144.28,103034,False
+"Qurayyat, Saudi Arabia",SA,Saudi Arabia,,31.332,37.343,102903,False
+"Santa Rosa, Argentina",AR,Argentina,,-36.616,-64.29,102860,False
+"Parintins, Brazil",BR,Brazil,,-2.628,-56.736,101956,False
+"Balsas, Brazil",BR,Brazil,,-7.532,-46.036,101767,False
+"Pārsābād, Iran",IR,Iran,,39.648,47.917,101661,False
+"Errachidia, Morocco",MA,Morocco,,31.931,-4.427,100870,False
+"Inda Silasē, Ethiopia",ET,Ethiopia,,14.103,38.283,100100,False
+"Sabt Alalayah, Saudi Arabia",SA,Saudi Arabia,,19.577,41.964,100000,False
+"Riberalta, Bolivia",BO,Bolivia,,-11.01,-66.053,99070,False
+"Trelew, Argentina",AR,Argentina,,-43.249,-65.305,97915,False
+"Gambēla, Ethiopia",ET,Ethiopia,,8.25,34.583,97600,False
+"Corumbá, Brazil",BR,Brazil,,-19.009,-57.653,96520,False
+"Vilhena, Brazil",BR,Brazil,,-12.741,-60.146,95832,False
+"Río Gallegos, Argentina",AR,Argentina,,-51.625,-69.252,95796,False
+"Novyy Urengoy, Russia",RU,Russia,,66.083,76.633,94212,False
+"Türkmenbaşy, Turkmenistan",TM,Turkmenistan,,40.022,52.955,91745,False
+"Lodja, DR Congo",CD,DR Congo,,-3.521,23.601,91409,False
+"Wajir, Kenya",KE,Kenya,,1.747,40.057,90116,False
+"Cafunfo, Angola",AO,Angola,,-8.767,17.996,90000,False
+"Mulongo, DR Congo",CD,DR Congo,,-7.835,26.999,89340,False
+"Sambava, Madagascar",MG,Madagascar,,-14.267,50.167,89003,False
+"Guanambi, Brazil",BR,Brazil,,-14.223,-42.781,87817,False
+"Kadugli, Sudan",SD,Sudan,,11.011,29.718,87666,False
+"Kongolo, DR Congo",CD,DR Congo,,-5.385,27.0,86932,False
+"Redenção, Brazil",BR,Brazil,,-8.029,-50.031,85597,False
+"Puerto Maldonado, Peru",PE,Peru,,-12.589,-69.199,85024,False
+"Rukban, Jordan",JO,Jordan,,33.314,38.703,85000,False
+"Trinidad, Bolivia",BO,Bolivia,,-14.832,-64.903,84259,False
+"Timbuktu, Mali",ML,Mali,,16.773,-3.007,84208,False
+"Al Khārjah, Egypt",EG,Egypt,,25.451,30.547,83108,False
+"Bambari, Central African Rep.",CF,Central African Rep.,,5.768,20.676,83029,False
+"Lodwar, Kenya",KE,Kenya,,3.12,35.596,82970,False
+"Tamanghasset, Algeria",DZ,Algeria,,22.785,5.523,81752,False
+"Babamba, DR Congo",CD,DR Congo,,0.183,27.483,81740,False
+"Balqash, Kazakhstan",KZ,Kazakhstan,,46.845,74.982,81364,False
+"Buta, DR Congo",CD,DR Congo,,2.786,24.73,80751,False
+"Tefé, Brazil",BR,Brazil,,-3.368,-64.721,79278,False
+"Wa, Ghana",GH,Ghana,,10.061,-2.502,78107,False
+"Nchelenge, Zambia",ZM,Zambia,,-9.345,28.734,77746,False
+"Maymana, Afghanistan",AF,Afghanistan,,35.921,64.784,75900,False
+"Am Timan, Chad",TD,Chad,,11.043,20.283,74691,False
+"Irecê, Brazil",BR,Brazil,,-11.304,-41.856,74507,False
+"Bosaso, Somalia",SO,Somalia,,11.284,49.182,74287,False
+"Al Qā’im, Iraq",IQ,Iraq,,34.393,40.989,74100,False
+"Fada N'gourma, Burkina Faso",BF,Burkina Faso,,12.062,0.358,73200,False
+"Negēlē, Ethiopia",ET,Ethiopia,,5.317,39.583,73100,False
+"Barra do Garças, Brazil",BR,Brazil,,-15.89,-52.257,72694,False
+"Tabatinga, Brazil",BR,Brazil,,-4.231,-69.939,72283,False
+"Upington, South Africa",ZA,South Africa,,-28.448,21.256,71373,False
+"Tôlanaro, Madagascar",MG,Madagascar,,-25.032,46.983,71258,False
+"Luquembo, Angola",AO,Angola,,-10.739,17.718,69420,False
+"Gode, Ethiopia",ET,Ethiopia,,5.951,43.552,67900,False
+"Tataouine, Tunisia",TN,Tunisia,,32.93,10.452,66924,False
+"São Félix do Xingu, Brazil",BR,Brazil,,-6.645,-51.995,65418,False
+"Mecheria, Algeria",DZ,Algeria,,33.545,-0.281,65043,False
+"Graaff Reinet, South Africa",ZA,South Africa,,-32.252,24.531,62896,False
+"Laascaanood, Somalia",SO,Somalia,,8.477,47.36,60100,False
+"Néma, Mauritania",MR,Mauritania,,16.617,-7.256,60000,False
+"Jacundá, Brazil",BR,Brazil,,-4.447,-49.116,59842,False
+"Antsalova, Madagascar",MG,Madagascar,,-18.667,44.617,58280,False
+"Manicoré, Brazil",BR,Brazil,,-5.809,-61.3,57758,False
+"El Menia, Algeria",DZ,Algeria,,30.576,2.884,57344,False
+"Ushuaia, Argentina",AR,Argentina,,-54.811,-68.316,56825,False
+"São Gabriel da Cachoeira, Brazil",BR,Brazil,,-0.118,-67.085,56406,False
+"Dongola, Sudan",SD,Sudan,,19.182,30.477,56167,False
+"Kandi, Benin",BJ,Benin,,11.134,2.939,56043,False
+"Beledweyne, Somalia",SO,Somalia,,4.736,45.204,55410,False
+"Bossangoa, Central African Rep.",CF,Central African Rep.,,6.493,17.455,55353,False
+"Zouérat, Mauritania",MR,Mauritania,,22.735,-12.471,55183,False
+"Kaga-Bandoro, Central African Rep.",CF,Central African Rep.,,6.99,19.187,55047,False
+"Pontes e Lacerda, Brazil",BR,Brazil,,-15.226,-59.335,54795,False
+"Ad Dawādimī, Saudi Arabia",SA,Saudi Arabia,,24.508,44.392,54474,False
+"Bangassou, Central African Rep.",CF,Central African Rep.,,4.741,22.818,54059,False
+"Mongo, Chad",TD,Chad,,12.185,18.688,53768,False
+"Eilat, Israel",IL,Israel,,29.558,34.948,52299,False
+"Nioro, Mali",ML,Mali,,15.231,-9.594,51933,False
+"Boende, DR Congo",CD,DR Congo,,-0.282,20.881,50794,False
+"Mao, Chad",TD,Chad,,14.123,15.312,50681,False
+"Moyobamba, Peru",PE,Peru,,-6.034,-76.974,50073,False
+"Tabas, Iran",IR,Iran,,33.596,56.924,49993,False
+"Viedma, Argentina",AR,Argentina,,-40.815,-63.0,48940,False
+"Mahalapye, Botswana",BW,Botswana,,-23.104,26.814,48431,False
+"Concepción, Paraguay",PY,Paraguay,,-23.4,-57.432,48123,False
+"Banyo, Cameroon",CM,Cameroon,,6.75,11.817,47936,False
+"Moyale, Kenya",KE,Kenya,,3.527,39.056,47850,False
+"Juína, Brazil",BR,Brazil,,-11.42,-58.755,47800,False
+"Chabahar, Iran",IR,Iran,,25.292,60.643,47287,False
+"Dori, Burkina Faso",BF,Burkina Faso,,14.034,-0.033,46512,False
+"Coyhaique, Chile",CL,Chile,,-45.575,-72.066,45787,False
+"Tindouf, Algeria",DZ,Algeria,,27.671,-8.147,45610,False
+"Pehuajó, Argentina",AR,Argentina,,-35.811,-61.899,44783,False
+"Bluefields, Nicaragua",NI,Nicaragua,,12.013,-83.764,44373,False
+"Porangatu, Brazil",BR,Brazil,,-13.441,-49.149,44317,False
+"Faya-Largeau, Chad",TD,Chad,,17.926,19.104,44011,False
+"Zagora, Morocco",MA,Morocco,,30.332,-5.838,43752,False
+"Tarauacá, Brazil",BR,Brazil,,-8.161,-70.766,43467,False
+"Mouila, Gabon",GA,Gabon,,-1.868,11.056,43342,False
+"Vilankulo, Mozambique",MZ,Mozambique,,-22.0,35.317,43183,False
+"Zhitikara, Kazakhstan",KZ,Kazakhstan,,52.19,61.199,43104,False
+"Arkalyk, Kazakhstan",KZ,Kazakhstan,,50.25,66.904,42000,False
+"Tromsø, Norway",NO,Norway,,69.649,18.955,41915,False
+"Naryn, Kyrgyzstan",KG,Kyrgyzstan,,41.428,75.996,41178,False
+"Basankusu, DR Congo",CD,DR Congo,,1.221,19.802,41141,False
+"Paranaíba, Brazil",BR,Brazil,,-19.677,-51.191,40957,False
+"Vangaindrano, Madagascar",MG,Madagascar,,-23.35,47.6,40813,False
+"Ouesso, Congo",CG,Congo,,1.614,16.052,40667,False
+"Antsohihy, Madagascar",MG,Madagascar,,-14.88,47.988,40512,False
+"Arawa, Papua New Guinea",PG,Papua New Guinea,,-6.23,155.566,40266,False
+"Chiredzi, Zimbabwe",ZW,Zimbabwe,,-21.05,31.667,40100,False
+"Kidal, Mali",ML,Mali,,18.443,1.409,40030,False
+"Geraldton, Australia",AU,Australia,,-28.779,114.615,38595,False
+"Confresa, Brazil",BR,Brazil,,-10.644,-51.569,37541,False
+"Novo Progresso, Brazil",BR,Brazil,,-7.148,-55.381,33638,False
+"Mount Hagen, Papua New Guinea",PG,Papua New Guinea,,-5.857,144.231,33623,False
+"Aral, Kazakhstan",KZ,Kazakhstan,,46.802,61.663,33017,False
+"Carauari, Brazil",BR,Brazil,,-4.883,-66.896,30892,False
+"Mitú, Colombia",CO,Colombia,,1.257,-70.236,29850,False
+"Amdjarass, Chad",TD,Chad,,16.067,22.835,29793,False
+"Sīwah, Egypt",EG,Egypt,,29.203,25.52,25031,False
+"Mount Gambier, Australia",AU,Australia,,-37.832,140.779,25030,False
+"As Sulayyil, Saudi Arabia",SA,Saudi Arabia,,20.461,45.578,24097,False
+"Keetmanshoop, Namibia",NA,Namibia,,-26.577,18.134,23049,False
+"Filadelfia, Paraguay",PY,Paraguay,,-22.339,-60.032,19927,False
+"Barcelos, Brazil",BR,Brazil,,-0.974,-62.927,18626,False
+"Mount Isa, Australia",AU,Australia,,-20.725,139.497,18317,False
+"Griffith, Australia",AU,Australia,,-34.289,146.051,18154,False
+"Broken Hill, Australia",AU,Australia,,-31.965,141.451,18027,False
+"Kafia Kingi, South Sudan",SS,South Sudan,,9.273,24.417,16000,False
+"Daru, Papua New Guinea",PG,Papua New Guinea,,-9.078,143.209,15214,False
+"Lüderitz, Namibia",NA,Namibia,,-26.648,15.154,15137,False
+"Ghat, Libya",LY,Libya,,24.963,10.18,14630,False
+"Puerto Ayora, Ecuador",EC,Ecuador,,-0.74,-90.314,12696,False
+"Newman, Australia",AU,Australia,,-23.356,119.736,12316,False
+"Hadibu, Yemen",YE,Yemen,,12.649,54.019,8545,False
+"Carnarvon, Australia",AU,Australia,,-24.883,113.657,7392,False
+"Roma, Australia",AU,Australia,,-26.567,148.788,7105,False
+"Kununurra, Australia",AU,Australia,,-15.778,128.742,6836,False
+"Lorengau, Papua New Guinea",PG,Papua New Guinea,,-2.034,147.272,5806,False
+"Bilma, Niger",NE,Niger,,18.685,12.916,5435,False
+"Broome, Australia",AU,Australia,,-17.955,122.239,5314,False
+"Hukuntsi, Botswana",BW,Botswana,,-23.999,21.78,5224,False

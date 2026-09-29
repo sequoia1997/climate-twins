@@ -3,7 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Climate twins: where is your city's future climate today?</title>
+<title>Climate Twins: Where is your city's future climate today?</title>
+<meta name="description" content="An interactive map of climate twins: see where today's climate already matches the projected 2050 or 2100 climate of 1,600+ places worldwide.">
+<link rel="canonical" href="https://climatetwins.org/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Climate Twins">
+<meta property="og:title" content="Where is your city's future climate today?">
+<meta property="og:description" content="Find the place that already has your town's 2050 or 2100 climate, for 1,600+ places across North America and the world.">
+<meta property="og:url" content="https://climatetwins.org/">
+<meta property="og:image" content="https://climatetwins.org/og-image.png">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1260">
+<meta property="og:image:alt" content="Dark map of North America with gold arrows running from each city to the place whose climate today matches its projected climate around 2100.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Where is your city's future climate today?">
+<meta name="twitter:description" content="Find the place that already has your town's 2050 or 2100 climate, for 1,600+ places across North America and the world.">
+<meta name="twitter:image" content="https://climatetwins.org/og-image.png">
+<meta name="twitter:image:alt" content="Dark map of North America with gold arrows running from each city to the place whose climate today matches its projected climate around 2100.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
@@ -59,6 +78,7 @@ hr{border:0;border-top:1px solid var(--rule);margin:18px 0}
 #result h2{font:700 1.35rem/1.15 var(--font-head);margin:0 0 4px}
 .answer{font-size:1.05rem;margin:8px 0 10px}
 .answer strong{font-weight:700}
+.tropnote{margin:8px 0 2px;color:var(--muted)} .tropnote strong{color:var(--ink)}
 .badge{display:inline-block;font-size:.82rem;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid currentColor}
 .q-good{color:var(--good)} .q-fair{color:var(--good)} .q-partial{color:var(--warn)} .q-novel{color:var(--bad)}
 .facts{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem;margin:12px 0}
@@ -105,34 +125,54 @@ details.intro{margin:0 0 10px} details.intro[open]>summary{margin-bottom:8px} de
 #ssp-desc{margin:2px 0 4px 64px;color:var(--muted)}
 @media (min-width:821px){#ctlbar{position:sticky;top:-20px;margin:0 -22px;padding:6px 22px;border-bottom:1px solid transparent} #ctlbar.stuck{border-bottom-color:var(--rule);box-shadow:0 4px 8px -6px rgba(0,0,0,.25)}}
 details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{font-weight:700} details.moresites ol.sites{margin-top:4px}
-.glance-h,.topic>summary{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,62px) 12px;align-items:center;column-gap:6px}
+.glance-h,.topic>summary{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,70px) 12px;align-items:center;column-gap:4px}
 .glance-h{font-size:.74rem;color:var(--muted);margin-top:12px;padding-bottom:5px;border-bottom:1.5px solid var(--ink)}
-.glance-h span{text-align:right;white-space:nowrap} .glance-h .sw,.kgl .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--c)}
+.glance-h span{text-align:center;white-space:nowrap} .glance-h .sw,.kgl .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--c)}
 .topic{border-bottom:1px solid var(--rule)} .topic>summary{list-style:none;cursor:pointer;padding:9px 0}
 .topic>summary::-webkit-details-marker{display:none}
 .topic>summary .t{font-weight:650;font-size:.93rem} .topic>summary .t small,.topic>summary .v small{display:block;font-weight:400;color:var(--muted);font-size:.72rem;line-height:1.2}
-.topic>summary .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem}
+.topic>summary .v{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem;min-width:0}
+.topic>summary .v small{white-space:nowrap;font-size:.7rem}
 .topic>summary::after{content:"";width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);justify-self:end;margin-top:-3px;transition:transform .15s}
 .topic[open]>summary::after{transform:rotate(-135deg);margin-top:3px}
 .topic>summary:hover .t{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
 .topic>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .topic .tb{padding:2px 0 12px} .kgl{list-style:none;padding:0;margin:4px 0;font-size:.88rem} .kgl li{margin:3px 0}
 .topic abbr{text-decoration:none}
-.reqline{margin:6px 0 2px;color:var(--muted)} .reqline.miss{color:var(--ink)}
-#reqdlg{border:1px solid var(--rule);border-radius:14px;background:var(--panel);color:var(--ink);padding:18px 20px;width:min(420px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.3)}
-#reqdlg::backdrop{background:rgba(0,0,0,.35)}
-#reqdlg h2{font-size:1.15rem;margin:0 0 4px} #reqdlg label{display:block;font-size:.88rem;margin:10px 0 0;font-weight:600}
-#reqdlg input,#reqdlg textarea{display:block;width:100%;margin-top:4px;font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--chip);color:var(--ink)}
-#reqdlg .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.reqline{margin:6px 0 2px;color:var(--muted)}
+#fbdlg{max-height:calc(100dvh - 32px);overflow-y:auto} #fbdlg fieldset{border:0;padding:0;margin:10px 0 0}
+#fbdlg legend{font-size:.88rem;font-weight:600;padding:0;margin-bottom:6px}
+.fbkinds{display:flex;flex-wrap:wrap;gap:6px} #fbdlg .fbkinds label{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:400;padding:6px 11px;border:1px solid var(--rule);border-radius:999px;background:var(--chip);cursor:pointer;font-size:.86rem}
+#fbdlg .fbkinds label:has(input:checked){background:var(--ink);color:var(--panel);border-color:var(--ink)}
+#fbdlg .fbkinds input{position:absolute;opacity:0;width:1px;height:1px} #fbdlg .fbkinds label:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+#fbdlg .fbctx{display:flex;align-items:center;gap:8px;font-weight:600} #fbdlg .fbctx input{width:auto;margin:0}
+.fbctxview{font:.78rem/1.45 var(--font-body);white-space:pre-wrap;color:var(--muted);background:var(--chip);border-radius:8px;padding:8px 10px;margin:6px 0 0;max-height:9em;overflow:auto}
+.fbline{margin:14px 0 4px}
+.fbbtn{display:inline-flex;align-items:center;gap:7px;font:600 .9rem var(--font-body);color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:999px;padding:7px 14px;cursor:pointer}
+.fbbtn:hover{border-color:var(--ink)} .fbbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px} .fbbtn svg{flex:none;opacity:.8} .reqline.miss{color:var(--ink)}
+#search::-webkit-calendar-picker-indicator{display:none!important;opacity:0}
+.combo{position:relative} #search{text-overflow:ellipsis}
+#plist{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;margin:0;padding:4px 0;list-style:none;max-height:min(340px,45vh);overflow-y:auto;overscroll-behavior:contain;
+       background:var(--panel);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#plist li{padding:7px 12px;cursor:pointer;font-size:.93rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#plist li[aria-selected="true"],#plist li:hover{background:var(--chip)}
+#plist li.cur{font-weight:700} #plist li.none{color:var(--muted);cursor:default} #plist li.none:hover{background:none}
+#plist mark{background:none;color:inherit;font-weight:700;text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:2px}
+#reqdlg,#fbdlg{border:1px solid var(--rule);border-radius:14px;background:var(--panel);color:var(--ink);padding:18px 20px;width:min(420px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.3)}
+#reqdlg::backdrop,#fbdlg::backdrop{background:rgba(0,0,0,.35)}
+#reqdlg h2,#fbdlg h2{font-size:1.15rem;margin:0 0 4px} #reqdlg label,#fbdlg label{display:block;font-size:.88rem;margin:10px 0 0;font-weight:600}
+#reqdlg input,#reqdlg textarea,#fbdlg input:not([type=radio]):not([type=checkbox]),#fbdlg textarea{display:block;width:100%;margin-top:4px;font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--chip);color:var(--ink)}
+#reqdlg .hp,#fbdlg .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .reqbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 .reqbtns button{font:600 .9rem var(--font-body);padding:8px 14px;border-radius:999px;border:1px solid var(--rule);background:var(--chip);color:var(--ink);cursor:pointer}
-#reqsend{background:var(--ink);color:var(--panel);border-color:var(--ink)} #reqsend:disabled{opacity:.5;cursor:default}
-#reqmsg.err{color:#b3261e} #reqmsg.ok{color:var(--good,#1a7f37)}
+#reqsend,#fbsend{background:var(--ink);color:var(--panel);border-color:var(--ink)} #reqsend:disabled,#fbsend:disabled{opacity:.5;cursor:default}
+#fbdlg label .muted,#reqdlg label .muted{font-weight:400}
+#reqmsg.err,#fbmsg.err{color:#b3261e} #reqmsg.ok,#fbmsg.ok{color:var(--good,#1a7f37)}
 .sigma-note p{margin:0 0 4px} .sigma-note p:last-child{margin:0}
 #tip{position:absolute;z-index:3;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:5px 8px;font-size:.82rem;display:none;max-width:240px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
-#zoom{position:absolute;right:10px;top:84px;display:flex;flex-direction:column;z-index:2;background:var(--panel);border-radius:4px;box-shadow:0 0 0 2px rgba(0,0,0,.1);overflow:hidden}
+#zoom{position:absolute;right:10px;top:78px;display:flex;flex-direction:column;z-index:2;background:var(--panel);border-radius:4px;box-shadow:0 0 0 2px rgba(0,0,0,.1);overflow:hidden}
 :root[data-theme="dark"] #zoom{box-shadow:0 0 0 1px var(--rule)}
-#zoom button{display:block;width:54px;height:29px;padding:0;margin:0;border:0;background:transparent;color:var(--ink);font:600 .74rem/1 var(--font-body);letter-spacing:.01em;cursor:pointer}
+#zoom button{display:grid;place-items:center;width:29px;height:29px;padding:0;margin:0;border:0;background:transparent;color:var(--ink);cursor:pointer}
 #zoom button+button{border-top:1px solid var(--rule)}
 #zoom button:hover{background:var(--chip)}
 #loading{position:absolute;z-index:4;background:var(--ocean);inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1rem}
@@ -163,6 +203,11 @@ details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{
 .axis{position:relative;height:18px;margin-left:var(--lw)}
 .axis span{position:absolute;top:2px;transform:translateX(-50%);font-size:.68rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .cmp .cap{font-size:.8rem;color:var(--muted);margin:4px 0 0}
+/* BEGIN extreme-days (extremes.json) */
+.ext-tab{margin-top:4px} .ext-tab th{font-size:.76rem;white-space:nowrap} .ext-tab th:first-child{white-space:normal;font-weight:400;color:var(--muted)} .ext-tab td:not(:first-child){width:19%} .ext-tab td,.ext-tab th{padding:4px 3px;text-align:center} .ext-tab td:first-child,.ext-tab th:first-child{text-align:left}
+.ext-tab td small{color:var(--muted);font-size:.72rem;white-space:nowrap} .ext-tab td{font-variant-numeric:tabular-nums}
+.ext-none{margin:6px 0 0;color:var(--muted);font-size:.85rem}
+/* END extreme-days */
 details.exact{margin:14px 0 0} details.exact summary{font-weight:400;color:var(--muted);font-size:.9rem}
 table.ex{margin-top:6px} table.ex th{font-size:.76rem} table.ex td,table.ex th{padding:4px 3px}
 table.ex tr.grp th{text-align:left;font-weight:700;padding-top:10px;border-bottom:1.5px solid var(--ink);font-size:.82rem;color:var(--ink)}
@@ -173,6 +218,7 @@ table.ex .sw{display:inline-block;width:8px;height:8px;border-radius:2px;backgro
 #themebtn:hover{border-color:var(--line)}
 #themebtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px} #zoom button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 :root[data-theme="dark"] .maplibregl-ctrl-group{background:var(--panel);box-shadow:0 0 0 1px var(--rule)}
+:root[data-theme="dark"] #zoom button{color:#b8c2ca} :root[data-theme="dark"] #zoom button:hover{color:var(--ink)}
 :root[data-theme="dark"] .maplibregl-ctrl-group button+button{border-top-color:var(--rule)}
 :root[data-theme="dark"] .maplibregl-ctrl-icon{filter:invert(1) brightness(.92)}
 aside a{color:var(--ink);text-decoration-color:var(--accent);text-underline-offset:2px}
@@ -184,7 +230,7 @@ aside a:hover{text-decoration-thickness:2px}
   #legend .lg-more{display:none;max-width:none} #legend.open .lg-more{display:block} #legend .lg-i{display:inline}
   #legend .sw span{min-width:10px;height:7px} #legend .lg-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #attrib{font-size:10px;white-space:nowrap}
-  #zoom{right:10px;top:84px}
+  #zoom{right:10px;top:78px}
 }
 @media (max-width:820px) and (orientation:portrait){
   #app{height:100%}
@@ -210,12 +256,12 @@ aside a:hover{text-decoration-thickness:2px}
   #sh-tog svg{transition:transform .2s}
   aside.collapsed{height:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px));overflow:hidden}
   aside.collapsed #sheethead{border-bottom-color:transparent;margin-bottom:0}
-  :root.sheet-hidden #legend{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px) + 8px)}
+  :root.sheet-hidden #legend{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px) + 30px)}
   :root.sheet-hidden #attrib{bottom:calc(var(--sheet-h,64px) + env(safe-area-inset-bottom,0px))}
   #ctlbar{display:none}
   #ssp-desc{margin-left:0}
   aside h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  #legend{bottom:calc(var(--sheet-h,260px) + 8px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
+  #legend{bottom:calc(var(--sheet-h,260px) + 30px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
   #attrib{bottom:var(--sheet-h,260px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
 }
 @media (max-width:820px) and (orientation:landscape),(orientation:landscape) and (max-height:520px){
@@ -228,20 +274,22 @@ aside a:hover{text-decoration-thickness:2px}
   #ctlbar.stuck{border-bottom-color:var(--rule)}
   .ctl>.small{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .ctl .seg{width:100%} .ctl .seg button{flex:1;padding:4px 3px;font-size:.74rem} #ssp-desc{margin-left:0}
-  #legend{font-size:11px;padding:4px 7px;left:6px;bottom:18px;max-width:60%;cursor:pointer}
+  #legend{font-size:11px;padding:4px 7px;left:6px;bottom:26px;max-width:60%;cursor:pointer}
   #legend .lg-more{display:none;max-width:none} #legend.open .lg-more{display:block} #legend .lg-i{display:inline}
   #legend .sw span{min-width:10px;height:7px} #legend .lg-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #zoom{top:84px}
+  #zoom{top:78px}
 }
 #sidetog,#minibar{display:none}
 @media not all and (max-width:820px) and (orientation:portrait){
   #sidetog{display:grid;place-items:center;position:absolute;z-index:8;top:50%;transform:translateY(-50%);right:calc(var(--aside-w,400px) - 15px);width:30px;height:30px;padding:0;
            border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
   #sidetog:hover{background:var(--chip)}
-  :root.panel-hidden aside,:root.panel-hidden #sidetog{display:none}
+  :root.panel-hidden aside{display:none}
+  :root.panel-hidden #sidetog{right:12px;width:34px;height:34px;box-shadow:0 2px 10px rgba(0,0,0,.25)} :root.panel-hidden #sidetog svg{transform:rotate(180deg)}
+  #sidetog svg{transition:transform .2s}
   :root.panel-hidden #minibar{display:flex}
   #minibar{position:absolute;z-index:4;top:12px;left:50%;transform:translateX(-50%);align-items:center;gap:6px;max-width:calc(100% - 150px);
-           padding:5px 5px 5px 14px;background:var(--panel);border:1px solid var(--rule);border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+           padding:5px 6px 5px 14px;background:var(--panel);border:1px solid var(--rule);border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
   #mb-title{min-width:0;flex:0 1 auto;font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
   #minibar select{flex:none;font:600 .8rem/1.2 var(--font-body);color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:999px;padding:5px 8px}
   #mb-open{flex:none;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);cursor:pointer}
@@ -251,6 +299,10 @@ aside a:hover{text-decoration-thickness:2px}
 }
 @media (max-width:820px) and (orientation:landscape),(orientation:landscape) and (max-height:520px){:root{--aside-w:min(340px,46vw)} #minibar{max-width:calc(100% - 130px)} #mb-title{font-size:.88rem}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+/* GWL-BEGIN: warming-level view styles */
+.gw-off{display:none!important}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+/* GWL-END */
 </style>
 </head>
 <body>
@@ -262,10 +314,10 @@ aside a:hover{text-decoration-thickness:2px}
       <span id="mb-title">Climate twins</span>
       <select class="pk-per" aria-label="Time period"></select>
       <select class="pk-ssp" aria-label="Emissions scenario"></select>
-      <button id="mb-open" type="button" aria-label="Show the panel" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <!-- GWL-BEGIN --><select class="pk-mode gw-off" aria-label="View: year and scenario, or warming level"></select><select class="pk-gwl gw-off" aria-label="Global warming level"></select><!-- GWL-END -->
     </div>
     <button id="themebtn" type="button" aria-pressed="false" aria-label="Dark map" title="Dark map"></button>
-    <div id="zoom"><button id="zfit" aria-label="Show the United States" title="United States">US</button><button id="zworld" aria-label="Show the whole world" title="World">World</button><button id="zreset" aria-label="Back to the starting view" title="Back to the starting view (Esc)">Reset</button></div>
+    <div id="zoom" role="group" aria-label="Map views"><button id="zreset" type="button" aria-label="Start over: clear the place and show the starting view" title="Start over (Esc)"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 9.3 10 3.6l6.8 5.7M5 8v8.2h3.7v-4.6h2.6v4.6H15V8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="zworld" type="button" aria-label="Show the whole world" title="Whole world"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7.2"/><ellipse cx="10" cy="10" rx="3.1" ry="7.2"/><path d="M2.8 10h14.4M4 6.3h12M4 13.7h12" stroke-linecap="round"/></g></svg></button></div>
     <div id="legend"></div>
     <div id="tip" role="status"></div>
     <div id="attrib"></div>
@@ -279,18 +331,19 @@ aside a:hover{text-decoration-thickness:2px}
         <span id="sh-title">Climate twins</span>
         <select id="mper" aria-label="Time period"></select>
         <select id="mssp" aria-label="Emissions scenario"></select>
+        <!-- GWL-BEGIN --><select class="pk-mode gw-off" aria-label="View: year and scenario, or warming level"></select><select class="pk-gwl gw-off" aria-label="Global warming level"></select><!-- GWL-END -->
         <button id="sh-tog" type="button" aria-label="Hide the panel" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 9l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
     <h1>Climate twins</h1>
-    <details id="intro" class="intro" open><summary>About this map and σ</summary>
+    <details id="intro" class="intro"><summary>About this map and σ</summary>
     <p class="lede">Pick a place anywhere in North America, or one of 800 major cities around the world. The arrow points to where today's climate is the closest match to the climate that place is projected to have around 2050 or 2100.</p>
     <div class="sigma-note">
       <p><strong>What σ means.</strong> σ (sigma) measures how different two climates are, in units of a place's normal year-to-year swings. 0σ is identical.</p>
       <p>Under 1σ, the climates are as alike as two ordinary years at the same place. 1–2σ is a reasonable match, 2–4σ only partial, and over 4σ no real match.</p>
     </div></details>
     <div class="row">
-      <input id="search" list="places" placeholder="Search places, e.g. Raleigh, NC or Lisbon" autocomplete="off" aria-label="Search for a place">
+      <div class="combo"><input id="search" placeholder="Search for a city or town" autocomplete="off" spellcheck="false" aria-label="Search for a place" role="combobox" aria-expanded="false" aria-controls="plist" aria-autocomplete="list"><ul id="plist" role="listbox" aria-label="Places" hidden></ul></div>
       <div class="small" id="wstat" role="status" style="margin-top:4px"></div>
       <p class="small reqline" id="reqline">Don't see your place? <button type="button" class="linkbtn" id="reqopen">Request it</button></p>
       <dialog id="reqdlg" aria-labelledby="reqh">
@@ -309,8 +362,12 @@ aside a:hover{text-decoration-thickness:2px}
       <datalist id="places"></datalist>
     </div>
     <div id="ctlbar">
-      <div class="ctl"><div class="small" id="per-label">Period</div><div class="seg" id="per" role="group" aria-labelledby="per-label"></div></div>
-      <div class="ctl"><div class="small" id="ssp-label">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="ssp-label"></div></div>
+      <!-- GWL-BEGIN: view toggle and warming-level buttons (filled and shown by gwlInit() when the data has them) -->
+      <div class="ctl gw-off" id="gwl-mode-ctl"><div class="small" id="mode-label">View</div><div class="seg" id="gwl-mode" role="group" aria-labelledby="mode-label"></div></div>
+      <div class="ctl gw-off" id="gwl-ctl"><div class="small" id="gwl-label">Warming</div><div class="seg" id="gwl-seg" role="group" aria-labelledby="gwl-label"></div></div>
+      <!-- GWL-END -->
+      <div class="ctl" id="per-ctl"><div class="small" id="per-label">Period</div><div class="seg" id="per" role="group" aria-labelledby="per-label"></div></div>
+      <div class="ctl" id="ssp-ctl"><div class="small" id="ssp-label">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="ssp-label"></div></div>
     </div>
     <div class="small" id="ssp-desc"></div>
     <details class="settings" data-k="settings"><summary>Settings</summary>
@@ -360,6 +417,27 @@ aside a:hover{text-decoration-thickness:2px}
     </details>
     <p class="foot" id="dver"></p>
     <p class="foot"><a href="methods.html" target="_blank" rel="noopener">How this map was made: methods, data and references</a></p>
+    <p class="foot"><a href="changelog.html">What's new: every change so far</a></p>
+    <p class="foot"><button type="button" class="fbbtn" data-fb=""><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h10a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 13 11H7.5L4.5 13.5V11H3A1.5 1.5 0 0 1 1.5 9.5v-5A1.5 1.5 0 0 1 3 3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Send feedback</button></p>
+    <dialog id="fbdlg" aria-labelledby="fbh">
+      <form id="fbform" method="dialog" novalidate>
+        <h2 id="fbh">Send feedback</h2>
+        <p class="small">Questions, corrections and ideas all help. Your note goes privately to the site's author.</p>
+        <fieldset class="fbkinds"><legend>What's this about?</legend>
+          <label><input type="radio" name="kind" value="wrong"> Something looks wrong</label>
+          <label><input type="radio" name="kind" value="bug"> Something's broken</label>
+          <label><input type="radio" name="kind" value="idea"> An idea</label>
+          <label><input type="radio" name="kind" value="other" checked> Other</label>
+        </fieldset>
+        <label>Your note <textarea name="message" required maxlength="3000" rows="5"></textarea></label>
+        <label>Email <span class="muted">(optional, only if you'd like a reply; never published)</span> <input name="email" type="email" maxlength="254" autocomplete="email"></label>
+        <label class="fbctx"><input type="checkbox" name="ctx" checked> Include what I'm looking at</label>
+        <pre class="fbctxview" id="fbctxview"></pre>
+        <label class="hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+        <p class="small" id="fbmsg" role="status"></p>
+        <div class="reqbtns"><button type="button" id="fbcancel">Cancel</button><button type="submit" id="fbsend">Send</button></div>
+      </form>
+    </dialog>
     <p class="foot">Projections are not forecasts. Treat each arrow as a way to picture a scenario, not a prediction for a specific town.</p>
   </aside>
 </div>
@@ -379,9 +457,10 @@ let NV=12,K=12,MI=[0,1,2,3,4,5,6,7,8,9,10,11],HAS10=false,kgNow,zoneNow,ffpNow,k
 const isP=i=>i>=8&&i<12,decT=(v,i)=>isP(i)?v/1000:v/100,decR=(v,i)=>isP(i)?Math.exp(v/1000)-1:v/100;
 const OPEN=new Set();const op=k=>OPEN.has(k)?" open":"";
 let D,NP,NT,NM,pool,poolRaw,cellRC,plat,plon,base,fut,sd,Msh,Mtr,bestIdx,bestSig,sigTab,places,cellPlace,cellCity;
+let OVS,OVP;   // overview: per place x 32 (period, scenario, ensemble, method): sigma x100 (65535 = none), best-match lat/lon x100
 let POOLS=[],PI=0,NTNA=0,worldState="none"; // PI: 0 = North America 15 km pool, 1 = global 0.5° pool
 const MBW={w:-180,e:180,s:-60,n:84,W:2160,H:0};let heatW=null,hctxW,heatImgW,heat32W,lutW=null,gridToCellW;
-const S={per:1,gsel:-1,darkMap:false,cmp:0,sel:-1,ssp:1,ens:"tcr_likely",pm:0,metric:false,showModels:true,showAll:true,hover:null};
+const S={mode:"year",gi:1,per:1,gsel:-1,darkMap:false,cmp:0,sel:-1,ssp:1,ens:"tcr_likely",pm:0,metric:false,showModels:true,showAll:true,hover:null};
 let cur=null; // current computation
 // ---------- theme: saved choice, else the system setting
 const THEME_KEY="ct-theme",sysDark=matchMedia("(prefers-color-scheme: dark)");
@@ -397,7 +476,7 @@ function applyTheme(dark,save,anim){
   RAMP=dark?RAMP_D:RAMP_L;RAMPRGB=RAMP.map(hex2rgb);themeBtn(anim);
   if(!map||!D)return;
   setAttrib();
-  if(usingFallback)setBaseStyle();else if(map.isStyleLoaded())paintBase();
+  if(usingFallback)setBaseStyle();else if(map.isStyleLoaded()){paintBase();stateLines();}
   for(const id of["heat","heatw"])if(map.getLayer(id))map.setPaintProperty(id,"raster-opacity",dark?0.84:0.72);
   if(cur){compute();updateMapLayers();}
   legend();draw();}
@@ -438,6 +517,15 @@ function darkColor(v,prop){
   let o;if(prop==="text-color")o=mix(0.55+0.35*(1-L),[40,50,60]);else if(prop==="text-halo-color")o=[17,24,30];else o=mix(0.03+0.14*(1-L),[24,32,40]);
   return a<1?`rgba(${o[0]},${o[1]},${o[2]},${a})`:`rgb(${o[0]},${o[1]},${o[2]})`;}
 let baseOrig=null;   // Positron's own paint values, captured on each style load, restored in light mode
+// State, province and territory lines (admin level 4): the base style only draws them from zoom 8 and mixes in
+// counties; show just the first level below countries from the continent view down, fainter than national borders.
+function stateLines(){if(usingFallback||!map||!map.getLayer("boundary_3"))return;
+  try{map.setLayerZoomRange("boundary_3",2,24);
+    map.setFilter("boundary_3",["all",["==",["get","admin_level"],4],["!=",["get","maritime"],1]]);
+    map.setPaintProperty("boundary_3","line-color",S.darkMap?"#6f7c89":"#98a1ab");
+    map.setPaintProperty("boundary_3","line-width",["interpolate",["linear"],["zoom"],2,0.6,5,1,8,1.4,12,2]);
+    map.setPaintProperty("boundary_3","line-opacity",["interpolate",["linear"],["zoom"],2,0.65,4,1]);
+    map.setPaintProperty("boundary_3","line-dasharray",[3,2]);}catch(e){}}
 function paintBase(){if(usingFallback||!map)return;const st=map.getStyle();if(!st||!st.layers)return;
   if(!baseOrig){baseOrig={};for(const l of st.layers){if(l.id==="heat"||l.id==="heatw")continue;const o={},p=l.paint||{};
     for(const k in p)if(/color|icon-opacity/.test(k))o[k]=p[k];baseOrig[l.id]=o;}}
@@ -467,7 +555,14 @@ async function fetchCTW(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.o
   const u=new Uint8Array(await r.arrayBuffer());let buf=u.buffer;
   if(u[0]===0x1f&&u[1]===0x8b)buf=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
   return unpackWorld(buf);}
-async function load(){return fetchCTW("data/na.dat");}
+async function fetchJSON(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.ok)throw new Error("HTTP "+r.status+" for "+url);return r.json();}
+// Startup needs three small-or-fixed-size files: index.json (every place), overview.dat (every place's best match, for the
+// arrows shown before a pick) and na.dat (the North American pool). Per-place data comes in shards (data/p/*.dat) when a place is
+// picked; the world pool (world.dat) when the first world place is picked (or after a quiet moment on a fast connection).
+async function load(){
+  const[d,idx,ov]=await Promise.all([fetchCTW("data/na.dat"),fetchJSON("data/index.json"),fetchCTW("data/overview.dat")]);
+  if(idx.v!==d.data_version||ov.v!==d.data_version)throw new Error("the data files come from different builds (reload the page)");
+  d.idx=idx;d.ov=ov;return d;}
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 function hav(a1,o1,a2,o2){const r=Math.PI/180,dl=(a2-a1)*r,dn=(o2-o1)*r;const h=Math.sin(dl/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dn/2)**2;return 12742.0176*Math.asin(Math.min(1,Math.sqrt(h)));}
 function bearing(a1,o1,a2,o2){const r=Math.PI/180,dx=(o2-o1)*Math.cos((a1+a2)/2*r),dy=a2-a1;return(Math.atan2(dx,dy)/r+360)%360;}
@@ -481,39 +576,64 @@ function init(d){
   applyTheme(savedTheme()?savedTheme()==="dark":sysDark.matches,false);
   document.getElementById("themebtn").onclick=()=>applyTheme(!S.darkMap,true,true);
   sysDark.addEventListener("change",e=>{if(!savedTheme())applyTheme(e.matches,false,true);});
-  D=d;NP=d.NP;NT=d.targets.length;NM=d.models.length;
+  D=d;NP=d.NP;NM=d.models.length;
+  if(!d.idx)throw new Error("data/index.json is missing");
+  {const cols=d.idx.cols;d.targets=d.idx.rows.map(r=>{const o={};for(let j=0;j<cols.length;j++)o[cols[j]]=r[j];return o;});}   // {n,lat,lon,pop,c,icv,k,g,s,i}
+  NT=d.targets.length;NTNA=d.idx.na;d.glob={};d.gglob={};
   NV=d.nv||12;MI=d.midx||MI;K=MI.length;HAS10=NV>=16;
   const p16=arr(d.pool,Int16Array);pool=new Float32Array(NV*NP);poolRaw=new Float32Array(NV*NP);
   for(let i=0;i<NV;i++)for(let p=0;p<NP;p++){const v=p16[i*NP+p];pool[i*NP+p]=decT(v,i);poolRaw[i*NP+p]=decR(v,i);}
   const m=b64u8(d.mask);cellRC=new Uint32Array(NP);let c=0;
   for(let g=0;g<d.nx*d.ny;g++){if(m[g>>3]&(128>>(g&7)))cellRC[c++]=g;}
   plat=arr(d.plat,Float32Array);plon=arr(d.plon,Float32Array);
-  base=arr(d.base,Int16Array);
-  if(d.fut_d){fut=unplane16(d.fut_d);const per=fut.length/base.length;for(let t=0;t<base.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)fut[o+i]+=base[t*NV+i];}}else fut=arr(d.fut,Int16Array);
-  const z8=n=>new Uint8Array(n),z16=n=>new Uint16Array(n),nt=d.targets.length,nc=nt*16;
-  kgNow=d.kg_now?arr(d.kg_now,Uint8Array):z8(nt);zoneNow=d.zone_now?arr(d.zone_now,Uint8Array):z8(nt);ffpNow=d.ffp_now?arr(d.ffp_now,Uint16Array):z16(nt);
-  kgFut=d.kg_fut?arr(d.kg_fut,Uint8Array):z8(nc);zoneFut=d.zone_fut?arr(d.zone_fut,Uint8Array):z8(nc);ffpFut=d.ffp_fut?arr(d.ffp_fut,Uint16Array):z16(nc);
-  recentA=d.recent?arr(d.recent,Int16Array):new Int16Array(nt*NV);recSig=d.rec_sig?arr(d.rec_sig,Float32Array):new Float32Array(nt);
-  Msh=arr(d.Msh,Float32Array);Mtr=arr(d.Mtr,Float32Array);sd=arr(d.icvsd,Float32Array);
-  bestIdx=arr(d.best_idx,Int32Array);bestSig=arr(d.best_sig,Float32Array);
+  // Per-place arrays are allocated for every place (about 9 kB each) and filled shard by shard as places are picked (ingestShard).
+  const nt=NT,nc=nt*16,pp=2*4*NM;                   // pp: 2 periods x 4 scenarios x models
+  base=new Int16Array(nt*NV);fut=new Int16Array(nt*pp*NV);
+  kgNow=new Uint8Array(nt);zoneNow=new Uint8Array(nt);ffpNow=new Uint16Array(nt);
+  kgFut=new Uint8Array(nc);zoneFut=new Uint8Array(nc);ffpFut=new Uint16Array(nc);
+  recentA=new Int16Array(nt*NV);recSig=new Float32Array(nt);
+  Msh=new Float32Array(nt*K*K);Mtr=new Float32Array(nt*K*K);sd=new Float32Array(nt*NV);
+  bestIdx=new Int32Array(nt*32).fill(-1);bestSig=new Float32Array(nt*32);
+  gwlLoad(d);
+  {const o=d.ov,n=o.n;OVS=arr(o.sig,Uint16Array);const p=arr(o.pos,Int16Array);OVP=p;if(OVS.length!==n*32)throw new Error("overview does not match the place list");}
   sigTab=arr(d.sig_tab,Float32Array);places=d.places;
   cellPlace=arr(d.cell_place,Uint16Array);cellCity=arr(d.cell_city,Uint16Array);
-  d.targets.forEach(t=>t.g=0);NTNA=NT;
   POOLS[0]={g:0,NP,pool,poolRaw,cellRC,plat,plon,places,cellPlace,cellCity,kg:d.kg_pool?arr(d.kg_pool,Uint8Array):null,zone:d.zone_pool?arr(d.zone_pool,Uint8Array):null,ffp:d.ffp_pool?arr(d.ffp_pool,Uint16Array):null,sep:150,region:"North America",area:c=>225};
   buildLUT();
-  const dl=document.getElementById("places");
-  d.targets.forEach((t,i)=>{const o=document.createElement("option");o.value=t.n;dl.appendChild(o);});
   document.getElementById("modelslist").textContent="Models: "+d.models.map((m,i)=>{const r=d.tcr?d.tcr[i]:null;return m+(d.ens.tcr_likely.includes(i)?"":r==null?" (no TCR)":r>2.2?" (hot)":" (cool)");}).join(", ")+". Marked models are outside the default mid-range screen.";
 }
-// ---------- world cities (global 0.5° pool), fetched after the North American payload
+// ---------- world pool (global 0.5°), place shards: fetched on demand
 function usePool(g){const P=POOLS[g];if(!P)return;PI=g;({NP,pool,poolRaw,cellRC,plat,plon,places,cellPlace,cellCity}=P);ppCache={key:null,Pp:null};}
 function cat(A,B){const o=new A.constructor(A.length+B.length);o.set(A,0);o.set(B,A.length);return o;}
-async function loadWorld(){
-  const st=document.getElementById("wstat");worldState="loading";st.textContent="Loading world cities…";
-  try{
-    addWorld(await fetchCTW("data/world.dat"));worldState="ready";st.textContent="";
-  }catch(e){worldState="failed";st.textContent="World cities could not load, so only North America is available. ("+e.message+")";}
-}
+// The world pool (world.dat, ~2 MB) loads once, when a world place is first picked or after a quiet moment on a fast connection.
+let worldP=null,busy=0;
+function setWStat(msg){const st=document.getElementById("wstat");if(st)st.textContent=msg||"";}
+function ensureWorld(){if(worldP)return worldP;worldState="loading";
+  worldP=fetchCTW("data/world.dat").then(w=>{addWorld(w);worldState="ready";}).catch(e=>{worldState="failed";worldP=null;throw e;});return worldP;}
+// Per-place data lives in shards (data/p/*.dat, ~50 places each). ensureShard(n) fetches one at most once (retrying after a failure).
+function ensureShard(n){const s=D.idx.shards[n];if(s.done)return Promise.resolve();
+  if(!s.p)s.p=fetchCTW("data/"+s.f).then(w=>{ingestShard(w);s.done=true;}).catch(e=>{s.p=null;throw e;});return s.p;}
+const placeReady=t=>{const r=D.targets[t];return !!D.idx.shards[r.s].done&&(r.g===0||worldState==="ready");};
+// Everything a place needs before it can be shown: its shard, and the world pool for world places.
+function ensurePlace(t){if(placeReady(t))return Promise.resolve();const r=D.targets[t];
+  busy++;setWStat("Loading data for "+r.n+"…");
+  const ps=[ensureShard(r.s)];if(r.g===1)ps.push(ensureWorld());
+  return Promise.all(ps).then(()=>{}).finally(()=>{if(--busy<=0){busy=0;setWStat("");}});}
+// Copy a shard's per-place arrays into the page-wide arrays at each place's index (w.ids[slot] = page index).
+function ingestShard(w){const ids=w.ids,n=ids.length;
+  const put=(dst,src,st)=>{for(let j=0;j<n;j++)dst.set(src.subarray(j*st,(j+1)*st),ids[j]*st);};
+  const b=warr(w.base,Int16Array);if(b.length!==n*NV)throw new Error("place data uses a different set of measures");
+  const f=unplane16(w.fut_d),per=f.length/b.length;                                            // per = 2 periods x 4 SSPs x NM models
+  for(let t=0;t<n;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)f[o+i]+=b[t*NV+i];}
+  put(base,b,NV);put(fut,f,per*NV);
+  put(Msh,warr(w.Msh,Float32Array),K*K);put(Mtr,warr(w.Mtr,Float32Array),K*K);put(sd,warr(w.icvsd,Float32Array),NV);
+  put(bestIdx,warr(w.best_idx,Int32Array),32);put(bestSig,warr(w.best_sig,Float32Array),32);
+  put(kgNow,arr(w.kg_now,Uint8Array),1);put(zoneNow,arr(w.zone_now,Uint8Array),1);put(ffpNow,arr(w.ffp_now,Uint16Array),1);
+  put(kgFut,arr(w.kg_fut,Uint8Array),16);put(zoneFut,arr(w.zone_fut,Uint8Array),16);put(ffpFut,arr(w.ffp_fut,Uint16Array),16);
+  put(recentA,arr(w.recent,Int16Array),NV);put(recSig,arr(w.rec_sig,Float32Array),1);
+  for(const j in (w.sl||{}))D.targets[ids[+j]].sl=w.sl[j];
+  gwlIngest(w,put,b);
+  Object.assign(D.glob,w.glob||{});Object.assign(D.gglob,w.gglob||{});}
 // world.dat = [gzip] "CTW1" | uint32 header length | JSON header | 4-byte-aligned binary arrays referenced as {"$b":[offset,nbytes]}
 function unpackWorld(buf){const dv=new DataView(buf),u=new Uint8Array(buf);
   const mg=String.fromCharCode(u[0],u[1],u[2],u[3]);if(mg!=="CTW1"&&mg!=="CTW2")throw new Error("unexpected data format");
@@ -533,22 +653,9 @@ function addWorld(w){
   gridToCellW=new Int32Array(w.nx*w.ny).fill(-1);for(let p=0;p<NPw;p++)gridToCellW[rc[p]]=p;
   POOLS[1]={g:1,NP:NPw,pool:pl,poolRaw:pr,cellRC:rc,plat:la,plon:lo,places:w.places,cellPlace:warr(w.cell_place,Uint16Array),cellCity:warr(w.cell_city,Uint16Array),kg:w.kg_pool?arr(w.kg_pool,Uint8Array):null,zone:w.zone_pool?arr(w.zone_pool,Uint8Array):null,ffp:w.ffp_pool?arr(w.ffp_pool,Uint16Array):null,
     sep:300,region:"the world",nx:w.nx,ny:w.ny,res:w.res,area:p=>ckm*Math.cos(la[p]*Math.PI/180)*lf[p]/255};
-  const wb=warr(w.base,Int16Array),wf=unplane16(w.fut_d),per=wf.length/wb.length;       // per = 2 periods x 4 SSPs x NM models
-  for(let t=0;t<wb.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)wf[o+i]+=wb[t*NV+i];}
-  const wt=w.targets.length,cz=(x,T,n)=>x?arr(x,T):new T(n);
-  kgNow=cat(kgNow,cz(w.kg_now,Uint8Array,wt));zoneNow=cat(zoneNow,cz(w.zone_now,Uint8Array,wt));ffpNow=cat(ffpNow,cz(w.ffp_now,Uint16Array,wt));
-  kgFut=cat(kgFut,cz(w.kg_fut,Uint8Array,wt*16));zoneFut=cat(zoneFut,cz(w.zone_fut,Uint8Array,wt*16));ffpFut=cat(ffpFut,cz(w.ffp_fut,Uint16Array,wt*16));
-  recentA=cat(recentA,cz(w.recent,Int16Array,wt*NV));recSig=cat(recSig,cz(w.rec_sig,Float32Array,wt));
-  base=cat(base,wb);fut=cat(fut,wf);Msh=cat(Msh,warr(w.Msh,Float32Array));Mtr=cat(Mtr,warr(w.Mtr,Float32Array));
-  sd=cat(sd,warr(w.icvsd,Float32Array));bestIdx=cat(bestIdx,warr(w.best_idx,Int32Array));bestSig=cat(bestSig,warr(w.best_sig,Float32Array));
-  const dl=document.getElementById("places");
-  w.targets.forEach(t=>{D.targets.push(t);const o=document.createElement("option");o.value=t.n;dl.appendChild(o);});
-  NT=D.targets.length;popOrder=null;
-  document.getElementById("search").placeholder=`Search ${NT.toLocaleString()} places, e.g. Raleigh, NC or Lisbon`;
   heatW=document.createElement("canvas");const r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2));
   MBW.H=Math.round(MBW.W*(my(MBW.n)-my(MBW.s))/((MBW.e-MBW.w)*r));heatW.width=MBW.W;heatW.height=MBW.H;
   D.fallbackWorld=w.fallback||null;if(usingFallback)setBaseStyle();else if(mapReady)addWorldHeat();
-  const h=decodeURIComponent(location.hash.slice(1));if(h&&S.sel<0){const i=D.targets.findIndex(t=>t.n===h);if(i>=0)select(i,true);}
   legend();draw();
 }
 function buildWorldLUT(){const W=MBW.W,H=MBW.H,P=POOLS[1],r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2)),yN=my(MBW.n),yS=my(MBW.s);
@@ -558,11 +665,59 @@ function buildWorldLUT(){const W=MBW.W,H=MBW.H,P=POOLS[1],r=Math.PI/180,my=l=>Ma
     const o=row*P.nx;for(let i=0;i<W;i++)lutW[j*W+i]=gridToCellW[o+col[i]];}}
 function wrapLon(lon,ref){while(lon-ref>180)lon-=360;while(lon-ref<-180)lon+=360;return lon;}
 // ---------- climate vectors (transformed space: temps °C, precip log(mm+1))
-function PER(){return D.periods[S.per];}
-function futVec(t,si,mi,per=S.per){const o=new Float64Array(NV);const b=(((t*2+per)*4+si)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(fut[b+i],i);return o;}
-function ensVec(t,si,ens,per=S.per){const ml=D.ens[ens];const o=new Float64Array(NV);for(const mi of ml){const v=futVec(t,si,mi,per);for(let i=0;i<NV;i++)o[i]+=isP(i)?Math.exp(v[i])-1:v[i];}for(let i=0;i<NV;i++){o[i]/=ml.length;if(isP(i))o[i]=Math.log(o[i]+1);}return o;}
+function PER(){return gwlOn()?gwlPer():D.periods[S.per];}
+function futVec(t,si,mi,per){if(per===undefined){if(gwlOn())return gFutVec(t,S.gi,mi);per=S.per;}const o=new Float64Array(NV);const b=(((t*2+per)*4+si)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(fut[b+i],i);return o;}
+function ensVec(t,si,ens,per){const ml=per===undefined&&gwlOn()?D.ens[ens].filter(mi=>D.gwl.reach[S.gi][mi]):D.ens[ens];const o=new Float64Array(NV);for(const mi of ml){const v=futVec(t,si,mi,per);for(let i=0;i<NV;i++)o[i]+=isP(i)?Math.exp(v[i])-1:v[i];}for(let i=0;i<NV;i++){o[i]/=ml.length;if(isP(i))o[i]=Math.log(o[i]+1);}return o;}
 function baseVec(t){const o=new Float64Array(NV);for(let i=0;i<NV;i++)o[i]=decT(base[t*NV+i],i);return o;}
 function toRaw(v){return Array.from(v,(x,i)=>isP(i)?Math.exp(x)-1:x);}
+/* GWL-BEGIN: warming-level view. Alternative to (period, scenario): each model's change over the 20-year window centred on
+   the year it reaches a level of global warming above 1850-1900, pooled over the scenarios that reach it (see methods).
+   Data: D.gwl {levels, ref, now, n[ens][level], ok[level][ens], when[ens][level][ssp], reach[level][model]} and per place
+   gfut_d, gbest_idx, gbest_sig, gkg/gzone/gffp (page order of ensembles: 0 all, 1 likely-range). */
+let OVGS=null,OVGP=null;   // overview for warming levels: per place x NG x 2 x 2
+let gFut=null,gBestIdx=null,gBestSig=null,gKg=null,gZone=null,gFfp=null,NG=0;
+function gwlOn(){return S.mode==="gwl"&&!!gFut&&!!D.gwl;}
+function gwlDec(x,b,n){const per=n*NM;for(let t=0;t<b.length/NV;t++)for(let j=0;j<per;j++){const o=(t*per+j)*NV;for(let i=0;i<NV;i++)x[o+i]+=b[t*NV+i];}return x;}
+function gwlLoad(d){if(!d.gwl)return;NG=d.gwl.levels.length;const nt=NT;      // preallocated for every place; shards fill it (gwlIngest)
+  gFut=new Int16Array(nt*NG*NM*NV);gBestIdx=new Int32Array(nt*NG*4).fill(-1);gBestSig=new Float32Array(nt*NG*4);
+  gKg=new Uint8Array(nt*NG*2);gZone=new Uint8Array(nt*NG*2);gFfp=new Uint16Array(nt*NG*2);
+  if(d.ov.gsig){OVGS=arr(d.ov.gsig,Uint16Array);OVGP=arr(d.ov.gpos,Int16Array);}}
+function gwlIngest(w,put,b){if(!gFut||!w.gfut_d)return;
+  put(gFut,gwlDec(unplane16(w.gfut_d),b,NG),NG*NM*NV);put(gBestIdx,warr(w.gbest_idx,Int32Array),NG*4);put(gBestSig,warr(w.gbest_sig,Float32Array),NG*4);
+  put(gKg,warr(w.gkg,Uint8Array),NG*2);put(gZone,warr(w.gzone,Uint8Array),NG*2);put(gFfp,warr(w.gffp,Uint16Array),NG*2);}
+function gFutVec(t,gi,mi){const o=new Float64Array(NV),b=((t*NG+gi)*NM+mi)*NV;for(let i=0;i<NV;i++)o[i]=decT(gFut[b+i],i);return o;}
+function bestAt(t,ei,pm){return gwlOn()?gBestIdx[((t*NG+S.gi)*2+ei)*2+pm]:bestIdx[(((t*2+S.per)*4+S.ssp)*2+ei)*2+pm];}
+function bestSigAt(t,ei,pm){return gwlOn()?gBestSig[((t*NG+S.gi)*2+ei)*2+pm]:bestSig[(((t*2+S.per)*4+S.ssp)*2+ei)*2+pm];}
+function ensModels(){return gwlOn()?D.ens[S.ens].filter(mi=>D.gwl.reach[S.gi][mi]):D.ens[S.ens];}
+const gwlNum=L=>Number.isInteger(L)?String(L):L.toFixed(1);
+function gwlLab(i=S.gi){return "+"+gwlNum(D.gwl.levels[i])+" °C";}
+function gwlPer(){return{label:gwlLab(),years:gwlNum(D.gwl.levels[S.gi])+" °C above 1850–1900"};}
+function PL(){return gwlOn()?"at "+gwlLab():"~"+PER().label;}
+function WHEN(){return gwlOn()?`a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900`:`${PER().years} under ${D.ssps[S.ssp]}`;}
+function UNDER(){return gwlOn()?` at ${gwlLab()} of global warming`:` under ${D.ssps[S.ssp]}`;}
+function BY(){return gwlOn()?`In a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900,`:`By ~${PER().label} under ${D.ssps[S.ssp]},`;}
+function gwlDesc(){const g=D.gwl,ei=S.ens==="tcr_likely"?1:0,L=g.levels[S.gi],w=g.when[ei][S.gi].map((y,s)=>y?{y,s:D.ssps[s]}:null).filter(Boolean).sort((a,b)=>a.y-b.y);
+  return `Global warming of ${gwlNum(L)} °C above the 1850–1900 average (1991–2020 is already about +${(+g.now).toFixed(1)} °C). ${g.n[ei][S.gi]} of ${D.ens[S.ens].length} models reach it`+(w.length?`, around ${w[0].y} (${w[0].s}) to ${w[w.length-1].y} (${w[w.length-1].s}).`:".")+" Results pool every scenario that gets there.";}
+function gwlSync(){if(!D||!D.gwl||!gFut)return;const g=D.gwl,ei=S.ens==="tcr_likely"?1:0,on=gwlOn();
+  if(!g.ok[S.gi][ei]){const j=g.ok.map((r,i)=>r[ei]?i:-1).filter(i=>i>=0);if(j.length)S.gi=j.reduce((a,b)=>Math.abs(b-S.gi)<Math.abs(a-S.gi)?b:a);}
+  const $=id=>document.getElementById(id),tg=(el,off)=>{if(el)el.classList.toggle("gw-off",off);};
+  [...$("gwl-mode").children].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===S.mode)));
+  [...$("gwl-seg").children].forEach((b,i)=>{const ok=!!g.ok[i][ei];b.disabled=!ok;b.setAttribute("aria-pressed",String(i===S.gi));
+    b.title=ok?`${gwlNum(g.levels[i])} °C above 1850–1900, averaged over the 20 years around the year each model reaches it`:`Fewer than ${g.min_models} of the selected models reach ${gwlLab(i)} this century.`+(S.ens==="tcr_likely"?" Try Settings, Include the models outside the likely range.":"");});
+  tg($("per-ctl"),on);tg($("ssp-ctl"),on);tg($("gwl-ctl"),!on);
+  document.querySelectorAll(".pk-per,.pk-ssp,#mper,#mssp").forEach(x=>tg(x,on));
+  document.querySelectorAll(".pk-gwl").forEach(x=>{tg(x,!on);x.value=S.gi;[...x.options].forEach((o,i)=>o.disabled=!g.ok[i][ei]);});
+  document.querySelectorAll(".pk-mode").forEach(x=>x.value=S.mode);
+  $("ssp-desc").textContent=on?gwlDesc():SSP_DESC[S.ssp];}
+function gwlInit(){if(!D.gwl||!gFut)return;const g=D.gwl,$=id=>document.getElementById(id);
+  const setMode=m=>{S.mode=m;refresh();};
+  const modes=[["year","Year & scenario","Pick a future period and an emissions scenario"],["gwl","Warming level","Pick how much the world has warmed (above 1850–1900) and see the climate at that point, whichever year and scenario gets there"]];
+  modes.forEach(([m,l,t])=>{const b=document.createElement("button");b.textContent=l;b.title=t;b.dataset.m=m;b.onclick=()=>setMode(m);$("gwl-mode").appendChild(b);});
+  g.levels.forEach((L,i)=>{const b=document.createElement("button");b.textContent="+"+gwlNum(L)+" °C";b.setAttribute("aria-label",`${gwlNum(L)} degrees Celsius of global warming`);b.onclick=()=>{S.gi=i;refresh();};$("gwl-seg").appendChild(b);});
+  document.querySelectorAll(".pk-mode").forEach(x=>{x.innerHTML=modes.map(([m,l])=>`<option value="${m}">${m==="year"?"Years":"Warming"}</option>`).join("");x.onchange=()=>setMode(x.value);});
+  document.querySelectorAll(".pk-gwl").forEach(x=>{x.innerHTML=g.levels.map((L,i)=>`<option value="${i}">+${gwlNum(L)} °C</option>`).join("");x.onchange=()=>{S.gi=+x.value;refresh();};});
+  $("gwl-mode-ctl").classList.remove("gw-off");document.querySelectorAll(".pk-mode").forEach(x=>x.classList.remove("gw-off"));gwlSync();}
+/* GWL-END */
 function metric(t,pm){const src=pm?Mtr:Msh,k=pm?D.targets[t].k:K;const M=new Float64Array(K*k);for(let i=0;i<K;i++)for(let j=0;j<k;j++)M[i*k+j]=src[t*K*K+i*K+j];return{k,M};}
 function proj(v,mt){const q=new Float64Array(mt.k);for(let j=0;j<mt.k;j++){let s=0;for(let i=0;i<K;i++)s+=v[MI[i]]*mt.M[i*mt.k+j];q[j]=s;}return q;}
 let ppCache={key:null,Pp:null};
@@ -581,7 +736,7 @@ function compute(){
   if(S.sel<0){cur=null;return;}
   const t=S.sel,mt=metric(t,S.pm),k=mt.k,Pp=projectPool(t,S.pm,mt);
   const ev=ensVec(t,S.ssp,S.ens),q=proj(ev,mt);
-  const glob=(D.glob||{})[`${S.per}|${t}|${S.ssp}|${S.ens==="tcr_likely"?1:0}`]||null;
+  const glob=gwlOn()?((D.gglob||{})[`g${S.gi}|${t}|${S.ens==="tcr_likely"?1:0}`]||null):(D.glob||{})[`${S.per}|${t}|${S.ssp}|${S.ens==="tcr_likely"?1:0}`]||null;
   const D2=dist2(Pp,q,k,new Float32Array(NP));
   const sig=new Float32Array(NP);for(let p=0;p<NP;p++)sig[p]=sigma(Math.sqrt(D2[p]),k);
   const best=argmin(D2);
@@ -590,12 +745,12 @@ function compute(){
   const sep=POOLS[PI].sep;const sites=[best];for(let n=0;n<NP&&sites.length<5&&n<40000;n++){const c=idx[n];if(sites.every(s=>hav(plat[c],plon[c],plat[s],plon[s])>=sep))sites.push(c);}
   // models
   const models=[];const tmp=new Float32Array(NP);
-  for(const mi of D.ens[S.ens]){const qm=proj(futVec(t,S.ssp,mi),mt);dist2(Pp,qm,k,tmp);const c=argmin(tmp);models.push({mi,c,s:sigma(Math.sqrt(tmp[c]),k)});}
+  for(const mi of ensModels()){const qm=proj(futVec(t,S.ssp,mi),mt);dist2(Pp,qm,k,tmp);const c=argmin(tmp);models.push({mi,c,s:sigma(Math.sqrt(tmp[c]),k)});}
   const qb=proj(baseVec(t),mt);let dd=0;for(let j=0;j<k;j++)dd+=(q[j]-qb[j])**2;const own=sigma(Math.sqrt(dd),k);
   let area=0;const ar=POOLS[PI].area;for(let p=0;p<NP;p++)if(sig[p]<2)area+=ar(p);
   // other PC mode (precomputed) for robustness
   const ei=S.ens==="tcr_likely"?1:0; // batch order: all=0, tcr_likely=1
-  const bo=(((t*2+S.per)*4+S.ssp)*2+ei)*2+(1-S.pm);const oi=bestIdx[bo],os=bestSig[bo];
+  const oi=bestAt(t,ei,1-S.pm),os=bestSigAt(t,ei,1-S.pm);
   cur={glob,t,k,sig,best,sites,models,own,area,ev,other:{c:oi,s:os}};
   // heat image in Web Mercator via the lookup table
   const cellCol=new Uint32Array(NP);
@@ -629,7 +784,7 @@ function buildLUT(){gridToCell=new Int32Array(D.nx*D.ny).fill(-1);for(let p=0;p<
       if(c>=0&&rr>=0&&c<D.nx&&rr<D.ny)lut[j*W+i]=gridToCell[rr*D.nx+c];}}}
 // ---------- drawing
 function cellXY(c){return[plon[c],plat[c]];}
-function toScr(lon,lat){const p=map.project([lon,lat]);return[p.x,p.y];}
+function toScr(lon,lat){const p=map.project([wrapLon(lon,map.getCenter().lng),lat]);return[p.x,p.y];}
 function sizeOv(){const r=wrap.getBoundingClientRect(),dpr=window.devicePixelRatio||1;ov.width=Math.max(1,Math.round(r.width*dpr));ov.height=Math.max(1,Math.round(r.height*dpr));ov.style.width=r.width+"px";ov.style.height=r.height+"px";}
 function resize(){if(!map)return;map.resize();sizeOv();const r=wrap.getBoundingClientRect();if(r.width>=20&&r.height>=20){if(!fitted)fit();if(pendingFocus&&cur){pendingFocus=false;focusOn();}}draw();}
 let fitted=false,pendingFocus=false;
@@ -656,9 +811,9 @@ function draw(){
   const lim=overviewLimit(z),shown=new Uint8Array(NT);
   if(S.showAll&&!cur){ctx.lineCap="butt";
     let nOn=0;for(let n=0;n<NT&&nOn<lim;n++){const t=popOrder[n];const tt=D.targets[t];const[a,b]=toScr(tt.lon,tt.lat);
-      if(a<-8||a>W+8||b<-8||b>H+8)continue;nOn++;shown[t]=1;const o=(((t*2+S.per)*4+S.ssp)*2+ei)*2+S.pm;const c=bestIdx[o];if(c<0)continue;
-      const Pg=POOLS[tt.g];const[x,y]=toScr(wrapLon(Pg.plon[c],tt.lon),Pg.plat[c]);
-      const sg=bestSig[o];if(sg>=4||(sg>=2&&Math.hypot(x-a,y-b)<4)){ctx.beginPath();ctx.arc(a,b,6,0,7);ctx.lineWidth=3.4;ctx.strokeStyle=m.casing;ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle=RAMP[5];ctx.stroke();continue;}
+      if(a<-8||a>W+8||b<-8||b>H+8)continue;nOn++;shown[t]=1;const gw=gwlOn()&&OVGS,oo=gw?((t*NG+S.gi)*2+ei)*2+S.pm:t*32+((S.per*4+S.ssp)*2+ei)*2+S.pm,sq=(gw?OVGS:OVS)[oo];if(sq===65535)continue;
+      const OP=gw?OVGP:OVP,[x,y]=toScr(wrapLon(OP[oo*2+1]/100,tt.lon),OP[oo*2]/100);
+      const sg=sq/100;if(sg>=4||(sg>=2&&Math.hypot(x-a,y-b)<4)){ctx.beginPath();ctx.arc(a,b,6,0,7);ctx.lineWidth=3.4;ctx.strokeStyle=m.casing;ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle=RAMP[5];ctx.stroke();continue;}
       const dash=sg>=2;arrow(a,b,x,y,colorFor(sg)||"#5a6675",1.8,8,dash,m.casing,0.9);}}
   const r0=z<3.5?2:z<5?2.8:3.6;
   for(let t=0;t<NT;t++){const tt=D.targets[t];const[x,y]=toScr(tt.lon,tt.lat);if(x<-10||y<-10||x>W+10||y>H+10)continue;
@@ -672,7 +827,7 @@ function draw(){
     if(cur.glob)cur.glob.sites.forEach((q,i)=>{const[x,y]=toScr(q[1],q[0]);if(x<-20||y<-20||x>W+20||y>H+20)return;const r=S.gsel===i?11:9;
       ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();ctx.fillStyle=S.gsel===i?m.acc:m.halo;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=m.ink;ctx.stroke();
       ctx.fillStyle=S.gsel===i?m.halo:m.ink;ctx.font="700 9px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("W"+(i+1),x,y+.5);
-      if(S.gsel===i)label(q[3],x,y+20,m.ink,m.halo);});
+      if(S.gsel===i)label(`${q[3]}, ${q[4]}`,x,y+20,m.ink,m.halo);});
     const[x,y]=toScr(wrapLon(plon[cur.best],tt.lon),plat[cur.best]);
     ctx.lineCap="round";const dsh=cur.sig[cur.best]>=2,selfm=hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60;
     if(!selfm){const L=Math.hypot(x-a,y-b),gap=10;                                   // stop the tip just outside the match dot and its outline
@@ -681,11 +836,13 @@ function draw(){
     ctx.beginPath();ctx.arc(x,y,6.5,0,7);ctx.fillStyle=m.acc;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=m.halo;ctx.stroke();}
     else{ctx.beginPath();ctx.arc(a,b,15,0,7);ctx.lineWidth=2.5;ctx.strokeStyle=RAMP[5];ctx.stroke();}
     star(a,b,9,m.dot,m.halo);
-    label(tt.n,a,b-(selfm?22:14),m.ink,m.halo);const nn=nearName(cur.best);if(!selfm&&(Math.hypot(x-a,y-b)>45||y>b+20))label(PI?nn.name.replace(/, [^,]+$/,""):nn.name.replace(/, [A-Z.]+( MX)?$/,""),x,y+18,m.ink,m.halo);}
+    label(tt.n,a,b-(selfm?22:14),m.ink,m.halo);const nn=nearName(cur.best);if(!selfm&&(Math.hypot(x-a,y-b)>45||y>b+20))label(nn.name,x,y+18,m.ink,m.halo);}
 }
 function star(x,y,r,f,s){ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;ctx.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}ctx.closePath();ctx.fillStyle=f;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=s;ctx.stroke();}
 function label(t,x,y,f,s){ctx.font="700 13px "+css("--font-body");ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle=s;ctx.lineJoin="round";ctx.strokeText(t,x,y);ctx.fillStyle=f;ctx.fillText(t,x,y);}
 // ---------- panel
+function tropNote(s){const t=D.targets[cur.t];if(s<2||Math.abs(t.lat)>=30)return "";
+  return `<p class="small tropnote"><strong>Why no ${s>=4?"":"close "}match?</strong> Places that are already among the warmest on Earth have nowhere warmer to compare with, and their climates vary little from year to year, so warming stands out sharply. <a href="methods.html#tropics">More on this</a></p>`;}
 function quality(s){if(s<1)return["Strong match","q-good"];if(s<2)return["Reasonable match","q-fair"];if(s<4)return["Partial match","q-partial"];return["No real match","q-novel"];}
 function fT(c){return S.metric?c.toFixed(1)+"°":(c*9/5+32).toFixed(0)+"°";}
 function fdT(c){const v=S.metric?c:c*9/5;return(v>=0?"+":"")+v.toFixed(1)+"°";}
@@ -704,7 +861,7 @@ function panel(){
   const tt=D.targets[cur.t],c=cur.best,bs=cur.sig[c];const [ql,qc]=quality(bs);
   const km=hav(tt.lat,tt.lon,plat[c],plon[c]),br=compass(bearing(tt.lat,tt.lon,plat[c],plon[c]));
   const nn=nearName(c),city=cityName(c);
-  const ensN=D.ens[S.ens].length;
+  const ensN=ensModels().length;
   const agree=cur.models.filter(m=>hav(plat[m.c],plon[m.c],plat[c],plon[c])<500).length;
   const oc=cur.other.c,od=oc>=0?hav(plat[oc],plon[oc],plat[c],plon[c]):0;
   const where=nn.km<12?esc(nn.name):`${Math.round(kmU(nn.km))} ${distU()} from ${esc(nn.name)}`;
@@ -713,14 +870,15 @@ function panel(){
   let h=`<h2>${esc(tt.n)}</h2>`;
   if(noMatch){
     h+=`<p class="answer"><strong>${PI?"No place on Earth":"No place in North America"} has this climate today.</strong> `+(selfMatch
-      ?`In ${PER().years} under ${D.ssps[S.ssp]}, its climate is ${cur.own.toFixed(1)}σ from its own present climate, and nowhere else ${PI?"in the world":"on the continent"} comes closer.</p>`
-      :`The closest partial match under ${D.ssps[S.ssp]} is ${where}, ${dirTxt}.</p>`);
+      ?`In ${WHEN()}, its climate is ${cur.own.toFixed(1)}σ from its own present climate, and nowhere else ${PI?"in the world":"on the continent"} comes closer.</p>`
+      :`The closest partial match${UNDER()} is ${where}, ${dirTxt}.</p>`);
     if(cur.glob&&cur.glob.s<2){const g0=cur.glob.sites[0];h+=`<p class="answer">Worldwide, the closest match today is <strong>${gname(g0)}</strong> (${g0[2].toFixed(2)}σ).</p>`;}
-    h+=`<span class="badge q-novel">No match, ${bs.toFixed(1)}σ</span>`;
+    h+=`<span class="badge q-novel">No match, ${bs.toFixed(1)}σ</span>`+tropNote(bs);
   }else{
-    h+=partial?`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
-      :`<p class="answer">In ${PER().years} under ${D.ssps[S.ssp]}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
-    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`;
+    h+=partial?`<p class="answer">In ${WHEN()}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
+      :selfMatch?`<p class="answer">In ${WHEN()}, <strong>no place today is a closer match than ${esc(tt.n)} itself.</strong> It will warm, but its weather already varies so much from year to year that the projected change is small by comparison.</p>`
+      :`<p class="answer">In ${WHEN()}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
+    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
     const lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
     let why=`${agree} of ${ensN} models point to this area`;
@@ -742,8 +900,8 @@ function panel(){
     h+=`<ol class="sites" start="1">${li(cur.sites[0],0)}</ol><details class="moresites" data-k="${k}"${op(k)}><summary>${n} more good match${n>1?"es":""}, at least ${Math.round(kmU(POOLS[PI].sep))} ${distU()} apart</summary><ol class="sites" start="2">${cur.sites.slice(1).map((s,i)=>li(s,i+1)).join("")}</ol><p class="small">Matches under 1σ are about equally good. Tap one to compare it below.</p></details>`;}
   // climate comparison
   const cc=cur.sites[S.cmp]??c;const now=toRaw(baseVec(cur.t)),fu=toRaw(cur.ev);let an=[];for(let i=0;i<NV;i++)an.push(poolRaw[i*NP+cc]);
-  const Pf=POOLS[PI],eiF=S.ens==="tcr_likely"?1:0,fo=((cur.t*2+S.per)*4+S.ssp)*2+eiF;
-  let feat=HAS10&&Pf.kg?{now:[kgNow[cur.t],zoneNow[cur.t],ffpNow[cur.t]],fut:[kgFut[fo],zoneFut[fo],ffpFut[fo]],an:[Pf.kg[cc],Pf.zone[cc],Pf.ffp[cc]]}:null;
+  const Pf=POOLS[PI],eiF=S.ens==="tcr_likely"?1:0,fo=((cur.t*2+S.per)*4+S.ssp)*2+eiF,gfo=(cur.t*NG+S.gi)*2+eiF;
+  let feat=HAS10&&Pf.kg?{now:[kgNow[cur.t],zoneNow[cur.t],ffpNow[cur.t]],fut:gwlOn()?[gKg[gfo],gZone[gfo],gFfp[gfo]]:[kgFut[fo],zoneFut[fo],ffpFut[fo]],an:[Pf.kg[cc],Pf.zone[cc],Pf.ffp[cc]]}:null;
   let mname=describeCell(cc),mlab=S.cmp?"Match "+(S.cmp+1):"Best match";
   if(S.gsel>=0&&cur.glob){const q=cur.glob.sites[S.gsel];an=q[6];mname=gname(q);mlab="Worldwide match "+(S.gsel+1);if(feat)feat.an=q.length>9?[q[7],q[8],q[9]]:null;}
   h+=compareHTML(tt.n,tt.lat,now,fu,an,mlab,mname,feat,tt);
@@ -772,7 +930,7 @@ function humidHTML(SN,S3,topic,C,TU,M){const mx=v=>Math.max(v[12],v[13],v[14],v[
 function zoneTxt(z){return z?`${Math.floor(z/2)}${z%2?"b":"a"}`:"–";}
 function featHTML(f,S3,topic){const cols=[f.now,f.fut,f.an];
   const code=i=>D.kg&&i<D.kg.length?`<abbr title="${esc(D.kg_name[i])}">${D.kg[i]}</abbr>`:"–",name=i=>D.kg&&i<D.kg.length?esc(D.kg_name[i]):"–";
-  const lab=[["s-now","Here now"],["s-fut",`Here ~${PER().label}`],["s-mat","Match"]];
+  const lab=[["s-now","Here now"],["s-fut",`Here ${PL()}`],["s-mat","Match"]];
   let h=topic("kg","Climate type","Köppen–Geiger",cols.map(c=>c?code(c[0]):"–"));
   h+=`<ul class="kgl">${lab.map(([k,l],j)=>`<li><i class="sw ${k}"></i>${l}: <strong>${cols[j]?code(cols[j][0]):"–"}</strong> ${cols[j]?name(cols[j][0]):""}</li>`).join("")}</ul><p class="cap">Köppen–Geiger climate types, computed from monthly averages with the rules of Beck et al. (2018).</p></div></details>`;
   h+=topic("zone","Hardiness zone","estimated",cols.map(c=>c?zoneTxt(c[1]):"–"));
@@ -783,8 +941,40 @@ function recentHTML(place,now){const t=cur.t;if(!HAS10||!recSig[t])return "";con
   const f50=toRaw(ensVec(t,1,S.ens,0));let p=0;for(let i=0;i<8;i++)p+=(f50[i]-now[i]);p/=8;
   const share=p>0.2&&a>0?Math.round(a/p*100):null;
   return `<p class="recent"><strong>Already happening:</strong> ${y[0]}–${y[1]} averaged ${Math.abs(dv).toFixed(1)}°${M?"C":"F"} ${a>=0?"warmer":"cooler"} here than 1991–2020${share!==null&&share<=150?`, about ${share}% of the warming projected by ~2050 under SSP2-4.5`:""}.</p>`;}
-function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!v["2050"]||!v["2100"]||[...v["2050"],...v["2100"]].some(x=>typeof x!=="number"))return "";const u=x=>M?x.toFixed(2)+" m":(x*3.281).toFixed(1)+" ft",r=a=>`${u(a[1])} (likely ${u(a[0])}–${u(a[2])})`;
-  return `<p class="slr"><strong>Sea level:</strong> projected to rise ${r(v["2050"])} by 2050 and ${r(v["2100"])} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away).</p>`;}
+function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!v["2050"]||!v["2100"]||[...v["2050"],...v["2100"]].some(x=>typeof x!=="number"))return "";const n=x=>M?Math.abs(x).toFixed(2):(Math.abs(x)*3.281).toFixed(1),un=M?" m":" ft";
+  const rng=a=>a[0]>=0?`likely ${n(a[0])}–${n(a[2])}${un}`:a[2]<=0?`likely ${n(a[2])}–${n(a[0])}${un}`:`likely between a ${n(a[0])}${un} fall and a ${n(a[2])}${un} rise`;
+  const dir=a=>a[1]>=0?"rise":"fall",a5=v["2050"],a1=v["2100"];
+  const r=(a,verb)=>`${verb?dir(a)+" ":""}${n(a[1])}${un} (${rng(a)})`;
+  return `<p class="slr"><strong>Sea level:</strong> projected to ${r(a5,true)} by 2050 and ${r(a1,dir(a1)!==dir(a5))} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, ${sl.km<3?"projection for a tide gauge here":`nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away`}).</p>`;}
+/* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
+   or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5 only (see methods). */
+let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded
+function extLoad(){EXT=null;fetch("data/extremes.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places&&j.indices){EXT=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
+function extHTML(tt,topic,S3,M){
+  if(!tt)return"";
+  if(EXT===undefined){extLoad();return"";}
+  if(!EXT)return"";
+  const P=EXT.places[tt.lat.toFixed(4)+","+tt.lon.toFixed(4)],pk=EXT.periods[S.per];
+  if(!P||!P.f||!P.f[pk])return `<p class="ext-none">Extreme-day counts are not available for this place (the daily-data grid has no land cell here).</p>`;
+  const want=D.ssps[S.ssp],ids=EXT.scenarios,order=["ssp126","ssp245","ssp370","ssp585"];
+  let sid=ids.find(i=>EXT.labels[i]===want),near=false;
+  if(!sid){near=true;sid=ids.slice().sort((a,b)=>Math.abs(order.indexOf(a)-S.ssp)-Math.abs(order.indexOf(b)-S.ssp)||order.indexOf(b)-order.indexOf(a))[0];}
+  const avail=ids.map(i=>EXT.labels[i]).join(" and "),slab=EXT.labels[sid];
+  const num=(v,k)=>v==null?"–":(k==="rx1"?(M?Math.round(v):(v/25.4).toFixed(1)):Math.round(v)).toLocaleString();
+  const cell=(a,k)=>a[0]==null?"–":`${num(a[0],k)}<br><small>${num(a[1],k)}–${num(a[2],k)}</small>`;
+  const rows=EXT.indices.map((ix,i)=>{const now=[P.b[i],P.br[i][0],P.br[i][1]],c5=P.f[EXT.periods[0]][sid][i],c1=P.f[EXT.periods[EXT.periods.length-1]][sid][i];return{ix,i,now,c5,c1};})
+    .filter(r=>[r.now,r.c5,r.c1].some(a=>a[0]!=null&&a[0]>=0.5));
+  if(!rows.length)return"";
+  const fut=r=>P.f[pk][sid][r.i];
+  const head=rows.find(r=>r.ix.id==="tx35"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tx30"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tr20")||rows.find(r=>r.ix.id==="fd")||rows[0];
+  const unit=r=>r.ix.id==="rx1"?(M?"mm":"inches"):r.ix.unit;
+  const short=id=>({tx35:"Days over 35 °C (95 °F)",tx30:"Days over 30 °C (86 °F)",tr20:"Tropical nights (low 20 °C+)",fd:"Frost days (low below 0 °C)",wb28:"Hot-humid days (wet-bulb 28 °C+)",cdd:"Longest dry spell",rx1:"Wettest day"})[id];
+  let h=topic("ext","Extreme days",`${short(head.ix.id)}, per year`,[num(head.now[0],head.ix.id),num(fut(head)[0],head.ix.id),"–"]);
+  h+=`<table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
+  for(const r of rows)h+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
+  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected), available for ${avail} only${near?`, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
+  return h;}
+/* END extreme-days */
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const SN=seasons(lat);
   const M=S.metric,TU=M?"°C":"°F",C=v=>M?v:v*9/5+32,dC=v=>M?v:v*9/5,P=mm=>M?mm:mm/25.4;
@@ -792,23 +982,28 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const deg=v=>Math.round(C(v))+"°",dd=x=>(M?Math.abs(x).toFixed(1):Math.round(Math.abs(x)))+"°",pv=mm=>M?Math.round(P(mm)).toLocaleString():P(mm).toFixed(1);
   const sgn=x=>(x>=0?"+":"−")+dd(x);
   const ta=v=>M?+C(annT(v)).toFixed(1):Math.round(C(annT(v))),tas=v=>(M?ta(v).toFixed(1):ta(v))+"°",tdel=(a,b)=>{const x=+(ta(a)-ta(b)).toFixed(1);return x===0?null:(x>0?"+":"−")+(M?Math.abs(x).toFixed(1):Math.abs(x))+"°";};
-  const S3=[["s-now","Here now","1991–2020",now],["s-fut",`Here ~${PER().label}`,PER().years,fu],["s-mat",`${mlab} now`,"1991–2020",an]];
+  const S3=[["s-now","Here now","1991–2020",now],["s-fut",`Here ${PL()}`,PER().years,fu],["s-mat",`${mlab} now`,"1991–2020",an]];
   const nm=measNames(lat);
   // plain-language summary
   const dT=ta(fu)-ta(now),pr=annP(fu)/annP(now)-1;
   let big=0;for(let i=1;i<8;i++)if(Math.abs(fu[i]-now[i])>Math.abs(fu[big]-now[big]))big=i;
-  let sum=`By ~${PER().label} under ${D.ssps[S.ssp]}, ${esc(place)} is ${M?Math.abs(dT).toFixed(1):Math.abs(dT)}°${M?"C":"F"} ${dT>=0?"warmer":"cooler"} on average, most in its ${nm[big]} (${sgn(dC(fu[big]-now[big]))}), and `+
+  let sum=`${BY()} ${esc(place)} is ${M?Math.abs(dT).toFixed(1):Math.abs(dT)}°${M?"C":"F"} ${dT>=0?"warmer":"cooler"} on average, most in its ${nm[big]} (${sgn(dC(fu[big]-now[big]))}), and `+
     (Math.abs(pr)<0.03?"about as wet as today.":`${Math.round(Math.abs(pr)*100)}% ${pr>0?"wetter":"drier"} over the year.`);
   let wi=0;for(let i=1;i<8;i++)if(Math.abs(an[i]-fu[i])>Math.abs(an[wi]-fu[wi]))wi=i;
   const wd=dC(an[wi]-fu[wi]),pm=annP(an)/annP(fu)-1,ok=Math.abs(wd)<=(M?1.5:2.5);
+  const selfCmp=!!(tt&&cur&&S.cmp===0&&S.gsel<0&&hav(tt.lat,tt.lon,plat[cur.best],plon[cur.best])<60);
+  if(selfCmp){const ch=dC(fu[wi]-an[wi]);
+    sum+=ok?` Its climate today is already within ${dd(Math.max(Math.abs(wd),M?0.5:1))} of that in every season.`
+           :` Its weather already swings so much from year to year that this still counts as a close match, and no other place today comes closer.`;}
+  else{
   sum+=ok?` Today the climate ${esc(mname)} is within ${dd(Math.max(Math.abs(wd),M?0.5:1))} of that in every season`
-         :` Today the climate ${esc(mname)} comes closest, though its ${nm[wi]} are ${dd(wd)} ${wd>0?"warmer":"cooler"}`;
-  sum+=Math.abs(pm)<0.06?", with similar yearly precipitation.":`, with ${Math.round(Math.abs(pm)*100)}% ${pm>0?"more":"less"} precipitation.`;
+         :` Today the climate ${esc(mname)} ${S.cmp>0||S.gsel>=0?"is also close":"comes closest"}, though its ${nm[wi]} are ${dd(wd)} ${wd>0?"warmer":"cooler"}`;
+  sum+=Math.abs(pm)<0.06?", with similar yearly precipitation.":`, with ${Math.round(Math.abs(pm)*100)}% ${pm>0?"more":"less"} precipitation.`;}
   let h=`<section class="cmp" aria-labelledby="cmp-h"><h3 id="cmp-h">How the climates compare</h3><p class="cmp-sum">${sum}</p>`;
-  h+=recentHTML(place,now);if(tt&&tt.sl)h+=seaHTML(tt.sl);
+  h+=recentHTML(place,now);if(tt&&tt.sl&&!gwlOn())h+=seaHTML(tt.sl);
   // temperature: stat blocks + range bars on one axis
   const topic=(k,t,sub,vals)=>`<details class="topic" data-k="t-${k}"${op("t-"+k)}><summary><span class="t">${t}<small>${sub}</small></span>${vals.map(v=>`<span class="v">${v}</span>`).join("")}</summary><div class="tb">`;
-  h+=`<div class="glance-h" aria-hidden="true"><span></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?"~"+PER().label:"Match"}</span>`).join("")}<span></span></div>`;
+  h+=`<div class="glance-h" aria-hidden="true"><span></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?PL():"Match"}</span>`).join("")}<span></span></div>`;
   const stat=(f,dl)=>`<div class="stats">${S3.map(([k,l,y,v],i)=>`<div class="st ${k}"><div class="k">${l}</div><div class="v">${f(v)}</div><div class="d">${dl(i,v,y)}</div></div>`).join("")}</div>`;
   h+=topic("temp","Temperature",`${TU}, yearly average`,S3.map(x=>tas(x[3])));
   let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let i=0;i<8;i++){lo=Math.min(lo,C(v[i]));hi=Math.max(hi,C(v[i]));}
@@ -833,9 +1028,11 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
     S3.forEach(([k, , ,v],j)=>{h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:0;width:${PX(v[8+q])}%"><b class="hi">${pv(v[8+q])}</b></div>`;});
     h+=`</div></div>`;}
   h+=`</div><p class="cap">Total precipitation in each season, rain and snow as water.</p></div></details>`;
+  h+=extHTML(tt,topic,S3,M);   // extreme-days block: see "BEGIN extreme-days" below
   if(feat)h+=featHTML(feat,S3,topic);
   // exact values, also the accessible version of the charts
   const cols=[now,fu,an];
+  h+=`<p class="small fbline"><button type="button" class="linkbtn" data-fb="wrong">Something look off for this place? Tell me</button></p>`;
   h+=`<details class="exact" data-k="exact"${op("exact")}><summary>Exact values</summary><div class="tablewrap"><table class="clim ex"><thead><tr><th></th>${S3.map(([k,l])=>`<th><span class="sw ${k}"></span>${l.replace("Here ","").replace(" now","")}</th>`).join("")}</tr></thead><tbody>`;
   h+=`<tr class="grp"><th colspan="4">Temperature (${TU})</th></tr><tr class="tot"><td>Annual average</td>${cols.map(v=>`<td>${fT(annT(v))}</td>`).join("")}</tr>`;
   for(let q=0;q<4;q++)for(const[o,w]of[[0,"high"],[4,"low"]])h+=`<tr><td>${SN[q]} ${w}</td>${cols.map(v=>`<td>${fT(v[o+q])}</td>`).join("")}</tr>`;
@@ -877,13 +1074,14 @@ function legend(){const el=document.getElementById("legend");if(!el)return;
   if(S.showModels&&cur.models&&cur.models.length)rows.push(["model","Each model’s match"]);
   rows.push(["outline","Outlined: under 2σ, close"]);
   rows.push(["blank","No colour: over 8σ"]);
-  el.innerHTML=`<div class="lg-title">How alike to ${esc(tt.n)}, ~${PER().label} (σ)${info}</div>${bar(7,BOUNDS.slice(0,8))}`+key(rows);}
-function refresh(){{const mp=document.getElementById("mper"),ms=document.getElementById("mssp");if(mp){mp.value=S.per;ms.value=S.ssp;}document.querySelectorAll(".pk-per").forEach(x=>x.value=S.per);document.querySelectorAll(".pk-ssp").forEach(x=>x.value=S.ssp);}S.cmp=0;S.gsel=-1;hideTip();compute();panel();legend();updateMapLayers();draw();}
+  el.innerHTML=`<div class="lg-title">How alike to ${esc(tt.n)}, ${PL()} (σ)${info}</div>${bar(7,BOUNDS.slice(0,8))}`+key(rows);}
+function refresh(){gwlSync();{const mp=document.getElementById("mper"),ms=document.getElementById("mssp");if(mp){mp.value=S.per;ms.value=S.ssp;}document.querySelectorAll(".pk-per").forEach(x=>x.value=S.per);document.querySelectorAll(".pk-ssp").forEach(x=>x.value=S.ssp);}S.cmp=0;S.gsel=-1;hideTip();compute();panel();legend();updateMapLayers();draw();}
 (()=>{const as=document.querySelector("aside"),bar=()=>document.getElementById("ctlbar");if(as)as.addEventListener("scroll",()=>{const b=bar();if(b)b.classList.toggle("stuck",as.scrollTop>(b.offsetTop-30));},{passive:true});})();
-const SIDE=(()=>{const root=document.documentElement,hide=document.getElementById("sidetog"),show=document.getElementById("mb-open");
-  const set=h=>{root.classList.toggle("panel-hidden",h);hide.setAttribute("aria-expanded",String(!h));show.setAttribute("aria-expanded",String(h));
-    if(typeof map!=="undefined"&&map)requestAnimationFrame(()=>map.resize());(h?show:hide).focus({preventScroll:true});};
-  hide.addEventListener("click",()=>set(true));show.addEventListener("click",()=>set(false));
+const SIDE=(()=>{const root=document.documentElement,btn=document.getElementById("sidetog");
+  const set=h=>{root.classList.toggle("panel-hidden",h);const t=h?"Show the panel":"Hide the panel";
+    btn.setAttribute("aria-expanded",String(!h));btn.setAttribute("aria-label",t);btn.title=t;
+    if(typeof map!=="undefined"&&map)requestAnimationFrame(()=>map.resize());};
+  btn.addEventListener("click",()=>set(!root.classList.contains("panel-hidden")));
   return{set,get hidden(){return root.classList.contains("panel-hidden")}};})();
 const SHEET=(()=>{const mq=matchMedia("(max-width:820px) and (orientation:portrait)"),as=document.querySelector("aside"),hd=document.getElementById("sheethead"),g=document.getElementById("grab"),tog=document.getElementById("sh-tog"),root=document.documentElement;
   let state="peek",last="peek",drag=null;
@@ -906,8 +1104,31 @@ const SHEET=(()=>{const mq=matchMedia("(max-width:820px) and (orientation:portra
   addEventListener("resize",onMode);mq.addEventListener("change",onMode);
   const toResult=()=>{const r=document.getElementById("result");if(mq.matches&&r)requestAnimationFrame(()=>as.scrollTo({top:Math.max(0,r.offsetTop-hd.offsetHeight-6),behavior:RM?"auto":"smooth"}));};
   return{set,toResult,get on(){return mq.matches},get state(){return state}};})();
+let fbOpened=0;
+function fbContext(){const p=[];
+  if(cur){const t=D.targets[cur.t];p.push(`Place: ${t.n}`,...(gwlOn()?[`Warming level: ${PER().label} above 1850–1900`]:[`Period: ~${PER().label} (${PER().years})`,`Scenario: ${D.ssps[S.ssp]}`]),
+    `Models: ${S.ens==="tcr_likely"?"likely-range models":"all models"}`,`Best match: ${describeCell(cur.best).replace(/^near /,"")} (${cur.sig[cur.best].toFixed(2)}σ)`);}
+  else p.push("No place selected");
+  p.push(`Screen: ${SHEET.on?"phone, upright":innerWidth<900?"small screen, sideways":"desktop"}, ${S.darkMap?"dark":"light"} map`,`Data version: ${D.data_version||"?"}`);
+  return p.join("\n");}
+function openFeedback(kind){const d=document.getElementById("fbdlg"),f=document.getElementById("fbform"),m=document.getElementById("fbmsg"),b=document.getElementById("fbsend");
+  f.reset();m.textContent="";m.className="small";b.disabled=false;b.textContent="Send";
+  f.querySelector(`input[name=kind][value="${kind||"other"}"]`).checked=true;
+  const v=document.getElementById("fbctxview");v.textContent=fbContext();v.hidden=false;
+  fbOpened=Date.now();d.showModal();f.message.focus();}
+async function sendFeedback(e){e.preventDefault();const f=document.getElementById("fbform"),m=document.getElementById("fbmsg"),b=document.getElementById("fbsend");
+  const msg=f.message.value.trim();if(msg.length<3){m.textContent="Please write a few words.";m.className="small err";f.message.focus();return;}
+  b.disabled=true;m.className="small";m.textContent="Sending…";
+  try{const r=await fetch("/api/feedback",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({kind:f.kind.value,message:msg,email:f.email.value.trim(),
+      context:f.ctx.checked?fbContext():"",website:f.website.value,elapsed:Date.now()-fbOpened})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok){m.className="small ok";m.textContent=f.email.value.trim()?"Thank you! Your note is on its way, and you may hear back.":"Thank you! Your note is on its way.";b.textContent="Sent";setTimeout(()=>document.getElementById("fbdlg").close(),2400);}
+    else{m.className="small err";m.innerHTML=esc(j.error||"Feedback isn't available on this copy of the site.")+(j.alt?` You can also <a href="${esc(j.alt)}" target="_blank" rel="noopener">open an issue on GitHub</a>.`:"");b.disabled=false;}}
+  catch(err){m.className="small err";m.textContent="Couldn't reach the server. Please try again later.";b.disabled=false;}}
 let reqOpened=0;
-function reqMiss(q){const el=document.getElementById("reqline");if(!el)return;el.classList.toggle("miss",!!q);
+function reqMiss(q,loading){const el=document.getElementById("reqline");if(!el)return;
+  if(q&&loading){el.classList.add("miss");el.textContent="World cities are still loading. Try again in a moment.";return;}
+  el.classList.toggle("miss",!!q);
   el.innerHTML=q?`No place called “${esc(q)}” on the map yet. <button type="button" class="linkbtn" id="reqopen">Request it</button>`:`Don't see your place? <button type="button" class="linkbtn" id="reqopen">Request it</button>`;
   document.getElementById("reqopen").onclick=()=>openReq(q);}
 function openReq(q){const d=document.getElementById("reqdlg"),f=document.getElementById("reqform"),m=document.getElementById("reqmsg");
@@ -922,13 +1143,54 @@ async function sendReq(e){e.preventDefault();const f=document.getElementById("re
     if(r.ok&&j.ok){m.className="small ok";m.textContent="Thanks! Your request is in. If the data cover it, it will appear after a data update.";b.textContent="Sent";setTimeout(()=>{document.getElementById("reqdlg").close();b.textContent="Send request";},2600);}
     else{m.className="small err";m.textContent=j.error||"Requests aren't available on this copy of the site.";b.disabled=false;}}
   catch(err){m.className="small err";m.textContent="Couldn't reach the server. Please try again later.";b.disabled=false;}}
-function select(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
+const COMBO=(()=>{let sr,ul,pickFn,items=[],act=-1,ALL=null,justFocused=false,lastQ=null;
+  const fold=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+  const all=()=>{if(!ALL||ALL.length!==D.targets.length)ALL=D.targets.map((t,i)=>({i,n:t.n,f:fold(t.n)})).sort((a,b)=>a.n.localeCompare(b.n));return ALL;};
+  const show=v=>{ul.hidden=!v;sr.setAttribute("aria-expanded",String(v));if(!v){sr.removeAttribute("aria-activedescendant");act=-1;}};
+  const hl=(n,f)=>{if(!f)return esc(n);const k=fold(n).indexOf(f);return k<0?esc(n):esc(n.slice(0,k))+"<mark>"+esc(n.slice(k,k+f.length))+"</mark>"+esc(n.slice(k+f.length));};
+  function render(q){const f=fold(q.trim());lastQ=f;let list=all();
+    if(f){const a=[],b=[];for(const x of list){const k=x.f.indexOf(f);if(k===0||(k>0&&/[\s,(-]/.test(x.f[k-1])))a.push(x);else if(k>0)b.push(x);}list=a.concat(b).slice(0,120);}
+    items=list;ul.innerHTML=items.length?items.map((x,j)=>`<li role="option" id="po${j}" data-i="${x.i}" aria-selected="false"${x.i===S.sel?' class="cur"':''}>${hl(x.n,f)}</li>`).join("")
+      :`<li class="none" role="option" aria-disabled="true">No place called “${esc(q.trim())}” on the map</li>`;
+    show(true);ul.scrollTop=0;}
+  function move(j){if(!items.length)return;act=(j+items.length)%items.length;ul.querySelectorAll('[aria-selected="true"]').forEach(x=>x.setAttribute("aria-selected","false"));
+    const li=document.getElementById("po"+act);li.setAttribute("aria-selected","true");sr.setAttribute("aria-activedescendant",li.id);li.scrollIntoView({block:"nearest"});}
+  function choose(i){show(false);sr.value=D.targets[i].n;reqMiss("");select(i,true);sr.blur();}
+  function init(input,pick){sr=input;ul=document.getElementById("plist");pickFn=pick;
+    sr.addEventListener("focus",()=>{justFocused=true;setTimeout(()=>{sr.setSelectionRange(0,sr.value.length);},0);render("");
+      if(S.sel>=0){const j=items.findIndex(x=>x.i===S.sel);if(j>=0){move(j);const li=document.getElementById("po"+j);ul.scrollTop=Math.max(0,li.offsetTop-ul.clientHeight/2);}}});
+    sr.addEventListener("mouseup",e=>{if(justFocused){e.preventDefault();justFocused=false;}});
+    sr.addEventListener("input",()=>{justFocused=false;render(sr.value);if(sr.value.trim())move(0);});
+    sr.addEventListener("keydown",e=>{
+      if(e.key==="ArrowDown"){e.preventDefault();if(ul.hidden)render(sr.value);move(act+1);}
+      else if(e.key==="ArrowUp"){e.preventDefault();move(act-1);}
+      else if(e.key==="Enter"){e.preventDefault();if(act>=0&&items[act])choose(items[act].i);else{show(false);pickFn();}}
+      else if(e.key==="Escape"){if(!ul.hidden){e.stopPropagation();show(false);}}});
+    ul.addEventListener("pointerdown",e=>{const li=e.target.closest("li[data-i]");if(!li)return;e.preventDefault();choose(+li.dataset.i);});
+    sr.addEventListener("blur",()=>setTimeout(()=>show(false),120));}
+  return{init};})();
+// Picking a place first makes sure its data is here (its shard, plus the world pool for a world place), then shows it.
+// Returns a promise that settles once the place is shown; a newer pick cancels an older one that is still loading.
+let selTok=0;
+function select(t,focus){const tok=++selTok;
+  if(t<0||placeReady(t)){selectNow(t,focus);return Promise.resolve();}
+  return ensurePlace(t).then(()=>{if(tok===selTok)selectNow(t,focus);},e=>{if(tok===selTok)setWStat("The data for "+D.targets[t].n+" could not load. Check your connection and try again. ("+e.message+")");});}
+function selectNow(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
   if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
 function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
-  const tt=D.targets[cur.t];const pts=[[tt.lon,tt.lat],...cur.sites.map(c=>[plon[c],plat[c]])];
-  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const mob=wrap.getBoundingClientRect().width<600;
-  map.fitBounds([[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)]],{padding:{top:60,bottom:mob?80:60,left:50,right:50},maxZoom:7,duration:RM?0:700});}
+  // Centre on the arrow (place -> best match), measured in the map's own projection so it is centred on screen.
+  const MC=maplibregl.MercatorCoordinate,tt=D.targets[cur.t],P=(lo,la)=>MC.fromLngLat([wrapLon(lo,tt.lon),la]);
+  const a=P(tt.lon,tt.lat),b=P(plon[cur.best],plat[cur.best]),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
+  const minH=90/(40075*Math.cos(tt.lat*Math.PI/180));                       // at least ~90 km of context each way
+  let hx=Math.max(Math.abs(a.x-b.x)/2,minH),hy=Math.max(Math.abs(a.y-b.y)/2,minH*0.75);
+  const lim=Math.max(hx,hy)*1.8;                                              // other matches join only if they fit near this frame
+  for(const c of cur.sites){if(c===cur.best)continue;const p=P(plon[c],plat[c]),nx=Math.abs(p.x-cx),ny=Math.abs(p.y-cy);
+    if(Math.max(nx,ny)<=lim){hx=Math.max(hx,nx);hy=Math.max(hy,ny);}}
+  const sw=new MC(cx-hx,cy+hy).toLngLat(),ne=new MC(cx+hx,cy-hy).toLngLat();
+  const r=wrap.getBoundingClientRect(),mob=r.width<600,lg=document.getElementById("legend"),lh=lg&&!SHEET.on?lg.getBoundingClientRect().height:0;
+  const pad=mob?{top:70,bottom:60,left:50,right:50}:{top:80,bottom:Math.max(80,lh+30),left:90,right:90};  // balanced; room above the key
+  map.fitBounds([[sw.lng,Math.max(-84,sw.lat)],[ne.lng,Math.min(84,ne.lat)]],{padding:pad,maxZoom:7,duration:RM?0:800});}
 function centerOn(lon,lat){map.easeTo({center:[lon,lat],duration:RM?0:500});}
 // ---------- controls
 function segs(){
@@ -936,6 +1198,7 @@ function segs(){
   const pe=document.getElementById("per");D.periods.forEach((q,i)=>{const b=document.createElement("button");b.textContent="~"+q.label;b.title=q.years;b.setAttribute("aria-label",`${q.label} (${q.years})`);b.setAttribute("aria-pressed",i===S.per);b.onclick=()=>{S.per=i;[...pe.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));refresh();};pe.appendChild(b);});
   const s=document.getElementById("ssp");D.ssps.forEach((n,i)=>{const b=document.createElement("button");b.textContent=n;b.setAttribute("aria-pressed",i===S.ssp);b.onclick=()=>{S.ssp=i;[...s.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));document.getElementById("ssp-desc").textContent=SSP_DESC[i];refresh();};s.appendChild(b);});
   document.getElementById("ssp-desc").textContent=SSP_DESC[S.ssp];
+  gwlInit();
   const mp=document.getElementById("mper"),ms=document.getElementById("mssp");
   mp.innerHTML=D.periods.map((q,i)=>`<option value="${i}">~${q.label}</option>`).join("");ms.innerHTML=D.ssps.map((n,i)=>`<option value="${i}">${n}</option>`).join("");
   mp.value=S.per;ms.value=S.ssp;mp.onchange=()=>pe.children[+mp.value].click();ms.onchange=()=>s.children[+ms.value].click();
@@ -945,10 +1208,14 @@ function segs(){
   document.getElementById("optAll").onchange=ev=>{S.showAll=ev.target.checked;legend();draw();};
   document.getElementById("optUnits").onchange=ev=>{S.metric=ev.target.checked;panel();};
   document.getElementById("optHot").onchange=ev=>{S.ens=ev.target.checked?"all":"tcr_likely";refresh();};
-  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim());};
+  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim(),false);};
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-fb]");if(b){e.preventDefault();openFeedback(b.dataset.fb);}});
+  document.getElementById("fbform").addEventListener("submit",sendFeedback);document.getElementById("fbcancel").onclick=()=>document.getElementById("fbdlg").close();
+  document.getElementById("fbform").message.addEventListener("input",()=>{const m=document.getElementById("fbmsg");if(m.classList.contains("err")){m.textContent="";m.className="small";}});
+  document.getElementById("fbform").ctx.addEventListener("change",e=>{document.getElementById("fbctxview").hidden=!e.target.checked;});
   reqMiss("");document.getElementById("reqform").addEventListener("submit",sendReq);document.getElementById("reqcancel").onclick=()=>document.getElementById("reqdlg").close();
-  sr.addEventListener("change",pick);sr.addEventListener("keydown",e=>{if(e.key==="Enter")pick();});
-  document.getElementById("zfit").onclick=()=>{fitted=false;fit();};
+  sr.addEventListener("input",()=>{if(document.getElementById("reqline").classList.contains("miss"))reqMiss("");});
+  COMBO.init(sr,pick);
   document.getElementById("search").addEventListener("focus",()=>{if(SHEET.on)SHEET.set("full");});
   const reset=()=>{hideTip();if(S.sel>=0)select(-1,false);if(location.hash)history.replaceState(null,"",location.pathname+location.search);map.fitBounds([[-124.8,24.4],[-66.9,49.4]],{padding:24,duration:RM?0:700});};
   document.getElementById("zreset").onclick=reset;
@@ -987,13 +1254,13 @@ function setBaseStyle(){mapReady=false;setAttrib();if(usingFallback){map.setStyl
 function makeMap(){
   if(SHEET.on){const it=document.getElementById("intro");if(it)it.open=false;}
   map=new maplibregl.Map({container:"map",style:STYLES.light,bounds:[[-124.8,24.4],[-66.9,49.4]],fitBoundsOptions:{padding:24},
-    minZoom:1.5,maxZoom:10,dragRotate:false,pitchWithRotate:false,touchPitch:false,attributionControl:false});
+    minZoom:innerWidth<600?0.8:1.5,maxZoom:10,dragRotate:false,pitchWithRotate:false,touchPitch:false,attributionControl:false});
   map.touchZoomRotate.disableRotation();
   if(SHEET.on){SHEET.set("peek");map.fitBounds([[-124.8,24.4],[-66.9,49.4]],{padding:24,animate:false});}
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-right");
   styleTimer=setTimeout(()=>{if(!mapReady){usingFallback=true;setBaseStyle();}},8000);
   setAttrib();
-  map.on("style.load",()=>{clearTimeout(styleTimer);baseOrig=null;setAttrib();if(S.darkMap)paintBase();addOverlays();draw();});
+  map.on("style.load",()=>{clearTimeout(styleTimer);baseOrig=null;setAttrib();if(S.darkMap)paintBase();stateLines();addOverlays();draw();});
   map.on("error",e=>{const u=(e&&e.error&&String(e.error.message||e.error))||"";if(!mapReady&&!usingFallback&&/style|openfreemap|Failed to fetch|NetworkError/i.test(u)){usingFallback=true;setBaseStyle();}});
   map.on("render",draw);
   map.on("zoomend",()=>{if(!cur)legend();});
@@ -1018,7 +1285,7 @@ function hideTip(){TIP=null;document.getElementById("tip").style.display="none";
 function posTip(){if(!TIP||!map)return;const tip=document.getElementById("tip"),p=map.project([TIP.lng,TIP.lat]),r=wrap.getBoundingClientRect();
   if(p.x<0||p.y<0||p.x>r.width||p.y>r.height){tip.style.display="none";return;}place(tip,p.x,p.y);}
 function tipFor(x,y,near){const t=nearestTarget(x,y,near);if(t>=0)return{t,html:esc(D.targets[t].n)};
-  if(cur){const c=cellAt(x,y);if(c>=0)return{c,html:`${esc(describeCell(c))}<br><strong>${cur.sig[c]>=10?"over 10":cur.sig[c].toFixed(2)}σ</strong> <span class="muted">from ${esc(D.targets[cur.t].n)} ~${PER().label}</span>`};}
+  if(cur){const c=cellAt(x,y);if(c>=0)return{c,html:`${esc(describeCell(c))}<br><strong>${cur.sig[c]>=10?"over 10":cur.sig[c].toFixed(2)}σ</strong> <span class="muted">from ${esc(D.targets[cur.t].n)} ${PL()}</span>`};}
   return null;}
 const ZONE_SIGMA=2,ZONE_KM=700;   // frame the connected patch under ZONE_SIGMA (1 = yellow only), only the part within ZONE_KM of the match
 // Connected patch of cells under ZONE_SIGMA containing the best match -> [minLon,minLat,maxLon,maxLat], longitudes
@@ -1048,7 +1315,7 @@ function revealMatch(){if(!cur||!map)return;const tt=D.targets[cur.t],c=cur.best
   const dx=Math.max(lonM-z[0],z[2]-lonM,0.4),dy=Math.max(lat-z[1],z[3]-lat,0.3);
   const cam=map.cameraForBounds([[lonM-dx,Math.max(-84,lat-dy)],[lonM+dx,Math.min(84,lat+dy)]],{padding:m,maxZoom:7});
   map.easeTo({center:[lonM,lat],zoom:cam?cam.zoom:map.getZoom(),duration:RM?0:900});}
-function click(x,y){const t=nearestTarget(x,y,14);if(t>=0){hideTip();select(t,false);revealMatch();return;}
+function click(x,y){const t=nearestTarget(x,y,14);if(t>=0){hideTip();select(t,true);return;}
   const h=tipFor(x,y,0);if(h)setTip(h.html,x,y);else hideTip();}
 function hover(x,y){if(touchMode||dragging)return;const h=tipFor(x,y,10);map.getCanvas().style.cursor=h&&h.t!==undefined?"default":"";
   if(h)setTip(h.html,x,y);else hideTip();}
@@ -1063,8 +1330,9 @@ load().then(d=>{
   if(typeof maplibregl==="undefined")throw new Error("the map library did not load");
   init(d);segs();makeMap();sizeOv();document.getElementById("loading").remove();legend();
   const r=wrap.getBoundingClientRect();if(r.width>=20&&r.height>=20)fitted=true;
-  const h=decodeURIComponent(location.hash.slice(1));const i=h?D.targets.findIndex(t=>t.n===h):-1;if(i>=0)select(i,true);
-  loadWorld();
+  const h=decodeURIComponent(location.hash.slice(1));if(h==="feedback"){history.replaceState(null,"",location.pathname+location.search);openFeedback("");}
+  const i=h&&h!=="feedback"?D.targets.findIndex(t=>t.n===h):-1;if(i>=0)select(i,true);
+  {const c=navigator.connection||{};if(!c.saveData&&(!c.effectiveType||c.effectiveType==="4g"))setTimeout(()=>{if(!worldP)ensureWorld().catch(()=>{});},4000);}   // world pool: quiet prefetch, not on slow or data-saving connections
 }).catch(err=>{const l=document.getElementById("loading");if(l)l.textContent="The map could not start: "+err.message+". It needs a current browser with WebGL.";});
 </script>
 </body>

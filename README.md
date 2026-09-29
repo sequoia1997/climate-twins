@@ -1,7 +1,7 @@
 # Climate Twins
 
-Where on Earth does today's climate look like your town's future? An interactive map for 1,612 places:
-789 across the US, Canada and Mexico and 823 world cities, for 2050 and 2100 under four emissions scenarios.
+Where on Earth does today's climate look like your town's future? An interactive map of places across the US, Canada and Mexico and cities in every part of the world, for 2050 and 2100
+under four emissions scenarios. The current place counts are on the [methods page](site/methods.html), which fills them in from each build.
 
 Live site: https://climate-twins.forest4science.workers.dev · How it works: [methods page](site/methods.html)
 
@@ -12,6 +12,7 @@ This repository holds everything: the data pipeline, the page, and the automatio
 | What | When | What you do |
 |---|---|---|
 | **Rebuild data** (`.github/workflows/rebuild.yml`) | Every March 15, or by hand | Nothing until it opens a pull request. Read the report in the pull request, then merge. |
+| **Extreme days** (`.github/workflows/extremes.yml`) | Every April 20, or by hand | Separate from the rebuild. Downloads NEX-GDDP-CMIP6 daily data (about 54 GB per model, 13 models) and opens a pull request that changes only `site/data/extremes.json`. Optional: the page hides the block without it. |
 | **Deploy site** (`deploy.yml`) | Whenever `site/` changes on `main` | Nothing: merging a rebuild publishes it. |
 | **Watch upstream data** (`watch.yml`) | The 1st of each month | Read the issue it opens, if any (a new TerraClimate year, a corrected climate-model dataset, CMIP7 arriving). |
 
@@ -118,7 +119,9 @@ ctw/                   the pipeline, one module per step (python -m ctw <step>)
   terraclimate.py      world climate, humidity, recent years (per variable, in parallel)
   adaptwest.py prism.py gazetteer.py sealevel.py
   analogs.py           the matching; features.py (climate type, hardiness zone, growing season)
-  export.py validate.py site.py watch.py
+  export.py            packs results for the page: index.json, two core pools, per-place shards (site/data/p/)
+  validate.py site.py watch.py
+  expand.py regions.py reshard.py  one-off tools (not in the workflow): grow the world place list, region table, convert old data files
 data/                  fixed inputs: place lists, outlines, calibration, sea-level projections
 web/                   page and methods templates
 site/                  what is published (built by the pipeline; do not edit by hand)
@@ -129,5 +132,10 @@ tests/test_page.py     browser test run by every rebuild
 
 - **The page's look or text:** edit `web/index.html` or `web/methods.html`, then run `python -m ctw site`
   (or the next rebuild does it). Pushing `site/` deploys.
+- **The world place list:** `python -m ctw.expand` prints a proposed expansion of `data/world_targets.csv` from the committed
+  GeoNames snapshot (`--write` appends it); review the diff, commit, run *Rebuild data*.
+- **Page weight:** the page downloads `site/data/index.json` (all places) and the two pool files first, then one
+  small shard from `site/data/p/` (about `[export] shard_places` places) when a place is picked, so it does not grow
+  with the number of places.
 - **The method** (models, periods, measures): edit `config.toml`, bump `method_version`, run *Rebuild data*.
 - **New baseline normals (2001–2030):** set `[baseline] years` once AdaptWest and PRISM publish them.
