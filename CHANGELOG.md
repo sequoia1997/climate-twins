@@ -6,6 +6,8 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 ## 29 September 2026
 
+- **New: a "Warming level" view.** Instead of choosing a year and an emissions scenario, you can choose how much the world has warmed (+1.5, +2, +3 or +4 °C above 1850–1900) and see where today's climate matches that future. The view pools every scenario and model that reaches the level; the panel says how many models do and roughly when they get there. Switch between the two under "View" above the map. Sea-level projections still belong to the year-and-scenario view.
+- **More simulations per model.** Each climate model's change is now the average of up to three of its runs (started from different initial conditions) instead of one, which smooths out natural year-to-year swings in the 20-year windows. Projections shift slightly for some places.
 - **"About this map and σ" starts closed.** The panel opens straight to the search box, and one tap on that line opens the explanation whenever you want it.
 - **A simpler search box.** The prompt now just says "Search for a city or town" and fits on every screen, instead of being cut off mid-word.
 

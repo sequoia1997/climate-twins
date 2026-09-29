@@ -25,9 +25,9 @@ def run(cfg=None) -> int:
         old = man.get("cmip6_versions", {})
         changed, gone = [], []
         for key, v in old.items():
-            src, exp, var = key.split("|")
+            src, exp, var, *extra = key.split("|")            # a fourth part names an extra ensemble member
             m = next(x for x in C.models(cfg) if x["name"] == src)
-            r = cat[(cat.source_id == src) & (cat.experiment_id == exp) & (cat.variable_id == var) & (cat.member_id == m["member"]) & (cat.grid_label == m["grid"])]
+            r = cat[(cat.source_id == src) & (cat.experiment_id == exp) & (cat.variable_id == var) & (cat.member_id == (extra[0] if extra else m["member"])) & (cat.grid_label == m["grid"])]
             if r.empty:
                 gone.append(key)
             elif int(r.version.max()) != int(v):

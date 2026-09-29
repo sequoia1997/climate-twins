@@ -201,6 +201,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <li><a href="#present">Present-day climate</a></li>
     <li><a href="#humidity">Humidity</a></li>
     <li><a href="#future">Projected climate</a></li>
+    <li><a href="#warming-levels">Warming levels</a></li>
     <li><a href="#models">Climate models</a></li>
     <li><a href="#distance">Measuring similarity</a></li>
     <li><a href="#matches">Choosing matches</a></li>
@@ -294,9 +295,22 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <p class="small">Here “obs” is the observed 1991–2020 value at the place, and “fut” and “base” are the model's own future and 1991–2020 means for the same month.</p>
   </section>
 
+  <section id="warming-levels">
+    <h2>Warming levels</h2>
+    <p>The map can also be read by <em>how much the world has warmed</em> instead of by year and scenario (the “Warming level” choice under View, at the top of the panel). This follows the IPCC AR6 idea of global warming levels (Lee et al. 2021): a warming level of +2 °C is the same amount of global warming whichever scenario, and whichever year, produces it. Regional climate at a given level depends far less on the scenario than the year does, so the view pools scenarios and is less tied to a particular emissions story.</p>
+    <ul>
+      <li><strong>Levels and reference.</strong> +1.5, +2, +3 and +4 °C of global warming above the 1850–1900 average, the AR6 convention. Warming is measured on each model's own global mean annual near-surface air temperature (<code>tas</code>, area-weighted), against that model's own 1850–1900 mean. The 1991–2020 baseline used for “here now” is itself already about +{{GWL_NOW}} °C above 1850–1900 in the models, so +1.5 °C is a modest step beyond today.</li>
+      <li><strong>When a level is reached.</strong> For each model and scenario, the first year in which the centred 20-year running mean of global temperature (the 10 years before and the 9 years after) is at or above the level. That year is taken as the centre of a 20-year window, for example 2039–2058. The first-crossing rule is used and later dips are ignored. Windows that would run past 2100 are not used, so a level a model reaches only in its last decade is treated as not reached.</li>
+      <li><strong>The change.</strong> Each model's regional change over that window minus its own 1991–2020 baseline, in exactly the same way as for the fixed periods (temperature differences, precipitation and humidity ratios, same limits). Windows that straddle 2014 and 2015 join the historical run to the scenario run, weighted by years.</li>
+      <li><strong>Pooling.</strong> For each model, the changes from every scenario that reaches the level are averaged with equal weight. The ensemble is then the mean over the models that reach the level; a level is offered only if at least three of the ensemble's models reach it. Under the default likely-range screen, +4 °C is usually not offered because few of those models warm that much this century; including the hotter models adds it. The panel states how many models contribute.</li>
+      <li><strong>Everything else is unchanged</strong>: change factors added to observed normals, sigma dissimilarity, the same pools and match rules. Sea-level projections are only shown in the year-and-scenario view, because they are tied to scenario and year.</li>
+    </ul>
+    <p class="small">Choices worth knowing: warming levels come from model temperatures, not observations, and models warm at different speeds, so “+2 °C” arrives in different years in different models (the panel shows the range). Averaging several members per model reduces, but does not remove, the noise from natural variability in 20-year windows, most for the +1.5 °C window where the change is small.</p>
+  </section>
+
   <section id="models">
     <h2>Climate models</h2>
-    <p>The map uses 24 CMIP6 models (Eyring et al. 2016), one simulation each, read from the Pangeo CMIP6 cloud archive (Abernathey et al. 2021). Several CMIP6 models warm faster in response to CO₂ than observations and other lines of evidence support. Following Hausfather et al. (2022), the default ensemble keeps the 15 models whose transient climate response (TCR) lies in the IPCC AR6 likely range of 1.4–2.2 °C (Forster et al. 2021, Table 7.SM.5). The remaining nine can be added under Advanced on the map: seven above the range, one below it (INM-CM4-8) and one without a TCR in that table (EC-Earth3-Veg-LR). Including them mostly shifts results toward hotter outcomes.</p>
+    <p>The map uses 24 CMIP6 models (Eyring et al. 2016), each represented by the average of up to {{MEMBERS_MAX}} initial-condition simulations (“members”) where the archive has them, read from the Pangeo CMIP6 cloud archive (Abernathey et al. 2021). Several CMIP6 models warm faster in response to CO₂ than observations and other lines of evidence support. Following Hausfather et al. (2022), the default ensemble keeps the 15 models whose transient climate response (TCR) lies in the IPCC AR6 likely range of 1.4–2.2 °C (Forster et al. 2021, Table 7.SM.5). The remaining nine can be added under Advanced on the map: seven above the range, one below it (INM-CM4-8) and one without a TCR in that table (EC-Earth3-Veg-LR). Including them mostly shifts results toward hotter outcomes.</p>
     <div class="tw"><table>
       <thead><tr><th>Model</th><th>Member</th><th class="n">TCR (°C)</th><th>Default ensemble</th></tr></thead>
       <tbody id="modeltable"></tbody>
@@ -458,6 +472,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
       <li>Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021). Ocean, cryosphere and sea level change. In V. Masson-Delmotte et al. (Eds.), <em>Climate Change 2021: The Physical Science Basis</em> (pp. 1211–1362). Cambridge University Press. <a href="https://doi.org/10.1017/9781009157896.011">https://doi.org/10.1017/9781009157896.011</a></li>
       <li>Garner, G. G., Hermans, T., Kopp, R. E., Slangen, A. B. A., Edwards, T. L., Levermann, A., et al. (2021). <em>IPCC AR6 sea level projections</em> (Version 20210809) [Data set]. Zenodo. <a href="https://doi.org/10.5281/zenodo.5914709">https://doi.org/10.5281/zenodo.5914709</a></li>
       <li>Hausfather, Z., Marvel, K., Schmidt, G. A., Nielsen-Gammon, J. W., &amp; Zelinka, M. (2022). Climate simulations: recognize the ‘hot model’ problem. <em>Nature, 605</em>, 26–29. <a href="https://doi.org/10.1038/d41586-022-01192-2">https://doi.org/10.1038/d41586-022-01192-2</a></li>
+      <li>Lee, J.-Y., Marotzke, J., Bala, G., Cao, L., Corti, S., Dunne, J. P., et al. (2021). Future global climate: scenario-based projections and near-term information. In V. Masson-Delmotte et al. (Eds.), <em>Climate Change 2021: The Physical Science Basis</em> (pp. 553–672). Cambridge University Press. <a href="https://doi.org/10.1017/9781009157896.006">doi:10.1017/9781009157896.006</a></li>
       <li>Ledoit, O., &amp; Wolf, M. (2004). A well-conditioned estimator for large-dimensional covariance matrices. <em>Journal of Multivariate Analysis, 88</em>(2), 365–411. <a href="https://doi.org/10.1016/S0047-259X(03)00096-4">https://doi.org/10.1016/S0047-259X(03)00096-4</a></li>
       <li>King, A. D., &amp; Harrington, L. J. (2018). The inequality of climate change from 1.5 to 2°C of global warming. <em>Geophysical Research Letters, 45</em>(10), 5030–5033. <a href="https://doi.org/10.1029/2018GL078430">https://doi.org/10.1029/2018GL078430</a></li>
       <li>Mahony, C. R., Cannon, A. J., Wang, T., &amp; Aitken, S. N. (2017). A closer look at novel climates: new methods and insights at continental to landscape scales. <em>Global Change Biology, 23</em>(9), 3934–3955. <a href="https://doi.org/10.1111/gcb.13645">https://doi.org/10.1111/gcb.13645</a></li>

@@ -85,6 +85,19 @@ def run(cfg=None):
         kg=F.KG, kg_name=[F.KG_NAME[c] for c in F.KG], recent_years=R["rec_years"].tolist(), humidity=bool(cfg["matching"]["humidity"]),
         calibration={"hardiness": {k: v for k, v in cal["hardiness"].items() if k != "coef"}, "ffp": {k: v for k, v in cal["ffp"].items() if k != "coef"}},
     )
+    # warming-level view (gwl.py): levels, how many models reach each, and the typical year it is reached per scenario
+    eord0 = [EN.index("all"), EN.index("tcr_likely")]
+    gy = R["gwl_year"]                                             # (levels, models, scenarios)
+    when = []
+    for e in eord0:
+        rows = []
+        for gi in range(gy.shape[0]):
+            rows.append([int(np.median([gy[gi, mi, s] for mi in ens[EN[e]] if gy[gi, mi, s] > 0])) if sum(gy[gi, mi, s] > 0 for mi in ens[EN[e]]) >= cfg["gwl"]["min_models"] else 0
+                         for s in range(gy.shape[2])])
+        when.append(rows)
+    common["gwl"] = dict(levels=[float(x) for x in R["gwl_levels"]], ref=cfg["gwl"]["reference"], window=20,
+                         now=round(float(np.nanmedian(R["gwl_now"])), 2), n=R["gwl_n"][:, eord0].tolist(), ok=R["gwl_ok"][:, eord0].astype(int).tolist(),
+                         when=when, reach=R["gwl_reach"].astype(int).tolist(), min_models=int(cfg["gwl"]["min_models"]))
     Dg = np.arange(0, 60.0001, 0.02)
     sig_tab = np.stack([C.chi_to_sigma(Dg, k) for k in range(1, C.NV + 1)]).astype("float32")
     E = len(EN)
@@ -114,6 +127,11 @@ def run(cfg=None):
             ffp_fut=pk.add(R["f_fut_ffp"][sel][:, :, :, eord]),
             recent=pk.add(np.round(np.nan_to_num(R["recent"][sel]) * 100).astype("int16")),        # °C x100, log ratio x100
             rec_sig=pk.add(np.nan_to_num(R["rec_sig"][sel]).astype("float32")),
+            # warming levels (page toggle "Warming level"): futures as changes from base, per model (NT, level, model, measure)
+            gfut_d=pk.planes(C.enc(R["gwl_fut"][sel]).astype("int32") - base16[:, None, None, :]),
+            gbest_idx=pk.add(R["gwl_best_idx"][sel][:, :, eord].astype("int32")), gbest_sig=pk.add(R["gwl_best_sig"][sel][:, :, eord].astype("float32")),
+            garea2=pk.add(R["gwl_area2"][sel][:, :, eord].astype("float32")),
+            gkg=pk.add(R["gf_kg"][sel][:, :, eord]), gzone=pk.add(R["gf_zone"][sel][:, :, eord]), gffp=pk.add(R["gf_ffp"][sel][:, :, eord]),
         )
         for j, k in enumerate(idx):
             summary["places"][T.label[k]] = {
@@ -159,6 +177,24 @@ def run(cfg=None):
                           int(R["w_kg"][j]), int(R["w_zone"][j]), int(R["w_ffp"][j])])
         glob[f"{p}|{pos[k]}|{s}|{eord.index(e)}"] = dict(s=round(float(R["glob_s"][row]), 2), a=int(R["glob_a"][row]), n=int(R["glob_n"][row]), sites=sites)
     na["glob"] = glob
+    gglob = {}
+    for row, key in enumerate(R["gglob_keys"]):
+        k, gi, e = (int(x) for x in key)
+        if k not in pos:
+            continue
+        sites = []
+        for c, sg in zip(R["gglob_cells"][row], R["gglob_sig"][row]):
+            if c < 0:
+                continue
+            j = int(c)
+            la, lo = float(R["w_lat"][j]), float(R["w_lon"][j])
+            _, ti = wtree.query(C.unit_xyz(np.array([la]), np.array([lo])))
+            town = wplaces[int(ti[0])]
+            sites.append([round(la, 3), round(lo, 3), round(float(sg), 2), town[0].rsplit(", ", 1)[0], town[0].rsplit(", ", 1)[-1],
+                          int(round(float(C.haversine_km(la, lo, town[1], town[2])))), np.round(R["w_raw"][j].astype(float), 2).tolist(),
+                          int(R["w_kg"][j]), int(R["w_zone"][j]), int(R["w_ffp"][j])])
+        gglob[f"g{gi}|{pos[k]}|{eord.index(e)}"] = dict(s=round(float(R["gglob_s"][row]), 2), a=int(R["gglob_a"][row]), n=int(R["gglob_n"][row]), sites=sites)
+    na["gglob"] = gglob
     raw, gzs = pk.write(na, C.SITE / "data" / "na.dat")
     C.log.info("na.dat: %d places, %d cells, %.1f MB raw, %.2f MB gzip", len(na_idx), na["NP"], raw / 1e6, gzs / 1e6)
 
@@ -179,7 +215,7 @@ def run(cfg=None):
 
     summary.update(selfchk_median=round(float(np.nanmedian(R["selfchk"])), 3), tc_check_median=round(float(np.nanmedian(R["tc_check"])), 3),
                    unusable=T.label[bad].tolist(), floored=R["floored"].tolist(), cc_fill=R["cc_fill"].tolist(),
-                   recent_years=R["rec_years"].tolist(), n_models=len(ms), sealevel_places=len(sl["places"]) if sl else 0)
+                   recent_years=R["rec_years"].tolist(), n_models=len(ms), gwl_now=common["gwl"]["now"], sealevel_places=len(sl["places"]) if sl else 0)
     json.dump(summary, open(C.SITE / "data" / "summary.json", "w"), separators=(",", ":"))
 
 
