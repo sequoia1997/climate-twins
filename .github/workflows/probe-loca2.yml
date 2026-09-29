@@ -1,0 +1,22 @@
+# Temporary: checks whether LOCA2 data hosts are reachable from Actions. Deleted after use.
+name: Probe LOCA2
+on:
+  push:
+    paths: [".github/workflows/probe-loca2.yml"]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        run: |
+          probe() { printf "%-90s " "$1"; curl -sL -m 30 -o /tmp/o -w "%{http_code} len=%header{content-length} size=%{size_download}\n" "$1" || echo FAIL; head -c 300 /tmp/o 2>/dev/null | tr '\n' ' ' | cut -c1-200; echo; }
+          probe https://cirrus.ucsd.edu/~pierce/LOCA2/
+          probe https://cirrus.ucsd.edu/~pierce/LOCA2/CONUS_regions_split/
+          probe https://loca.ucsd.edu/
+          probe https://loca.ucsd.edu/loca-version-2-for-north-america-ca-jan-2023/
+          probe "https://raw.githubusercontent.com/awslabs/open-data-registry/main/datasets/loca2.yaml"
+          probe "https://raw.githubusercontent.com/awslabs/open-data-registry/main/datasets/nex-gddp-cmip6.yaml"
+          echo "--- CHELSA GET tests"
+          probe https://os.zhdk.ch/envicloud/chelsa/chelsa_V2/GLOBAL/climatologies/1981-2010/tas/CHELSA_tas_01_1981-2010_V.2.1.tif
+          probe https://os.zhdk.ch/chelsav2/GLOBAL/climatologies/1981-2010/tas/CHELSA_tas_01_1981-2010_V.2.1.tif
+          probe https://envicloud.wsl.ch/
