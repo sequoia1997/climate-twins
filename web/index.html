@@ -151,7 +151,7 @@ details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{
 .fbbtn{display:inline-flex;align-items:center;gap:7px;font:600 .9rem var(--font-body);color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:999px;padding:7px 14px;cursor:pointer}
 .fbbtn:hover{border-color:var(--ink)} .fbbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px} .fbbtn svg{flex:none;opacity:.8} .reqline.miss{color:var(--ink)}
 #search::-webkit-calendar-picker-indicator{display:none!important;opacity:0}
-.combo{position:relative}
+.combo{position:relative} #search{text-overflow:ellipsis}
 #plist{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;margin:0;padding:4px 0;list-style:none;max-height:min(340px,45vh);overflow-y:auto;overscroll-behavior:contain;
        background:var(--panel);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 #plist li{padding:7px 12px;cursor:pointer;font-size:.93rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -332,7 +332,7 @@ aside a:hover{text-decoration-thickness:2px}
       <p>Under 1σ, the climates are as alike as two ordinary years at the same place. 1–2σ is a reasonable match, 2–4σ only partial, and over 4σ no real match.</p>
     </div></details>
     <div class="row">
-      <div class="combo"><input id="search" placeholder="Search places, e.g. Raleigh, NC or Lisbon" autocomplete="off" spellcheck="false" aria-label="Search for a place" role="combobox" aria-expanded="false" aria-controls="plist" aria-autocomplete="list"><ul id="plist" role="listbox" aria-label="Places" hidden></ul></div>
+      <div class="combo"><input id="search" placeholder="Search for a city or town" autocomplete="off" spellcheck="false" aria-label="Search for a place" role="combobox" aria-expanded="false" aria-controls="plist" aria-autocomplete="list"><ul id="plist" role="listbox" aria-label="Places" hidden></ul></div>
       <div class="small" id="wstat" role="status" style="margin-top:4px"></div>
       <p class="small reqline" id="reqline">Don't see your place? <button type="button" class="linkbtn" id="reqopen">Request it</button></p>
       <dialog id="reqdlg" aria-labelledby="reqh">
@@ -402,6 +402,7 @@ aside a:hover{text-decoration-thickness:2px}
     </details>
     <p class="foot" id="dver"></p>
     <p class="foot"><a href="methods.html" target="_blank" rel="noopener">How this map was made: methods, data and references</a></p>
+    <p class="foot"><a href="changelog.html">What's new: every change so far</a></p>
     <p class="foot"><button type="button" class="fbbtn" data-fb=""><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h10a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 13 11H7.5L4.5 13.5V11H3A1.5 1.5 0 0 1 1.5 9.5v-5A1.5 1.5 0 0 1 3 3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Send feedback</button></p>
     <dialog id="fbdlg" aria-labelledby="fbh">
       <form id="fbform" method="dialog" novalidate>
@@ -615,7 +616,6 @@ function addWorld(w){
   const dl=document.getElementById("places");
   w.targets.forEach(t=>{D.targets.push(t);const o=document.createElement("option");o.value=t.n;dl.appendChild(o);});
   NT=D.targets.length;popOrder=null;
-  document.getElementById("search").placeholder=`Search ${NT.toLocaleString()} places, e.g. Raleigh, NC or Lisbon`;
   heatW=document.createElement("canvas");const r=Math.PI/180,my=l=>Math.log(Math.tan(Math.PI/4+l*r/2));
   MBW.H=Math.round(MBW.W*(my(MBW.n)-my(MBW.s))/((MBW.e-MBW.w)*r));heatW.width=MBW.W;heatW.height=MBW.H;
   D.fallbackWorld=w.fallback||null;if(usingFallback)setBaseStyle();else if(mapReady)addWorldHeat();
