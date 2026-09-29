@@ -82,6 +82,31 @@ def run(cfg=None, previous=None) -> int:
     else:
         notes.append("⚠️ No ERA5 cross-check in this build (the era5 jobs did not produce data); the page shows no baseline-agreement line.")
     # END era5-agreement
+    # BEGIN baseline-agreement: the other independent sources and the combined result (advisory, never fails the build)
+    AG = S.get("agree")
+    if AG:
+        from .baselines import LABEL
+        for n, e in AG["sources"].items():
+            if n == "era5":
+                continue
+            ok = e["median"] <= 1.0 and e["over_poor"] <= 0.25
+            out.append(f"{'✅' if ok else '⚠️'} {LABEL[n]} baseline agreement: median {e['median']:.2f}σ over {e['n']:,} places; "
+                       f"{e['over_fair']:.0%} above {AG['thr'][0]}σ, {e['over_poor']:.0%} above {AG['thr'][1]}σ")
+            if not ok:
+                notes.append(f"{LABEL[n]} disagrees with the baselines more than expected (median above 1σ or over 25% of its places above the poor threshold): "
+                             "check the bias table in summary.json.")
+        cb = AG.get("combined")
+        if cb:
+            by = ", ".join(f"{LABEL[n]} {c}" for n, c in cb["poor_by"].items() if c)
+            out.append(f"ℹ️ Combined agreement (worst source per place): median {cb['median']:.2f}σ; {cb['over_fair']:.0%} above {AG['thr'][0]}σ, "
+                       f"{cb['over_poor']:.0%} above {AG['thr'][1]}σ" + (f" (poor, by source: {by})" if by else ""))
+        missing = [LABEL[n] for n in ("chirps", "chelsa") if n not in AG["sources"]]
+        if missing:
+            notes.append("No " + " or ".join(missing) + " cross-check in this build (the job did not produce data); the panel line names the sources that ran.")
+        if AG.get("chirps_icv_ratio"):
+            notes.append("CHIRPS interannual precipitation variability relative to the place model (detrended SD of log seasonal totals, median, DJF MAM JJA SON): "
+                         + ", ".join(f"{x:.2f}" for x in AG["chirps_icv_ratio"]))
+    # END baseline-agreement
     try:                                                       # optional: sensitivity to model resolution (nexcheck)
         from . import nexcheck
         nx = json.load(open(d / "nexcheck.json"))

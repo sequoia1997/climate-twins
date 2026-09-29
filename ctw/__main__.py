@@ -10,6 +10,8 @@ def main(argv=None):
     a = sub.add_parser("cmip6"); a.add_argument("--model", required=True)
     a = sub.add_parser("terraclimate"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap", "pet", "srad"])
     a = sub.add_parser("era5"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
+    a = sub.add_parser("chirps", help="CHIRPS monthly precipitation at every place (one part of the years)"); a.add_argument("--part", type=int, default=0); a.add_argument("--of", type=int, default=1)
+    a = sub.add_parser("chelsa", help="CHELSA v2.1 1981-2010 monthly normals at every place"); a.add_argument("--var", required=True, choices=["tasmax", "tasmin", "pr"])
     sub.add_parser("hindcast", help="ERA5 1961-90 vs 1991-2020 hindcast test of the analog method")
     sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer")
     a = sub.add_parser("sealevel"); a.add_argument("--if-stale", action="store_true", help="skip when data/sealevel.json is current for the place list")
@@ -36,6 +38,10 @@ def main(argv=None):
         from . import terraclimate; terraclimate.run(args.var, cfg)
     elif args.step == "era5":
         from . import era5; era5.run(args.var, cfg)
+    elif args.step == "chirps":
+        from . import baselines; baselines.run_chirps(args.part, args.of, cfg)
+    elif args.step == "chelsa":
+        from . import baselines; baselines.run_chelsa(args.var, cfg)
     elif args.step == "hindcast":
         from . import hindcast; hindcast.run(cfg)
     elif args.step == "adaptwest":

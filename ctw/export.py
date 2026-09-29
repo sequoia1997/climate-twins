@@ -21,6 +21,7 @@ from __future__ import annotations
 import datetime as dt, gzip, json, shutil
 import numpy as np
 from scipy.spatial import cKDTree
+from . import baselines as BL
 from . import common as C
 from . import features as F
 from .regions import region as region_of
@@ -134,6 +135,7 @@ def run(cfg=None):
     bad = R["bad"]
     version = dt.date.today().isoformat()
     size = int(cfg.get("export", {}).get("shard_places", SHARD_PLACES))
+    AGR = agreement_matrix(R)                                       # baseline-agreement: (NT, sources)
     common = dict(
         nv=NVX, xlog=[bool(C.EXTRAS[n]["log"]) for n in XN for _ in range(4)], xscale=C.ENC_SCALE, extra=XN, midx=midx.tolist(), K=K, models=[m["name"] for m in ms], tcr=[m["tcr"] if m["tcr"] > 0 else None for m in ms],
         ens={e: ens[e] for e in ("tcr_likely", "all")}, ssps=cfg["scenarios"]["labels"],
@@ -141,6 +143,7 @@ def run(cfg=None):
         baseline=cfg["baseline"]["years"], data_version=version, method_version=cfg["release"]["method_version"],
         kg=F.KG, kg_name=[F.KG_NAME[c] for c in F.KG], recent_years=R["rec_years"].tolist(), humidity=bool(cfg["matching"]["humidity"]),
         era5_thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]],      # era5-agreement
+        agr_src=[BL.LABEL[x] for x in BL.SOURCES], agr_cols=[BL.COLS[x].tolist() for x in BL.SOURCES],      # baseline-agreement
         calibration={"hardiness": {k: v for k, v in cal["hardiness"].items() if k != "coef"}, "ffp": {k: v for k, v in cal["ffp"].items() if k != "coef"}},
     )
     # warming-level view (gwl.py): levels, how many models reach each, and the typical year it is reached per scenario
@@ -249,6 +252,7 @@ def run(cfg=None):
             # BEGIN era5-agreement: sigma between the place's baseline and its ERA5 baseline; -1 = not available
             era5=pk.add(np.nan_to_num(R["era5_sig"][sel], nan=-1.0).astype("float32")),
             # END era5-agreement
+            agr=pk.add(np.nan_to_num(AGR[sel], nan=-1.0).astype("float32")),      # baseline-agreement: (n, sources) sigma per source, -1 = not available
             # warming levels (page toggle "Warming level"): futures as changes from base, per model (n, level, model, measure)
             gfut_d=pk.planes(C.enc(R["gwl_fut"][sel]).astype("int32") - base16[:, None, None, :]),
             gbest_idx=pk.add(R["gwl_best_idx"][sel][:, :, eord].astype("int32")), gbest_sig=pk.add(R["gwl_best_sig"][sel][:, :, eord].astype("float32")),
@@ -268,7 +272,8 @@ def run(cfg=None):
             "ll": np.round(np.stack([(R["na_lat"] if g == 0 else R["w_lat"])[R["best_idx"][k][:, :, eord, 0]],
                                      (R["na_lon"] if g == 0 else R["w_lon"])[R["best_idx"][k][:, :, eord, 0]]], -1), 3).tolist(),
             "selfchk": round(float(R["selfchk"][k]), 3), "rec_sig": round(float(R["rec_sig"][k]), 3),
-            "era5": None if not np.isfinite(R["era5_sig"][k]) else round(float(R["era5_sig"][k]), 3)}      # era5-agreement
+            "era5": None if not np.isfinite(R["era5_sig"][k]) else round(float(R["era5_sig"][k]), 3),      # era5-agreement
+            "agr": {n: round(float(AGR[k, i]), 3) for i, n in enumerate(BL.SOURCES) if np.isfinite(AGR[k, i])}}      # baseline-agreement
     C.log.info("shards: %d files, %d places, %.1f MB gzip in all, largest %.0f kB", len(shards), len(order), tot_gz / 1e6, biggest / 1e3)
 
     # ------------------------------------------------------------ overview: every place's best match, for the map before a pick
@@ -360,7 +365,53 @@ def run(cfg=None):
                                thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]],
                                bias={"North America": bias(diff[isna]), "World cities": bias(diff[~isna])})
     # END era5-agreement
+    summary["agree"] = agreement_summary(cfg, AGR, R, bad, T)        # baseline-agreement
     json.dump(summary, open(out / "summary.json", "w"), separators=(",", ":"))
+
+
+def agreement_matrix(R):
+    """(NT, len(BL.SOURCES)) sigma per source, NaN where a source is missing. Results from before the multi-source check hold only ERA5."""
+    if "agr_sig" in R:
+        return np.asarray(R["agr_sig"], "float32")
+    a = np.full((len(R["era5_sig"]), len(BL.SOURCES)), np.nan, "float32")
+    a[:, 0] = R["era5_sig"]
+    return a
+
+
+def agreement_summary(cfg, AGR, R, bad, T):
+    """Per-source and combined agreement statistics (for methods.html and validate.py), plus the CHIRPS/CHELSA bias tables."""
+    fair, poor = cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]
+    A = AGR[~bad]
+    out = {"thr": [fair, poor], "sources": {}, "bias": {}}
+    for i, n in enumerate(BL.SOURCES):
+        fin = A[:, i][np.isfinite(A[:, i])]
+        if len(fin):
+            out["sources"][n] = dict(median=round(float(np.median(fin)), 3), n=int(len(fin)), p90=round(float(np.percentile(fin, 90)), 3),
+                                     over_fair=round(float(np.mean(fin > fair)), 4), over_poor=round(float(np.mean(fin > poor)), 4))
+    worst, which = BL.combine(A)
+    fin = np.isfinite(worst)
+    if fin.any():
+        w = worst[fin]
+        out["combined"] = dict(median=round(float(np.median(w)), 3), n=int(fin.sum()), over_fair=round(float(np.mean(w > fair)), 4),
+                               over_poor=round(float(np.mean(w > poor)), 4),
+                               poor_by={n: int(((which == i) & fin & (worst > poor)).sum()) for i, n in enumerate(BL.SOURCES)})
+    if "agr_diff" in R:
+        diff, isna = R["agr_diff"][~bad], T.g.values[~bad] == 0
+        import warnings
+        for j, n, cols in ((0, "chirps", {"ppt": slice(8, 12)}), (1, "chelsa", {"tmax": slice(0, 4), "tmin": slice(4, 8), "ppt": slice(8, 12)})):
+            if n not in out["sources"]:
+                continue
+            tab = {}
+            for reg, m in (("North America", isna), ("World cities", ~isna)):
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    med = np.nanmedian(diff[m][:, j], axis=0) if m.any() else np.full(diff.shape[2], np.nan)
+                tab[reg] = {v: [None if not np.isfinite(x) else float(x) for x in np.round(med[c], 2 if v != "ppt" else 1)] for v, c in cols.items()}
+            out["bias"][n] = tab
+    ic = R["chirps_icv"][~bad] if "chirps_icv" in R else None
+    if ic is not None and np.isfinite(ic).any():
+        out["chirps_icv_ratio"] = [round(float(x), 2) for x in np.nanmedian(ic, 0)]
+    return out
 
 
 def _na_label(T, k):

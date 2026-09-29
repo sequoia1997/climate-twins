@@ -68,6 +68,41 @@ def era5_html(S) -> str:
             "(December–February, and so on; the same months in both hemispheres). These are the offsets removed before the agreement is computed. North American temperature and precipitation are compared with AdaptWest, dewpoint and all other places with TerraClimate.</caption></table></div>")
 
 
+def agreement_html(S) -> str:
+    """Per-source table and the CHIRPS / CHELSA offsets for methods.html (block AGREE_BLOCK)."""
+    a = S.get("agree")
+    if not a or not a.get("sources"):
+        return "<p>Results for this build are not available.</p>"
+    from .baselines import LABEL
+    what = {"era5": "All sixteen measures", "chirps": "Precipitation (four seasons)", "chelsa": "Highs, lows, precipitation (twelve measures)"}
+    rows = "".join(f'<tr><td>{LABEL[n]}</td><td>{what[n]}</td><td class="n">{e["n"]:,}</td><td class="n">{e["median"]:.2f}</td><td class="n">{e["p90"]:.1f}</td>'
+                   f'<td class="n">{e["over_fair"]:.0%}</td><td class="n">{e["over_poor"]:.0%}</td></tr>' for n, e in a["sources"].items())
+    cb = a.get("combined")
+    if cb:
+        rows += (f'<tr><td><strong>Worst of the sources</strong></td><td>Used for the confidence level</td><td class="n">{cb["n"]:,}</td><td class="n">{cb["median"]:.2f}</td>'
+                 f'<td class="n">&ndash;</td><td class="n">{cb["over_fair"]:.0%}</td><td class="n">{cb["over_poor"]:.0%}</td></tr>')
+    out = ('<div class="tw"><table class="res"><thead><tr><th>Source</th><th>Covers</th><th class="n">Places</th><th class="n">Median &sigma;</th>'
+           f'<th class="n">90th percentile</th><th class="n">Above {a["thr"][0]:g}&sigma;</th><th class="n">Above {a["thr"][1]:g}&sigma;</th></tr></thead><tbody>{rows}</tbody>'
+           "<caption>Baseline agreement in this release, after removing each source's typical offset.</caption></table></div>")
+    names = {"tmax": "Highs (&deg;C)", "tmin": "Lows (&deg;C)", "ppt": "Precipitation (mm per season)"}
+    brows = ""
+    for src, tab in a.get("bias", {}).items():
+        for reg, b in tab.items():
+            for v, lab in names.items():
+                if v in b:
+                    brows += f"<tr><td>{LABEL[src]}</td><td>{reg}</td><td>{lab}</td>" + "".join(f'<td class="n">{x:+.1f}</td>' if x is not None else "<td>-</td>" for x in b[v]) + "</tr>"
+    if brows:
+        out += ('<div class="tw"><table class="res"><thead><tr><th>Source</th><th>Places</th><th>Measure</th><th class="n">Winter</th><th class="n">Spring</th>'
+                '<th class="n">Summer</th><th class="n">Autumn</th></tr></thead><tbody>' + brows +
+                "</tbody><caption>Median source minus baseline (TerraClimate, or AdaptWest in North America). CHELSA covers 1981&ndash;2010, so its offsets include the change between the two periods.</caption></table></div>")
+    if a.get("chirps_icv_ratio"):
+        r = a["chirps_icv_ratio"]
+        out += (f"<p>Year-to-year variability of precipitation is also compared: the detrended standard deviation of log seasonal totals in CHIRPS, divided by the value in each place's "
+                f"own variability model, has a median of {r[0]:.2f} (winter), {r[1]:.2f} (spring), {r[2]:.2f} (summer) and {r[3]:.2f} (autumn) across places. Values near 1 mean the two agree "
+                "on how much the rain varies; this comparison is reported only and does not change any confidence level.</p>")
+    return out
+
+
 def hindcast_html() -> str:
     f = C.DATA / "hindcast.json"
     if not f.exists():
@@ -137,6 +172,7 @@ def run(cfg=None):
     fills["TROPICS_TABLE"] = tropics_rows(S)
     fills["EXTRA_TOC"], fills["EXTRA_SECTION"] = extra_section(cfg, S)
     fills["ERA5_BLOCK"] = era5_html(S)                                  # era5-agreement
+    fills["AGREE_BLOCK"] = agreement_html(S)                            # baseline-agreement
     fills["HINDCAST_BLOCK"] = hindcast_html()                           # hindcast
     fills.update(place_counts(S))
     for k, v in fills.items():

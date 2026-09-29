@@ -159,6 +159,8 @@ extra_max_median_dsigma = 0.30 # ... and the median |change in best sigma| is at
 # measured with the place's own year-to-year variability (the matching metric).
 agree_fair = 2.0               # above this the page says the two datasets differ noticeably
 agree_poor = 3.5               # above this the confidence badge drops one level
+# The same thresholds apply to the combined agreement: the largest disagreement over the independent sources (ERA5 on all measures,
+# CHIRPS on precipitation, CHELSA on highs, lows and precipitation), each with its own typical offset removed (ctw/baselines.py).
 
 [hindcast]
 # ERA5 hindcast (ctw/hindcast.py): start window, target window

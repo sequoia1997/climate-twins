@@ -138,6 +138,45 @@ jobs:
       - uses: actions/upload-artifact@v6
         with: { name: "era5-${{ matrix.var }}", path: work/era5/*.npz, retention-days: 7 }
 
+  chirps:
+    # Independent precipitation cross-check: CHIRPS v2.0 monthly GeoTIFFs (14 MB each), one at a time, sampled at every place and deleted.
+    # Six parts of five years, in parallel (about 60-72 files per job).
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw chirps --part ${{ matrix.part }} --of 6
+      - uses: actions/upload-artifact@v6
+        with: { name: "chirps-${{ matrix.part }}", path: work/chirps/part*.npz, if-no-files-found: ignore, retention-days: 7 }
+
+  chelsa:
+    # Independent temperature and precipitation cross-check: CHELSA v2.1 1981-2010 monthly normals, one file at a time, sampled and deleted.
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        var: [tasmax, tasmin, pr]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw chelsa --var ${{ matrix.var }}
+      - uses: actions/upload-artifact@v6
+        with: { name: "chelsa-${{ matrix.var }}", path: work/chelsa/*.npz, retention-days: 7 }
+
   hindcast:
     needs: era5
     if: ${{ !cancelled() && needs.era5.result == 'success' && !inputs.smoke }}
@@ -156,7 +195,7 @@ jobs:
         with: { name: hindcast, path: data/hindcast.json, retention-days: 7 }
 
   analyze:
-    needs: [cmip6, terraclimate, north-america, sealevel, era5, hindcast]
+    needs: [cmip6, terraclimate, north-america, sealevel, era5, chirps, chelsa, hindcast]
     if: ${{ !cancelled() && needs.cmip6.result == 'success' && needs.terraclimate.result == 'success' && needs.north-america.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 240
@@ -177,6 +216,12 @@ jobs:
       - uses: actions/download-artifact@v7
         continue-on-error: true
         with: { pattern: "era5-*", path: work/era5, merge-multiple: true }
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with: { pattern: "chirps-*", path: work/chirps, merge-multiple: true }
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with: { pattern: "chelsa-*", path: work/chelsa, merge-multiple: true }
       - uses: actions/download-artifact@v7
         continue-on-error: true
         with: { name: hindcast, path: data }

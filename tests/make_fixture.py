@@ -91,6 +91,11 @@ def main(seed=1):
              gglob_cells=rng.integers(0, nw, (ngk, ns)).astype("int32"), gglob_sig=rng.uniform(2, 6, (ngk, ns)).astype("float32"))
     e5 = rng.gamma(1.2, 1.5, NT).astype("float32")                       # ERA5 baseline agreement (sigma): some fair, some poor
     R.update(era5_sig=e5, era5_raw=(e5 * 3).astype("float32"), era5_diff=rng.normal(0, 1, (NT, NV)).astype("float32"))
+    agr = np.stack([e5, rng.gamma(1.2, 1.5, NT), rng.gamma(1.2, 1.5, NT)], 1).astype("float32")   # ERA5, CHIRPS, CHELSA agreement (sigma)
+    agr[rng.random(NT) < 0.3, 1] = np.nan                                 # CHIRPS covers 50S-50N only
+    agr[rng.random(NT) < 0.2, 2] = np.nan
+    R.update(agr_sig=agr, agr_src=np.array(["era5", "chirps", "chelsa"]), agr_diff=rng.normal(0, 1, (NT, 2, NV)).astype("float32"),
+             chirps_icv=rng.uniform(0.7, 1.3, (NT, 4)).astype("float32"))
     C.save(C.work("results.npz"), **R)
     snap = json.load(gzip.open(C.DATA / "places_snapshot.json.gz", "rt"))
     json.dump({"na": snap["na"], "world": snap["world"], "source": "fixture", "countries": {}}, open(C.work("gazetteer.json"), "w"))

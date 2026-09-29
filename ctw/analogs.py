@@ -15,6 +15,7 @@ from pyproj import Transformer
 from scipy.spatial import cKDTree
 from . import common as C
 from . import features as F
+from . import baselines as BL
 from . import era5 as ERA5                            # (not E: run() uses E for the number of ensembles)
 
 MON = ("tmax", "tmin", "ppt", "vap")
@@ -487,6 +488,33 @@ def run(cfg=None):
                    int((era5_sig > cfg["era5"]["agree_fair"]).sum()), cfg["era5"]["agree_fair"],
                    int((era5_sig > cfg["era5"]["agree_poor"]).sum()), cfg["era5"]["agree_poor"])   # END era5-agreement
 
+    # ---------------------------------------------------------------- more independent sources (CHIRPS precipitation, CHELSA), same offset-removal metric
+    agr_sig = np.full((NT, len(BL.SOURCES)), np.nan, "float32"); agr_sig[:, 0] = era5_sig      # BEGIN baseline-agreement
+    agr_diff = np.full((NT, 2, NVX), np.nan, "float32"); chirps_icv = np.full((NT, 4), np.nan, "float32")
+    okm = ~bad & np.isfinite(base[:, midx]).all(1)
+    ch = BL.load_chirps(T)
+    if ch is None:
+        C.log.warning("no CHIRPS files in work/chirps: CHIRPS agreement not computed")
+    else:
+        cvec = BL.chirps_vectors(ch[0], ch[1], b0, b1)
+        agr_sig[:, 1], coff = BL.source_agreement(SH, midx, base, cvec, G, BL.COLS["chirps"], okm)
+        agr_diff[:, 0] = cvec - base
+        chirps_icv = BL.icv_ratio(ch[0], ch[1], b0, b1, icvsd).astype("float32")
+        C.log.info("CHIRPS typical precipitation offsets (log ratio) NA %s | world %s; agreement median %.2f sigma over %d places; icv ratio median %s",
+                   np.round(coff[0, C.PPT], 2).tolist(), np.round(coff[1, C.PPT], 2).tolist(), np.nanmedian(agr_sig[:, 1]),
+                   int(np.isfinite(agr_sig[:, 1]).sum()), np.round(np.nanmedian(chirps_icv, 0), 2).tolist())
+    cl = BL.load_chelsa(T)
+    if cl is None:
+        C.log.warning("no CHELSA files in work/chelsa: CHELSA agreement not computed")
+    else:
+        lvec = BL.chelsa_vectors(cl)
+        lvec = np.concatenate([lvec, np.full((NT, NVX - lvec.shape[1]), np.nan)], 1) if lvec.shape[1] < NVX else lvec
+        agr_sig[:, 2], loff = BL.source_agreement(SH, midx, base, lvec, G, BL.COLS["chelsa"], okm)
+        agr_diff[:, 1] = lvec - base
+        C.log.info("CHELSA typical offsets (transformed) NA %s | world %s; agreement median %.2f sigma over %d places",
+                   np.round(loff[0, :12], 2).tolist(), np.round(loff[1, :12], 2).tolist(), np.nanmedian(agr_sig[:, 2]), int(np.isfinite(agr_sig[:, 2]).sum()))
+    C.log.info("baseline agreement sources available: %s", [n for n, c in zip(BL.SOURCES, agr_sig.T) if np.isfinite(c).any()])   # END baseline-agreement
+
     gk = sorted(glob)
     ggk = sorted(gglob)
     ns = mcfg["sites"]
@@ -496,7 +524,7 @@ def run(cfg=None):
            Mtr=np.array([TR[k].M(K) if TR[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            kdef=np.array([TR[k].k if TR[k] else 0 for k in range(NT)]), alpha=np.array([SH[k].alpha if SH[k] else np.nan for k in range(NT)]),
            best_idx=best_idx, best_sig=best_sig, sites=sites, site_sig=site_sig, area2=area2, own=own, agree=agree, selfchk=selfchk,
-           tc_check=tc_check, era5_sig=era5_sig, era5_diff=era5_diff, era5_raw=era5_raw if e5 is not None else np.full(NT, np.nan, "float32"), recent=ref.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
+           tc_check=tc_check, era5_sig=era5_sig, era5_diff=era5_diff, agr_sig=agr_sig, agr_diff=agr_diff, agr_src=np.array(BL.SOURCES), chirps_icv=chirps_icv, era5_raw=era5_raw if e5 is not None else np.full(NT, np.nan, "float32"), recent=ref.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
            floored=np.array([f"{a}:{b}" for a, b in floored]), cc_fill=np.array(cc_fill), x_names=np.array(XN, dtype=str), x_fill=np.array(x_fill, dtype=str),
            f_now_kg=fnow["kg"], f_now_zone=fnow["zone"], f_now_ffp=fnow["ffp"],
            f_fut_kg=ffut["kg"], f_fut_zone=ffut["zone"], f_fut_ffp=ffut["ffp"],

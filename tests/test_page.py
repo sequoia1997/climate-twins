@@ -79,10 +79,10 @@ async def main():
                 if "How the climates compare" not in txt:
                     fails.append(f"{place}: no comparison")
                 # era5-agreement: a shown confidence line carries the ERA5 sentence, and a poor agreement lowers the badge
-                e5 = await pg.evaluate(f"typeof era5Sig!=='undefined'?era5Sig[{i}]:-1")
+                e5 = await pg.evaluate(f"(()=>{{const n=(D.agr_src||[]).length;if(!n)return typeof era5Sig!=='undefined'?era5Sig[{i}]:-1;let w=-1;for(let s=0;s<n;s++)w=Math.max(w,agrSig[{i}*n+s]);return w;}})()")
                 if "Confidence:" in txt and e5 >= 0:
                     e5s.append(e5)
-                    if "ERA5, an independent dataset" not in txt:
+                    if "independent dataset" not in txt.lower():
                         fails.append(f"{place}: no ERA5 agreement line (era5 sigma {e5:.1f})")
                     if e5 > (await pg.evaluate("(D.era5_thr||[2,3.5])[1]")) and "describes this place" not in txt:
                         fails.append(f"{place}: poor ERA5 agreement not reported")
