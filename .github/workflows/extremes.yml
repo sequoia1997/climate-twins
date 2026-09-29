@@ -19,6 +19,10 @@ name: Extreme days
 on:
   schedule:
     - cron: "0 5 20 4 *"
+  push:
+    # Until this workflow is on main (GitHub only offers "Run workflow" for workflows on the default branch), editing
+    # .github/run/extremes starts it; a file containing "smoke" makes it a quick test run.
+    paths: [".github/run/extremes"]
   workflow_dispatch:
     inputs:
       smoke:
@@ -34,7 +38,7 @@ concurrency:
   cancel-in-progress: false
 env:
   CTW_WORK: ${{ github.workspace }}/work
-  CTW_SMOKE: ${{ inputs.smoke && '1' || '' }}
+  CTW_SMOKE: ${{ (inputs.smoke || (github.event_name == 'push' && contains(github.event.head_commit.message, '[smoke]'))) && '1' || '' }}
   CTW_SMOKE_MODELS: MIROC6
   PYTHONUNBUFFERED: "1"
 jobs:
