@@ -1,0 +1,26 @@
+# Temporary: checks CHELSA's new download host (os.zhdk.cloud.switch.ch/chelsa01). Deleted after use.
+name: Probe CHELSA new host
+on:
+  push:
+    paths: [".github/workflows/probe-chelsa3.yml"]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        run: |
+          set +e
+          p() { printf "%-125s " "$1"; curl -sIL -m 30 -o /dev/null -w "%{http_code} len=%header{content-length} type=%header{content-type}\n" "$1" || echo FAIL; }
+          for b in https://os.zhdk.cloud.switch.ch/chelsa01 https://os.unil.cloud.switch.ch/chelsa02; do
+            for v in tas tasmax tasmin pr; do
+              p "$b/chelsa_V2/GLOBAL/climatologies/1981-2010/$v/CHELSA_${v}_01_1981-2010_V.2.1.tif"
+            done
+          done
+          echo "== other periods / layouts"
+          p "https://os.zhdk.cloud.switch.ch/chelsa01/chelsa_V2/GLOBAL/climatologies/1991-2020/tas/CHELSA_tas_01_1991-2020_V.2.1.tif"
+          p "https://os.zhdk.cloud.switch.ch/chelsa01/"
+          echo "== S3 listing (may be allowed here)"
+          curl -s -m 30 "https://os.zhdk.cloud.switch.ch/chelsa01?prefix=chelsa_V2/GLOBAL/climatologies/&delimiter=/" | head -c 1500; echo
+          curl -s -m 30 "https://os.zhdk.cloud.switch.ch/chelsa01?prefix=chelsa_V2/GLOBAL/climatologies/1981-2010/tasmax/&max-keys=14" | head -c 1500; echo
+          echo "== Range GET of one file (first 4 KB = a real GeoTIFF header?)"
+          curl -s -m 30 -r 0-3 "https://os.zhdk.cloud.switch.ch/chelsa01/chelsa_V2/GLOBAL/climatologies/1981-2010/tas/CHELSA_tas_01_1981-2010_V.2.1.tif" | xxd | head -2

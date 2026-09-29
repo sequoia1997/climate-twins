@@ -57,7 +57,7 @@ jobs:
         run: |
           for u in https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6/ https://adaptwest.databasin.org/pages/adaptwest-climatena/ https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6-downscaled/ ; do
             echo "== $u"; curl -sSL -m 60 -w "HTTP %{http_code}\n" "$u" -o /tmp/p.html || true
-            grep -o 'https\?://[^"<> )]*\(cacpd\|databasin\)[^"<> )]*' /tmp/p.html | sort -u | || true
+            grep -o 'https\?://[^"<> )]*\(cacpd\|databasin\)[^"<> )]*' /tmp/p.html | sort -u || true
           done
           curl -sSI "https://s3-us-west-2.amazonaws.com/www.cacpd.org/CMIP6v73/normals/Normal_1991_2020_monthly.zip" | head -5
           time python -m ctw downdeltas --list --source aw
