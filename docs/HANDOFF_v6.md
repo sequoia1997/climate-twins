@@ -100,7 +100,7 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   v10 summary.
 
 ## Deferred
-- Heat days (days over 95 °F, NEX-GDDP daily data): terabyte-scale; would need a separate job design.
+- Heat days: DONE as the separate `extremes` job (ctw/extremes.py, .github/workflows/extremes.yml). Each NEX-GDDP file is one variable-year with a whole globe per daily chunk, so place extraction still costs the whole file; solved by sampling every second year and one matrix job per model (~54 GB each). Only SSP2-4.5 and SSP5-8.5 are processed.
 
 ## Operating notes
 - Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.

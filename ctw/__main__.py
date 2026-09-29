@@ -10,6 +10,8 @@ def main(argv=None):
     a = sub.add_parser("cmip6"); a.add_argument("--model", required=True)
     a = sub.add_parser("terraclimate"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
     sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer"); sub.add_parser("sealevel")
+    a = sub.add_parser("extremes", help="extreme-day indicators (NEX-GDDP-CMIP6): --model M | --plan | --aggregate")
+    a.add_argument("--model"); a.add_argument("--plan", action="store_true"); a.add_argument("--aggregate", action="store_true")
     sub.add_parser("analogs"); sub.add_parser("export")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
     sub.add_parser("site"); sub.add_parser("watch")
@@ -36,6 +38,17 @@ def main(argv=None):
         from . import gazetteer; gazetteer.run(cfg)
     elif args.step == "sealevel":
         from . import sealevel; sealevel.run(cfg)
+    elif args.step == "extremes":
+        from . import extremes
+        if args.plan:
+            import json
+            print(json.dumps(extremes.available_models(cfg)))
+        elif args.aggregate:
+            extremes.aggregate(cfg)
+        elif args.model:
+            extremes.run(args.model, cfg)
+        else:
+            p.error("extremes needs --model, --plan or --aggregate")
     elif args.step == "analogs":
         from . import analogs; analogs.run(cfg)
     elif args.step == "export":

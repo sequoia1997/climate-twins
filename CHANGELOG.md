@@ -6,6 +6,7 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 ## 29 September 2026
 
+- **Extreme days.** A new "Extreme days" row in the comparison shows, for each place, how many days a year reach 35 °C (95 °F) or 30 °C, tropical nights, frost days, hot-humid days and the longest dry spell, today and around 2050 and 2100, as the median of several climate models with the range beneath. It uses NASA's daily NEX-GDDP-CMIP6 data for SSP2-4.5 and SSP5-8.5 only (the other two scenarios show the nearest one, and say so) and is refreshed by its own yearly job, so it never holds up the main data update.
 - **"About this map and σ" starts closed.** The panel opens straight to the search box, and one tap on that line opens the explanation whenever you want it.
 - **A simpler search box.** The prompt now just says "Search for a city or town" and fits on every screen, instead of being cut off mid-word.
 

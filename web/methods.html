@@ -208,6 +208,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <li><a href="#features">Climate type, zone and season</a></li>
     <li><a href="#recent">Already happening</a></li>
     <li><a href="#sealevel">Sea level</a></li>
+    <li><a href="#extremes">Extreme days</a></li>
     <li><a href="#updates">Updates and versions</a></li>
     <li><a href="#tropics">Why many tropical places have no match</a></li>
     <li><a href="#limits">Limitations</a></li>
@@ -383,6 +384,18 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <h2>Sea level</h2>
     <p>For places within 50 km of a projection site, the page shows relative sea-level rise from the IPCC Sixth Assessment Report (Fox-Kemper et al. 2021), using the medium-confidence projections at tide gauges and on a 1° coastal grid (Garner et al. 2021). Values are the median and the likely range (17th–83rd percentiles) for 2050 and 2100 relative to 1995–2014, and include vertical land motion such as subsidence. {{SL_N}} places have projections. Low-likelihood, high-impact outcomes involving rapid ice-sheet loss are not included and could add substantially by 2100.</p>
   </section>
+
+  <!-- BEGIN extreme-days -->
+  <section id="extremes">
+    <h2>Extreme days</h2>
+    <p>The “Extreme days” row counts, for each place, the days a year that are dangerously hot, humid or cold, and how dry and how wet the extremes get. It comes from a separate dataset and a separate yearly job from the rest of the page: NASA's NEX-GDDP-CMIP6 (Thrasher et al. 2022), which gives daily maximum and minimum temperature, precipitation and relative humidity on a 0.25° (about 25 km) grid, bias-corrected against observations, for historical years and for the emissions scenarios. The daily values needed for these counts are not in the monthly CMIP6 data used everywhere else.</p>
+    <p><strong>Indicators.</strong> Days with a daily high of 35 °C (95 °F) or more, and 30 °C (86 °F) or more; tropical nights (daily low of 20 °C or more); frost days (daily low below 0 °C); hot-humid days (wet-bulb temperature of 28 °C or more); the longest run of days with under 1 mm of precipitation in a year; and the wettest single day. Each is computed for every sampled year and averaged over a window: 1991–2020 for “Now” (historical years to 2014, SSP2-4.5 for 2015–2020), and 2041–2060 and 2081–2100 for the future. Counts are scaled to a 365-day year so that models with 360-day calendars compare.</p>
+    <p><strong>Wet-bulb temperature</strong> is calculated with the empirical formula of Stull (2011) from the daily high temperature and relative humidity. The dataset provides only the daily <em>mean</em> humidity, which is much higher than the humidity in the afternoon when the high occurs, so the humidity at the time of the high is estimated by holding the vapour pressure (dewpoint) fixed while temperature rises from the daily mean, taken as the average of the high and low, to the high. This is an approximation and the threshold is a rough marker of very hard conditions, not a measured heat-stress limit; wet-bulb temperatures near 35 °C are the physiological limit for healthy people, and 28 °C is already dangerous for hard work.</p>
+    <p><strong>From grid to place.</strong> Each place takes the values of the nearest 0.25° cell that has data (up to three cells away for coastal places). A 25 km cell is a spatial average, so hot spots, city heat islands and mountain valleys are not resolved, and counts of extreme days at one site can differ from the cell value. Ensembles: the median across the same likely-sensitivity models used elsewhere, where NEX-GDDP publishes them with all four variables (currently 13 of them; the exact list is in the data file), with the range (lowest to highest) shown beneath. To keep the download affordable, every second year of each window is sampled; this adds a small amount of noise to counts of rare events.</p>
+    <p><strong>Scenarios.</strong> Only SSP2-4.5 and SSP5-8.5 are processed. For SSP1-2.6 and SSP3-7.0 the page shows the nearest processed scenario and says so. Places with no land cell in the grid (some small islands) show nothing. The counts are model output, not observations, and are not forecasts for a particular year.</p>
+    <p class="small">Thrasher, B., Wang, W., Michaelis, A., Melton, F., Lee, T., &amp; Nemani, R. (2022). NASA Global Daily Downscaled Projections, CMIP6. <em>Scientific Data, 9</em>, 262. <a href="https://doi.org/10.1038/s41597-022-01393-4">https://doi.org/10.1038/s41597-022-01393-4</a>. Stull, R. (2011). Wet-bulb temperature from relative humidity and air temperature. <em>Journal of Applied Meteorology and Climatology, 50</em>(11), 2267–2269. <a href="https://doi.org/10.1175/JAMC-D-11-0143.1">https://doi.org/10.1175/JAMC-D-11-0143.1</a></p>
+  </section>
+  <!-- END extreme-days -->
 
   <section id="updates">
     <h2>Updates and versions</h2>
