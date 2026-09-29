@@ -11,7 +11,11 @@ One pass per variable (same names as terraclimate.py: tmax, tmin, ppt, vap) writ
   series   (NT, ny, 12)       monthly values at every place, for every year (Dec of year 0 feeds DJF)
   w0, w1   (12, 360, 720)     monthly normals of the two hindcast windows on a 0.5° grid (2x2 block means)
   lsm05    (360, 720)         land fraction of each 0.5° cell
-The place value is the bilinear interpolation of the four surrounding 0.25° cells, weighted toward land cells.
+  cell     (NT, ny, 12)       monthly values of each place's own ERA5 land cell (NaN: no land cell, see land_cell)
+  cell_i, cell_j, cell_km, cell_lsm (NT,)  that cell's row, column, distance from the place and land fraction
+The place value (series, used by the hindcast) is the bilinear interpolation of the four surrounding 0.25° cells,
+weighted toward land cells. The baseline-agreement check uses `cell` instead: one whole ERA5 land cell, compared with
+the place's own dataset averaged over that same cell's footprint (matched resolution; see matched()).
 Dewpoint is averaged as vapour pressure (Magnus, as for TerraClimate) and converted back after seasonal averaging.
 Progress is checkpointed after every year."""
 from __future__ import annotations
@@ -77,6 +81,84 @@ def interp_weights(lat, lon, lsm):
     return I, J, W / W.sum(1, keepdims=True)
 
 
+# ------------------------------------------------------------------------------------------ matched-resolution cells
+DEG = 0.25
+TC_PER_CELL = 6                                         # TerraClimate 1/24° pixels per 0.25° cell side
+
+
+def land_params(cfg):
+    e = (cfg or {}).get("era5", {})
+    return float(e.get("land_frac_min", 0.5)), float(e.get("land_max_km", 50.0))
+
+
+def cells_within(lat, lon, km):
+    """0.25° ERA5 cells (row i: latitude 90 - 0.25 i; column j: longitude 0.25 j) whose centres lie within km of each
+    place. Returns a list of (i, j, distance_km) arrays, one per place."""
+    step = C.R_EARTH * np.radians(DEG)                 # km per 0.25° of latitude
+    dr = int(np.ceil(km / step))
+    out = []
+    for la, lo in zip(np.asarray(lat, float), np.asarray(lon, float)):
+        i0, j0 = int(round((90 - la) / DEG)), int(round(np.mod(lo, 360.0) / DEG))
+        cosm = max(np.cos(np.radians(min(89.9, abs(la) + (dr + 1) * DEG))), 1e-3)
+        dc = int(min(NLON // 2, np.ceil(km / (step * cosm))))
+        ii, jj = np.mgrid[i0 - dr:i0 + dr + 1, j0 - dc:j0 + dc + 1]
+        ii, jj = ii.ravel(), jj.ravel()
+        keep = (ii >= 0) & (ii < NLAT)
+        ii, jj = ii[keep], np.mod(jj[keep], NLON)
+        d = C.haversine_km(la, lo, 90.0 - ii * DEG, jj * DEG)
+        s = d <= km
+        out.append((ii[s], jj[s], d[s]))
+    return out
+
+
+def land_cell(lat, lon, lsm, min_frac=0.5, max_km=50.0):
+    """Each place's own ERA5 land cell: the 0.25° cell nearest to the place (by centre) whose land fraction is at least
+    min_frac, within max_km. Returns (i, j, km); i = j = -1 and km = NaN where there is none ('no land cell': small
+    islands and atolls ERA5 treats as sea)."""
+    n = len(np.atleast_1d(lat))
+    I, J, D = np.full(n, -1), np.full(n, -1), np.full(n, np.nan)
+    for k, (ii, jj, d) in enumerate(cells_within(lat, lon, max_km)):
+        m = lsm[ii, jj] >= min_frac
+        if m.any():
+            q = int(np.argmin(np.where(m, d, np.inf)))
+            I[k], J[k], D[k] = ii[q], jj[q], d[q]
+    return I, J, D
+
+
+def candidate_cells(lat, lon, max_km=50.0):
+    """Flat indices (i * 1440 + j, sorted, unique) of every 0.25° cell that can be some place's land cell. The TerraClimate
+    step averages its pixels over these cells without needing the ERA5 land-sea mask."""
+    parts = [ii.astype(np.int64) * NLON + jj for ii, jj, _ in cells_within(lat, lon, max_km + 1.0)]
+    return np.unique(np.concatenate(parts)) if parts else np.zeros(0, np.int64)
+
+
+def box_pixels(flat, per=TC_PER_CELL, nlat=4320, nlon=8640):
+    """Row and column indices (n, per*per) of the 1/24° TerraClimate pixels inside each 0.25° ERA5 cell. TerraClimate
+    pixel r spans latitudes 90 - r/24 .. 90 - (r+1)/24 and column c longitudes -180 + c/24 .. -180 + (c+1)/24, so ERA5
+    cell (i, j), centred on (90 - i/4, j/4) with half-width 1/8°, holds rows 6i-3 .. 6i+2 and columns 6j+4317 .. 6j+4322
+    (mod 8640) exactly. Rows beyond the poles are clipped (repeats; irrelevant for places)."""
+    flat = np.asarray(flat, np.int64)
+    i, j = flat // NLON, flat % NLON
+    h = per // 2
+    o = np.arange(per)
+    rows = np.clip(i[:, None] * per - h + o[None, :], 0, nlat - 1)
+    cols = np.mod(j[:, None] * per + nlon // 2 - h + o[None, :], nlon)
+    R = np.repeat(rows, per, axis=1)
+    Cc = np.tile(cols, (1, per))
+    return R, Cc
+
+
+def box_means(a, R, Cc):
+    """Mean of the finite (land) pixels of the 2-D field a in each box; returns (mean (n,), land pixel count (n,)). NaN
+    where a box has no land pixel."""
+    b = a[R, Cc]
+    ok = np.isfinite(b)
+    n = ok.sum(1)
+    with np.errstate(invalid="ignore"):
+        m = np.where(ok, b, 0).sum(1) / np.maximum(n, 1)
+    return np.where(n > 0, m, np.nan), n
+
+
 def _read(arr, i, tries=6):
     for a in range(tries):
         try:
@@ -100,6 +182,10 @@ def run(var: str, cfg=None):
     lsm = load_lsm(ar)
     assert 0.2 < lsm.mean() < 0.4, "land-sea mask looks wrong"
     I, J, W = interp_weights(T.lat.values, T.lon.values, lsm)
+    ci, cj, ckm = land_cell(T.lat.values, T.lon.values, lsm, *land_params(cfg))       # each place's own land cell
+    hasc = ci >= 0
+    C.log.info("era5: %d of %d places have an ERA5 land cell within %.0f km (no land cell: %s)", int(hasc.sum()), len(T),
+               land_params(cfg)[1], T.label[~hasc].tolist()[:40])
     years = years_needed(cfg)
     hw = cfg["hindcast"]["windows"]
     arr = g[ARRAY[var]]
@@ -108,8 +194,10 @@ def run(var: str, cfg=None):
     if ck.exists():
         d = C.load(ck)
         series, w, done = d["series"], [d["w0"], d["w1"]], set(d["done"].tolist())
+        cell = d["cell"] if "cell" in d else np.full(series.shape, np.nan, "float32")
     else:
         series = np.full((len(T), len(years), 12), np.nan, "float32")
+        cell = np.full((len(T), len(years), 12), np.nan, "float32")
         w = [np.zeros((12, 360, 720), "float32") for _ in hw]
         done = set()
     t0 = time.time()
@@ -141,13 +229,16 @@ def run(var: str, cfg=None):
             acc /= cnt[:, None, None].astype("float32")
         # values at the places: (12, NT, 4) x weights
         series[:, yi] = np.einsum("mnc,nc->nm", acc[:, I, J], W)
+        cell[hasc, yi] = acc[:, ci[hasc], cj[hasc]].T
         for wi, (a, b) in enumerate(hw):
             if a <= y <= b:
                 w[wi] += acc[:, :720].reshape(12, 360, 2, 720, 2).mean((2, 4)) / (b - a + 1)
         done.add(y)
-        C.save(ck, series=series, w0=w[0], w1=w[1], done=np.array(sorted(done)))
+        C.save(ck, series=series, cell=cell, w0=w[0], w1=w[1], done=np.array(sorted(done)))
         C.log.info("era5 %s %d done (%d/%d) %.0fs", var, y, len(done), len(years), time.time() - t0)
     C.save(out_f, var=np.array(var), years=np.array(years), series=series, w0=w[0], w1=w[1], lsm05=lsm05,
+           cell=cell, cell_i=ci.astype("int32"), cell_j=cj.astype("int32"), cell_km=ckm.astype("float32"),
+           cell_lsm=np.where(hasc, lsm[np.maximum(ci, 0), np.maximum(cj, 0)], np.nan).astype("float32"),
            labels=T.label.values.astype(str), windows=np.array(hw))
     ck.unlink(missing_ok=True)
     C.log.info("era5 %s written: %s", var, out_f)
@@ -180,6 +271,84 @@ def baseline_vectors(d, b0, b1):
     for k in range(NT):
         out[k] = np.nanmean(C.seasonal_years({v: d[v]["series"][k] for v in ARRAY}, years, ys), 0)
     return out
+
+
+def _normals(series, years, b0, b1):
+    """Monthly normals (NT, 12) over the years b0..b1 of a (NT, ny, 12) series (NaN where no year has data)."""
+    years = np.asarray(years)
+    sel = (years >= b0) & (years <= b1)
+    with np.errstate(invalid="ignore"), __import__("warnings").catch_warnings():
+        __import__("warnings").simplefilter("ignore")
+        return np.nanmean(np.asarray(series, "float64")[:, sel], axis=1)
+
+
+def cell_vectors(d, b0, b1):
+    """(NT, nvx) ERA5 baseline of each place's own land cell (monthly normals over b0..b1, then seasonalised; extras NaN).
+    NaN rows: no land cell. None when the era5 files predate the per-cell series."""
+    if "cell" not in d["tmax"]:
+        return None
+    mon = {v: _normals(d[v]["cell"], d[v]["years"], b0, b1) for v in ARRAY}
+    return C.seasonalize({v: m.T for v, m in mon.items()}).T
+
+
+def box_vectors(tc, d, names):
+    """(NT, nvx) the place's baseline dataset (TerraClimate, all monthly variables in names) averaged over the land pixels
+    of that place's ERA5 land cell, from the per-cell normals the TerraClimate step writes (box_cells, box_normals).
+    NaN rows: no land cell, or no TerraClimate land pixel in it. None when either step predates the per-cell output."""
+    if "cell_i" not in d["tmax"] or any("box_cells" not in tc[v] for v in names):
+        return None
+    ci, cj = np.asarray(d["tmax"]["cell_i"]), np.asarray(d["tmax"]["cell_j"])
+    flat = ci.astype(np.int64) * NLON + cj
+    mon = {}
+    for v in names:
+        cells = np.asarray(tc[v]["box_cells"], np.int64)
+        m = np.full((len(ci), 12), np.nan)
+        if not len(cells):
+            mon[v] = m
+            continue
+        pos = np.clip(np.searchsorted(cells, flat), 0, len(cells) - 1)
+        hit = (ci >= 0) & (cells[pos] == flat)
+        m[hit] = np.asarray(tc[v]["box_normals"], "float64")[:, pos[hit]].T
+        mon[v] = m
+    return C.seasonalize({v: m.T for v, m in mon.items()}).T
+
+
+def untransform(X):
+    """Inverse of C.transform (precipitation and log-matched extras back from log(x+1); divided extras multiplied back)."""
+    X = np.array(X, dtype="float64", copy=True)
+    X[..., C.PPT] = np.exp(X[..., C.PPT]) - 1.0
+    for j, n in enumerate(C._ACTIVE):
+        if X.shape[-1] >= C.NV + 4 * (j + 1):
+            c = slice(C.NV + 4 * j, C.NV + 4 * j + 4)
+            X[..., c] = np.exp(X[..., c]) - 1.0 if C.EXTRAS[n]["log"] else X[..., c] * C.EXTRAS[n]["div"]
+    return X
+
+
+def footprint(base, point, box):
+    """The place's own baseline carried from its point (10 km neighbourhood) to the footprint of its ERA5 cell, using the
+    TerraClimate difference between the cell box and the point: base + (box - point) for temperatures and dewpoints,
+    base x (box + 1) / (point + 1) for precipitation (the same shift in the metric's transformed space). For TerraClimate
+    places base is the point, so this is exactly the box mean; AdaptWest places keep their own dataset, moved by
+    TerraClimate's point-to-cell difference."""
+    return untransform(C.transform(base) + C.transform(box) - C.transform(point))
+
+
+def matched(d, tc, base, point, b0, b1, names, mode="cell"):
+    """The two vectors the baseline-agreement check compares. mode "cell" (matched resolution): the place's baseline
+    moved to its ERA5 land cell's footprint (footprint()) against that one cell (cell_vectors()); places without a land
+    cell get NaN ('no land cell'). mode "point", or files from before the per-cell output: the place's point baseline
+    against ERA5 interpolated to the point (the original check). Returns (ref, era, no_cell (NT,) bool, mode used)."""
+    NT = base.shape[0]
+    if mode == "cell":
+        ev, bx = cell_vectors(d, b0, b1), box_vectors(tc, d, names)
+        if ev is None or bx is None:
+            C.log.warning("era5: per-cell output missing (%s): falling back to the point comparison",
+                          "ERA5 cell series" if ev is None else "TerraClimate box normals")
+        else:
+            ref = footprint(base, point, bx)
+            nocell = np.asarray(d["tmax"]["cell_i"]) < 0
+            return ref, ev, nocell, "cell"
+    return np.array(base, "float64", copy=True), baseline_vectors(d, b0, b1), np.zeros(NT, bool), "point"
 
 
 def offsets(base, era, groups):

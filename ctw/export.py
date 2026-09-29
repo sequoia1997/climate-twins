@@ -363,6 +363,8 @@ def run(cfg=None):
                                over_fair=round(float(np.mean(fin > cfg["era5"]["agree_fair"])), 4),
                                over_poor=round(float(np.mean(fin > cfg["era5"]["agree_poor"])), 4),
                                thr=[cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]],
+                               match=str(R["era5_mode"]) if "era5_mode" in R else "point",
+                               no_land_cell=int(R["era5_nocell"][~bad].sum()) if "era5_nocell" in R else 0,
                                bias={"North America": bias(diff[isna]), "World cities": bias(diff[~isna])})
     # END era5-agreement
     summary["agree"] = agreement_summary(cfg, AGR, R, bad, T)        # baseline-agreement

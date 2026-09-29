@@ -4,13 +4,18 @@
   series      (NT, ny, 12)    10 km neighbourhood mean at every place, for every year (Dec of year 0 feeds DJF)
   laea        (12, ny, nx)    baseline normals sampled at the North American 15 km grid cells (vap, and the optional
                               extras pet and srad: AdaptWest has none of them, so North America uses TerraClimate)
+  box_cells   (n,)            flat indices (i * 1440 + j) of the 0.25° ERA5 cells that can be a place's ERA5 land cell
+  box_normals (12, n)         baseline monthly normals averaged over the land pixels inside each of those cells (6 x 6
+                              pixels, exactly the ERA5 cell's footprint): the matched-resolution side of the ERA5 check
+  box_land    (n,)            share of those pixels that are land
 Files are fetched one year ahead of processing and deleted after use; progress is checkpointed after every year."""
 from __future__ import annotations
-import queue, threading, time
+import os, queue, threading, time
 import netCDF4
 import numpy as np
 from pyproj import Transformer
 from . import common as C
+from . import era5 as ERA5
 
 NLAT, NLON, B = 4320, 8640, 12
 LAEA_VARS = ("vap", "pet", "srad")            # variables also sampled on the North American 15 km grid
@@ -81,6 +86,9 @@ def run(var: str, cfg=None):
     years = list(range(y_first, y_end + 1))
     if C.SMOKE:
         years = [y for y in years if y <= y_first + 6] + [y for y in (y_end - 1, y_end) if y > y_first + 6]
+    if os.environ.get("CTW_TC_YEARS"):                          # explicit year range (smoke workflows)
+        a, b = os.environ["CTW_TC_YEARS"].split("-")
+        years = list(range(int(a), int(b) + 1))
     base_years = [y for y in years if b0 <= y <= b1]
     out_f = C.work("terraclimate", f"{var}.npz")
     ck = C.work("terraclimate", f"{var}.ckpt.npz")
@@ -88,15 +96,23 @@ def run(var: str, cfg=None):
     LI = LJ = shp = None
     if var in LAEA_VARS:
         LI, LJ, shp = laea_pixels(cfg)
+    bcells = ERA5.candidate_cells(T.lat.values, T.lon.values, ERA5.land_params(cfg)[1])    # ERA5 cells for the matched check
+    BR, BC = ERA5.box_pixels(bcells)
     NY, NX = NLAT // B, NLON // B
     if ck.exists():
         d = C.load(ck)
         acc, lacc, series, land, done = d["acc"], d["lacc"], d["series"], d["land"], set(d["done"].tolist())
         if land.ndim == 0:
             land = None
+        if "box_acc" in d and d["box_acc"].shape[1] == len(bcells):
+            bacc, bn, bland = d["box_acc"], d["box_n"], d["box_land"]
+        else:
+            C.log.warning("terraclimate checkpoint without matching box normals: they cover only the years still to do")
+            bacc, bn, bland = np.zeros((12, len(bcells))), np.zeros((12, len(bcells))), np.full(len(bcells), np.nan)
     else:
         acc = np.zeros((12, NY, NX)); lacc = np.zeros((12, LI.shape[0])) if LI is not None else np.zeros(0)
         series = np.full((len(T), len(years), 12), np.nan, "float32"); land = None; done = set()
+        bacc, bn, bland = np.zeros((12, len(bcells))), np.zeros((12, len(bcells))), np.full(len(bcells), np.nan)
     todo = [y for y in years if y not in done]
     url = cfg["sources"]["terraclimate"]
     q: queue.Queue = queue.Queue(maxsize=1)
@@ -124,6 +140,11 @@ def run(var: str, cfg=None):
                 n = sel.sum((1, 2))
                 series[:, yi, m] = np.where(n > 0, np.where(sel, blk, 0).sum((1, 2)) / np.maximum(n, 1), np.nan)
                 if y in base_years:
+                    bm, bcnt = ERA5.box_means(a, BR, BC)
+                    got = np.isfinite(bm)
+                    bacc[m] += np.where(got, bm, 0.0); bn[m] += got
+                    if not np.isfinite(bland).any():
+                        bland = bcnt / BR.shape[1]
                     a4 = a.reshape(NY, B, NX, B)
                     cnt = np.isfinite(a4).sum((1, 3))
                     with np.errstate(invalid="ignore"):
@@ -137,12 +158,14 @@ def run(var: str, cfg=None):
                 del a
         path.unlink(missing_ok=True)
         done.add(y)
-        C.save(ck, acc=acc, lacc=lacc, series=series, land=land if land is not None else np.array(0.0), done=np.array(sorted(done)))
+        C.save(ck, acc=acc, lacc=lacc, series=series, land=land if land is not None else np.array(0.0), done=np.array(sorted(done)),
+               box_acc=bacc, box_n=bn, box_land=bland)
         C.log.info("terraclimate %s %d done (%d/%d) %.0fs", var, y, len(done), len(years), time.time() - t0)
     nb = len(base_years)
     out = dict(var=np.array(var), years=np.array(years), y_first=np.array(y_first), latest=np.array(y_end),
                normals05=(acc / nb).astype("float32"), land05=land.astype("float32"), series=series,
-               labels=T.label.values.astype(str))
+               labels=T.label.values.astype(str), box_cells=bcells.astype("int32"),
+               box_normals=np.where(bn > 0, bacc / np.maximum(bn, 1), np.nan).astype("float32"), box_land=bland.astype("float32"))
     if LI is not None:
         L = lacc / nb
         L[L < -1e8] = np.nan                                     # cells with no land pixel in any baseline year

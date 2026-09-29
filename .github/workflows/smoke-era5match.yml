@@ -1,0 +1,76 @@
+# Smoke test for the matched-resolution ERA5 baseline agreement (ctw/era5.py matched(), box normals in ctw/terraclimate.py).
+# Runs on push of this file only, or by hand. About 70 places (small islands, coasts, deserts, mountains, interiors):
+# TerraClimate and ERA5 for 1990-2020, then ctw/smoke_era5match.py prints the sigma distribution of the old point check,
+# the cell choice alone and the matched check, the worst 15 places and whether the target (median < 0.8 sigma, < 10% of
+# places over 3.5 sigma) is met.
+name: Smoke ERA5 matched resolution
+on:
+  push:
+    paths: [".github/workflows/smoke-era5match.yml"]
+  workflow_dispatch:
+env:
+  CTW_WORK: ${{ github.workspace }}/work
+  CTW_SMOKE: "1"
+  CTW_SMOKE_PLACES: "Zamboanga, Philippines|Jizan, Saudi Arabia|Koror, Palau|Porlamar, Venezuela|Tacna, Peru|Palikir, Micronesia|Moroni, Comoros|Roseau, Dominica|Male, Maldives|Funafuti, Tuvalu|Tarawa, Kiribati|Majuro, Marshall Is.|Apia, Samoa|Victoria, Seychelles|Port Louis, Mauritius|Praia, Cabo Verde|Bridgetown, Barbados|Honiara, Solomon Is.|Saipan, N. Mariana Is.|Ponta Delgada, Portugal|Funchal, Portugal|Las Palmas de Gran Canaria, Spain|Stanley, Falkland Is.|Nassau, Bahamas|Honolulu, HI|Kingston, Jamaica|San Juan, Puerto Rico|Singapore, Singapore|Hong Kong, Hong Kong|Colombo, Sri Lanka|Djibouti, Djibouti|Aden, Yemen|Muscat, Oman|Lima, Peru|Dakar, Senegal|Wellington, New Zealand|Reykjavík, Iceland|Nuuk, Greenland|Tromsø, Norway|Cape Town, South Africa|Sydney, Australia|Lisbon, Portugal|Mogadishu, Somalia|Havana, Cuba|Beijing, China|Delhi, India|Moscow, Russia|Kinshasa, DR Congo|Riyadh, Saudi Arabia|Johannesburg, South Africa|Tehran, Iran|Kabul, Afghanistan|Berlin, Germany|Madrid, Spain|Almaty, Kazakhstan|Khartoum, Sudan|Niamey, Niger|Ulan Bator, Mongolia|Yakutsk, Russia|Manaus, Brazil|La Paz, Bolivia|Quito, Ecuador|Bogotá, Colombia|Addis Ababa, Ethiopia|Nairobi, Kenya|Kathmandu, Nepal|Alice Springs, Australia|Windhoek, Namibia|Irkutsk, Russia|Paris, France"
+  PYTHONUNBUFFERED: "1"
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pytest
+      - run: python -m pytest tests/test_era5match.py tests/test_baselines.py -q
+
+  terraclimate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      CTW_TC_YEARS: "1990-2020"
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        var: [tmax, tmin, ppt, vap]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw terraclimate --var ${{ matrix.var }}
+      - uses: actions/upload-artifact@v6
+        with: { name: "tc-${{ matrix.var }}", path: work/terraclimate/*.npz, retention-days: 3 }
+
+  era5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      CTW_ERA5_YEARS: "1990-2020"
+    strategy:
+      fail-fast: false
+      matrix:
+        var: [tmax, tmin, ppt, vap]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw era5 --var ${{ matrix.var }}
+      - uses: actions/upload-artifact@v6
+        with: { name: "era5-${{ matrix.var }}", path: work/era5/*.npz, retention-days: 3 }
+
+  compare:
+    needs: [terraclimate, era5]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v7
+        with: { pattern: "tc-*", path: work/terraclimate, merge-multiple: true }
+      - uses: actions/download-artifact@v7
+        with: { pattern: "era5-*", path: work/era5, merge-multiple: true }
+      - run: python -m ctw.smoke_era5match

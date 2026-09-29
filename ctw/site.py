@@ -60,11 +60,14 @@ def era5_html(S) -> str:
     for reg, b in e["bias"].items():
         for v, lab in names.items():
             rows += f"<tr><td>{reg}</td><td>{lab}</td>" + "".join(f'<td class="n">{x:+.1f}</td>' if x is not None else "<td>-</td>" for x in b[v]) + "</tr>"
+    cell = e.get("match") == "cell"
+    nolc = (f" {e['no_land_cell']:,} places have no ERA5 land cell within reach and are not checked against ERA5." if cell and e.get("no_land_cell") else "")
+    what = "ERA5 (each place's land cell) minus baseline averaged over the same cell" if cell else "ERA5 minus baseline"
     return (f"<p>In this release the median disagreement is {e['median']:.2f}σ across {e['n']:,} places (90th percentile {e['p90']:.1f}σ); "
-            f"{e['over_fair']:.0%} of places are above {e['thr'][0]:g}σ and {e['over_poor']:.0%} above {e['thr'][1]:g}σ.</p>"
+            f"{e['over_fair']:.0%} of places are above {e['thr'][0]:g}σ and {e['over_poor']:.0%} above {e['thr'][1]:g}σ.{nolc}</p>"
             '<div class="tw"><table class="res"><thead><tr><th>Places</th><th>Measure</th><th class="n">Winter</th><th class="n">Spring</th>'
             '<th class="n">Summer</th><th class="n">Autumn</th></tr></thead><tbody>' + rows +
-            "</tbody><caption>Median ERA5 minus baseline (TerraClimate, or AdaptWest in North America), 1991–2020, by season "
+            f"</tbody><caption>Median {what} (TerraClimate, or AdaptWest in North America), 1991–2020, by season "
             "(December–February, and so on; the same months in both hemispheres). These are the offsets removed before the agreement is computed. North American temperature and precipitation are compared with AdaptWest, dewpoint and all other places with TerraClimate.</caption></table></div>")
 
 

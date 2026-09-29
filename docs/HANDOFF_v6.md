@@ -125,6 +125,15 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
 - tests/make_fixture.py builds a synthetic results.npz so export -> site -> validate -> tests/test_page.py run offline.
 - Not done: growing the North American list; making the North American pool lazy too (it is the fixed ~3 MB of startup).
 
+## ERA5 check at matched resolution
+- The first full rebuild's point check (10 km baseline vs ERA5 bilinear) gave median 1.39σ, 33% of places > 3.5σ, worst on small
+  islands/coasts. Now (`[era5] match = "cell"`): each place's ERA5 land cell (nearest 0.25° cell with land fraction >= 0.5 within
+  50 km; none -> 'no land cell', not checked; ~55 of 2,386 places, `era5_nocell` in results) vs the place's baseline carried to that
+  cell's footprint (TerraClimate mean of the 6x6 land pixels in the cell, `box_cells`/`box_normals` in work/terraclimate/*.npz;
+  AdaptWest places shifted by TerraClimate box minus point). ERA5 writes `cell`, `cell_i/j/km/lsm`. Old files fall back to "point".
+- No ERA5-Land store is reachable from the sandbox (GCS arco-era5 / weatherbench2 and public S3 checked, 2026-09-29).
+- Verified by `.github/workflows/smoke-era5match.yml` (70 places, 1990-2020): prints point vs matched distributions and the worst 15.
+
 ## Multi-source model-resolution cross-check (downdeltas)
 - `nexcheck` compares the main projection with NEX-GDDP (data/nexdeltas.npz), WorldClim 2.1 CMIP6 and AdaptWest downscaled CMIP6 (data/downdeltas.npz, from ctw/downdeltas.py, workflow `downdeltas.yml`); flag = worst case over sources, `flagged_by` lists them; page line names them.
 - Written without network access: the extraction (WorldClim URLs/GCM list, AdaptWest bucket layout parsing in `parse_aw_key`/`aw_products`) is verified only by `.github/workflows/smoke-downdeltas.yml` on Actions; adjust `[downdeltas]` / DEFAULTS in the module to what the listing shows.
