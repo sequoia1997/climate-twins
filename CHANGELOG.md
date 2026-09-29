@@ -4,6 +4,10 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 29 September 2026
+
+- **A simpler search box.** The prompt now just says "Search for a city or town" and fits on every screen, instead of being cut off mid-word.
+
 ## 28 September 2026
 
 - **State, province and territory borders** now show on the map from the continent view down, as fine dashed lines that stay quieter than country borders.
