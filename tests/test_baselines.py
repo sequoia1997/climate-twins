@@ -223,7 +223,8 @@ def test_agreement_summary_shapes():
     assert cb["n"] == n and cb["median"] >= out["sources"]["era5"]["median"] and cb["over_poor"] >= out["sources"]["era5"]["over_poor"]
     cfg["era5"]["combine"] = "corroborated"          # the default: two sources must both disagree, so it can only be milder
     oc = export.agreement_summary(cfg, AGR, R, np.zeros(n, bool), T)["combined"]
-    assert oc["n"] == n and oc["median"] <= cb["median"] and oc["over_poor"] <= cb["over_poor"]
+    assert oc["n"] == 10 and oc["median"] <= cb["median"]      # badge sources: ERA5 + CHIRPS (CHELSA reported only); CHIRPS has 10 rows
+    assert oc["over_poor"] <= cb["over_poor"]
     assert sum(cb["poor_by"].values()) == int(round(cb["over_poor"] * n))
     assert set(out["bias"]) == {"chirps", "chelsa"} and len(out["bias"]["chelsa"]["World cities"]["tmax"]) == 4
     assert len(out["chirps_icv_ratio"]) == 4
@@ -310,3 +311,14 @@ def test_combine_corroborated_needs_two_sources():
     assert np.isnan(v[3]) and which[3] == -1
     w, _ = BL.combine(sig)                      # default mode is unchanged
     assert w[0] == 55.0
+
+
+def test_badge_matrix_drops_reported_only_sources():
+    from ctw import export
+    cfg = C.config()
+    cfg["era5"]["badge_sources"] = ["era5", "chirps"]
+    A = np.array([[4.0, 0.1, 5.0], [0.2, 4.5, 6.0]], "float32")
+    B = export.badge_matrix(cfg, A)
+    assert np.isnan(B[:, BL.SOURCES.index("chelsa")]).all() and B[0, 0] == 4.0 and B[1, 1] == 4.5
+    v, _ = BL.combine(B, "corroborated")
+    assert v[0] == np.float32(0.1) and v[1] == np.float32(0.2)       # ERA5 + CHELSA alone never corroborate

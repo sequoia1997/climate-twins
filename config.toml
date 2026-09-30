@@ -197,6 +197,9 @@ land_max_km = 50               # also sets which cells the terraclimate step ave
 # 10.2 -> 0.6), but coasts keep a real ERA5 warm-night bias of 2-3 degrees C (Honolulu, Kingston, Dakar), so one source
 # alone still is not trusted to lower the badge.
 combine = "corroborated"
+# Sources that may lower the badge; the others are measured and reported only. CHELSA v2.1 is downscaled from ERA5, so the
+# two share ERA5's coastal warm-night bias and cannot confirm each other (together they flagged 25% of places).
+badge_sources = ["era5", "chirps"]
 # The same thresholds apply to the combined agreement: the largest disagreement over the independent sources (ERA5 on all measures,
 # CHIRPS on precipitation, CHELSA on highs, lows and precipitation), each with its own typical offset removed (ctw/baselines.py).
 

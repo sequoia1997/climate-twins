@@ -135,7 +135,8 @@ def run(cfg=None):
     bad = R["bad"]
     version = dt.date.today().isoformat()
     size = int(cfg.get("export", {}).get("shard_places", SHARD_PLACES))
-    AGR = agreement_matrix(R)                                       # baseline-agreement: (NT, sources)
+    AGR_ALL = agreement_matrix(R)                                   # baseline-agreement: (NT, sources), every source (reported)
+    AGR = badge_matrix(cfg, AGR_ALL)                                # only the sources that may lower the badge (shipped to the page)
     common = dict(
         nv=NVX, xlog=[bool(C.EXTRAS[n]["log"]) for n in XN for _ in range(4)], xscale=C.ENC_SCALE, extra=XN, midx=midx.tolist(), K=K, models=[m["name"] for m in ms], tcr=[m["tcr"] if m["tcr"] > 0 else None for m in ms],
         ens={e: ens[e] for e in ("tcr_likely", "all")}, ssps=cfg["scenarios"]["labels"],
@@ -369,7 +370,7 @@ def run(cfg=None):
                                no_land_cell=int(R["era5_nocell"][~bad].sum()) if "era5_nocell" in R else 0,
                                bias={"North America": bias(diff[isna]), "World cities": bias(diff[~isna])})
     # END era5-agreement
-    summary["agree"] = agreement_summary(cfg, AGR, R, bad, T)        # baseline-agreement
+    summary["agree"] = agreement_summary(cfg, AGR_ALL, R, bad, T)        # baseline-agreement
     json.dump(summary, open(out / "summary.json", "w"), separators=(",", ":"))
 
 
@@ -382,6 +383,18 @@ def agreement_matrix(R):
     return a
 
 
+def badge_matrix(cfg, AGR):
+    """Blank the sources that are reported but may not lower the confidence badge ([era5] badge_sources). CHELSA v2.1 is a
+    downscaling of ERA5, so ERA5 and CHELSA agreeing is not independent confirmation: in the first build with both, they
+    'corroborated' each other at 25% of places (mostly coasts, where ERA5 runs warm at night)."""
+    keep = cfg["era5"].get("badge_sources", list(BL.SOURCES))
+    out = np.array(AGR, "float32", copy=True)
+    for i, n in enumerate(BL.SOURCES):
+        if n not in keep:
+            out[:, i] = np.nan
+    return out
+
+
 def agreement_summary(cfg, AGR, R, bad, T):
     """Per-source and combined agreement statistics (for methods.html and validate.py), plus the CHIRPS/CHELSA bias tables."""
     fair, poor = cfg["era5"]["agree_fair"], cfg["era5"]["agree_poor"]
@@ -392,7 +405,7 @@ def agreement_summary(cfg, AGR, R, bad, T):
         if len(fin):
             out["sources"][n] = dict(median=round(float(np.median(fin)), 3), n=int(len(fin)), p90=round(float(np.percentile(fin, 90)), 3),
                                      over_fair=round(float(np.mean(fin > fair)), 4), over_poor=round(float(np.mean(fin > poor)), 4))
-    worst, which = BL.combine(A, cfg["era5"].get("combine", "corroborated"))
+    worst, which = BL.combine(badge_matrix(cfg, A), cfg["era5"].get("combine", "corroborated"))
     fin = np.isfinite(worst)
     if fin.any():
         w = worst[fin]
