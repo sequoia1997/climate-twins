@@ -498,8 +498,8 @@ def run(cfg=None):
             b = SH[k].project(C.transform(tcvec[k])[midx])[0]
             tc_check[k] = C.chi_to_sigma(np.sqrt(((a - b) ** 2).sum()), SH[k].k)[0]
     recent[:, C.NV:] = 0.0                                               # the page shows recent change for the 16 standard measures only
-    ref = C.transform(recent)                                            # precipitation anomaly as a log ratio
-    ref[:, C.PPT] = np.log((np.maximum(tcvec[:, C.PPT] + recent[:, C.PPT], 0) + 1) / (tcvec[:, C.PPT] + 1))
+    rec_anom = C.transform(recent)                                       # precipitation anomaly as a log ratio
+    rec_anom[:, C.PPT] = np.log((np.maximum(tcvec[:, C.PPT] + recent[:, C.PPT], 0) + 1) / (tcvec[:, C.PPT] + 1))
     C.log.info("recent climate %d-%d; self-check median %.2f sigma; TerraClimate vs AdaptWest median %.2f sigma",
                rec_years[0], rec_years[-1], np.nanmedian(selfchk), np.nanmedian(tc_check))
 
@@ -511,14 +511,14 @@ def run(cfg=None):
         C.log.warning("no ERA5 files in work/era5: baseline agreement not computed")
     else:
         # matched resolution: the place's baseline carried to its ERA5 land cell's footprint vs that cell (ERA5.matched)
-        ref, eb, era5_nocell, era5_mode = ERA5.matched(e5, tc, base, tcvec, b0, b1, ALLM, cfg["era5"].get("match", "cell"))
-        eb[:, C.NV:] = ref[:, C.NV:]                        # extras (pet, srad) have no ERA5 counterpart here: zero difference, so agreement reflects the standard measures
-        ok5 = ~bad & np.isfinite(eb[:, midx]).all(1) & np.isfinite(ref[:, midx]).all(1)
-        e5off = ERA5.offsets(ref[ok5], eb[ok5], G[ok5])
+        e5ref, eb, era5_nocell, era5_mode = ERA5.matched(e5, tc, base, tcvec, b0, b1, ALLM, cfg["era5"].get("match", "cell"))
+        eb[:, C.NV:] = e5ref[:, C.NV:]                        # extras (pet, srad) have no ERA5 counterpart here: zero difference, so agreement reflects the standard measures
+        ok5 = ~bad & np.isfinite(eb[:, midx]).all(1) & np.isfinite(e5ref[:, midx]).all(1)
+        e5off = ERA5.offsets(e5ref[ok5], eb[ok5], G[ok5])
         for k in np.where(ok5)[0]:
-            era5_sig[k] = ERA5.agreement(SH[k], midx, ref[k], eb[k], e5off[G[k]])
-            era5_raw[k] = ERA5.agreement(SH[k], midx, ref[k], eb[k])
-            era5_diff[k] = eb[k] - ref[k]
+            era5_sig[k] = ERA5.agreement(SH[k], midx, e5ref[k], eb[k], e5off[G[k]])
+            era5_raw[k] = ERA5.agreement(SH[k], midx, e5ref[k], eb[k])
+            era5_diff[k] = eb[k] - e5ref[k]
         C.log.info("ERA5 comparison: %s; %d places without an ERA5 land cell: %s", era5_mode, int(era5_nocell.sum()), T.label[era5_nocell].tolist()[:30])
         C.log.info("ERA5 typical offsets (transformed units) NA %s | world %s", np.round(e5off[0], 2).tolist(), np.round(e5off[1], 2).tolist())
         C.log.info("ERA5 raw agreement median %.2f sigma", np.nanmedian(era5_raw))
@@ -564,7 +564,7 @@ def run(cfg=None):
            Mtr=np.array([TR[k].M(K) if TR[k] else np.full((K, K), np.nan) for k in range(NT)], "float32"),
            kdef=np.array([TR[k].k if TR[k] else 0 for k in range(NT)]), alpha=np.array([SH[k].alpha if SH[k] else np.nan for k in range(NT)]),
            best_idx=best_idx, best_sig=best_sig, sites=sites, site_sig=site_sig, area2=area2, own=own, agree=agree, selfchk=selfchk,
-           tc_check=tc_check, era5_sig=era5_sig, era5_diff=era5_diff, agr_sig=agr_sig, agr_diff=agr_diff, agr_src=np.array(BL.SOURCES), chirps_icv=chirps_icv, era5_raw=era5_raw, era5_nocell=era5_nocell, era5_mode=np.array(era5_mode), recent=ref.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
+           tc_check=tc_check, era5_sig=era5_sig, era5_diff=era5_diff, agr_sig=agr_sig, agr_diff=agr_diff, agr_src=np.array(BL.SOURCES), chirps_icv=chirps_icv, era5_raw=era5_raw, era5_nocell=era5_nocell, era5_mode=np.array(era5_mode), recent=rec_anom.astype("float32"), rec_sig=rec_sig, rec_years=np.array([rec_years[0], rec_years[-1]]), n_icv=n_icv,
            floored=np.array([f"{a}:{b}" for a, b in floored]), cc_fill=np.array(cc_fill), x_names=np.array(XN, dtype=str), x_fill=np.array(x_fill, dtype=str),
            f_now_kg=fnow["kg"], f_now_zone=fnow["zone"], f_now_ffp=fnow["ffp"],
            f_fut_kg=ffut["kg"], f_fut_zone=ffut["zone"], f_fut_ffp=ffut["ffp"],

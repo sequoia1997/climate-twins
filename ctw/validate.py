@@ -62,6 +62,7 @@ def run(cfg=None, previous=None) -> int:
         (w["NP"] > 60000, f"World pool cells: {w['NP']:,}"),
         (len(na["models"]) == len(C.models(cfg)), f"Climate models: {len(na['models'])} of {len(C.models(cfg))}"),
         (S["selfchk_median"] < 0.5, f"Self-check (today's climate finds itself): median {S['selfchk_median']:.2f} σ (expect < 0.5)"),
+        (abs(S.get("recent_dt_median", 0.0)) < 3.0, f"Already happening: median recent temperature change {S.get('recent_dt_median', float('nan')):+.2f} °C (a change, expect under ±3)"),
         (np.isnan(S["tc_check_median"]) or S["tc_check_median"] < 1.5, f"TerraClimate vs AdaptWest at the same places: median {S['tc_check_median']:.2f} σ"),
     ]
     for ok, msg in chk:
