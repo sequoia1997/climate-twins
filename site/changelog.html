@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What's new: Climate Twins</title>
+<meta name="description" content="Every change to Climate Twins, newest first: new features, fixes and data updates.">
+<link rel="canonical" href="https://climatetwins.org/changelog.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Climate Twins">
+<meta property="og:title" content="What's new in Climate Twins">
+<meta property="og:description" content="Every change to Climate Twins, newest first: new features, fixes and data updates.">
+<meta property="og:url" content="https://climatetwins.org/changelog.html">
+<meta property="og:image" content="https://climatetwins.org/og-image.png">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1260">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#f3f5f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11181e" media="(prefers-color-scheme: dark)">
+<script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f6;--panel:#fff;--ink:#1d2730;--muted:#5b6670;--rule:#d8dde1;--accent:#d6412c;--chip:#eef1f3;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-head:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#11181e;--panel:#172028;--ink:#e7ecef;--muted:#9aa6b0;--rule:#2c3943;--accent:#ff6b4a;--chip:#1d2831}}
+:root[data-theme="dark"]{--bg:#11181e;--panel:#172028;--ink:#e7ecef;--muted:#9aa6b0;--rule:#2c3943;--accent:#ff6b4a;--chip:#1d2831}
+*,*::before,*::after{box-sizing:inherit}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--font-body)}
+main{max-width:720px;margin:0 auto;padding:28px 22px 56px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:.92rem;margin-bottom:26px}
+a{color:inherit;text-decoration-color:var(--accent);text-underline-offset:3px}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:3px}
+.brand{font:700 1rem var(--font-head);text-decoration:none}
+h1{font:700 clamp(2rem,6vw,2.7rem)/1.08 var(--font-head);margin:0 0 10px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0 0 30px}
+h2{font:700 1.3rem/1.3 var(--font-head);margin:34px 0 10px;padding-top:18px;border-top:1px solid var(--rule)}
+h3{font:700 1.05rem var(--font-head);margin:20px 0 6px}
+ul{margin:0;padding-left:1.2em} li{margin:0 0 10px} li::marker{color:var(--muted)}
+code{font-size:.9em;background:var(--chip);border-radius:4px;padding:1px 5px}
+footer{margin-top:42px;padding-top:18px;border-top:1px solid var(--rule);font-size:.92rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <nav class="top" aria-label="Site"><a class="brand" href="./">← Climate Twins map</a><a href="methods.html">Methods and sources</a></nav>
+  <h1>What's new</h1>
+  <p class="lead">Changes to Climate Twins, newest first. Data updates are added automatically each time the data are rebuilt.</p>
+  <h2 id="30-september-2026-data-update">30 September 2026: data update</h2>
+<ul><li><strong>Rebuilt from the latest source data.</strong> The "already happening" comparison now covers 2016–2025.</li><li>2,385 places, 24 climate models, sea-level projections for 1013 coastal places.</li></ul>
+<h2 id="1-october-2026-downscaled-climate-changes">1 October 2026 (downscaled climate changes)</h2>
+<ul><li><strong>Projected climates now use higher-resolution, bias-corrected changes where they exist.</strong> For the 20 of our 24 climate models that NASA's NEX-GDDP-CMIP6 dataset covers (Thrasher et al. 2022), each place's projected change in temperature, precipitation and humidity now comes from that 25 km, bias-corrected version of the model instead of the model's own 100–250 km grid, for all four scenarios. Coasts, mountains and valleys are better represented. The other four models, and anything the dataset lacks, keep the model's own change; the ensembles contain the same models as before. This takes effect with the first data rebuild after the yearly "Extreme days" job has produced the downscaled changes; that rebuild's report shows how many best matches moved and by how much. The warming-level view keeps the models' own changes (the downscaled data start in 1950, after the 1850–1900 reference). The model-resolution caution now compares the page's projection with the models' own coarse-grid changes.</li><li>Extreme-day counts now cover all four scenarios instead of two.</li></ul>
+<h2 id="30-september-2026-model-resolution-more-sources">30 September 2026 (model resolution, more sources)</h2>
+<ul><li><strong>The model-resolution caution now checks three downscaled sources.</strong> Besides NASA's NEX-GDDP-CMIP6, each projection is repeated with the WorldClim 2.1 CMIP6 changes (global) and the AdaptWest downscaled CMIP6 changes (North America), and the worst case counts. The line under the answer, still shown only where the futures differ noticeably, now says which source(s) disagree. See "Sensitivity to model resolution" on the methods page.</li></ul>
+<h2 id="29-september-2026-model-resolution">29 September 2026 (model resolution)</h2>
+<ul><li><strong>A caution when the result depends on model resolution.</strong> Once a year we now repeat every projection with NASA's higher-resolution, bias-corrected NEX-GDDP-CMIP6 climate changes and compare. Where the two futures differ noticeably (1σ or more, or the best match would jump a long way), the panel adds one line saying so. Most places never show it. The methods page explains what the check does and does not tell you.</li></ul>
+<h2 id="29-september-2026">29 September 2026</h2>
+<ul><li><strong>New: a "Warming level" view.</strong> Instead of choosing a year and an emissions scenario, you can choose how much the world has warmed (+1.5, +2, +3 or +4 °C above 1850–1900) and see where today's climate matches that future. The view pools every scenario and model that reaches the level; the panel says how many models do and roughly when they get there. Switch between the two under "View" above the map. Sea-level projections still belong to the year-and-scenario view.</li><li><strong>More simulations per model.</strong> Each climate model's change is now the average of up to three of its runs (started from different initial conditions) instead of one, which smooths out natural year-to-year swings in the 20-year windows. Projections shift slightly for some places.</li><li><strong>Extreme days.</strong> A new "Extreme days" row in the comparison shows, for each place, how many days a year reach 35 °C (95 °F) or 30 °C, tropical nights, frost days, hot-humid days and the longest dry spell, today and around 2050 and 2100, as the median of several climate models with the range beneath. It uses NASA's daily NEX-GDDP-CMIP6 data for SSP2-4.5 and SSP5-8.5 only (the other two scenarios show the nearest one, and say so) and is refreshed by its own yearly job, so it never holds up the main data update.</li><li><strong>"About this map and σ" starts closed.</strong> The panel opens straight to the search box, and one tap on that line opens the explanation whenever you want it.</li><li><strong>A simpler search box.</strong> The prompt now just says "Search for a city or town" and fits on every screen, instead of being cut off mid-word.</li></ul>
+<h2 id="28-september-2026">28 September 2026</h2>
+<ul><li><strong>State, province and territory borders</strong> now show on the map from the continent view down, as fine dashed lines that stay quieter than country borders.</li><li><strong>Clearer wording when a place's best match is itself.</strong> Places like Bethel, Alaska, whose weather already swings so much from year to year that the projected change is small by comparison, now say so plainly instead of comparing the place with itself.</li><li><strong>Sea-level wording:</strong> projections that fall (as in Juneau, where the land is still rising after the glaciers melted) now say "fall", and likely ranges that include both a fall and a rise read naturally.</li><li><strong>Better centring.</strong> Picking a place now centres the map on the arrow between it and its match, rather than stretching the view to take in more distant matches. Phones can zoom out further, so very long matches fit.</li><li><strong>New map buttons.</strong> "US / World / Reset" became two icon buttons that match the zoom buttons: 🏠 start over and 🌐 whole world.</li><li><strong>This changelog.</strong></li></ul>
+<h2 id="27-september-2026">27 September 2026</h2>
+<ul><li><strong>A new home: <a href="https://climatetwins.org">climatetwins.org</a>.</strong> The old address still works and forwards here, and every visit uses a secure connection.</li><li><strong>Send feedback</strong> from the bottom of the panel, from under any place's comparison, or from the methods page. Notes go privately to the author, and you can see exactly what is attached before sending.</li><li><strong>Request a place</strong> that isn't on the map. Requests are checked against the data and added by hand when the data cover them.</li><li><strong>Why many tropical places have no match:</strong> a short note in the results and a new section on the methods page.</li><li><strong>Link previews and an icon:</strong> shared links now show a card with the map, and the site has an icon in browser tabs and on phone home screens.</li><li><strong>Search</strong> opens an alphabetical list of every place, filters as you type, selects the old text when you click into it, and works with the keyboard.</li><li><strong>Every search or tap now frames the place and its match.</strong> Both sides of the Pacific draw at once when you look across the date line.</li><li><strong>Hide the panel</strong> to enjoy the map on its own, on desktop and phones, and bring it back with one tap.</li><li><strong>Phones held sideways</strong> get a map-beside-panel layout. On phones held upright, the panel became a bottom sheet you can drag, with the period and scenario always at hand.</li><li><strong>Match names on the map</strong> now include the state or country.</li><li><strong>Tidier comparison table</strong>, with values centred in their columns.</li></ul>
+<h2 id="26-september-2026-version-10">26 September 2026: version 10</h2>
+<ul><li><strong>Humidity.</strong> Matching now uses dewpoint in December–February and June–August along with temperature and precipitation, so a humid place's twin is humid too. Each comparison shows how muggy it feels now, in the future and at the match.</li><li><strong>Climate type, estimated hardiness zone and growing season</strong> for every place, its future and its match.</li><li><strong>Already happening:</strong> how the last ten years compare with 1991–2020 at each place.</li><li><strong>Sea level:</strong> IPCC projections for 2050 and 2100 at coastal places.</li><li><strong>Rebuilt from the original data</strong> (TerraClimate through 2025, AdaptWest, PRISM and 24 climate models), with checks that the rebuild reproduces the previous results before anything new was added.</li><li><strong>Automatic yearly updates</strong> and a monthly check for new or corrected source data.</li><li><strong>A simpler panel:</strong> an at-a-glance table of the key numbers, with the charts one tap away.</li></ul>
+<h2 id="25-september-2026-version-9-6">25 September 2026: version 9.6</h2>
+<ul><li><strong>A graphic map key</strong> that shows each kind of mark as it appears on the map.</li><li><strong>A shorter credit line</strong> at the bottom of the map.</li><li><strong>Tidier map buttons.</strong></li></ul>
+<h2 id="24-september-2026-versions-9-4-and-9-5">24 September 2026: versions 9.4 and 9.5</h2>
+<ul><li><strong>Dark mode</strong>, with a sun/moon button, following your device's setting until you choose.</li><li><strong>The methods page:</strong> how the matching works, the data, the checks, the limitations and full references.</li><li><strong>A redesigned climate comparison</strong> with a plain-language summary and seasonal charts.</li><li><strong>Month-based season names</strong> (Dec–Feb, Jun–Aug) near the equator and in the southern hemisphere.</li></ul>
+<h2 id="earlier">Earlier</h2>
+<ul><li><strong>Version 9:</strong> 823 world cities, including every city of a million or more outside North America and every national capital, matched against a worldwide climate map.</li><li><strong>Version 8:</strong> 789 places across the United States, Canada and Mexico.</li></ul>
+  <footer>Something you'd like changed or added? <a href="./#feedback">Send feedback</a>.</footer>
+</main>
+</body>
+</html>

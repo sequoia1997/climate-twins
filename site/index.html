@@ -395,7 +395,7 @@ aside a:hover{text-decoration-thickness:2px}
       </ul>
       <p><strong>How year-to-year variation is used.</strong> The 14 measures don't vary independently. Hot summers tend to be dry, for example. The comparison accounts for these links, using a statistical technique called shrinkage (Ledoit &amp; Wolf 2004) so that patterns which barely vary at a place are neither ignored nor exaggerated.</p>
       <p><strong>Models.</strong> The map averages 15 of 24 CMIP6 models: those whose transient climate response lies in the IPCC AR6 likely range of 1.4–2.2 °C, following Hausfather et al. (2022). The other nine (seven above the range, one below it, one without a published value) can be included under Advanced. The small dots show each model's own best match, so a tight cluster means the models agree.</p>
-      <p><strong>Confidence.</strong> High means at least 60% of the models put their own best match within 500 km of the arrow's tip, and a second statistical method (keeping only the main patterns of variation) agrees. Low means fewer than 40% of models agree, or the second method points elsewhere and model agreement is modest.</p>
+      <p><strong>Confidence.</strong> High means at least 60% of the models put their own best match within 500 km of the arrow's tip, and a second statistical method (keeping only the main patterns of variation) agrees. Low means fewer than 40% of models agree, or the second method points elsewhere and model agreement is modest. <!-- BEGIN era5-agreement -->Independent datasets (ERA5, and where available CHIRPS and CHELSA) are also compared with the place's present climate; where the two differ a lot, the level drops by one and the panel says so.<!-- END era5-agreement --></p>
     </details>
     <details>
       <summary>What this leaves out</summary>
@@ -453,8 +453,11 @@ const SSP_DESC=["Strong mitigation: warming held near 2 °C this century.","Midd
 const SEAS=["Winter","Spring","Summer","Fall"],SEASM=["Dec–Feb","Mar–May","Jun–Aug","Sep–Nov"];
 function seasons(lat){return lat<23.5?SEASM:SEAS;}
 function measNames(lat){const S4=seasons(lat),f=x=>S4===SEAS?x.toLowerCase():x;return[...S4.map(x=>f(x)+" highs"),...S4.map(x=>f(x)+" lows"),...S4.map(x=>f(x)+(S4===SEAS?" rain":" precipitation")),...S4.map(x=>f(x)+" dewpoint")];}
+/* BEGIN era5-agreement */let era5Sig=new Float32Array(0);/* END era5-agreement */
+/* BEGIN baseline-agreement */let agrSig=new Float32Array(0),AGN=0;/* END baseline-agreement */
 let NV=12,K=12,MI=[0,1,2,3,4,5,6,7,8,9,10,11],HAS10=false,kgNow,zoneNow,ffpNow,kgFut,zoneFut,ffpFut,recentA,recSig;
-const isP=i=>i>=8&&i<12,decT=(v,i)=>isP(i)?v/1000:v/100,decR=(v,i)=>isP(i)?Math.exp(v/1000)-1:v/100;
+// columns >= 16 are optional extra matched variables (D.xlog flags log-transformed ones), stored x D.xscale
+const isP=i=>(i>=8&&i<12)||(i>=16&&!!D.xlog[i-16]),decT=(v,i)=>i>=16?v/D.xscale:isP(i)?v/1000:v/100,decR=(v,i)=>i>=16?(D.xlog[i-16]?Math.exp(v/D.xscale)-1:v/D.xscale):isP(i)?Math.exp(v/1000)-1:v/100;
 const OPEN=new Set();const op=k=>OPEN.has(k)?" open":"";
 let D,NP,NT,NM,pool,poolRaw,cellRC,plat,plon,base,fut,sd,Msh,Mtr,bestIdx,bestSig,sigTab,places,cellPlace,cellCity;
 let OVS,OVP;   // overview: per place x 32 (period, scenario, ensemble, method): sigma x100 (65535 = none), best-match lat/lon x100
@@ -550,7 +553,7 @@ function laeaInv(x,y){const Dd=LA.D,rho=Math.hypot(x/Dd,Dd*y);if(rho<1e-6)return
 
 function b64u8(b){if(b&&b.buf)return new Uint8Array(b.buf,b.off,b.n);const s=atob(b);const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
 function arr(b,T){if(b&&b.buf)return b.t==="i16p"?unplane16(b):new T(b.buf.slice(b.off,b.off+b.n));const u=b64u8(b);return new T(u.buffer,u.byteOffset,u.byteLength/T.BYTES_PER_ELEMENT);}
-const DATA_VERSION="2026-09-26";
+const DATA_VERSION="2026-09-30";
 async function fetchCTW(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.ok)throw new Error("HTTP "+r.status+" for "+url);
   const u=new Uint8Array(await r.arrayBuffer());let buf=u.buffer;
   if(u[0]===0x1f&&u[1]===0x8b)buf=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
@@ -592,6 +595,8 @@ function init(d){
   kgNow=new Uint8Array(nt);zoneNow=new Uint8Array(nt);ffpNow=new Uint16Array(nt);
   kgFut=new Uint8Array(nc);zoneFut=new Uint8Array(nc);ffpFut=new Uint16Array(nc);
   recentA=new Int16Array(nt*NV);recSig=new Float32Array(nt);
+  /* BEGIN era5-agreement */era5Sig=new Float32Array(nt).fill(-1);/* END era5-agreement */
+  /* BEGIN baseline-agreement */AGN=(D.agr_src||[]).length;agrSig=new Float32Array(nt*AGN).fill(-1);/* END baseline-agreement */
   Msh=new Float32Array(nt*K*K);Mtr=new Float32Array(nt*K*K);sd=new Float32Array(nt*NV);
   bestIdx=new Int32Array(nt*32).fill(-1);bestSig=new Float32Array(nt*32);
   gwlLoad(d);
@@ -631,6 +636,8 @@ function ingestShard(w){const ids=w.ids,n=ids.length;
   put(kgNow,arr(w.kg_now,Uint8Array),1);put(zoneNow,arr(w.zone_now,Uint8Array),1);put(ffpNow,arr(w.ffp_now,Uint16Array),1);
   put(kgFut,arr(w.kg_fut,Uint8Array),16);put(zoneFut,arr(w.zone_fut,Uint8Array),16);put(ffpFut,arr(w.ffp_fut,Uint16Array),16);
   put(recentA,arr(w.recent,Int16Array),NV);put(recSig,arr(w.rec_sig,Float32Array),1);
+  /* BEGIN era5-agreement */if(w.era5)put(era5Sig,arr(w.era5,Float32Array),1);/* END era5-agreement */
+  /* BEGIN baseline-agreement */if(w.agr&&AGN)put(agrSig,arr(w.agr,Float32Array),AGN);/* END baseline-agreement */
   for(const j in (w.sl||{}))D.targets[ids[+j]].sl=w.sl[j];
   gwlIngest(w,put,b);
   Object.assign(D.glob,w.glob||{});Object.assign(D.gglob,w.gglob||{});}
@@ -880,12 +887,32 @@ function panel(){
       :`<p class="answer">In ${WHEN()}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
     h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
-    const lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
+    let lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
+    /* BEGIN baseline-agreement: independent datasets (ERA5 on all measures, CHIRPS on precipitation, CHELSA on temperature and precipitation)
+       are compared with the place's present climate; the worst one decides, and a poor agreement lowers the badge one level */
+    const e5t=D.era5_thr||[2,3.5];
+    let e5=-1,e5n="",e5all=[],e5vals=[];
+    const corro=(D.agr_combine||"worst")==="corroborated";
+    if(AGN){for(let q=0;q<AGN;q++){const v=agrSig[cur.t*AGN+q];if(v>=0){e5all.push(D.agr_src[q]);e5vals.push([v,D.agr_src[q]]);if(v>e5){e5=v;e5n=D.agr_src[q];}}}}
+    else if(era5Sig[cur.t]>=0){e5=era5Sig[cur.t];e5n="ERA5";e5all=["ERA5"];e5vals=[[e5,"ERA5"]];}
+    if(corro){ /* two independent datasets must both disagree: the second-largest disagreement decides, and one source alone says nothing */
+      e5vals.sort((a,b)=>b[0]-a[0]);
+      if(e5vals.length>=2){e5=e5vals[1][0];e5n=e5vals[0][1]+" and "+e5vals[1][1];}else{e5=-1;e5n="";}
+    }
+    const e5what=corro?"":(()=>{const q=AGN?D.agr_src.indexOf(e5n):-1,c=q>=0&&D.agr_cols?D.agr_cols[q].length:16;return c>=16?"":c>=12?" (temperature and precipitation)":" (precipitation only)";})();
+    const e5poor=e5>e5t[1];
+    const lvl0=lvl;if(e5poor)lvl=lvl==="high"?"medium":"low";
+    const e5line=e5<0?"":e5poor?`<br>${e5n}${e5what}, ${corro?"independent datasets, both describe":"an independent dataset, describes"} this place's present climate quite differently (${e5.toFixed(1)}σ)${lvl!==lvl0?", so confidence is lowered one level":""}.`
+      :e5>e5t[0]?`<br>${e5n}${e5what}, ${corro?"independent datasets, both differ":"an independent dataset, differs"} somewhat on this place's present climate (${e5.toFixed(1)}σ).`
+      :corro&&e5vals[0][0]>e5t[0]?`<br>${e5vals[1][1]}, an independent dataset, agrees on this place's present climate.`
+      :e5all.length>1?`<br>Independent datasets (${e5all.join(", ")}) agree on this place's present climate.`:`<br>${e5n}, an independent dataset, agrees on this place's present climate.`;
+    /* END baseline-agreement */
     let why=`${agree} of ${ensN} models point to this area`;
     why+=mAgree?(lvl==="high"?", and a second statistical method agrees.":". A second statistical method agrees."):`. A second statistical method picks ${esc(describeCell(oc))}, ${Math.round(kmU(od))} ${distU()} away.`;
     if(lvl==="low")why+=" Treat the arrow as one of several plausible answers, and see the other matches below.";
-    h+=`<p class="conf"><strong>Confidence: ${lvl}.</strong> ${why}</p>`;
+    h+=`<p class="conf"><strong>Confidence: ${lvl}.</strong> ${why}${e5line}</p>`;
   }
+  h+=nexHTML(tt);
   h+=`<details class="more" data-k="facts"${op("facts")}><summary>More about this result</summary><dl class="facts">
   <dt>Change from its own 1991–2020 climate</dt><dd>${cur.own.toFixed(1)}σ</dd>
   <dt>Land area within 2σ (outlined)</dt><dd>${cur.area>=500?Math.round(cur.area*(S.metric?1:0.386102)/1000).toLocaleString()+"k "+(S.metric?"km²":"mi²"):"none"}</dd>
@@ -946,8 +973,17 @@ function seaHTML(sl){const M=S.metric,sc=D.ssps[S.ssp],v=sl.v&&sl.v[sc];if(!v||!
   const dir=a=>a[1]>=0?"rise":"fall",a5=v["2050"],a1=v["2100"];
   const r=(a,verb)=>`${verb?dir(a)+" ":""}${n(a[1])}${un} (${rng(a)})`;
   return `<p class="slr"><strong>Sea level:</strong> projected to ${r(a5,true)} by 2050 and ${r(a1,dir(a1)!==dir(a5))} by 2100 under ${sc}, relative to 1995–2014, including local land motion (IPCC AR6, ${sl.km<3?"projection for a tide gauge here":`nearest projection site ${Math.round(kmU(sl.km))} ${distU()} away`}).</p>`;}
+/* BEGIN nexcheck (nexcheck.json): one line, only where the projection is highly sensitive to model resolution (see methods) */
+let NEXC;   // undefined: not requested; null: loading or unavailable; object: loaded
+function nexLoad(){NEXC=null;fetch("data/nexcheck.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places){NEXC=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
+function nexHTML(tt){
+  if(NEXC===undefined){nexLoad();return"";}
+  const q=NEXC&&NEXC.places[tt.lat.toFixed(4)+","+tt.lon.toFixed(4)];
+  const NM={nex:"NASA NEX-GDDP",wc:"WorldClim",aw:"AdaptWest",cmip6:"the coarse model grids"},by=q&&q.flagged_by&&q.flagged_by.length?" ("+q.flagged_by.map(x=>NM[x]||x).join(", ")+")":"";
+  return q&&q.gcm_res_sensitivity==="high"?`<p class="small muted">Sensitive to model resolution: climate data at another resolution${by} give a noticeably different future here, so treat this result with extra caution. <a href="methods.html#resolution">Why</a></p>`:"";}
+/* END nexcheck */
 /* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
-   or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5 only (see methods). */
+   or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, the scenarios listed in the file (see methods). */
 let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded
 function extLoad(){EXT=null;fetch("data/extremes.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places&&j.indices){EXT=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
 function extHTML(tt,topic,S3,M){
@@ -972,7 +1008,7 @@ function extHTML(tt,topic,S3,M){
   let h=topic("ext","Extreme days",`${short(head.ix.id)}, per year`,[num(head.now[0],head.ix.id),num(fut(head)[0],head.ix.id),"–"]);
   h+=`<table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
   for(const r of rows)h+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
-  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected), available for ${avail} only${near?`, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
+  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected)${near?`, available for ${avail} only, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
   return h;}
 /* END extreme-days */
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
