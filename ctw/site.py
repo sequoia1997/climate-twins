@@ -20,6 +20,33 @@ def tropics_rows(S) -> str:
     return "".join(rows)
 
 
+def results_rows(S) -> str:
+    """Table 2 on the methods page, computed from this build's summary (it was hand-written before release 10 and went stale):
+    best-match quality with the likely-range ensemble for North America and world cities."""
+    import numpy as np
+    T = C.targets()
+    ll0 = {k: (a, o) for k, a, o in zip(T.label, T.lat, T.lon)}
+    rows = []
+    for g, name in ((0, "North America"), (1, "World cities")):
+        for p, s, per, scen in ((0, 1, "2050", "SSP2-4.5"), (1, 1, "2100", "SSP2-4.5"), (1, 3, "2100", "SSP5-8.5")):
+            sig, km = [], []
+            for k, v in S["places"].items():
+                if v["g"] != g or k not in ll0:
+                    continue
+                sig.append(v["sig"][p][s][1])
+                bla, blo = v["ll"][p][s][1]
+                km.append(float(C.haversine_km(ll0[k][0], ll0[k][1], bla, blo)))
+            if not sig:
+                continue
+            x = np.array(sig)
+            cells = [("Under 1σ", np.mean(x < 1)), ("1–2σ", np.mean((x >= 1) & (x < 2))), ("Partial", np.mean((x >= 2) & (x < 4))),
+                     ("No match", np.mean(x >= 4))]
+            tds = "".join(f'<td class="n" data-l="{lab}">{val:.0%}</td>' for lab, val in cells)
+            rows.append(f'<tr><td data-l="Places" data-t="{name}, {per}, {scen}">{name}</td><td data-l="Period">{per}</td>'
+                        f'<td data-l="Scenario">{scen}</td>{tds}<td class="n" data-l="Median">{np.median(km):,.0f} km</td></tr>')
+    return "\n        ".join(rows)
+
+
 def extra_section(cfg, S) -> tuple[str, str]:
     """(contents entry, section) for the optional extra matched variables; both empty while [matching] extra = []."""
     names = C.extra_names(cfg)
@@ -173,6 +200,7 @@ def run(cfg=None):
              "SELFCHK": f"{S['selfchk_median']:.2f}", "GWL_NOW": f"{S.get('gwl_now', 0.9):.1f}", "MEMBERS_MAX": str(cfg["models"].get("members_max", 1)), "SL_N": str(S["sealevel_places"]),
              "REPO_LINK": (f'<a href="{cfg["release"]["repo_url"]}">{cfg["release"]["repo_url"]}</a>' if cfg["release"].get("repo_url") else "source code in the project repository")}
     fills["TROPICS_TABLE"] = tropics_rows(S)
+    fills["RESULTS_TABLE"] = results_rows(S)
     fills["EXTRA_TOC"], fills["EXTRA_SECTION"] = extra_section(cfg, S)
     fills["ERA5_BLOCK"] = era5_html(S)                                  # era5-agreement
     fills["AGREE_BLOCK"] = agreement_html(S)                            # baseline-agreement
