@@ -8,7 +8,7 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   collapses to the colour bar on phones), attribution shortened to "Methods & Sources · © OpenStreetMap"
   (full basemap credits on the methods page and in the link's hover text).
 - **10.0** (produced by the first *Rebuild data* run): humidity in the matching, climate type, estimated
-  hardiness zone and growing season, "already happening", sea level, page loads `data/na.dat` + `data/world.dat`.
+  hardiness zone and growing season, "already happening", sea level, page loads `data/na.dat` + `data/world.dat` (since the sharding change: see "Sharded data" below).
 
 ## Page changes waiting for 10.0 (in web/index.html)
 - Layout: intro folds into "About this map and σ" after a pick; period/scenario in a compact bar pinned while scrolling;
@@ -94,18 +94,62 @@ This repository replaces the v9 script folder (climate_twins_pipeline_v9_5.zip) 
   passes at 1440 px light and 390 px dark. Screens reviewed.
 
 ## Not yet run at full scale
-- `analogs` with humidity on all 1,612 places (first GitHub rebuild does it). Expect the "needs review" label:
+- `analogs` with humidity on every place in the lists (first GitHub rebuild does it; 790 + 1,596 after the world expansion). Expect the "needs review" label:
   method version changed and there is no previous summary.
 - Checks and results section of methods.html (Table 2) still quotes v9 numbers; regenerate from the first
   v10 summary.
 
 ## Deferred
-- Heat days (days over 95 °F, NEX-GDDP daily data): terabyte-scale; would need a separate job design.
+- Heat days: DONE as the separate `extremes` job (ctw/extremes.py, .github/workflows/extremes.yml). Each NEX-GDDP file is one variable-year with a whole globe per daily chunk, so place extraction still costs the whole file; solved by sampling every second year and one matrix job per model x part (see "NEX-GDDP changes as the main projection source"). All four SSPs are processed.
 
 ## Operating notes
-- Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.
+- Steps: `python -m ctw plan|cmip6 --model M|terraclimate --var V|era5 --var V (ERA5 cross-check, about 10 min per variable)|hindcast (needs the four era5 files)|adaptwest|prism|gazetteer|sealevel|analogs|export|validate|site|watch`.
   `CTW_WORK` = scratch dir, `CTW_SMOKE=1` = quick run.
 - `web/` holds page templates; `site/` is build output (deployed). Page edits go in `web/`, then `python -m ctw site`.
 - Gazetteer falls back to data/places_snapshot.json.gz when GeoNames is unreachable.
 - Sandbox: 1 CPU / 3 GB. Running two TerraClimate passes plus CMIP6 at once crashed the VM; run one heavy job at a time.
   Background jobs stop when a turn ends; all steps checkpoint and resume.
+
+## Sharded data and the expanded world list (added after v6 notes)
+- Export layout (ctw/export.py): `site/data/index.json` (all places + shard table), `overview.dat` (each place's best match for
+  the arrows drawn before a pick, ~100 B/place), core `na.dat` / `world.dat` (pools only, size independent of place count) and
+  `p/<na|w>-<group>-NN.dat` shards of per-place arrays (about `[export] shard_places` = 48 places, grouped by country / world
+  region in ctw/regions.py and ordered along a Z-curve). The page's place index t = row in index.json (NA first, then world,
+  CSV order, unusable places dropped): same semantics as before. Startup downloads index + overview + na.dat (~3.3 MB);
+  a shard (~250 kB) is fetched when a place is picked; world.dat (~1.9 MB) when the first world place is picked or after 4 s
+  on a fast connection. Per-place arrays in the page are preallocated for every place (~9 kB each) and filled per shard.
+- `select(t)` now returns a promise (loads the shard first); `selectNow` is the old synchronous body.
+- validate.py checks index, overview and every shard's ids; export clears `site/data/p/` before writing.
+- ctw/reshard.py converts old monolithic na.dat/world.dat to this layout without rebuilding (used once for the committed data).
+- ctw/expand.py (not in any workflow) grew data/world_targets.csv from 823 to 1,596 places (208 countries/territories).
+- tests/make_fixture.py builds a synthetic results.npz so export -> site -> validate -> tests/test_page.py run offline.
+- Not done: growing the North American list; making the North American pool lazy too (it is the fixed ~3 MB of startup).
+
+## ERA5 check at matched resolution
+- The first full rebuild's point check (10 km baseline vs ERA5 bilinear) gave median 1.39σ, 33% of places > 3.5σ, worst on small
+  islands/coasts. Now (`[era5] match = "cell"`): each place's ERA5 land cell (nearest 0.25° cell with land fraction >= 0.5 within
+  50 km; none -> 'no land cell', not checked; ~55 of 2,386 places, `era5_nocell` in results) vs the place's baseline carried to that
+  cell's footprint (TerraClimate mean of the 6x6 land pixels in the cell, `box_cells`/`box_normals` in work/terraclimate/*.npz;
+  AdaptWest places shifted by TerraClimate box minus point). ERA5 writes `cell`, `cell_i/j/km/lsm`. Old files fall back to "point".
+- No ERA5-Land store is reachable from the sandbox (GCS arco-era5 / weatherbench2 and public S3 checked, 2026-09-29).
+- Verified by `.github/workflows/smoke-era5match.yml` (70 places, 1990-2020): prints point vs matched distributions and the worst 15.
+## NEX-GDDP changes as the main projection source ([deltas] source = "nex")
+- extremes.yml: one job per model x part (`<model>__base`, `<model>__ssp126` ... from `ctw extremes --plan`), all four SSPs,
+  every configured model NEX publishes (20 of 24: not AWI-CM-1-1-MR, CNRM-CM6-1-HR, CanESM5-CanOE, EC-Earth3-Veg; BCC-CSM2-MR has no
+  hurs -> its NEX humidity change is missing and the CMIP6 huss ratio is used). extremes.json keeps the likely-TCR models
+  ([extremes] ensemble); data/nexdeltas.npz gets every extracted model. Estimate at year_stride 2: base job 60 files (~10-15 min),
+  scenario job 80 files (~12-20 min); ~100 jobs, ~1.9 TB, ~17-25 runner-hours. Timing in the sandbox is not representative.
+- analogs: per model/period/scenario, NEX change where nexdeltas.npz has it (per place; NaN places fall back to CMIP6); results.npz
+  gains fut_cmip6, delta_nex_share (NM, P, S), src_km/src_dbest/src_dist (NEX vs CMIP6 best match of each ensemble mean) only
+  when NEX is used. No file -> byte-identical results.npz (checked on the synthetic smoke fixture, 84 arrays).
+- export: summary.json "deltas" (per model x scenario share of places on NEX, effect stats); site: manifest.json "delta_sources";
+  validate: one note line. nexcheck: with NEX as the main source, the "nex" source is replaced by "cmip6" (main vs native-grid).
+- GWL stays on CMIP6: NEX-GDDP historical starts 1950, so no 1850-1900 reference (tas is published but cannot be used for this).
+- Out-of-sample test skipped deliberately: NEX-GDDP is bias-corrected against GMFD over 1960-2014, so any 1991-2020 hindcast is in
+  sample, and 1991-2020 vs 2001-2020 windows overlap and differ by less than internal variability.
+- method_version not bumped (results only change once nexdeltas.npz is merged); bump it in the PR that merges the first nexdeltas.npz
+  if you want the rebuild's "method changed" note.
+
+## Multi-source model-resolution cross-check (downdeltas)
+- `nexcheck` compares the main projection with NEX-GDDP (data/nexdeltas.npz), WorldClim 2.1 CMIP6 and AdaptWest downscaled CMIP6 (data/downdeltas.npz, from ctw/downdeltas.py, workflow `downdeltas.yml`); flag = worst case over sources, `flagged_by` lists them; page line names them.
+- Written without network access: the extraction (WorldClim URLs/GCM list, AdaptWest bucket layout parsing in `parse_aw_key`/`aw_products`) is verified only by `.github/workflows/smoke-downdeltas.yml` on Actions; adjust `[downdeltas]` / DEFAULTS in the module to what the listing shows.

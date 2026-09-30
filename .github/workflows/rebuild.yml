@@ -11,6 +11,10 @@ on:
         description: "Quick test run (2 models, 12 places, few years) - opens no pull request"
         type: boolean
         default: false
+      extra:
+        description: "Try extra matched variables, comma-separated (pet, srad); the report gets a sensitivity note. Empty = config.toml"
+        type: string
+        default: ""
 permissions:
   contents: write
   pull-requests: write
@@ -21,6 +25,7 @@ concurrency:
 env:
   CTW_WORK: ${{ github.workspace }}/work
   CTW_SMOKE: ${{ inputs.smoke && '1' || '' }}
+  CTW_EXTRA: ${{ inputs.extra }}
   PYTHONUNBUFFERED: "1"
 jobs:
   plan:
@@ -28,6 +33,7 @@ jobs:
     outputs:
       models: ${{ steps.p.outputs.models }}
       latest: ${{ steps.p.outputs.latest }}
+      tcvars: ${{ steps.p.outputs.tcvars }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -37,6 +43,7 @@ jobs:
         run: |
           python -m ctw plan > plan.json
           echo "models=$(python -c 'import json;print(json.dumps(json.load(open("plan.json"))["models"]))')" >> "$GITHUB_OUTPUT"
+          echo "tcvars=$(python -c 'import json;print(json.dumps(json.load(open("plan.json"))["tc_vars"]))')" >> "$GITHUB_OUTPUT"
           echo "latest=$(python -c 'import json;print(json.load(open("plan.json"))["latest_year"])')" >> "$GITHUB_OUTPUT"
 
   cmip6:
@@ -67,7 +74,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        var: [tmax, tmin, ppt, vap]
+        var: ${{ fromJson(needs.plan.outputs.tcvars) }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -99,7 +106,7 @@ jobs:
             work/downloads/ne_50m_countries.geojson
 
   sealevel:
-    # IPCC AR6 projections do not change between assessments: fetched once, then kept in data/sealevel.json.
+    # IPCC AR6 projections do not change between assessments: fetched once, then kept in data/sealevel.json (fetched again only when the place lists have changed).
     runs-on: ubuntu-latest
     timeout-minutes: 60
     continue-on-error: true
@@ -108,12 +115,87 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
-      - run: "[ -f data/sealevel.json ] || python -m ctw sealevel"
+      - run: python -m ctw sealevel --if-stale
       - uses: actions/upload-artifact@v6
         with: { name: sealevel, path: data/sealevel.json, if-no-files-found: ignore, retention-days: 7 }
 
+  era5:
+    # Independent cross-check and hindcast input: ERA5 daily fields from Google Cloud (about 8 s per year and variable).
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        var: [tmax, tmin, ppt, vap]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw era5 --var ${{ matrix.var }}
+      - uses: actions/upload-artifact@v6
+        with: { name: "era5-${{ matrix.var }}", path: work/era5/*.npz, retention-days: 7 }
+
+  chirps:
+    # Independent precipitation cross-check: CHIRPS v2.0 monthly GeoTIFFs (14 MB each), one at a time, sampled at every place and deleted.
+    # Six parts of five years, in parallel (about 60-72 files per job).
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw chirps --part ${{ matrix.part }} --of 6
+      - uses: actions/upload-artifact@v6
+        with: { name: "chirps-${{ matrix.part }}", path: work/chirps/part*.npz, if-no-files-found: ignore, retention-days: 7 }
+
+  chelsa:
+    # Independent temperature and precipitation cross-check: CHELSA v2.1 1981-2010 monthly normals, one file at a time, sampled and deleted.
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        var: [tasmax, tasmin, pr]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw chelsa --var ${{ matrix.var }}
+      - uses: actions/upload-artifact@v6
+        with: { name: "chelsa-${{ matrix.var }}", path: work/chelsa/*.npz, retention-days: 7 }
+
+  hindcast:
+    needs: era5
+    if: ${{ !cancelled() && needs.era5.result == 'success' && !inputs.smoke }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v7
+        with: { pattern: "era5-*", path: work/era5, merge-multiple: true }
+      - run: python -m ctw hindcast
+      - uses: actions/upload-artifact@v6
+        with: { name: hindcast, path: data/hindcast.json, retention-days: 7 }
+
   analyze:
-    needs: [cmip6, terraclimate, north-america, sealevel]
+    needs: [cmip6, terraclimate, north-america, sealevel, era5, chirps, chelsa, hindcast]
     if: ${{ !cancelled() && needs.cmip6.result == 'success' && needs.terraclimate.result == 'success' && needs.north-america.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 240
@@ -131,9 +213,25 @@ jobs:
       - uses: actions/download-artifact@v7
         continue-on-error: true
         with: { name: sealevel, path: data }
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with: { pattern: "era5-*", path: work/era5, merge-multiple: true }
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with: { pattern: "chirps-*", path: work/chirps, merge-multiple: true }
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with: { pattern: "chelsa-*", path: work/chelsa, merge-multiple: true }
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with: { name: hindcast, path: data }
       - name: Keep the current release's summary for comparison
         run: cp site/data/summary.json /tmp/previous_summary.json 2>/dev/null || true
+      # analogs uses data/nexdeltas.npz (from the Extreme days workflow) as each model's change where it has it ([deltas] source)
       - run: python -m ctw analogs
+      - name: Model-resolution check (main vs native-grid CMIP6 or NEX-GDDP, WorldClim, AdaptWest; skipped if no delta file exists)
+        continue-on-error: true
+        run: python -m ctw nexcheck
       - run: python -m ctw export
       - run: python -m ctw site
       - name: Check the build
@@ -160,7 +258,7 @@ jobs:
           b="data-update-$v"
           git config user.name "climate-twins-bot"; git config user.email "actions@users.noreply.github.com"
           git checkout -b "$b"
-          git add site CHANGELOG.md data/sealevel.json 2>/dev/null || git add site CHANGELOG.md
+          git add site CHANGELOG.md data/sealevel.json data/hindcast.json 2>/dev/null || git add site CHANGELOG.md
           git commit -m "Data update $v (${{ steps.check.outputs.status }})"
           git push -f origin "$b"
           label="${{ steps.check.outputs.status }}"

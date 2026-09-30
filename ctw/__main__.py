@@ -8,9 +8,20 @@ def main(argv=None):
     sub = p.add_subparsers(dest="step", required=True)
     sub.add_parser("plan", help="print the job matrix (models, TerraClimate variables, latest year) as JSON")
     a = sub.add_parser("cmip6"); a.add_argument("--model", required=True)
-    a = sub.add_parser("terraclimate"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
-    sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer"); sub.add_parser("sealevel")
+    a = sub.add_parser("terraclimate"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap", "pet", "srad"])
+    a = sub.add_parser("era5"); a.add_argument("--var", required=True, choices=["tmax", "tmin", "ppt", "vap"])
+    a = sub.add_parser("chirps", help="CHIRPS monthly precipitation at every place (one part of the years)"); a.add_argument("--part", type=int, default=0); a.add_argument("--of", type=int, default=1)
+    a = sub.add_parser("chelsa", help="CHELSA v2.1 1981-2010 monthly normals at every place"); a.add_argument("--var", required=True, choices=["tasmax", "tasmin", "pr"])
+    sub.add_parser("hindcast", help="ERA5 1961-90 vs 1991-2020 hindcast test of the analog method")
+    sub.add_parser("adaptwest"); sub.add_parser("prism"); sub.add_parser("gazetteer")
+    a = sub.add_parser("sealevel"); a.add_argument("--if-stale", action="store_true", help="skip when data/sealevel.json is current for the place list")
+    a = sub.add_parser("extremes", help="extreme-day indicators and NEX-GDDP monthly changes: --model M[__part] [--part base|sspXXX] | --plan | --aggregate")
+    a.add_argument("--model"); a.add_argument("--part", default=None); a.add_argument("--plan", action="store_true"); a.add_argument("--aggregate", action="store_true")
+    a = sub.add_parser("downdeltas", help="WorldClim 2.1 / AdaptWest downscaled CMIP6 changes: --list | --plan | --job J | --aggregate | --table")
+    a.add_argument("--list", action="store_true"); a.add_argument("--plan", action="store_true"); a.add_argument("--job")
+    a.add_argument("--aggregate", action="store_true"); a.add_argument("--table", action="store_true"); a.add_argument("--source", default="all", choices=["all", "wc", "aw"])
     sub.add_parser("analogs"); sub.add_parser("export")
+    sub.add_parser("nexcheck", help="sensitivity of projections to GCM resolution (NEX-GDDP-CMIP6 deltas vs main deltas)")
     a = sub.add_parser("validate"); a.add_argument("--previous", default=None, help="previous release summary.json")
     sub.add_parser("site"); sub.add_parser("watch")
     sub.add_parser("changelog", help="add this build's data update to CHANGELOG.md (once per data version)")
@@ -22,12 +33,20 @@ def main(argv=None):
     if args.step == "plan":
         import json
         from .terraclimate import latest_year
-        print(json.dumps({"models": [m["name"] for m in C.models(cfg)], "tc_vars": ["tmax", "tmin", "ppt", "vap"],
+        print(json.dumps({"models": [m["name"] for m in C.models(cfg)], "tc_vars": ["tmax", "tmin", "ppt", "vap"] + C.extra_names(cfg),
                           "latest_year": latest_year(cfg)}))
     elif args.step == "cmip6":
         from . import cmip6; cmip6.run(args.model, cfg)
     elif args.step == "terraclimate":
         from . import terraclimate; terraclimate.run(args.var, cfg)
+    elif args.step == "era5":
+        from . import era5; era5.run(args.var, cfg)
+    elif args.step == "chirps":
+        from . import baselines; baselines.run_chirps(args.part, args.of, cfg)
+    elif args.step == "chelsa":
+        from . import baselines; baselines.run_chelsa(args.var, cfg)
+    elif args.step == "hindcast":
+        from . import hindcast; hindcast.run(cfg)
     elif args.step == "adaptwest":
         from . import adaptwest; adaptwest.run(cfg)
     elif args.step == "prism":
@@ -35,9 +54,37 @@ def main(argv=None):
     elif args.step == "gazetteer":
         from . import gazetteer; gazetteer.run(cfg)
     elif args.step == "sealevel":
-        from . import sealevel; sealevel.run(cfg)
+        from . import sealevel; sealevel.run(cfg, args.if_stale)
+    elif args.step == "extremes":
+        from . import extremes
+        if args.plan:
+            import json
+            print(json.dumps(extremes.plan(cfg)))                 # jobs "<model>__<part>" (part = base or a scenario)
+        elif args.aggregate:
+            extremes.aggregate(cfg)
+        elif args.model:
+            extremes.run(args.model, cfg, part=args.part)
+        else:
+            p.error("extremes needs --model, --plan or --aggregate")
+    elif args.step == "downdeltas":
+        from . import downdeltas as D
+        if args.list:
+            D.list_sources(cfg, args.source)
+        elif args.plan:
+            import json
+            print(json.dumps(D.plan(cfg, args.source)))
+        elif args.job:
+            D.run_job(args.job, cfg)
+        elif args.aggregate:
+            D.aggregate(cfg)
+        elif args.table:
+            D.table()
+        else:
+            p.error("downdeltas needs --list, --plan, --job, --aggregate or --table")
     elif args.step == "analogs":
         from . import analogs; analogs.run(cfg)
+    elif args.step == "nexcheck":
+        from . import nexcheck; nexcheck.run(cfg)
     elif args.step == "export":
         from . import export; export.run(cfg)
     elif args.step == "validate":
@@ -57,7 +104,7 @@ def main(argv=None):
     elif args.step == "all":
         from . import cmip6, terraclimate, adaptwest, prism, gazetteer, analogs, export, site
         for m in C.models(cfg): cmip6.run(m["name"], cfg)
-        for v in ("tmax", "tmin", "ppt", "vap"): terraclimate.run(v, cfg)
+        for v in ["tmax", "tmin", "ppt", "vap"] + C.extra_names(cfg): terraclimate.run(v, cfg)
         adaptwest.run(cfg); prism.run(cfg); gazetteer.run(cfg)
         analogs.run(cfg); export.run(cfg); site.run(cfg)
 

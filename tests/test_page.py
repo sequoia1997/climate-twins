@@ -1,5 +1,7 @@
 """Load the built site in a headless browser and exercise it. Usage: python tests/test_page.py site [place ...]
-Fails (exit 1) on any JavaScript error, a panel without results, or missing new sections.
+Fails (exit 1) on any JavaScript error, a panel without results, or missing new sections. Also checks the download
+plan: at load the page fetches only index.json, overview.dat and na.dat (no per-place shard); picking a place fetches
+its shard (once) and, for a world place, the world pool.
 Environment: PW_CHROMIUM (browser binary) and PW_MAPLIBRE_DIR (local MapLibre dist) for offline use."""
 import asyncio, functools, http.server, os, sys, threading
 from playwright.async_api import async_playwright
@@ -21,6 +23,7 @@ def serve():
 async def main():
     port = serve()
     fails, found, missing = [], set(), set()
+    e5s = []
     async with async_playwright() as p:
         kw = {"args": ["--no-sandbox", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]}
         if os.environ.get("PW_CHROMIUM"):
@@ -35,30 +38,74 @@ async def main():
                 await ctx.route("https://tiles.openfreemap.org/**", lambda r: r.abort())
                 await ctx.route("https://fonts.googleapis.com/**", lambda r: r.abort())
             pg = await ctx.new_page()
-            errs = []
+            errs, fetched = [], []
             pg.on("pageerror", lambda e: errs.append(str(e)))
+            pg.on("response", lambda r: fetched.append((r.url.split("/", 3)[-1].split("?")[0], int(r.headers.get("content-length", 0)))) if "/data/" in r.url else None)
             await pg.goto(f"http://127.0.0.1:{port}/index.html")
             await pg.wait_for_function("document.getElementById('loading')===null", timeout=240000)
-            await pg.wait_for_function("worldState!=='loading'", timeout=120000)
-            ws = await pg.evaluate("worldState")
-            if ws != "ready":
-                fails.append(f"world data did not load ({ws})")
+            first = [u for u, _ in fetched]
+            sharded = "data/index.json" in first
+            if not sharded:
+                fails.append("data/index.json was not fetched")
+            if any(u.startswith("data/p/") for u in first):
+                fails.append(f"per-place shards were fetched before any pick: {[u for u in first if u.startswith('data/p/')]}")
+            if sharded:
+                nt = await pg.evaluate("[NT,D.targets.length,D.idx.rows.length,D.idx.shards.reduce((a,s)=>a+s.n,0)]")
+                if len(set(nt)) != 1:
+                    fails.append(f"place counts disagree: {nt}")
+                if w == 1440:
+                    print(f"startup download: {sum(b for u, b in fetched if u != 'data/world.dat') / 1e6:.2f} MB (index, overview, North America pool); {nt[0]} places, {len(await pg.evaluate('D.idx.shards'))} shards")
             nv = await pg.evaluate("NV")
+            picked, world_picked = set(), False
             for place in PLACES:
                 i = await pg.evaluate(f"D.targets.findIndex(t=>t.n.startsWith({place!r}))")
                 if i < 0:
                     missing.add(place)                          # quick test runs build only 12 places
                     continue
                 found.add(place)
-                await pg.evaluate(f"select({i},false)")
+                before = sum(1 for u, _ in fetched if u.startswith("data/p/"))
+                sh = await pg.evaluate(f"D.targets[{i}].s")
+                await pg.evaluate(f"select({i},false)")        # resolves when the place's data is loaded and it is shown
                 await pg.wait_for_timeout(300)
+                after = sum(1 for u, _ in fetched if u.startswith("data/p/"))
+                if after - before != (0 if sh in picked else 1):
+                    fails.append(f"{place}: expected {0 if sh in picked else 1} shard fetches, saw {after - before}")
+                picked.add(sh)
+                world_picked |= bool(await pg.evaluate(f"D.targets[{i}].g===1"))
+                sel = await pg.evaluate("S.sel")
+                if sel != i:
+                    fails.append(f"{place}: not selected after select() ({sel})")
                 txt = await pg.inner_text("#result")
                 if "How the climates compare" not in txt:
                     fails.append(f"{place}: no comparison")
+                # era5-agreement: a shown confidence line carries the ERA5 sentence, and a poor agreement lowers the badge
+                # same rule as the page: "worst" = largest disagreement; "corroborated" = second largest, and nothing with fewer than two sources
+                e5 = await pg.evaluate(f"(()=>{{const n=(D.agr_src||[]).length;if(!n)return typeof era5Sig!=='undefined'?era5Sig[{i}]:-1;const v=[];for(let s=0;s<n;s++){{const x=agrSig[{i}*n+s];if(x>=0)v.push(x);}}v.sort((a,b)=>b-a);if((D.agr_combine||'worst')==='corroborated')return v.length>=2?v[1]:-1;return v.length?v[0]:-1;}})()")
+                if "Confidence:" in txt and e5 >= 0:
+                    e5s.append(e5)
+                    if "independent dataset" not in txt.lower():
+                        fails.append(f"{place}: no ERA5 agreement line (era5 sigma {e5:.1f})")
+                    if e5 > (await pg.evaluate("(D.era5_thr||[2,3.5])[1]")) and "describe this place" not in txt and "describes this place" not in txt:
+                        fails.append(f"{place}: poor ERA5 agreement not reported")
                 if nv >= 16 and "Humidity" not in txt:
                     fails.append(f"{place}: no humidity section")
                 if nv >= 16 and "Hardiness zone" not in txt:
                     fails.append(f"{place}: no climate type / zone table")
+            if await pg.evaluate("!!D.gwl"):                       # warming-level view: data comes from the same shards
+                await pg.evaluate("S.mode='gwl';refresh()")
+                for place in [x for x in PLACES if x in found][:4]:
+                    i = await pg.evaluate(f"D.targets.findIndex(t=>t.n.startsWith({place!r}))")
+                    await pg.evaluate(f"select({i},false)")
+                    await pg.wait_for_timeout(200)
+                    if not await pg.evaluate("gwlOn()"):
+                        fails.append(f"{place}: warming-level view did not switch on")
+                    if "How the climates compare" not in await pg.inner_text("#result"):
+                        fails.append(f"{place}: no comparison in warming-level view")
+                await pg.evaluate("S.mode='year';select(-1,false)")
+            if world_picked:
+                ws = await pg.evaluate("worldState")
+                if ws != "ready":
+                    fails.append(f"world data did not load ({ws})")
             att = await pg.inner_text("#attrib")
             if "Methods & Sources" not in att:
                 fails.append("attribution missing the methods link")

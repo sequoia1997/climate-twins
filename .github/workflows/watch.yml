@@ -1,4 +1,5 @@
-# Once a month: is there a new TerraClimate year, a corrected or withdrawn CMIP6 dataset, or CMIP7 data?
+# Once a month: is there a new TerraClimate year, a corrected or withdrawn CMIP6 dataset, CMIP7 data, a data source
+# that stopped answering, or a newer dataset worth adopting (CHELSA 1991-2020, ERA5-Land, NEX-GDDP for CMIP7)?
 # Opens or updates one issue when something needs attention. Changes nothing on its own.
 name: Watch upstream data
 on:

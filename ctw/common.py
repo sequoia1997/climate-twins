@@ -6,6 +6,8 @@ Climate vector (16 values per place, in this order):
   8-11  total precipitation, mm (log(mm+1) in the metric)
   12-15 mean dewpoint, °C (from mean vapour pressure)
 Matching uses 0-11, plus 12 (DJF) and 14 (JJA) when humidity is on. 13 and 15 are shown, not matched.
+Optional extra variables ([matching] extra = ["pet", "srad"], default none) append 4 seasonal columns each
+(16-19 for the first, 20-23 for the second); [matching] extra_seasons (default DJF and JJA) picks which are matched.
 """
 from __future__ import annotations
 import logging, math, os, time, tomllib
@@ -30,6 +32,8 @@ for _n in ("urllib3", "fsspec", "asyncio", "rasterio"):
 def config() -> dict:
     with open(ROOT / "config.toml", "rb") as f:
         c = tomllib.load(f)
+    if os.environ.get("CTW_EXTRA") is not None and os.environ["CTW_EXTRA"].strip() != "":
+        c["matching"]["extra"] = [x.strip() for x in os.environ["CTW_EXTRA"].split(",") if x.strip()]   # workflow_dispatch override
     if SMOKE:                                                     # a couple of models is enough to test the code
         keep = os.environ.get("CTW_SMOKE_MODELS", "MIROC6,MRI-ESM2-0").split(",")
         c["models"]["list"] = [m for m in c["models"]["list"] if m["name"] in keep]
@@ -147,8 +151,52 @@ PPT = slice(8, 12)
 DPM = np.array([31, 28.25, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
 
 
+# Optional extra matched variables. Each is a TerraClimate variable turned into 4 seasonal columns appended after
+# the 16 standard ones. "log": matched as log(x+1) like precipitation; "div": matched as x / div (so that the
+# seasonal SD is of order 1 and the shared variability floor means something). ENC_SCALE: int16 scale on the page.
+EXTRAS = {"pet": {"log": True, "div": 1.0, "sum": True}, "srad": {"log": False, "div": 10.0, "sum": False}}
+ENC_SCALE = 500.0
+_ACTIVE: list = []
+
+
+def extra_names(cfg) -> list:
+    names = list(cfg["matching"].get("extra", []) or [])
+    bad = [n for n in names if n not in EXTRAS]
+    if bad:
+        raise ValueError(f"unknown [matching] extra {bad}; choose from {sorted(EXTRAS)}")
+    return names
+
+
+def use_extras(names) -> list:
+    """Declare which extras the vectors carry (module state, so seasonalize/transform/enc need no new arguments)."""
+    _ACTIVE[:] = list(names)
+    return _ACTIVE
+
+
+def nvx(names=None) -> int:
+    return NV + 4 * len(_ACTIVE if names is None else names)
+
+
 def match_idx(cfg) -> np.ndarray:
-    return np.r_[np.arange(12), [12, 14]] if cfg["matching"]["humidity"] else np.arange(12)
+    idx = np.r_[np.arange(12), [12, 14]] if cfg["matching"]["humidity"] else np.arange(12)
+    seas = cfg["matching"].get("extra_seasons", [0, 2])
+    ex = [NV + 4 * j + int(s) for j in range(len(extra_names(cfg))) for s in seas]
+    return np.r_[idx, ex].astype(int)
+
+
+def hargreaves_pet(tmax, tmin, lat):
+    """Hargreaves & Samani (1985) monthly PET (mm/month) from monthly tmax, tmin (12, N) and latitude (N,).
+    Extraterrestrial radiation from FAO-56 (Allen et al. 1998, eq. 21) at mid-month. Used only as a ratio between
+    a projected and a baseline climate, so its known bias against Penman-Monteith cancels to first order."""
+    tx, tn = np.asarray(tmax, "float64"), np.asarray(tmin, "float64")
+    phi = np.radians(np.asarray(lat, "float64"))[None, :]
+    J = (np.cumsum(DPM) - DPM / 2)[:, None]
+    dr = 1 + 0.033 * np.cos(2 * np.pi * J / 365)
+    dec = 0.409 * np.sin(2 * np.pi * J / 365 - 1.39)
+    ws = np.arccos(np.clip(-np.tan(phi) * np.tan(dec), -1, 1))
+    ra = (24 * 60 / np.pi) * 0.0820 * dr * (ws * np.sin(phi) * np.sin(dec) + np.cos(phi) * np.cos(dec) * np.sin(ws))
+    ra_mm = np.maximum(ra, 0) / 2.45
+    return 0.0023 * ra_mm * np.maximum((tx + tn) / 2 + 17.8, 0) * np.sqrt(np.maximum(tx - tn, 0.1)) * DPM[:, None]
 
 
 def dewpoint(e_kpa):
@@ -177,14 +225,22 @@ def seasonalize(mon: dict) -> np.ndarray:
             out.append(np.full_like(out[0], np.nan))
         else:
             out.append(dewpoint(np.asarray(vap, "float64")[[m - 1 for m in ms]].mean(0)))
+    for n in _ACTIVE:                                               # optional extras: seasonal sum (pet) or mean (srad)
+        a = mon.get(n)
+        for ms in SEASONS:
+            if a is None:
+                out.append(np.full_like(out[0], np.nan))
+            else:
+                b = np.asarray(a, "float64")[[m - 1 for m in ms]]
+                out.append(b.sum(0) if EXTRAS[n]["sum"] else b.mean(0))
     return np.stack(out)
 
 
 def seasonal_years(series: dict, row_years, years) -> np.ndarray:
     """Per-year seasonal vectors from monthly series {var: (nrows, 12)} whose rows are the years in row_years.
-    DJF of year y uses December of y-1. Missing years give NaN. Returns (len(years), 16)."""
+    DJF of year y uses December of y-1. Missing years give NaN. Returns (len(years), 16 + 4 * extras)."""
     pos = {int(y): i for i, y in enumerate(row_years)}
-    out = np.full((len(years), NV), np.nan)
+    out = np.full((len(years), nvx()), np.nan)
     for n, y in enumerate(years):
         if y not in pos or (y - 1) not in pos:
             continue
@@ -202,15 +258,22 @@ def seasonal_years(series: dict, row_years, years) -> np.ndarray:
 def transform(X):
     X = np.array(X, dtype="float64", copy=True)
     X[..., PPT] = np.log(np.maximum(X[..., PPT], 0) + 1.0)
+    for j, n in enumerate(_ACTIVE):
+        if X.shape[-1] >= NV + 4 * (j + 1):
+            c = slice(NV + 4 * j, NV + 4 * j + 4)
+            X[..., c] = np.log(np.maximum(X[..., c], 0) + 1.0) if EXTRAS[n]["log"] else X[..., c] / EXTRAS[n]["div"]
     return X
 
 
 def enc(X) -> np.ndarray:
     """Raw vectors -> int16 for the page: temperatures and dewpoints x100, precipitation log(mm+1) x1000."""
+    X_in = X
     X = np.asarray(X, "float64").copy()
     X[..., :8] *= 100
-    X[..., 12:] *= 100
+    X[..., 12:NV] *= 100
     X[..., PPT] = np.log(np.maximum(X[..., PPT], 0) + 1) * 1000
+    if X.shape[-1] > NV:                                            # extras: transformed value x ENC_SCALE
+        X[..., NV:] = transform(np.asarray(X_in, "float64"))[..., NV:] * ENC_SCALE
     return np.round(np.nan_to_num(X, nan=0.0)).astype("int16")
 
 

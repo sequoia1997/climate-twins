@@ -1,0 +1,93 @@
+# Downscaled CMIP6 changes for the model-resolution cross-check: WorldClim 2.1 CMIP6 (global) and AdaptWest (North America).
+# Writes data/downdeltas.npz (committed; read by the "Rebuild data" workflow's `nexcheck` step) and opens its own pull request.
+# One runner per source model, in parallel; each downloads one file at a time and deletes it (< 1 GB disk, a few minutes).
+name: Downscaled changes
+on:
+  schedule:
+    - cron: "0 5 22 4 *"
+  push:
+    paths: [".github/run/downdeltas"]      # starts it from a branch before the workflow is on main
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+concurrency:
+  group: downdeltas
+  cancel-in-progress: false
+env:
+  CTW_WORK: ${{ github.workspace }}/work
+  PYTHONUNBUFFERED: "1"
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      jobs: ${{ steps.p.outputs.jobs }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - id: p
+        run: echo "jobs=$(python -m ctw downdeltas --plan)" >> "$GITHUB_OUTPUT"
+
+  extract:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        job: ${{ fromJson(needs.plan.outputs.jobs) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m ctw downdeltas --job "${{ matrix.job }}"
+      - uses: actions/upload-artifact@v6
+        with: { name: "downdeltas-${{ strategy.job-index }}", path: work/downdeltas/*.npz, retention-days: 7 }
+
+  aggregate:
+    needs: [plan, extract]
+    if: ${{ !cancelled() && needs.extract.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v7
+        with: { pattern: "downdeltas-*", path: work/downdeltas, merge-multiple: true }
+      - name: Fold into data/downdeltas.npz
+        run: |
+          ls work/downdeltas | wc -l
+          python -m ctw downdeltas --aggregate
+          ls -l data/downdeltas.npz
+      - uses: actions/upload-artifact@v6
+        with: { name: downdeltas-npz, path: data/downdeltas.npz, retention-days: 30 }
+      - name: Open a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          d=$(date +%F); b="downdeltas-update-$d"
+          git config user.name "climate-twins-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout -b "$b"
+          git add data/downdeltas.npz
+          git commit -m "Downscaled changes update $d (WorldClim 2.1 CMIP6, AdaptWest)"
+          git push -f origin "$b"
+          body="Yearly refresh of \`data/downdeltas.npz\`: monthly changes from WorldClim 2.1 CMIP6 and AdaptWest downscaled CMIP6, used by the next data rebuild's model-resolution check (\`python -m ctw nexcheck\`). Only this file changes; nothing goes live."
+          gh pr create --title "Downscaled changes update $d" --body "$body" --base main --head "$b" || gh pr edit "$b" --body "$body"
+
+  report-failure:
+    needs: [aggregate]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create -R "${{ github.repository }}" --title "Downscaled changes update failed ($(date +%F))" \
+            --body "The downscaled-changes job did not finish. Open the run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. The live site is unchanged; the model-resolution check uses whichever delta files exist."

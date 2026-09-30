@@ -4,8 +4,30 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 30 September 2026: data update
+<!-- data:2026-09-30 -->
+
+- **Rebuilt from the latest source data.** The "already happening" comparison now covers 2016–2025.
+- 2,385 places, 24 climate models, sea-level projections for 1013 coastal places.
+
+## 1 October 2026 (downscaled climate changes)
+
+- **Projected climates now use higher-resolution, bias-corrected changes where they exist.** For the 20 of our 24 climate models that NASA's NEX-GDDP-CMIP6 dataset covers (Thrasher et al. 2022), each place's projected change in temperature, precipitation and humidity now comes from that 25 km, bias-corrected version of the model instead of the model's own 100–250 km grid, for all four scenarios. Coasts, mountains and valleys are better represented. The other four models, and anything the dataset lacks, keep the model's own change; the ensembles contain the same models as before. This takes effect with the first data rebuild after the yearly "Extreme days" job has produced the downscaled changes; that rebuild's report shows how many best matches moved and by how much. The warming-level view keeps the models' own changes (the downscaled data start in 1950, after the 1850–1900 reference). The model-resolution caution now compares the page's projection with the models' own coarse-grid changes.
+- Extreme-day counts now cover all four scenarios instead of two.
+
+## 30 September 2026 (model resolution, more sources)
+
+- **The model-resolution caution now checks three downscaled sources.** Besides NASA's NEX-GDDP-CMIP6, each projection is repeated with the WorldClim 2.1 CMIP6 changes (global) and the AdaptWest downscaled CMIP6 changes (North America), and the worst case counts. The line under the answer, still shown only where the futures differ noticeably, now says which source(s) disagree. See "Sensitivity to model resolution" on the methods page.
+
+## 29 September 2026 (model resolution)
+
+- **A caution when the result depends on model resolution.** Once a year we now repeat every projection with NASA's higher-resolution, bias-corrected NEX-GDDP-CMIP6 climate changes and compare. Where the two futures differ noticeably (1σ or more, or the best match would jump a long way), the panel adds one line saying so. Most places never show it. The methods page explains what the check does and does not tell you.
+
 ## 29 September 2026
 
+- **New: a "Warming level" view.** Instead of choosing a year and an emissions scenario, you can choose how much the world has warmed (+1.5, +2, +3 or +4 °C above 1850–1900) and see where today's climate matches that future. The view pools every scenario and model that reaches the level; the panel says how many models do and roughly when they get there. Switch between the two under "View" above the map. Sea-level projections still belong to the year-and-scenario view.
+- **More simulations per model.** Each climate model's change is now the average of up to three of its runs (started from different initial conditions) instead of one, which smooths out natural year-to-year swings in the 20-year windows. Projections shift slightly for some places.
+- **Extreme days.** A new "Extreme days" row in the comparison shows, for each place, how many days a year reach 35 °C (95 °F) or 30 °C, tropical nights, frost days, hot-humid days and the longest dry spell, today and around 2050 and 2100, as the median of several climate models with the range beneath. It uses NASA's daily NEX-GDDP-CMIP6 data for SSP2-4.5 and SSP5-8.5 only (the other two scenarios show the nearest one, and say so) and is refreshed by its own yearly job, so it never holds up the main data update.
 - **"About this map and σ" starts closed.** The panel opens straight to the search box, and one tap on that line opens the explanation whenever you want it.
 - **A simpler search box.** The prompt now just says "Search for a city or town" and fits on every screen, instead of being cut off mid-word.
 

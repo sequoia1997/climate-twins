@@ -7,7 +7,7 @@ author_family = "Schweitzer"
 author_given = "Forest Meyer"
 author_initials = "F. M."
 # Bump the method version when the method changes. The data version is the build date.
-method_version = "10.0"
+method_version = "10.0"           # bump to 11.0 (and add a CHANGELOG entry) in the same change that sets [matching] extra
 # Public address of this repository, shown on the methods page (e.g. "https://github.com/yourname/climate-twins").
 repo_url = ""
 # Public address of the site, used in link previews. Change it here if you move to your own domain.
@@ -28,6 +28,11 @@ labels = ["SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5"]
 # Transient climate response (°C), IPCC AR6 WG1 Table 7.SM.5 as compiled by Hausfather et al. (2022).
 # The default ensemble keeps models whose TCR lies in the AR6 likely range. tcr = -1 means no published value.
 tcr_likely = [1.4, 2.2]
+# Initial-condition members averaged per model (the configured member first, then others with the same physics/forcing
+# indices that have every needed variable and scenario in the Pangeo archive). Averaging shrinks internal variability
+# in 20-year windows. Each extra member adds about one more single-member download to that model's job;
+# 1 = the earlier single-member method. A model entry may set its own members_max.
+members_max = 3
 list = [
   { name = "ACCESS-CM2",       member = "r1i1p1f1", grid = "gn", tcr = 2.10 },
   { name = "AWI-CM-1-1-MR",    member = "r1i1p1f1", grid = "gn", tcr = 2.06 },
@@ -55,6 +60,13 @@ list = [
   { name = "UKESM1-0-LL",      member = "r1i1p1f2", grid = "gn", tcr = 2.79 },
 ]
 
+[gwl]
+# Warming-level view: the 20-year window centred on the first year the running 20-year global mean tas of a model is
+# this many degrees above its own 1850-1900 mean (IPCC AR6 convention), pooled over the scenarios that reach it.
+levels = [1.5, 2.0, 3.0, 4.0]
+reference = [1850, 1900]
+min_models = 3                 # a level is shown for an ensemble only if at least this many of its models reach it
+
 [matching]
 # 12 temperature and precipitation measures (seasonal mean daily high, low, total precipitation),
 # plus dewpoint in Dec–Feb and Jun–Aug (the warm season in each hemisphere) when humidity = true.
@@ -66,6 +78,18 @@ vap_ratio = [0.5, 3.0]         # limits on model humidity change ratios
 sites = 5
 sep_km_na = 150
 sep_km_world = 300
+# Optional extra matched variables, OFF by default so results are unchanged until validated (see methods "Extra variables").
+#   "pet"  potential evapotranspiration: TerraClimate pet (Penman-Monteith), projected with the Hargreaves-Samani ratio
+#          from each model's tasmax/tasmin (aridity enters through precipitation and PET together);
+#   "srad" surface solar radiation: TerraClimate srad x each model's rsds ratio (an extra CMIP6 variable per model).
+# Each adds 4 seasonal columns; extra_seasons picks the matched ones by index (0 DJF, 1 MAM, 2 JJA, 3 SON).
+# A rebuild can also try them without editing this file: run "Rebuild data" with the "extra" input, e.g. pet,srad.
+extra = []
+extra_seasons = [0, 2]         # Dec-Feb and Jun-Aug, as for dewpoint
+pet_ratio = [0.5, 3.0]         # limits on the projected / baseline Hargreaves PET ratio
+srad_ratio = [0.8, 1.25]       # limits on model rsds change ratios
+extra_report = true            # with extras on, `ctw analogs` also refits the standard metric and writes the sensitivity summary
+extra_report_stride = 1        # test every Nth place only (2 halves the extra run time)
 agree_km = 500
 agree_km_world = 1000
 glob_trigger_sigma = 2.0       # search worldwide for a North American place when its best match is this poor
@@ -81,6 +105,52 @@ na_landfrac_min = 0.25
 world_res = 0.5
 world_landfrac_min = 0.25
 world_lat_min = -60.0
+
+[export]
+shard_places = 48              # places per per-place download file (site/data/p/*.dat); the page fetches one when a place is picked
+
+[extremes]
+# Extreme-day indicators and the NEX-GDDP monthly changes (data/nexdeltas.npz, see [deltas]) from NASA NEX-GDDP-CMIP6 daily
+# data (separate "Extreme days" workflow, see ctw/extremes.py). One Actions job per model x part (baseline, or one scenario).
+# Each model-year is four ~245 MB files, so the job samples years: year_stride = 2 uses every second year of each
+# window (15 of 30 baseline years, 10 of 20 in each future period). Set 1 for every year (about twice the runtime; still
+# far below the 6 h job limit: ~0.5 h per scenario job).
+scenarios = ["ssp126", "ssp245", "ssp370", "ssp585"]
+year_stride = 2
+extract = "all"                # models to process: every configured model NEX-GDDP publishes ("all") or an ensemble name
+ensemble = "tcr_likely"        # models in the page's extreme-day counts (site/data/extremes.json): the likely-TCR set
+workers = 3
+wet_bulb_c = 28.0
+dry_mm = 1.0
+
+[deltas]
+# Where each model's projected change comes from. "nex": NASA NEX-GDDP-CMIP6 (0.25°, bias-corrected; Thrasher et al. 2022) monthly
+# changes from data/nexdeltas.npz wherever that file has the model, scenario and place (temperature added, precipitation ratio
+# limited by [matching] ppt_ratio, humidity from NEX hurs + temperature, limited by vap_ratio), else the native-grid CMIP6 change.
+# "cmip6": native-grid CMIP6 changes only. Without data/nexdeltas.npz both give the CMIP6-only result. The warming-level view
+# always uses CMIP6 (NEX-GDDP starts in 1950, after the 1850-1900 reference). Ensembles keep the same models either way.
+source = "nex"
+
+[nexcheck]
+# Does the ensemble's projection depend on model resolution? With [deltas] source = "nex" the main projection (NEX-GDDP changes) is
+# compared with the native-grid CMIP6 projection of the same models; otherwise NEX-GDDP is compared with the CMIP6 main projection.
+# WorldClim / AdaptWest are always compared with the main projection. Flag per place, worst case over periods, scenarios and sources
+# (see ctw/nexcheck.py). 1 sigma = as alike as two ordinary years.
+sigma_moderate = 0.5           # projected climates this far apart: "moderate"
+sigma_high = 1.0               # this far apart: "high" (also high: moderate distance and the best match moves more than moved_km)
+moved_km = 500
+min_models = 6                 # models a source must share with the main ensemble to be compared model by model; else its mean is used
+high_share_note = 0.15         # validate's report warns if more than this share of places is "high"
+# How sources combine into the page flag. "corroborated": two sources must agree (the second-worst decides). "worst": any one.
+# Set after the first full NEX build: WorldClim alone put 40% of places at "high", because its changes are measured from its
+# 1970-2000 baseline, not 1991-2020, so they carry two extra decades of warming; native-grid CMIP6 alone flagged 7%.
+combine = "corroborated"
+
+[downdeltas]
+# Extra downscaled CMIP6 changes for the nexcheck cross-check (ctw/downdeltas.py, .github/workflows/downdeltas.yml):
+# WorldClim 2.1 CMIP6 (global) and AdaptWest (North America). Other keys (URLs, radius) have defaults in the module.
+scenarios = ["ssp245", "ssp585"]
+wc_res = "10m"                 # WorldClim resolution: 10m (18 km), 5m or 2.5m; 10m is plenty for a place value at GCM-cell scale
 
 [recent]
 years = 10                     # "already happening": the latest N complete years vs the baseline
@@ -103,3 +173,38 @@ esgf_search = "https://esgf.ceda.ac.uk/esg-search/search"
 moved_km = 500                 # a best match "moved" if it is this far from last release's
 max_moved_share = 0.10         # routine if at most this share of best matches moved
 max_median_dsigma = 0.25       # routine if the median change in best sigma is at most this
+extra_max_places_moved = 0.15   # optional extras (see [matching] extra): adopt-worthy if at most this share of places moved
+extra_max_median_dsigma = 0.30 # ... and the median |change in best sigma| is at most this
+
+[era5]
+# Independent cross-check of every place's present climate against ERA5 (ctw/era5.py).
+# Baseline agreement = sigma distance between the place's TerraClimate/AdaptWest baseline and its ERA5 baseline,
+# measured with the place's own year-to-year variability (the matching metric).
+agree_fair = 2.0               # above this the page says the two datasets differ noticeably
+agree_poor = 3.5               # above this the confidence badge drops one level
+# Matched resolution (ctw/era5.py matched()). "cell": each place is compared through its own ERA5 land cell (the 0.25 degree
+# cell nearest the place with land fraction >= land_frac_min, within land_max_km; none = 'no land cell', not checked
+# against ERA5), and the place's baseline is carried to that cell's footprint with TerraClimate's cell-box minus point
+# difference. "point": the original comparison (10 km point baseline vs ERA5 interpolated to the point).
+match = "cell"
+land_frac_min = 0.5
+land_max_km = 50               # also sets which cells the terraclimate step averages (box_cells)
+# How the independent sources are combined. "corroborated": a place is only flagged when two sources both disagree (the
+# second-largest disagreement counts; one source alone never lowers the badge). "worst": the largest disagreement counts.
+# "corroborated" was set after the first full rebuild, when the point comparison put 33% of places over 3.5 sigma (small
+# islands and coasts that the 0.25 degree grid smears into the ocean). match = "cell" (2026-09-29 smoke, 70 hard places
+# mostly islands and coasts) cut the median from 6.8 to 3.8 sigma and fixes inland cities (Sydney 7.7 -> 0.2, Cape Town
+# 10.2 -> 0.6), but coasts keep a real ERA5 warm-night bias of 2-3 degrees C (Honolulu, Kingston, Dakar), so one source
+# alone still is not trusted to lower the badge.
+combine = "corroborated"
+# Sources that may lower the badge; the others are measured and reported only. CHELSA v2.1 is downscaled from ERA5, so the
+# two share ERA5's coastal warm-night bias and cannot confirm each other (together they flagged 25% of places).
+badge_sources = ["era5", "chirps"]
+# The same thresholds apply to the combined agreement: the largest disagreement over the independent sources (ERA5 on all measures,
+# CHIRPS on precipitation, CHELSA on highs, lows and precipitation), each with its own typical offset removed (ctw/baselines.py).
+
+[hindcast]
+# ERA5 hindcast (ctw/hindcast.py): start window, target window
+windows = [[1961, 1990], [1991, 2020]]
+n_places = 100
+seed = 20260929

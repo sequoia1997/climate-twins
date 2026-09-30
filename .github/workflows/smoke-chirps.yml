@@ -1,0 +1,45 @@
+# Smoke test for the CHIRPS extraction (ctw/baselines.py). Runs on push of this file only, or by hand.
+# Step 1: 12 places, two years (24 monthly files): shows the per-place table.
+# Step 2: one full part of the real job (all places, 6 years = 72 files) to measure runtime and disk for the matrix job.
+name: Smoke CHIRPS
+on:
+  push:
+    paths: [".github/workflows/smoke-chirps.yml"]
+  workflow_dispatch:
+jobs:
+  chirps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pytest
+      - name: Unit tests
+        run: python -m pytest tests/test_baselines.py -q
+      - name: Reachability (one month, first bytes)
+        run: |
+          curl -sS -r 0-1023 -o /dev/null -w "CHIRPS range GET: HTTP %{http_code}, %{size_download} bytes, %{time_total}s\n" \
+            https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/chirps-v2.0.2020.12.tif.gz
+      - name: 12 places, two years
+        env:
+          CTW_WORK: ${{ github.workspace }}/work-smoke
+          CTW_SMOKE: "1"
+          CTW_CHIRPS_YEARS: "2019-2020"
+        run: |
+          start=$(date +%s)
+          python -m ctw chirps --part 0 --of 1
+          echo "elapsed $(( $(date +%s) - start )) s"
+          python -m ctw.smoke_baselines chirps
+      - name: One full part (all places, 72 files), timing and disk
+        env:
+          CTW_WORK: ${{ github.workspace }}/work-part
+        run: |
+          start=$(date +%s)
+          python -m ctw chirps --part 0 --of 6
+          echo "elapsed $(( $(date +%s) - start )) s"
+          df -h . | tail -1
+          ls -la work-part/chirps
+          python -m ctw.smoke_baselines chirps

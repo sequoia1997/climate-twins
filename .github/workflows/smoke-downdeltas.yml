@@ -1,0 +1,77 @@
+# Smoke test for ctw/downdeltas.py (WorldClim 2.1 CMIP6 + AdaptWest downscaled changes). Push-triggered on this file only.
+# Lists what exists on the data hosts, then extracts 12 places for WorldClim GCMs and one AdaptWest product, folds them
+# into changes and prints a compact table with timings. Opens no pull request and commits nothing.
+name: Smoke downdeltas
+on:
+  push:
+    paths: [".github/workflows/smoke-downdeltas.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  CTW_WORK: ${{ github.workspace }}/work
+  CTW_SMOKE: "1"
+  PYTHONUNBUFFERED: "1"
+jobs:
+  wc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: What exists (WorldClim)
+        run: |
+          df -h . | tail -1
+          curl -sS https://geodata.ucdavis.edu/cmip6/ | grep -o 'href="[^"]*"' | head -40 || true
+          curl -sS https://geodata.ucdavis.edu/cmip6/10m/ | grep -o 'href="[^"]*"' | head -60 || true
+          curl -sS https://geodata.ucdavis.edu/cmip6/10m/MIROC6/ssp245/ | grep -o 'href="[^"]*"' | head -20 || true
+          time python -m ctw downdeltas --list --source wc
+      - name: Plan
+        run: time python -m ctw downdeltas --plan --source wc
+      - name: Extract (base, MIROC6, one more GCM)
+        run: |
+          time python -m ctw downdeltas --job wc-base
+          time python -m ctw downdeltas --job wc:MIROC6
+          g=$(python -m ctw downdeltas --plan --source wc | python -c "import json,sys; j=[x for x in json.load(sys.stdin) if x.startswith('wc:') and x!='wc:MIROC6']; print(j[0][3:] if j else '')")
+          if [ -n "$g" ]; then time python -m ctw downdeltas --job "wc:$g"; fi
+          ls -l work/downdeltas; df -h . | tail -1
+      - name: Fold and table
+        run: |
+          time python -m ctw downdeltas --aggregate
+          python -m ctw downdeltas --table
+          ls -l data/downdeltas.npz
+
+  aw:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CTW_SMOKE_PLACES: "Shallotte, NC|Raleigh, NC|Phoenix, AZ|Denver, CO|Seattle, WA|Miami, FL|Chicago, IL|Boston, MA|Los Angeles, CA|Anchorage, AK|Vancouver, British Columbia, CA|Houston, TX"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: What exists (AdaptWest; docs page links in full, then the configured ensemble URLs are HEAD-checked)
+        run: |
+          for u in https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6/ https://adaptwest.databasin.org/pages/adaptwest-climatena/ https://adaptwest.databasin.org/pages/adaptwest-climatena-cmip6-downscaled/ ; do
+            echo "== $u"; curl -sSL -m 60 -w "HTTP %{http_code}\n" "$u" -o /tmp/p.html || true
+            grep -o 'https\?://[^"<> )]*\(cacpd\|databasin\)[^"<> )]*' /tmp/p.html | sort -u || true
+          done
+          curl -sSI "https://s3-us-west-2.amazonaws.com/www.cacpd.org/CMIP6v73/normals/Normal_1991_2020_monthly.zip" | head -5
+          time python -m ctw downdeltas --list --source aw
+      - name: Plan
+        run: python -m ctw downdeltas --plan --source aw
+      - name: Extract (base and first product)
+        run: |
+          time python -m ctw downdeltas --job aw-base
+          l=$(python -m ctw downdeltas --plan --source aw | python -c "import json,sys; j=[x for x in json.load(sys.stdin) if x.startswith('aw:')]; print(j[0][3:] if j else '')")
+          echo "first AdaptWest label: '$l'"
+          if [ -n "$l" ]; then time python -m ctw downdeltas --job "aw:$l"; fi
+          ls -l work/downdeltas; df -h . | tail -1
+      - name: Fold and table
+        run: |
+          time python -m ctw downdeltas --aggregate
+          python -m ctw downdeltas --table
+          ls -l data/downdeltas.npz
