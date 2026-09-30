@@ -233,3 +233,11 @@ if __name__ == "__main__":
     for k, v in list(globals().items()):
         if k.startswith("test_"):
             v(); print("ok", k)
+
+
+def test_combine_corroborated_needs_two_sources():
+    assert N.combine({"nex": "ok", "wc": "high", "aw": None}, "corroborated") == ("ok", [])
+    assert N.combine({"nex": "moderate", "wc": "high"}, "corroborated") == ("moderate", ["nex", "wc"])
+    assert N.combine({"nex": "high", "wc": "high", "aw": "ok"}, "corroborated") == ("high", ["nex", "wc"])
+    assert N.combine({"wc": "high"}, "corroborated") == ("high", ["wc"])      # a single source is judged by itself
+    assert N.combine({"wc": None}, "corroborated") == (None, [])

@@ -141,6 +141,10 @@ sigma_high = 1.0               # this far apart: "high" (also high: moderate dis
 moved_km = 500
 min_models = 6                 # models a source must share with the main ensemble to be compared model by model; else its mean is used
 high_share_note = 0.15         # validate's report warns if more than this share of places is "high"
+# How sources combine into the page flag. "corroborated": two sources must agree (the second-worst decides). "worst": any one.
+# Set after the first full NEX build: WorldClim alone put 40% of places at "high", because its changes are measured from its
+# 1970-2000 baseline, not 1991-2020, so they carry two extra decades of warming; native-grid CMIP6 alone flagged 7%.
+combine = "corroborated"
 
 [downdeltas]
 # Extra downscaled CMIP6 changes for the nexcheck cross-check (ctw/downdeltas.py, .github/workflows/downdeltas.yml):

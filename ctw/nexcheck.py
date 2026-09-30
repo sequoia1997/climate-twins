@@ -272,13 +272,16 @@ def load_sources(nex_path=None, down_path=None):
     return out
 
 
-def combine(flags):
-    """Worst case over sources. flags {name: "ok"/"moderate"/"high"/None} -> (flag, [names at that level]); (None, []) without data."""
+def combine(flags, mode="worst"):
+    """flags {name: "ok"/"moderate"/"high"/None} -> (flag, [names at or above that level]); (None, []) without data.
+    mode "worst": the worst source decides. mode "corroborated": the second-worst decides, so a place is flagged only when
+    two sources agree (one source alone gives "ok"; a place with a single source is judged by it)."""
     f = {k: v for k, v in flags.items() if v}
     if not f:
         return None, []
-    w = max(f.values(), key=RANK.get)
-    return w, [k for k, v in f.items() if v == w]
+    ranked = sorted(f.values(), key=RANK.get, reverse=True)
+    w = ranked[1] if mode == "corroborated" and len(ranked) >= 2 else ranked[0]
+    return w, [k for k, v in f.items() if RANK[v] >= RANK[w]] if w != "ok" else []
 
 
 def select_models(src, mnames, ens, min_models):
@@ -442,7 +445,7 @@ def run(cfg=None, deltas_path=None, out=None, down_path=None):
             f = None if bad[k] else classify(dsig[k], moved[k] > s["moved_km"], s["sigma_moderate"], s["sigma_high"])
             fl[n] = f
             per[n]["nodata" if f is None else f] += 1
-        worst, by = combine(fl)
+        worst, by = combine(fl, s.get("combine", "corroborated"))
         if worst is None:
             counts["nodata"] += 1
             continue
