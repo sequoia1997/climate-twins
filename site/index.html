@@ -125,14 +125,15 @@ details.intro{margin:0 0 10px} details.intro[open]>summary{margin-bottom:8px} de
 #ssp-desc{margin:2px 0 4px 64px;color:var(--muted)}
 @media (min-width:821px){#ctlbar{position:sticky;top:-20px;margin:0 -22px;padding:6px 22px;border-bottom:1px solid transparent} #ctlbar.stuck{border-bottom-color:var(--rule);box-shadow:0 4px 8px -6px rgba(0,0,0,.25)}}
 details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{font-weight:700} details.moresites ol.sites{margin-top:4px}
-.glance-h,.topic>summary{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,70px) 12px;align-items:center;column-gap:4px}
+.glance-h,.topic>summary{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,64px);align-items:start;column-gap:4px}
+@media (max-width:480px){.glance-h,.topic>summary{grid-template-columns:minmax(0,1fr) repeat(3,54px)}}
 .glance-h{font-size:.74rem;color:var(--muted);margin-top:12px;padding-bottom:5px;border-bottom:1.5px solid var(--ink)}
 .glance-h span{text-align:center;white-space:nowrap} .glance-h span:first-child{text-align:left} .glance-h .sw,.kgl .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--c)}
 .topic{border-bottom:1px solid var(--rule)} .topic>summary{list-style:none;cursor:pointer;padding:9px 0}
 .topic>summary::-webkit-details-marker{display:none}
 .topic>summary .t{font-weight:650;font-size:.93rem} .topic>summary .t small,.topic>summary .v small{display:block;font-weight:400;color:var(--muted);font-size:.72rem;line-height:1.2}
-.topic>summary .v{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem;min-width:0}
-.topic>summary .v small{white-space:nowrap;font-size:.7rem}
+.topic>summary .v{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:.98rem;line-height:1.25;min-width:0}
+.topic>summary .v small{white-space:nowrap;font-size:.72rem;font-weight:400;margin-top:1px}
 .topic>summary{padding-left:8px;margin-left:-8px;border-left:3px solid transparent;border-radius:4px;transition:background .12s}
 .topic>summary:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
 .topic[open]>summary{border-left-color:var(--accent);background:color-mix(in srgb,var(--ink) 5%,transparent)}
@@ -590,7 +591,7 @@ function laeaInv(x,y){const Dd=LA.D,rho=Math.hypot(x/Dd,Dd*y);if(rho<1e-6)return
 
 function b64u8(b){if(b&&b.buf)return new Uint8Array(b.buf,b.off,b.n);const s=atob(b);const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
 function arr(b,T){if(b&&b.buf)return b.t==="i16p"?unplane16(b):new T(b.buf.slice(b.off,b.off+b.n));const u=b64u8(b);return new T(u.buffer,u.byteOffset,u.byteLength/T.BYTES_PER_ELEMENT);}
-const DATA_VERSION="2026-09-30";
+const DATA_VERSION="2026-10-01";
 async function fetchCTW(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.ok)throw new Error("HTTP "+r.status+" for "+url);
   const u=new Uint8Array(await r.arrayBuffer());let buf=u.buffer;
   if(u[0]===0x1f&&u[1]===0x8b)buf=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
@@ -1154,7 +1155,7 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   h+=recentHTML(place,now);if(tt&&tt.sl&&!gwlOn())h+=seaHTML(tt.sl);
   // temperature: stat blocks + range bars on one axis
   const topic=(k,t,sub,vals)=>`<details class="topic" data-k="t-${k}"${op("t-"+k)}><summary><span class="t">${t}<small>${sub}</small></span>${vals.map(v=>`<span class="v">${v}</span>`).join("")}</summary><div class="tb">`;
-  h+=`<div class="glance-h"><span><button type="button" class="linkbtn xall" id="xall" aria-label="Expand or collapse every section below">Expand all</button></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?PL():"Match"}</span>`).join("")}<span></span></div>`;
+  h+=`<div class="glance-h"><span><button type="button" class="linkbtn xall" id="xall" aria-label="Expand or collapse every section below">Expand all</button></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?PL():"Match"}</span>`).join("")}</div>`;
   const stat=(f,dl)=>`<div class="stats">${S3.map(([k,l,y,v],i)=>`<div class="st ${k}"><div class="k">${l}</div><div class="v">${f(v)}</div><div class="d">${dl(i,v,y)}</div></div>`).join("")}</div>`;
   h+=topic("temp","Temperature",`${TU}, yearly average`,S3.map((x,i)=>tas(x[3])+(i&&tdel(x[3],now)?`<small>${tdel(x[3],now)}</small>`:"")));
   let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let i=0;i<8;i++){lo=Math.min(lo,C(v[i]));hi=Math.max(hi,C(v[i]));}
