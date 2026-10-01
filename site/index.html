@@ -127,14 +127,23 @@ details.intro{margin:0 0 10px} details.intro[open]>summary{margin-bottom:8px} de
 details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{font-weight:700} details.moresites ol.sites{margin-top:4px}
 .glance-h,.topic>summary{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,70px) 12px;align-items:center;column-gap:4px}
 .glance-h{font-size:.74rem;color:var(--muted);margin-top:12px;padding-bottom:5px;border-bottom:1.5px solid var(--ink)}
-.glance-h span{text-align:center;white-space:nowrap} .glance-h .sw,.kgl .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--c)}
+.glance-h span{text-align:center;white-space:nowrap} .glance-h span:first-child{text-align:left} .glance-h .sw,.kgl .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--c)}
 .topic{border-bottom:1px solid var(--rule)} .topic>summary{list-style:none;cursor:pointer;padding:9px 0}
 .topic>summary::-webkit-details-marker{display:none}
 .topic>summary .t{font-weight:650;font-size:.93rem} .topic>summary .t small,.topic>summary .v small{display:block;font-weight:400;color:var(--muted);font-size:.72rem;line-height:1.2}
 .topic>summary .v{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem;min-width:0}
 .topic>summary .v small{white-space:nowrap;font-size:.7rem}
-.topic>summary::after{content:"";width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);justify-self:end;margin-top:-3px;transition:transform .15s}
-.topic[open]>summary::after{transform:rotate(-135deg);margin-top:3px}
+.topic>summary{padding-left:8px;margin-left:-8px;border-left:3px solid transparent;border-radius:4px;transition:background .12s}
+.topic>summary:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.topic[open]>summary{border-left-color:var(--accent);background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.xall{font-size:.74rem;white-space:nowrap}
+.exh{font-size:.8rem;margin:12px 0 2px;color:var(--muted);font-weight:650}
+#result>details:not(.topic)>summary{font-weight:400;color:var(--muted);font-size:.9rem}
+/* secondary expanders: a plain text link led by + or −, not a triangle */
+details.intro>summary,details.settings>summary,details.more>summary,details.moresites>summary,details.exact>summary,#result>details:not(.topic):not(.more):not(.moresites):not(.exact)>summary,.cmp>details:not(.topic)>summary{list-style:none}
+details.intro>summary::-webkit-details-marker,details.settings>summary::-webkit-details-marker,details.more>summary::-webkit-details-marker,details.moresites>summary::-webkit-details-marker,details.exact>summary::-webkit-details-marker,#result>details>summary::-webkit-details-marker{display:none}
+details.intro>summary::before,details.settings>summary::before,details.more>summary::before,details.moresites>summary::before,details.exact>summary::before,#result>details:not(.topic)>summary::before{content:"+";display:inline-block;width:1.1em;color:var(--muted);font-weight:400}
+details[open].intro>summary::before,details[open].settings>summary::before,details[open].more>summary::before,details[open].moresites>summary::before,details[open].exact>summary::before,#result>details[open]:not(.topic)>summary::before{content:"−"}
 .topic>summary:hover .t{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
 .topic>summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .topic .tb{padding:2px 0 12px} .kgl{list-style:none;padding:0;margin:4px 0;font-size:.88rem} .kgl li{margin:3px 0}
@@ -981,6 +990,7 @@ function panel(){
     scope=r=>r.closest(".exc")||r.closest(".fig"),
     sync=f=>{const s=(f.querySelector(".exc:not([hidden])")||f).querySelector(".crow.sel");show(f,s?s.getAttribute(att(f)):base(f));};
   el.addEventListener("click",e=>{
+    if(e.target.closest("#xall")){const b=e.target.closest("#xall"),ds=[...el.querySelectorAll("details.topic")],open=ds.some(d=>!d.open);ds.forEach(d=>{d.open=open;});b.textContent=open?"Collapse all":"Expand all";return;}
     const v=e.target.closest("[data-view]");
     if(v){const f=v.closest(".fig");VIEW[v.dataset.view]=v.dataset.v;f.dataset.view=v.dataset.v;f.querySelectorAll(".vt button").forEach(x=>x.setAttribute("aria-pressed",String(x===v)));sync(f);return;}
     const x=e.target.closest("[data-ex]");
@@ -1065,7 +1075,7 @@ function nexHTML(tt){
 /* END nexcheck */
 /* BEGIN extreme-days (extremes.json): loaded lazily on the first place shown; the block is omitted while it loads
    or when the file / the place is missing. Source: NASA NEX-GDDP-CMIP6, the scenarios listed in the file (see methods). */
-let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded
+let EXTTAB="";let EXT;   // undefined: not requested yet; null: loading or unavailable; object: loaded
 function extLoad(){EXT=null;fetch("data/extremes.json?v="+DATA_VERSION).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.places&&j.indices){EXT=j;if(typeof cur!=="undefined"&&cur)panel();}}).catch(()=>{});}
 function extHTML(tt,topic,S3,M){
   if(!tt)return"";
@@ -1110,9 +1120,10 @@ function extHTML(tt,topic,S3,M){
   }
   h+=ins;
   h+=`<p class="cap">${short(rows.find(r=>r.ix.id===sel).ix.id)}, per year, under ${slab}. Now is 1991–2020; the future bars are 2041–2060 and 2081–2100. The bar is the median of ${EXT.n_models} climate models, and the pale band behind it is the range across models. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected)${near?`, available for ${avail} only, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div>`;
-  h+=`<details class="exact" data-k="exttab"${op("exttab")}><summary>All extremes as a table</summary><table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
-  for(const r of rows)h+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
-  h+=`</tbody></table></details></div></details>`;
+  let tb=`<p class="exh">Extreme days per year, ${slab}</p><div class="tablewrap"><table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
+  for(const r of rows)tb+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
+  EXTTAB=tb+`</tbody></table></div>`;   /* shown under "Exact values" rather than as one more expander */
+  h+=`</div></details>`;
   return h;}
 /* END extreme-days */
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
@@ -1143,7 +1154,7 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   h+=recentHTML(place,now);if(tt&&tt.sl&&!gwlOn())h+=seaHTML(tt.sl);
   // temperature: stat blocks + range bars on one axis
   const topic=(k,t,sub,vals)=>`<details class="topic" data-k="t-${k}"${op("t-"+k)}><summary><span class="t">${t}<small>${sub}</small></span>${vals.map(v=>`<span class="v">${v}</span>`).join("")}</summary><div class="tb">`;
-  h+=`<div class="glance-h" aria-hidden="true"><span></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?PL():"Match"}</span>`).join("")}<span></span></div>`;
+  h+=`<div class="glance-h"><span><button type="button" class="linkbtn xall" id="xall" aria-label="Expand or collapse every section below">Expand all</button></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?PL():"Match"}</span>`).join("")}<span></span></div>`;
   const stat=(f,dl)=>`<div class="stats">${S3.map(([k,l,y,v],i)=>`<div class="st ${k}"><div class="k">${l}</div><div class="v">${f(v)}</div><div class="d">${dl(i,v,y)}</div></div>`).join("")}</div>`;
   h+=topic("temp","Temperature",`${TU}, yearly average`,S3.map((x,i)=>tas(x[3])+(i&&tdel(x[3],now)?`<small>${tdel(x[3],now)}</small>`:"")));
   let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let i=0;i<8;i++){lo=Math.min(lo,C(v[i]));hi=Math.max(hi,C(v[i]));}
@@ -1178,7 +1189,7 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
     cap:`Total precipitation in each season, rain and snow as water.`,
     capC:`Change in each season's precipitation compared with here today (1991–2020). Dark: here ahead. Red: the match place today.`});
   h+=`</div></details>`;
-  h+=extHTML(tt,topic,S3,M);   // extreme-days block: see "BEGIN extreme-days" below
+  EXTTAB="";h+=extHTML(tt,topic,S3,M);   // extreme-days block: see "BEGIN extreme-days" below
   if(feat)h+=featHTML(feat,S3,topic);
   // exact values, also the accessible version of the charts
   const cols=[now,fu,an];
@@ -1189,7 +1200,7 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   h+=`<tr class="grp"><th colspan="4">Precipitation (${PU})</th></tr><tr class="tot"><td>Annual total</td>${cols.map(v=>`<td>${fP(annP(v))}</td>`).join("")}</tr>`;
   for(let q=0;q<4;q++)h+=`<tr><td>${SN[q]}</td>${cols.map(v=>`<td>${fP(v[8+q])}</td>`).join("")}</tr>`;
   if(HAS10&&an.length>=16&&isFinite(an[12])){h+=`<tr class="grp"><th colspan="4">Dewpoint (${TU})</th></tr>`;for(let q=0;q<4;q++)h+=`<tr><td>${SN[q]}</td>${cols.map(v=>`<td>${fT(v[12+q])}</td>`).join("")}</tr>`;}
-  h+=`</tbody></table></div><p class="cap">Highs and lows are averages of daily values; precipitation is each season's total${HAS10?"; dewpoint is the season's average":""}.</p></details></section>`;
+  h+=`</tbody></table></div>${EXTTAB}<p class="cap">Highs and lows are averages of daily values; precipitation is each season's total${HAS10?"; dewpoint is the season's average":""}.</p></details></section>`;
   return h;}
 function glyph(kind,m){const W=26,H=14,y=7;const c=m||MC();const acc=c.acc,ink=c.ink,halo=c.halo;let g="";
   const arrowSvg=(col,dash,w)=>`<line x1="2" y1="${y}" x2="17" y2="${y}" stroke="${c.casing}" stroke-width="${w+1.6}" stroke-linecap="butt"${dash?' stroke-dasharray="3.2 2.6"':''}/><line x1="2" y1="${y}" x2="17" y2="${y}" stroke="${col}" stroke-width="${w}" stroke-linecap="butt"${dash?' stroke-dasharray="3.2 2.6"':''}/><path d="M24 ${y} L16 ${y-4.5} L16 ${y+4.5} Z" fill="${col}" stroke="${c.casing}" stroke-width=".8"/>`;
