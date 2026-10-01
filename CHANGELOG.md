@@ -4,6 +4,12 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 1 October 2026: data update
+<!-- data:2026-10-01 -->
+
+- **Rebuilt from the latest source data.** The "already happening" comparison now covers 2016–2025.
+- 2,385 places, 24 climate models, sea-level projections for 1013 coastal places.
+
 ## 30 September 2026: data update
 <!-- data:2026-09-30 -->
 

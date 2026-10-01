@@ -590,7 +590,7 @@ function laeaInv(x,y){const Dd=LA.D,rho=Math.hypot(x/Dd,Dd*y);if(rho<1e-6)return
 
 function b64u8(b){if(b&&b.buf)return new Uint8Array(b.buf,b.off,b.n);const s=atob(b);const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
 function arr(b,T){if(b&&b.buf)return b.t==="i16p"?unplane16(b):new T(b.buf.slice(b.off,b.off+b.n));const u=b64u8(b);return new T(u.buffer,u.byteOffset,u.byteLength/T.BYTES_PER_ELEMENT);}
-const DATA_VERSION="2026-09-30";
+const DATA_VERSION="2026-10-01";
 async function fetchCTW(url){const r=await fetch(url+"?v="+DATA_VERSION);if(!r.ok)throw new Error("HTTP "+r.status+" for "+url);
   const u=new Uint8Array(await r.arrayBuffer());let buf=u.buffer;
   if(u[0]===0x1f&&u[1]===0x8b)buf=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
