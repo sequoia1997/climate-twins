@@ -188,6 +188,34 @@ details.more,details.moresites{margin:6px 0} ol.sites li[aria-current] .linkbtn{
 .st .k{font-size:.76rem;line-height:1.25;color:var(--muted)}
 .st .v{font:700 1.4rem/1.15 var(--font-head);font-variant-numeric:tabular-nums;margin-top:2px}
 .st .d{font-size:.76rem;line-height:1.25;color:var(--muted)}
+.fig{margin:4px 0 0}
+.figbar{display:flex;justify-content:flex-end;margin:0 0 4px}
+.vt{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:2px;background:var(--chip)}
+.vt button,.exs button{font:inherit;font-size:.76rem;line-height:1;border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer;min-height:28px}
+.vt button[aria-pressed="true"],.exs button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);font-weight:650}
+.vt button:focus-visible,.exs button:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.fig[data-view="abs"] .v-chg,.fig[data-view="chg"] .v-abs{display:none}
+.fig .crow{border-radius:6px;cursor:pointer;transition:background .12s}
+.fig .crow:hover,.fig .crow.sel{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.fig .crow:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.fig .crow.sel .lab{color:var(--ink);font-weight:650}
+.fig .bar{transform-origin:left center}
+@media (prefers-reduced-motion:no-preference){.fig[data-view] .chart:not([hidden]) .bar{animation:grow .35s ease-out}@keyframes grow{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}}
+.gl.zero{bottom:0;border-left:1px solid var(--line)}
+.insp{min-height:2.7em;font-size:.84rem;line-height:1.35;padding:7px 10px;border-radius:8px;background:var(--chip);margin:6px 0 2px}
+.exs{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+.exs button{border:1px solid var(--rule);background:var(--chip)}
+.exc[hidden]{display:none}
+.trk.ext1{height:30px}
+.exb{position:absolute;top:11px;left:0;height:8px;border-radius:4px;background:var(--c);min-width:3px}
+.exr{position:absolute;top:7px;height:16px;border-radius:8px;background:var(--c);opacity:.22}
+.exv{position:absolute;top:50%;transform:translateY(-50%);font-size:.74rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink)}
+.jny{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);align-items:stretch;gap:4px;margin:6px 0}
+.ja{align-self:center;color:var(--muted)}
+.jc{border-top:4px solid var(--c);padding:6px 4px 0;min-width:0;display:flex;flex-direction:column;gap:2px}
+.jl{font-size:.72rem;line-height:1.2;color:var(--muted)} .jv{font:700 1.3rem/1.1 var(--font-head)} .jn{font-size:.74rem;line-height:1.25;color:var(--muted)}
+.gs{display:block;height:7px;border-radius:4px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden}
+.gs i{display:block;height:100%;border-radius:4px;background:var(--c)}
 .s-now{--c:var(--cNow);--t:var(--muted)} .s-fut{--c:var(--cFut);--t:var(--ink)} .s-mat{--c:var(--cMat);--t:var(--accent)}
 .chart{position:relative;margin:12px 0 0}
 .chart{--lw:4.1rem}
@@ -944,24 +972,76 @@ function panel(){
   el.querySelectorAll("details[data-k]").forEach(d=>d.addEventListener("toggle",()=>{d.open?OPEN.add(d.dataset.k):OPEN.delete(d.dataset.k);}));
   el.querySelectorAll("[data-site]").forEach(b=>b.addEventListener("click",()=>{S.gsel=-1;S.cmp=+b.dataset.site;const [x,y]=cellXY(cur.sites[S.cmp]);panel();draw();centerOn(x,y);}));
 }
+/* interactive figures (see "BEGIN figures"): one set of delegated listeners on the results pane */
+(function(){const el=document.getElementById("result");if(!el)return;
+  const att=f=>f.dataset.view==="chg"?"data-c":"data-a",
+    ins=f=>f.querySelector(".exc:not([hidden]) .insp")||f.querySelector(".insp"),
+    base=f=>{const e=f.querySelector(".exc:not([hidden])");return e?e.dataset.def:f.querySelector(".insp").getAttribute(f.dataset.view==="chg"?"data-dc":"data-da");},
+    show=(f,t)=>{const i=ins(f);if(i)i.textContent=t;},
+    scope=r=>r.closest(".exc")||r.closest(".fig"),
+    sync=f=>{const s=(f.querySelector(".exc:not([hidden])")||f).querySelector(".crow.sel");show(f,s?s.getAttribute(att(f)):base(f));};
+  el.addEventListener("click",e=>{
+    const v=e.target.closest("[data-view]");
+    if(v){const f=v.closest(".fig");VIEW[v.dataset.view]=v.dataset.v;f.dataset.view=v.dataset.v;f.querySelectorAll(".vt button").forEach(x=>x.setAttribute("aria-pressed",String(x===v)));sync(f);return;}
+    const x=e.target.closest("[data-ex]");
+    if(x){const f=x.closest(".fig");EXSEL=x.dataset.ex;f.querySelectorAll("[data-ex]").forEach(b=>b.setAttribute("aria-pressed",String(b===x)));f.querySelectorAll(".exc").forEach(c=>{c.hidden=c.dataset.id!==EXSEL;});
+      const cp=f.querySelector(":scope > .cap");if(cp){const nm=x.textContent;cp.innerHTML=cp.innerHTML.replace(/^[^,]*,/,esc(nm)+",");}sync(f);return;}
+    const r=e.target.closest(".fig .crow");
+    if(r){const f=r.closest(".fig"),sc=scope(r),on=r.classList.contains("sel");sc.querySelectorAll(".crow.sel").forEach(y=>y.classList.remove("sel"));
+      if(!on)sc.querySelectorAll(`.crow[data-i="${r.dataset.i}"]`).forEach(y=>y.classList.add("sel"));sync(f);}
+  });
+  const over=e=>{const r=e.target.closest&&e.target.closest(".fig .crow");if(r)show(r.closest(".fig"),r.getAttribute(att(r.closest(".fig"))));};
+  const out=e=>{const f=e.target.closest&&e.target.closest(".fig");if(f&&!f.contains(e.relatedTarget))sync(f);};
+  el.addEventListener("mouseover",over);el.addEventListener("focusin",over);el.addEventListener("mouseout",out);el.addEventListener("focusout",out);
+  el.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList&&e.target.classList.contains("crow")){e.preventDefault();e.target.click();}});
+})();
 // Here now / here in the future / the match: summary, stat blocks, seasonal range bars and precipitation bars.
 function comfort(td){const f=td*9/5+32;return f<50?"dry":f<60?"comfortable":f<65?"humid":f<70?"muggy":"oppressive";}
+/* BEGIN figures: interactive charts for the data pane. Every figure holds two views ("Values" and "Change") rendered together;
+   the toggle only flips data-view, so nothing is recomputed. Rows are focusable: hover, focus or a tap shows that row's numbers in the
+   inspector line under the chart, and a tap pins it. */
+const VIEW={temp:"abs",hum:"abs",ppt:"abs"};let EXSEL=null;
+const esa=s=>esc(String(s)).replace(/\s+/g," ");
+const sg1=(v,u)=>(v>=0?"+":"−")+Math.abs(v).toFixed(1)+u;
+function figHead(k){return `<div class="figbar"><div class="vt" role="group" aria-label="Chart view">${[["abs","Values"],["chg","Change"]].map(([v,l])=>`<button type="button" data-view="${k}" data-v="${v}" aria-pressed="${VIEW[k]===v}">${l}</button>`).join("")}</div></div>`;}
+function chgChart(rows,fmt){let lo=0,hi=0;for(const r of rows)for(const v of[r.f,r.m]){lo=Math.min(lo,v);hi=Math.max(hi,v);}
+  const sp=(hi-lo)||1,pl=lo<0?sp*0.3:0,pr=hi>0?sp*0.3:0,t0=lo-pl,T=sp+pl+pr,Z=(-t0/T*100).toFixed(2);   /* room beside the bars for their labels; the zero line sits where zero falls */
+  const bar=(c,v,top)=>{const w=(Math.abs(v)/T*100).toFixed(2);return `<div class="bar ${c}" style="top:${top}px;left:${v>=0?Z:(Z-w).toFixed(2)}%;width:${w}%"><b class="${v>=0?"hi":"lo"}">${fmt(v)}</b></div>`;};
+  return `<div class="chart v-chg"><i class="gl zero" style="left:calc(var(--lw) + (100% - var(--lw))*${Z/100})"></i>`+rows.map(r=>`<div class="crow" tabindex="0" data-i="${r.i}" data-a="${esa(r.a)}" data-c="${esa(r.c)}"><div class="lab">${r.lab}</div><div class="trk">${bar("s-fut",r.f,8)}${bar("s-mat",r.m,20)}</div></div>`).join("")+`</div>`;}
+/* o: sum(v,q) the season's value, bar(c,j,v,q) one bar in the Values view, chg(a,b) the change from b to a, cfmt(x) its label,
+   txtA(q) / txtC(q,f,m) the inspector texts, defA / defC the texts with nothing selected, grid / axis extras, cap / capC captions */
+function seasonFig(k,SN,S3,o){let a=`<div class="chart v-abs">${o.grid||""}`;const rc=[];
+  for(let q=0;q<4;q++){const x=S3.map(e=>o.sum(e[3],q)),f=o.chg(x[1],x[0]),m=o.chg(x[2],x[0]),A=o.txtA(q),Cx=o.txtC(q,f,m);
+    a+=`<div class="crow" tabindex="0" data-i="${q}" data-a="${esa(A)}" data-c="${esa(Cx)}"><div class="lab">${SN[q]}</div><div class="trk">${S3.map(([c, , ,v],j)=>o.bar(c,j,v,q)).join("")}</div></div>`;
+    rc.push({lab:SN[q],f,m,i:q,a:A,c:Cx});}
+  a+=`${o.axis||""}</div>`;
+  return `<div class="fig" data-fig="${k}" data-view="${VIEW[k]}">${figHead(k)}${a}${chgChart(rc,o.cfmt)}<div class="insp" aria-live="polite" data-da="${esa(o.defA)}" data-dc="${esa(o.defC)}">${esc(VIEW[k]==="chg"?o.defC:o.defA)}</div><p class="cap v-abs">${o.cap}</p><p class="cap v-chg">${o.capC}</p></div>`;}
+/* END figures */
 function humidHTML(SN,S3,topic,C,TU,M){const mx=v=>Math.max(v[12],v[13],v[14],v[15]),deg=v=>Math.round(C(v))+"°";
-  let h=topic("hum","Humidity",`dewpoint ${TU}, muggiest season`,S3.map(x=>`${deg(mx(x[3]))}<small>${comfort(mx(x[3]))}</small>`));
+  let h=topic("hum","Humidity",`dewpoint ${TU}, muggiest season`,S3.map((x,i)=>{const d=C(mx(x[3]))-C(mx(S3[0][3]));return `${deg(mx(x[3]))}<small>${i&&Math.abs(d)>=0.5?sg1(d,"°"):comfort(mx(x[3]))}</small>`;}));
   let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let q=0;q<4;q++){lo=Math.min(lo,C(v[12+q]));hi=Math.max(hi,C(v[12+q]));}
-  const z0=Math.min(lo,M?-5:25)-(M?2:4),z1=hi+(hi-z0)*0.12,X=v=>((C(v)-z0)/(z1-z0)*100).toFixed(2);
-  h+=`<div class="chart" aria-hidden="true">`;
-  for(let q=0;q<4;q++){h+=`<div class="crow"><div class="lab">${SN[q]}</div><div class="trk">`;
-    S3.forEach(([k, , ,v],j)=>{h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:0;width:${X(v[12+q])}%"><b class="hi">${deg(v[12+q])}</b></div>`;});h+=`</div></div>`;}
-  h+=`</div><p class="cap">Dewpoint tracks the moisture in the air. Above about ${M?"18°C":"65°F"} most people find it muggy. ${K>12?"Matches are chosen on Dec–Feb and Jun–Aug dewpoint along with temperature and precipitation.":""}</p></div></details>`;return h;}
+  const z0=Math.min(lo,M?-5:25)-(M?2:4),z1=hi+(hi-z0)*0.12,X=v=>((C(v)-z0)/(z1-z0)*100).toFixed(2),dC=v=>M?v:v*9/5;
+  const yr=S3.map(([, , ,v])=>(v[12]+v[13]+v[14]+v[15])/4);
+  h+=seasonFig("hum",SN,S3,{sum:(v,q)=>v[12+q],chg:(a,b)=>dC(a-b),cfmt:x=>sg1(x,"°"),
+    bar:(c,j,v,q)=>`<div class="bar ${c}" style="top:${2+j*12}px;left:0;width:${X(v[12+q])}%"><b class="hi">${deg(v[12+q])}</b></div>`,
+    txtA:q=>`${SN[q]} dewpoint: ${deg(S3[0][3][12+q])} now, ${deg(S3[1][3][12+q])} ahead, ${deg(S3[2][3][12+q])} at the match.`,
+    txtC:(q,f,m)=>`${SN[q]} dewpoint, change from here today: ${sg1(f,"°")} ahead, ${sg1(m,"°")} at the match.`,
+    defA:`Muggiest season ${deg(mx(S3[0][3]))} now, ${deg(mx(S3[1][3]))} ahead, ${deg(mx(S3[2][3]))} at the match. Hover or tap a season.`,
+    defC:`Yearly dewpoint ${sg1(dC(yr[1]-yr[0]),"°")} ahead and ${sg1(dC(yr[2]-yr[0]),"°")} at the match, compared with here today. Hover or tap a season.`,
+    cap:`Dewpoint tracks the moisture in the air. Above about ${M?"18°C":"65°F"} most people find it muggy. ${K>12?"Matches are chosen on Dec–Feb and Jun–Aug dewpoint along with temperature and precipitation.":""}`,
+    capC:`Change in each season's dewpoint compared with here today (1991–2020). Dark: here ahead. Red: the match place today.`});
+  return h+`</div></details>`;}
 function zoneTxt(z){return z?`${Math.floor(z/2)}${z%2?"b":"a"}`:"–";}
 function featHTML(f,S3,topic){const cols=[f.now,f.fut,f.an];
   const code=i=>D.kg&&i<D.kg.length?`<abbr title="${esc(D.kg_name[i])}">${D.kg[i]}</abbr>`:"–",name=i=>D.kg&&i<D.kg.length?esc(D.kg_name[i]):"–";
   const lab=[["s-now","Here now"],["s-fut",`Here ${PL()}`],["s-mat","Match"]];
+  const jny=inner=>`<div class="jny">${inner.join('<span class="ja" aria-hidden="true">→</span>')}</div>`;
   let h=topic("kg","Climate type","Köppen–Geiger",cols.map(c=>c?code(c[0]):"–"));
-  h+=`<ul class="kgl">${lab.map(([k,l],j)=>`<li><i class="sw ${k}"></i>${l}: <strong>${cols[j]?code(cols[j][0]):"–"}</strong> ${cols[j]?name(cols[j][0]):""}</li>`).join("")}</ul><p class="cap">Köppen–Geiger climate types, computed from monthly averages with the rules of Beck et al. (2018).</p></div></details>`;
+  h+=jny(lab.map(([k,l],j)=>`<div class="jc ${k}"><span class="jl">${l}</span><span class="jv">${cols[j]?code(cols[j][0]):"–"}</span><span class="jn">${cols[j]?name(cols[j][0]):""}</span></div>`));
+  h+=`<p class="cap">${f.now[0]!==f.fut[0]&&D.kg&&f.now[0]<D.kg.length&&f.fut[0]<D.kg.length?`The climate type shifts from <strong>${D.kg[f.now[0]]}</strong> to <strong>${D.kg[f.fut[0]]}</strong>. `:"The climate type stays the same. "}Köppen–Geiger climate types, computed from monthly averages with the rules of Beck et al. (2018).</p></div></details>`;
   h+=topic("zone","Hardiness zone","estimated",cols.map(c=>c?zoneTxt(c[1]):"–"));
-  h+=`<ul class="kgl">${lab.map(([k,l],j)=>`<li><i class="sw ${k}"></i>${l}: growing season ${cols[j]?(cols[j][2]>=365?"all year":`about <strong>${cols[j][2]} days</strong>`):"–"}</li>`).join("")}</ul><p class="cap">Hardiness zone and growing season (days between the last spring and first fall frost) are estimated from monthly averages. They are not the official USDA Plant Hardiness Zone Map. <a href="methods.html#features">How these are estimated</a>.</p></div></details>`;
+  h+=jny(lab.map(([k,l],j)=>{const c=cols[j],d=c?c[2]:0;return `<div class="jc ${k}"><span class="jl">${l}</span><span class="jv">${c?zoneTxt(c[1]):"–"}</span><span class="gs" role="img" aria-label="${c?(d>=365?"growing season all year":`growing season about ${d} days`):"no data"}"><i style="width:${Math.min(100,d/365*100).toFixed(1)}%"></i></span><span class="jn">${c?(d>=365?"all year":`~${d} days`):""}</span></div>`;}));
+  h+=`<p class="cap">The bar is the growing season: the days between the last spring and first fall frost. Hardiness zone and growing season are estimated from monthly averages. They are not the official USDA Plant Hardiness Zone Map. <a href="methods.html#features">How these are estimated</a>.</p></div></details>`;
   return h;}
 function recentHTML(place,now){const t=cur.t;if(!HAS10||!recSig[t])return "";const M=S.metric,y=D.recent_years;
   let a=0;for(let i=0;i<8;i++)a+=recentA[t*NV+i]/100;a/=8;if(!(Math.abs(a)<5))return "";   /* a decade's change is never 5 °C: anything larger is a data error, so say nothing */
@@ -1006,10 +1086,33 @@ function extHTML(tt,topic,S3,M){
   const head=rows.find(r=>r.ix.id==="tx35"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tx30"&&(r.now[0]>=1||fut(r)[0]>=1))||rows.find(r=>r.ix.id==="tr20")||rows.find(r=>r.ix.id==="fd")||rows[0];
   const unit=r=>r.ix.id==="rx1"?(M?"mm":"inches"):r.ix.unit;
   const short=id=>({tx35:"Days over 35 °C (95 °F)",tx30:"Days over 30 °C (86 °F)",tr20:"Tropical nights (low 20 °C+)",fd:"Frost days (low below 0 °C)",wb28:"Hot-humid days (wet-bulb 28 °C+)",cdd:"Longest dry spell",rx1:"Wettest day"})[id];
-  let h=topic("ext","Extreme days",`${short(head.ix.id)}, per year`,[num(head.now[0],head.ix.id),num(fut(head)[0],head.ix.id),"–"]);
-  h+=`<table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
+  const ncol=(v,k)=>num(v,k);
+  const dlt=(a,b,k)=>{if(a==null||b==null)return"";const d=a-b;if(Math.abs(d)<0.5&&k!=="rx1")return"";return (d>=0?"+":"−")+num(Math.abs(d),k);};
+  const fh=fut(head);
+  let h=topic("ext","Extreme days",`${short(head.ix.id)}, per year`,[num(head.now[0],head.ix.id),num(fh[0],head.ix.id)+(dlt(fh[0],head.now[0],head.ix.id)?`<small>${dlt(fh[0],head.now[0],head.ix.id)}</small>`:""),"–"]);
+  const sel=rows.some(r=>r.ix.id===EXSEL)?EXSEL:head.ix.id;
+  h+=`<div class="fig exfig" data-fig="ext"><div class="exs" role="group" aria-label="Which extreme">${rows.map(r=>`<button type="button" data-ex="${r.ix.id}" aria-pressed="${r.ix.id===sel}">${short(r.ix.id).replace(/ \(.*\)/,"")}</button>`).join("")}</div>`;
+  const per=[["Now","1991–2020",null,"s-now"],...EXT.periods.map((p,j)=>{const L=D.periods[j]?"~"+D.periods[j].label.replace(/^~/,""):"~"+p;return[L,L+" ("+p.replace("-","–")+")",p,"s-fut"];})];
+  let ins="";
+  for(const r of rows){
+    const set=[[r.now,per[0]],...EXT.periods.map((p,j)=>[P.f[p][sid][r.i],per[j+1]])];
+    let mx=0;for(const[a]of set)for(const v of a)if(v!=null)mx=Math.max(mx,v);mx=(mx||1)*1.3;
+    const W=v=>(v/mx*100).toFixed(2),u=unit(r),id=r.ix.id;
+    const txt=(a,pl)=>`${short(id)}, ${pl[1]}: ${num(a[0],id)} ${u} a year${a[1]!=null?` (models range ${num(a[1],id)}–${num(a[2],id)})`:""}${pl[2]!==null&&r.now[0]!=null?`, ${dlt(a[0],r.now[0],id)||"no change"} from now`:""}.`;
+    const def=`${short(id)} per year: ${num(r.now[0],id)} now, ${EXT.periods.map((p,j)=>`${num(P.f[p][sid][r.i][0],id)} by ${per[j+1][0]}`).join(", ")}. Hover or tap a bar for the model range.`;
+    ins+=`<div class="exc" data-id="${id}"${id===sel?"":" hidden"} data-def="${esa(def)}"><div class="chart">`;
+    for(const[a,pl]of set){
+      if(a[0]==null)continue;
+      const hiE=Math.max(a[0],a[2]==null?0:a[2]);
+      ins+=`<div class="crow" tabindex="0" data-i="${pl[1]}" data-a="${esa(txt(a,pl))}" data-c="${esa(txt(a,pl))}"><div class="lab">${pl[0]}</div><div class="trk ext1">${a[1]!=null?`<i class="exr ${pl[3]}" style="left:${W(a[1])}%;width:${Math.max(0.5,W(a[2])-W(a[1]))}%"></i>`:""}<i class="exb ${pl[3]}" style="width:${W(a[0])}%"></i><b class="exv" style="left:calc(${W(hiE)}% + 6px)">${num(a[0],id)}</b></div></div>`;
+    }
+    ins+=`</div><div class="insp" aria-live="polite">${esc(def)}</div></div>`;
+  }
+  h+=ins;
+  h+=`<p class="cap">${short(rows.find(r=>r.ix.id===sel).ix.id)}, per year, under ${slab}. Now is 1991–2020; the future bars are 2041–2060 and 2081–2100. The bar is the median of ${EXT.n_models} climate models, and the pale band behind it is the range across models. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected)${near?`, available for ${avail} only, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div>`;
+  h+=`<details class="exact" data-k="exttab"${op("exttab")}><summary>All extremes as a table</summary><table class="clim ext-tab"><thead><tr><th>Per year, ${slab}</th><th>Now</th>${EXT.periods.map(p=>`<th>~${p}</th>`).join("")}</tr></thead><tbody>`;
   for(const r of rows)h+=`<tr><td>${short(r.ix.id)}<small> ${unit(r)}</small></td><td>${cell(r.now,r.ix.id)}</td>${EXT.periods.map(p=>`<td>${cell(P.f[p][sid][r.i],r.ix.id)}</td>`).join("")}</tr>`;
-  h+=`</tbody></table><p class="cap">Now is 1991–2020; the future columns are 2041–2060 and 2081–2100. Median of ${EXT.n_models} climate models, with the range across models beneath. Daily data from NASA NEX-GDDP-CMIP6 (25 km, bias-corrected)${near?`, available for ${avail} only, so ${slab} is shown for ${want}`:""}. Hot-humid days use an approximate wet-bulb temperature. <a href="methods.html#extremes">How this is calculated</a></p></div></details>`;
+  h+=`</tbody></table></details></div></details>`;
   return h;}
 /* END extreme-days */
 function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
@@ -1042,29 +1145,39 @@ function compareHTML(place,lat,now,fu,an,mlab,mname,feat,tt){
   const topic=(k,t,sub,vals)=>`<details class="topic" data-k="t-${k}"${op("t-"+k)}><summary><span class="t">${t}<small>${sub}</small></span>${vals.map(v=>`<span class="v">${v}</span>`).join("")}</summary><div class="tb">`;
   h+=`<div class="glance-h" aria-hidden="true"><span></span>${S3.map(([k,l])=>`<span><i class="sw ${k}"></i>${k==="s-now"?"Now":k==="s-fut"?PL():"Match"}</span>`).join("")}<span></span></div>`;
   const stat=(f,dl)=>`<div class="stats">${S3.map(([k,l,y,v],i)=>`<div class="st ${k}"><div class="k">${l}</div><div class="v">${f(v)}</div><div class="d">${dl(i,v,y)}</div></div>`).join("")}</div>`;
-  h+=topic("temp","Temperature",`${TU}, yearly average`,S3.map(x=>tas(x[3])));
+  h+=topic("temp","Temperature",`${TU}, yearly average`,S3.map((x,i)=>tas(x[3])+(i&&tdel(x[3],now)?`<small>${tdel(x[3],now)}</small>`:"")));
   let lo=Infinity,hi=-Infinity;for(const[, , ,v]of S3)for(let i=0;i<8;i++){lo=Math.min(lo,C(v[i]));hi=Math.max(hi,C(v[i]));}
   const span=Math.max(hi-lo,1),pad=0.15,d0=lo-span*pad/(1-2*pad),d1=hi+span*pad/(1-2*pad),X=v=>((C(v)-d0)/(d1-d0)*100).toFixed(2);
   const steps=M?[2,5,10,20]:[5,10,20,40];let step=steps[3];for(const st of steps)if(Math.floor(d1/st)-Math.ceil(d0/st)+1<=6){step=st;break;}
   const frz=M?0:32,gx=t=>((t-d0)/(d1-d0)*100).toFixed(2);
   let g="",ax="";const hasF=frz>d0&&frz<d1;for(let t=Math.ceil(d0/step)*step;t<=d1;t+=step){if(t===frz)continue;if(hasF&&Math.abs(gx(t)-gx(frz))<13){g+=`<i class="gl" style="left:calc(var(--lw) + (100% - var(--lw))*${gx(t)/100})"></i>`;continue;}g+=`<i class="gl" style="left:calc(var(--lw) + (100% - var(--lw))*${gx(t)/100})"></i>`;ax+=`<span style="left:${gx(t)}%">${t}°</span>`;}
   if(frz>d0&&frz<d1){g+=`<i class="gl frz" style="left:calc(var(--lw) + (100% - var(--lw))*${gx(frz)/100})"></i>`;ax+=`<span style="left:${gx(frz)}%">${frz}°</span>`;}
-  h+=`<div class="chart" aria-hidden="true">${g}`;
-  for(let q=0;q<4;q++){h+=`<div class="crow"><div class="lab">${SN[q]}</div><div class="trk">`;
-    S3.forEach(([k, , ,v],j)=>{const a=X(v[4+q]),b=X(v[q]);h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:${a}%;width:${(b-a).toFixed(2)}%"><b class="lo">${deg(v[4+q])}</b><b class="hi">${deg(v[q])}</b></div>`;});
-    h+=`</div></div>`;}
-  h+=`<div class="axis">${ax}</div></div><p class="cap">Each bar runs from the season's average daily low to its average daily high.${hasF?` The dashed line marks freezing (${frz}${TU}).`:""}</p></div></details>`;
+  const yT=S3.map(x=>annT(x[3]));
+  h+=seasonFig("temp",SN,S3,{sum:(v,q)=>(v[q]+v[4+q])/2,chg:(a,b)=>dC(a-b),cfmt:x=>sg1(x,"°"),grid:g,axis:`<div class="axis">${ax}</div>`,
+    bar:(c,j,v,q)=>{const a=X(v[4+q]),b=X(v[q]);return `<div class="bar ${c}" style="top:${2+j*12}px;left:${a}%;width:${(b-a).toFixed(2)}%"><b class="lo">${deg(v[4+q])}</b><b class="hi">${deg(v[q])}</b></div>`;},
+    txtA:q=>`${SN[q]}: highs ${deg(now[q])} now, ${deg(fu[q])} ahead, ${deg(an[q])} at the match. Lows ${deg(now[4+q])}, ${deg(fu[4+q])}, ${deg(an[4+q])}.`,
+    txtC:(q,f,m)=>`${SN[q]}, change from here today: ${sg1(f,"°")} ahead (highs ${sg1(dC(fu[q]-now[q]),"°")}, lows ${sg1(dC(fu[4+q]-now[4+q]),"°")}), ${sg1(m,"°")} at the match.`,
+    defA:`Yearly average ${tas(now)} now, ${tas(fu)} ahead, ${tas(an)} at the match. Hover or tap a season.`,
+    defC:`Yearly average ${sg1(dC(yT[1]-yT[0]),"°")} ahead and ${sg1(dC(yT[2]-yT[0]),"°")} at the match, compared with here today. Hover or tap a season.`,
+    cap:`Each bar runs from the season's average daily low to its average daily high.${hasF?` The dashed line marks freezing (${frz}${TU}).`:""}`,
+    capC:`Change in each season's average temperature (highs and lows combined) compared with here today (1991–2020). Dark: here ahead. Red: the match place today.`});
+  h+=`</div></details>`;
   if(HAS10&&an.length>=16&&isFinite(an[12]))h+=humidHTML(SN,S3,topic,C,TU,M);
   // precipitation: stat blocks + bars from zero
   const PU=M?"mm":"inches";
-  h+=topic("ppt","Precipitation",`${PU} a year`,S3.map(x=>pv(annP(x[3]))));
+  h+=topic("ppt","Precipitation",`${PU} a year`,S3.map((x,i)=>{const r=annP(x[3])/annP(now)-1;return pv(annP(x[3]))+(i&&Math.abs(r)>=0.005?`<small>${r>0?"+":"−"}${Math.round(Math.abs(r)*100)}%</small>`:"");}));
   let pmx=0;for(const[, , ,v]of S3)for(let q=0;q<4;q++)pmx=Math.max(pmx,v[8+q]);
   const PX=mm=>(mm/(pmx*1.25||1)*100).toFixed(2);
-  h+=`<div class="chart" aria-hidden="true">`;
-  for(let q=0;q<4;q++){h+=`<div class="crow"><div class="lab">${SN[q]}</div><div class="trk">`;
-    S3.forEach(([k, , ,v],j)=>{h+=`<div class="bar ${k}" style="top:${2+j*12}px;left:0;width:${PX(v[8+q])}%"><b class="hi">${pv(v[8+q])}</b></div>`;});
-    h+=`</div></div>`;}
-  h+=`</div><p class="cap">Total precipitation in each season, rain and snow as water.</p></div></details>`;
+  const pc=(a,b)=>((a+1)/(b+1)-1)*100,sp=x=>(x>=0?"+":"−")+Math.abs(x).toFixed(0)+"%";
+  h+=seasonFig("ppt",SN,S3,{sum:(v,q)=>v[8+q],chg:pc,cfmt:sp,
+    bar:(c,j,v,q)=>`<div class="bar ${c}" style="top:${2+j*12}px;left:0;width:${PX(v[8+q])}%"><b class="hi">${pv(v[8+q])}</b></div>`,
+    txtA:q=>`${SN[q]}: ${pv(now[8+q])} ${PU} now, ${pv(fu[8+q])} ahead, ${pv(an[8+q])} at the match.`,
+    txtC:(q,f,m)=>`${SN[q]}, change from here today: ${sp(f)} ahead, ${sp(m)} at the match.`,
+    defA:`${pv(annP(now))} ${PU} a year now, ${pv(annP(fu))} ahead, ${pv(annP(an))} at the match. Hover or tap a season.`,
+    defC:`Yearly total ${sp(pc(annP(fu),annP(now)))} ahead and ${sp(pc(annP(an),annP(now)))} at the match, compared with here today. Hover or tap a season.`,
+    cap:`Total precipitation in each season, rain and snow as water.`,
+    capC:`Change in each season's precipitation compared with here today (1991–2020). Dark: here ahead. Red: the match place today.`});
+  h+=`</div></details>`;
   h+=extHTML(tt,topic,S3,M);   // extreme-days block: see "BEGIN extreme-days" below
   if(feat)h+=featHTML(feat,S3,topic);
   // exact values, also the accessible version of the charts
