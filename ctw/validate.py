@@ -62,6 +62,7 @@ def run(cfg=None, previous=None) -> int:
         (w["NP"] > 60000, f"World pool cells: {w['NP']:,}"),
         (len(na["models"]) == len(C.models(cfg)), f"Climate models: {len(na['models'])} of {len(C.models(cfg))}"),
         (S["selfchk_median"] < 0.5, f"Self-check (today's climate finds itself): median {S['selfchk_median']:.2f} σ (expect < 0.5)"),
+        (abs(S.get("recent_dt_median", 0.0)) < 3.0, f"Already happening: median recent temperature change {S.get('recent_dt_median', float('nan')):+.2f} °C (a change, expect under ±3)"),
         (np.isnan(S["tc_check_median"]) or S["tc_check_median"] < 1.5, f"TerraClimate vs AdaptWest at the same places: median {S['tc_check_median']:.2f} σ"),
     ]
     for ok, msg in chk:
@@ -95,10 +96,10 @@ def run(cfg=None, previous=None) -> int:
             if not ok:
                 notes.append(f"{LABEL[n]} disagrees with the baselines more than expected (median above 1σ or over 25% of its places above the poor threshold): "
                              "check the bias table in summary.json.")
-        cb = AG.get("combined")
+        cb = AG.get("combined"); cmb = "two sources must agree" if AG.get("combine") == "corroborated" else "worst source per place"
         if cb:
             by = ", ".join(f"{LABEL[n]} {c}" for n, c in cb["poor_by"].items() if c)
-            out.append(f"ℹ️ Combined agreement ({"two sources must agree" if AG.get("combine") == "corroborated" else "worst source per place"}): median {cb['median']:.2f}σ; {cb['over_fair']:.0%} above {AG['thr'][0]}σ, "
+            out.append(f"ℹ️ Combined agreement ({cmb}): median {cb['median']:.2f}σ; {cb['over_fair']:.0%} above {AG['thr'][0]}σ, "
                        f"{cb['over_poor']:.0%} above {AG['thr'][1]}σ" + (f" (poor, by source: {by})" if by else ""))
         missing = [LABEL[n] for n in ("chirps", "chelsa") if n not in AG["sources"]]
         if missing:
