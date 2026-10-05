@@ -87,6 +87,17 @@ async def main():
                         fails.append(f"{place}: no ERA5 agreement line (era5 sigma {e5:.1f})")
                     if e5 > (await pg.evaluate("(D.era5_thr||[2,3.5])[1]")) and "describe this place" not in txt and "describes this place" not in txt:
                         fails.append(f"{place}: poor ERA5 agreement not reported")
+                # figures: tapping a row must not reveal the other view; the toggle switches views
+                if await pg.locator('[data-fig="temp"] .v-abs .crow').count():
+                    await pg.evaluate("document.querySelectorAll('details.topic').forEach(d=>d.open=true)")
+                    await pg.locator('[data-fig="temp"] .v-abs .crow').first.click()
+                    vis = await pg.evaluate("[...document.querySelectorAll('[data-fig=temp] .chart')].filter(c=>c.offsetParent!==null).length")
+                    if vis != 1:
+                        fails.append(f"{place}: tapping a figure row shows {vis} charts, not 1")
+                    await pg.locator('[data-fig="temp"] button[data-v="chg"]').click()
+                    if await pg.evaluate("document.querySelector('[data-fig=temp]').dataset.view") != "chg":
+                        fails.append(f"{place}: the Change toggle did not switch the figure")
+                    await pg.locator('[data-fig="temp"] button[data-v="abs"]').click()
                 if nv >= 16 and "Humidity" not in txt:
                     fails.append(f"{place}: no humidity section")
                 if nv >= 16 and "Hardiness zone" not in txt:

@@ -992,7 +992,7 @@ function panel(){
     sync=f=>{const s=(f.querySelector(".exc:not([hidden])")||f).querySelector(".crow.sel");show(f,s?s.getAttribute(att(f)):base(f));};
   el.addEventListener("click",e=>{
     if(e.target.closest("#xall")){const b=e.target.closest("#xall"),ds=[...el.querySelectorAll("details.topic")],open=ds.some(d=>!d.open);ds.forEach(d=>{d.open=open;});b.textContent=open?"Collapse all":"Expand all";return;}
-    const v=e.target.closest("[data-view]");
+    const v=e.target.closest("button[data-view]");
     if(v){const f=v.closest(".fig");VIEW[v.dataset.view]=v.dataset.v;f.dataset.view=v.dataset.v;f.querySelectorAll(".vt button").forEach(x=>x.setAttribute("aria-pressed",String(x===v)));sync(f);return;}
     const x=e.target.closest("[data-ex]");
     if(x){const f=x.closest(".fig");EXSEL=x.dataset.ex;f.querySelectorAll("[data-ex]").forEach(b=>b.setAttribute("aria-pressed",String(b===x)));f.querySelectorAll(".exc").forEach(c=>{c.hidden=c.dataset.id!==EXSEL;});
@@ -1317,7 +1317,7 @@ const COMBO=(()=>{let sr,ul,pickFn,items=[],act=-1,ALL=null,justFocused=false,la
     show(true);ul.scrollTop=0;}
   function move(j){if(!items.length)return;act=(j+items.length)%items.length;ul.querySelectorAll('[aria-selected="true"]').forEach(x=>x.setAttribute("aria-selected","false"));
     const li=document.getElementById("po"+act);li.setAttribute("aria-selected","true");sr.setAttribute("aria-activedescendant",li.id);li.scrollIntoView({block:"nearest"});}
-  function choose(i){show(false);sr.value=D.targets[i].n;reqMiss("");select(i,true);sr.blur();}
+  function choose(i){show(false);sr.value=D.targets[i].n;reqMiss("");select(i,true);sr.blur();refocus();}
   function init(input,pick){sr=input;ul=document.getElementById("plist");pickFn=pick;
     sr.addEventListener("focus",()=>{justFocused=true;setTimeout(()=>{sr.setSelectionRange(0,sr.value.length);},0);render("");
       if(S.sel>=0){const j=items.findIndex(x=>x.i===S.sel);if(j>=0){move(j);const li=document.getElementById("po"+j);ul.scrollTop=Math.max(0,li.offsetTop-ul.clientHeight/2);}}});
@@ -1338,8 +1338,10 @@ function select(t,focus){const tok=++selTok;
   if(t<0||placeReady(t)){selectNow(t,focus);return Promise.resolve();}
   return ensurePlace(t).then(()=>{if(tok===selTok)selectNow(t,focus);},e=>{if(tok===selTok)setWStat("The data for "+D.targets[t].n+" could not load. Check your connection and try again. ("+e.message+")");});}
 function selectNow(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
-  if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="full")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
+  if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="half")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
+/* after a search the soft keyboard closes and the sheet settles, which resizes the map: frame the match again once it has */
+function refocus(){if(!SHEET.on)return;setTimeout(()=>{if(S.sel>=0&&map){map.resize();sizeOv();focusOn();}},500);}
 function focusOn(){if(!cur||!map)return;{const q=wrap.getBoundingClientRect();if(q.width<20||q.height<20){pendingFocus=true;return;}}
   // Centre on the arrow (place -> best match), measured in the map's own projection so it is centred on screen.
   const MC=maplibregl.MercatorCoordinate,tt=D.targets[cur.t],P=(lo,la)=>MC.fromLngLat([wrapLon(lo,tt.lon),la]);
@@ -1370,7 +1372,7 @@ function segs(){
   document.getElementById("optAll").onchange=ev=>{S.showAll=ev.target.checked;legend();draw();};
   document.getElementById("optUnits").onchange=ev=>{S.metric=ev.target.checked;panel();};
   document.getElementById("optHot").onchange=ev=>{S.ens=ev.target.checked?"all":"tcr_likely";refresh();};
-  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");}else reqMiss(sr.value.trim(),false);};
+  const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");refocus();}else reqMiss(sr.value.trim(),false);};
   document.addEventListener("click",e=>{const b=e.target.closest("[data-fb]");if(b){e.preventDefault();openFeedback(b.dataset.fb);}});
   document.getElementById("fbform").addEventListener("submit",sendFeedback);document.getElementById("fbcancel").onclick=()=>document.getElementById("fbdlg").close();
   document.getElementById("fbform").message.addEventListener("input",()=>{const m=document.getElementById("fbmsg");if(m.classList.contains("err")){m.textContent="";m.className="small";}});
