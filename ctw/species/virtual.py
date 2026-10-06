@@ -239,12 +239,19 @@ class VirtualSpecies:
 
 
 def catalog(grid: Grid) -> dict:
-    """Six virtual species whose niche parameters are quantiles of the grid's own present-day predictors, so the same
+    """Seven virtual species whose niche parameters are quantiles of the grid's own present-day predictors, so the same
     definitions work for NA and world. Names say what is being tested."""
     B = bio(grid.X)
     q = lambda v, p: float(np.quantile(B[:, BIO_NAMES.index(v)], p))        # noqa: E731
     ix = {v: BIO_NAMES.index(v) for v in BIO_NAMES}
     lon_cut = float(np.quantile(grid.lon, 0.35))
+    def patchy(g, cut=0.3, block_km=150.0):
+        """Non-climatic habitat patchiness (soil, land cover): ~30% of 150 km blocks are unsuitable, fixed in time."""
+        km = g.km
+        key = np.floor(km[:, 0] / block_km).astype(np.int64) * 100003 + np.floor(km[:, 1] / block_km).astype(np.int64)
+        u, inv = np.unique(key, return_inverse=True)
+        return np.random.default_rng(7).random(len(u))[inv] < cut
+
     sp = [
         VirtualSpecies("broad", "broad climatic tolerance (wide temperature and rainfall optimum)", ("mat", "lpann"),
                        lambda B, a=(q("mat", .5), (q("mat", .9) - q("mat", .1)) / 2.6, q("lpann", .5), (q("lpann", .9) - q("lpann", .1)) / 2.6):
@@ -266,6 +273,11 @@ def catalog(grid: Grid) -> dict:
                        lambda B, a=(q("mat", .5), (q("mat", .9) - q("mat", .1)) / 2.0, q("lpann", .5), (q("lpann", .9) - q("lpann", .1)) / 2.0):
                        gauss(B[:, ix["mat"]], a[0], a[1]) * gauss(B[:, ix["lpann"]], a[2], a[3]),
                        exclude=lambda g, c=lon_cut: g.lon < c),
+        VirtualSpecies("patchy", "broad climate niche, but 30% of 150 km blocks are unsuitable for non-climatic reasons (soil, land cover)",
+                       ("mat", "lpann"),
+                       lambda B, a=(q("mat", .5), (q("mat", .9) - q("mat", .1)) / 2.0, q("lpann", .5), (q("lpann", .9) - q("lpann", .1)) / 2.0):
+                       gauss(B[:, ix["mat"]], a[0], a[1]) * gauss(B[:, ix["lpann"]], a[2], a[3]),
+                       exclude=patchy),
     ]
     return {s.name: s for s in sp}
 
@@ -377,6 +389,16 @@ def evaluate(fine: Grid, sp: VirtualSpecies, n: int = 500, seed: int = 0, bias_p
     out["now_auc_truth"] = sdm.auc(sc_fine[pres_t], sc_fine[~pres_t])
     out["now_rank_r"] = float(np.corrcoef(stats.rankdata(sc_fine), stats.rankdata(suit))[0, 1])
     A = fine.area
+    last = f"{scenarios[-1][0][3:6].replace('.', '')}_{scenarios[-1][1]}" if scenarios else None
+    for m, t in res.thr_all.items():                           # how the threshold rule changes present and last-scenario accuracy
+        a = sdm.range_agreement((res.score_now >= t)[up], pres_t, A)
+        out[f"thr_{m}_now_tss"], out[f"thr_{m}_now_area_ratio"] = a["tss"], a["area_ratio"]
+        if scenarios:
+            tf = sp.present(fine, *scenarios[-1])
+            pf = (res.future[scenarios[-1]]["score"] >= t)[up]
+            out[f"thr_{m}_fut_sorensen"] = sdm.range_agreement(pf, tf, A)["sorensen"]
+            ts_, ps_ = sdm.summarise(fine.lat, fine.lon, A, pres_t, tf), sdm.summarise(fine.lat, fine.lon, A, (res.score_now >= t)[up], pf)
+            out[f"thr_{m}_change_err"] = ps_["change_pct"] - ts_["change_pct"]
     for ssp, per in scenarios:
         tag = f"{ssp[3:6].replace('.', '')}_{per}"
         tf = sp.present(fine, ssp, per)

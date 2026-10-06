@@ -32,11 +32,11 @@ class Settings:
     """Pipeline settings (the recommended defaults, justified in docs/spikes/F-sdm-engine.md)."""
     algos: tuple = ("gam", "maxent", "gbm", "rf")
     n_bg: int = 10000
-    threshold: str = "p10"
+    threshold: str = "p05"
     cv: bool = True
     cv_folds: int = 5
     block_km: float = 400.0
-    min_auc: float = 0.6               # a model whose spatial-CV AUC is lower is dropped from the ensemble
+    min_auc: float = 0.7               # a model whose spatial-CV domain AUC (held-out presences vs held-out cells) is lower is dropped
     n_ref: int = 20000                 # cells used for each model's percentile reference
     seed: int = 0
     n_jobs: int = 1
@@ -421,15 +421,17 @@ def spatial_cv(Xp: np.ndarray, Xb: np.ndarray, km_p: np.ndarray, km_b: np.ndarra
                s: Settings) -> CVResult:
     """Spatial-block cross-validation. Blocks of s.block_km are dealt into s.cv_folds folds (balanced by presences); each fold
     is held out in turn, the ensemble refit on the rest, and AUC (held-out presences vs held-out background), TSS (threshold
-    chosen on the training fold) and the Boyce index (held-out presences vs sampled cells of the held-out blocks) computed.
+    chosen on the training fold), the Boyce index and the domain AUC (held-out presences vs sampled cells of the held-out blocks,
+    i.e. how well the score separates where the species is recorded from the rest of the domain) computed. AUC / TSS use the
+    supplied background, so with a bias-matched (target-group) background they are deliberately hard to score high on.
     Folds with fewer than 3 presences are skipped."""
     allkm = np.vstack([km_p, km_b])
     X = np.vstack([Xp, Xb])
     y = np.r_[np.ones(len(Xp), int), np.zeros(len(Xb), int)]
     fold = block_folds(allkm, s.block_km, s.cv_folds, y.astype(float), s.seed)
     fold_eval = block_folds_like(km_eval, allkm, fold, s.block_km)
-    rec = {a: dict(auc=[], tss=[], boyce=[]) for a in s.algos}
-    rec["ens"] = dict(auc=[], tss=[], boyce=[])
+    rec = {a: dict(auc=[], tss=[], boyce=[], auc_dom=[]) for a in s.algos}
+    rec["ens"] = dict(auc=[], tss=[], boyce=[], auc_dom=[])
     oof_s = np.full((len(y), len(s.algos)), np.nan)
     used = 0
     for f in range(s.cv_folds):
@@ -450,15 +452,17 @@ def spatial_cv(Xp: np.ndarray, Xb: np.ndarray, km_p: np.ndarray, km_b: np.ndarra
             rec[a]["tss"].append(tss(Pte[yte == 1, j], Pte[yte == 0, j], t))
             if Pev is not None:
                 rec[a]["boyce"].append(boyce(Pte[yte == 1, j], Pev[:, j]))
+                rec[a]["auc_dom"].append(auc(Pte[yte == 1, j], Pev[:, j]))
         # ensemble over all algorithms of this fold (the min_auc filter is applied afterwards, on the means)
         etr, ete = Ptr.mean(1), Pte.mean(1)
         rec["ens"]["auc"].append(auc(ete[yte == 1], ete[yte == 0]))
         rec["ens"]["tss"].append(tss(ete[yte == 1], ete[yte == 0], best_threshold(etr[ytr == 1], etr[ytr == 0])))
         if Pev is not None:
             rec["ens"]["boyce"].append(boyce(ete[yte == 1], Pev.mean(1)))
+            rec["ens"]["auc_dom"].append(auc(ete[yte == 1], Pev.mean(1)))
     mean = lambda v: float(np.nanmean(v)) if len(v) else float("nan")                       # noqa: E731
     per = {a: {k: mean(v) for k, v in r.items()} for a, r in rec.items() if a != "ens"}
-    kept = tuple(a for a in s.algos if per[a]["auc"] >= s.min_auc) or tuple(s.algos)
+    kept = tuple(a for a in s.algos if per[a]["auc_dom"] >= s.min_auc) or tuple(s.algos)
     cols = [s.algos.index(a) for a in kept]
     sc = np.nanmean(oof_s[:, cols], 1)
     ens_metrics = {k: mean(v) for k, v in rec["ens"].items()}
@@ -490,6 +494,7 @@ class SDMResult:
     present_now: np.ndarray
     future: dict = field(default_factory=dict)       # (ssp, period) -> dict(score, present, mess, novel_mahal)
     mess_now: np.ndarray = None
+    thr_all: dict = None                             # threshold under every method in THRESHOLDS
 
 
 def run_sdm(grid, pres_idx: np.ndarray, bg_idx: np.ndarray, names, settings: Settings = Settings(), scenarios=()) -> SDMResult:
@@ -515,11 +520,13 @@ def run_sdm(grid, pres_idx: np.ndarray, bg_idx: np.ndarray, names, settings: Set
     ens = fit_ensemble(X, y, P_now[ref_idx], algos, s.seed, n_jobs=s.n_jobs)
     score_now = ens.score(P_now)
     if cv is not None and len(cv.oof_pos) >= 5:
-        thr = threshold(cv.oof_pos, cv.oof_bg, s.threshold)
+        pos, neg = cv.oof_pos, cv.oof_bg
     else:
         sc = ens.score(X)
-        thr = threshold(sc[y == 1], sc[y == 0], s.threshold)
-    res = SDMResult(s, tuple(names), len(pres_idx), ens, tuple(algos), cv, thr, score_now, score_now >= thr)
+        pos, neg = sc[y == 1], sc[y == 0]
+    thr_all = {m: threshold(pos, neg, m) for m in THRESHOLDS}
+    thr = thr_all[s.threshold]
+    res = SDMResult(s, tuple(names), len(pres_idx), ens, tuple(algos), cv, thr, score_now, score_now >= thr, thr_all=thr_all)
     res.mess_now = mess(X, P_now)[0]
     for ssp, period in scenarios:
         Pf = grid.predictors(grid.climate(ssp, period), names)
