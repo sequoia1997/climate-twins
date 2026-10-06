@@ -93,6 +93,11 @@ def monthly_to_daily(m):
     """Monthly means (12, ...) -> daily values (365, ...) by a periodic cubic spline through the mid-month points.
     Smooth annual cycle; the annual mean is preserved to within about 0.1 C for temperature."""
     m = np.asarray(m, "float64")
+    bad = ~np.isfinite(m).all(axis=0)                      # sea or missing cells: carry NaN through instead of failing
+    if bad.any():
+        out = monthly_to_daily(np.where(bad, 0.0, m))
+        out[:, bad] = np.nan
+        return out
     x = np.concatenate([[DAY_MID[-1] - NDAY], DAY_MID, [DAY_MID[0] + NDAY]])
     y = np.concatenate([m[-1:], m, m[:1]])
     cs = CubicSpline(x, y, axis=0)
@@ -116,13 +121,21 @@ def _sine_dd(tx, tn, base):
     return np.where(tn >= base, M - base, np.where(tx <= base, 0.0, part))
 
 
-def gdd(tmax, tmin, base=5.0) -> np.ndarray:
+GH3 = (np.array([-np.sqrt(3.0), 0.0, np.sqrt(3.0)]), np.array([1 / 6, 2 / 3, 1 / 6]))   # 3-point Gauss-Hermite for N(0, 1)
+
+
+def gdd(tmax, tmin, base=5.0, sw=3.0) -> np.ndarray:
     """Growing degree days (deg C days per year) above `base` (default 5 C, the usual choice for plants and the
-    ClimateNA/ClimateEU DD5). Method: daily tmax and tmin curves from the monthly means (`monthly_to_daily`), then the
-    single-sine within-day method. It cannot see day-to-day weather, so it is slightly low where the threshold is crossed
-    in the shoulder seasons; the error against NEX-GDDP daily data is reported in docs/spikes/B-climate-stack.md."""
+    ClimateNA/ClimateEU DD5). Method: daily tmax and tmin curves from the monthly means (`monthly_to_daily`), the
+    single-sine within-day method for each day, and an expectation over day-to-day weather: the whole daily curve is
+    shifted by e ~ N(0, sw^2) (3-point Gauss-Hermite). Without the weather term (sw = 0) the result is biased low by about 3 % (more
+    in cool climates) because monthly means hide that warm days count more than cold days subtract; sw = 3 C was fitted
+    against NEX-GDDP daily data (bias and RMSE in docs/spikes/B-climate-stack.md)."""
     dx, dn = monthly_to_daily(tmax), monthly_to_daily(tmin)
-    return _sine_dd(dx, dn, base).sum(0)
+    if not sw:
+        return _sine_dd(dx, dn, base).sum(0)
+    z, w = GH3
+    return sum(wi * _sine_dd(dx + sw * zi, dn + sw * zi, base).sum(0) for zi, wi in zip(z, w))
 
 
 def frost_sigma(tmax=None, tmin=None, a=2.6, b=0.0):
@@ -260,10 +273,10 @@ def future_predictors(base, fut_tx, fut_tn, fut_ppt, lat):
     return out
 
 
-def predictors(tmax, tmin, ppt, sigma=3.0, base_t=5.0) -> dict:
+def predictors(tmax, tmin, ppt, sigma=3.0, base_t=5.0, sw=3.0) -> dict:
     """The climate predictors that need only tmax, tmin, ppt (everything except cwd and aet)."""
     out = bioclim(tmax, tmin, ppt)
-    out["gdd5"] = gdd(tmax, tmin, base_t)
+    out["gdd5"] = gdd(tmax, tmin, base_t, sw)
     out["fd"] = frost_days(tmin, sigma)
     return out
 

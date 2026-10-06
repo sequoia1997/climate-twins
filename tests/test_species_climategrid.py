@@ -130,3 +130,20 @@ def test_window_and_area():
     assert r.stop - r.start == 480 and c.stop - c.start == 480
     assert G.cell_area_km2(0) == pytest.approx(21.4, abs=0.3)
     assert G.cell_area_km2(60) == pytest.approx(G.cell_area_km2(0) / 2, rel=0.01)
+
+
+def test_nan_cells_propagate_without_error():
+    tx = np.tile(seasonal(15, 10)[:, None], (1, 3)); tn = tx - 8
+    tx[:, 1] = np.nan; tn[:, 1] = np.nan
+    g = G.gdd(tx, tn, 5.0)
+    assert np.isnan(g[1]) and np.isfinite(g[[0, 2]]).all()
+    assert np.isnan(G.monthly_to_daily(tx)[:, 1]).all()
+
+
+def test_gdd_weather_term_raises_cool_climates_and_keeps_order():
+    tx = seasonal(8, 10)[:, None]; tn = tx - 7
+    assert G.gdd(tx, tn, 5.0, sw=3.0)[0] > G.gdd(tx, tn, 5.0, sw=0)[0]
+    assert G.gdd(tx, tn, 0.0)[0] > G.gdd(tx, tn, 5.0)[0] > G.gdd(tx, tn, 10.0)[0]
+    # far above the base everywhere the weather term changes nothing (the daily curve is linear in the shift)
+    hot = np.full((12, 1), 35.0)
+    assert G.gdd(hot, hot - 6, 5.0, sw=3.0)[0] == pytest.approx(G.gdd(hot, hot - 6, 5.0, sw=0)[0], rel=0.01)
