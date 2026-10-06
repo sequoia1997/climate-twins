@@ -13,3 +13,5 @@ jobs:
       - run: python -u ctw/species/validate_probe.py
         env:
           PYTHONUNBUFFERED: "1"
+          PROBE_LIST: ctw/species/validate_probe_urls.txt
+          PROBE_CHARS: "3500"

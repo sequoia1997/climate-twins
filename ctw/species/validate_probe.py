@@ -1,6 +1,7 @@
 """Spike C: reachability / metadata probe for validation data sources (run from GitHub Actions).
 Prints status, content-type, size and (for pages) a text excerpt so licences can be read from the log."""
-import json, re, sys, urllib.request
+import json, os, re, sys, urllib.request, http.cookiejar
+urllib.request.install_opener(urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())))
 
 UA = {"User-Agent": "climate-twins-spike-c/0.1 (research probe)"}
 SB = ["691cfb53d4be021d1d89b482", "6a39284a1ba49b4f9d9e0e99", "692f0fa7d4be026ff273a98e"]
@@ -92,7 +93,7 @@ def strip(h):
 
 def probe(u):
     try:
-        r = urllib.request.urlopen(urllib.request.Request(u, headers={**UA, "Range": "bytes=0-60000"}), timeout=15)
+        r = urllib.request.urlopen(urllib.request.Request(u, headers={**UA, "Range": "bytes=0-60000"}), timeout=30)
         b = r.read(60000)
         ct = r.headers.get("content-type", ""); cl = r.headers.get("content-range") or r.headers.get("content-length")
         print("\n=== %s\nHTTP %s | %s | size/range: %s | final: %s" % (u, r.status, ct, cl, r.url))
@@ -109,7 +110,7 @@ def probe(u):
         elif "json" in ct:
             print(t[:1200] if "crossref" not in u else json.dumps({k: (j := json.loads(t)).get("message", {}).get(k) for k in ("title", "container-title", "issued", "author")})[:600] if False else _cr(t))
         elif "text" in ct or "html" in ct or "xml" in ct:
-            print(strip(t)[:1800])
+            print(strip(t)[:int(os.environ.get("PROBE_CHARS", "1800"))])
         else:
             print("(binary) first bytes", b[:80])
     except Exception as e:
@@ -124,5 +125,7 @@ def _cr(t):
         return t[:600]
 
 if __name__ == "__main__":
-    for u in (sys.argv[1:] or HEAD):
+    lst = os.environ.get("PROBE_LIST")
+    urls = [l.strip() for l in open(lst) if l.strip() and not l.startswith("#")] if lst else (sys.argv[1:] or HEAD)
+    for u in urls:
         probe(u)
