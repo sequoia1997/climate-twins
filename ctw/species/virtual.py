@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import json
 import numpy as np
+from scipy import stats
 from scipy.spatial import cKDTree
 
 from .. import common as C
@@ -89,8 +90,16 @@ class Grid:
 
     def predictors(self, X: np.ndarray = None, names=BIO_NAMES) -> np.ndarray:
         """Derived predictors for raw climate X (default: present day), columns in the order of `names`."""
-        B = bio(self.X if X is None else X)
-        return B[:, [BIO_NAMES.index(m) for m in names]]
+        X = self.X if X is None else X
+        B = bio(X)
+        cols = []
+        for m in names:
+            if m in BIO_NAMES:
+                cols.append(B[:, BIO_NAMES.index(m)])
+            else:                                                  # "x0".."x15": a raw seasonal column (precipitation as log)
+                j = int(m[1:])
+                cols.append(np.log1p(X[:, j]) if 8 <= j < 12 else X[:, j])
+        return np.stack(cols, 1)
 
     def _weights(self, k=5):
         if self._idw is None:
@@ -313,6 +322,90 @@ def target_group_background(grid: Grid, bias: np.ndarray, n: int, rng: np.random
 def uniform_background(grid: Grid, n: int, rng: np.random.Generator) -> np.ndarray:
     """Random background cells over the whole domain."""
     return rng.choice(grid.n, min(n, grid.n), replace=False)
+
+
+# --------------------------------------------------------------------------- end-to-end evaluation against truth
+SCENARIOS = (("SSP2-4.5", "2050"), ("SSP5-8.5", "2100"))
+DECADES = {"2050": 2.5, "2100": 7.5}                         # from ~2025 to the middle of each period
+DISPERSAL = {"unlimited": None, "fast": 100.0, "slow": 20.0, "none": 0.0}      # km per decade
+
+
+def _frac(a, b):
+    return float(a / b) if b > 0 else float("nan")
+
+
+def evaluate(fine: Grid, sp: VirtualSpecies, n: int = 500, seed: int = 0, bias_power: float = 1.0, background: str = "target",
+             names=None, settings=None, fit_grid: Grid = None, bias: np.ndarray = None, scenarios=SCENARIOS,
+             false_pos: float = 0.03, jitter: float = 0.10, train_mask: np.ndarray = None) -> dict:
+    """Simulate records for species `sp` on the `fine` grid, fit the SDM pipeline, and score it against the truth.
+    background: 'target' (target-group, shares the effort bias), 'uniform' (no bias correction). fit_grid: a coarsened
+    version of `fine` (grid.coarsen) to fit and project on; predictions are copied back to the fine cells for scoring.
+    train_mask: bool per fine cell; records and background are only kept inside it (a restricted training area, to
+    provoke extrapolation when projecting to the full grid).
+    Returns a flat dict: record counts, spatial-CV skill, present-range accuracy against truth, and per scenario the future
+    range accuracy, area-change and centroid-shift errors, change-class agreement, share of novel (MESS < 0) cells and the
+    error inside them, and accuracy under each dispersal assumption."""
+    from . import sdm
+    s = settings or sdm.Settings(seed=seed)
+    names = tuple(names or sp.drivers)
+    rng = np.random.default_rng(seed)
+    if bias is None:
+        bias = bias_surface(fine)
+    pres_t = sp.present(fine)
+    suit = sp.suitability(fine)
+    avail = pres_t if train_mask is None else pres_t & train_mask
+    rec = sample_occurrences(fine, avail, suit, n, rng, bias, bias_power, false_pos, jitter)
+    if train_mask is not None:
+        rec = rec[train_mask[rec]]
+    bgw = bias if train_mask is None else bias * train_mask
+    bg = (target_group_background(fine, bgw, s.n_bg, rng, bias_power) if background == "target"
+          else uniform_background(fine, s.n_bg, rng) if train_mask is None else rng.choice(np.nonzero(train_mask)[0], s.n_bg, replace=False))
+    g = fit_grid or fine
+    up = np.arange(fine.n) if fit_grid is None else g.parent
+    if fit_grid is not None:
+        rec, bg = np.unique(g.parent[rec]), np.unique(g.parent[bg])
+    res = sdm.run_sdm(g, rec, bg, names, s, scenarios)
+    out = dict(species=sp.name, n_req=n, n_rec=len(rec), n_bg=len(bg), bias_power=bias_power, background=background, seed=seed,
+               predictors=",".join(names), grid_km=float(np.sqrt(g.area.mean())), thr=res.thr, kept=",".join(res.kept))
+    if res.cv is not None:
+        for k, v in res.cv.ensemble.items():
+            out["cv_" + k] = v
+        out["cv_folds"] = res.cv.folds_used
+    pred_now = res.present_now[up]
+    out.update({"now_" + k: v for k, v in sdm.range_agreement(pred_now, pres_t, fine.area).items()})
+    sc_fine = res.score_now[up]
+    out["now_auc_truth"] = sdm.auc(sc_fine[pres_t], sc_fine[~pres_t])
+    out["now_rank_r"] = float(np.corrcoef(stats.rankdata(sc_fine), stats.rankdata(suit))[0, 1])
+    A = fine.area
+    for ssp, per in scenarios:
+        tag = f"{ssp[3:6].replace('.', '')}_{per}"
+        tf = sp.present(fine, ssp, per)
+        f = res.future[(ssp, per)]
+        pf = f["present"][up]
+        out.update({f"{tag}_{k}": v for k, v in sdm.range_agreement(pf, tf, A).items()})
+        ts, ps = sdm.summarise(fine.lat, fine.lon, A, pres_t, tf), sdm.summarise(fine.lat, fine.lon, A, pred_now, pf)
+        out[f"{tag}_true_change"], out[f"{tag}_pred_change"] = ts["change_pct"], ps["change_pct"]
+        out[f"{tag}_change_err"] = ps["change_pct"] - ts["change_pct"]
+        out[f"{tag}_true_shift"], out[f"{tag}_pred_shift"] = ts["shift_km"], ps["shift_km"]
+        okc = np.isfinite(ps["shift_km"]) and np.isfinite(ts["shift_km"])
+        out[f"{tag}_shift_err_km"] = float(C.haversine_km(*ts["centroid_fut"], *ps["centroid_fut"])) if okc else float("nan")
+        out[f"{tag}_bearing_err"] = sdm.angle_diff(ts["bearing"], ps["bearing"]) if okc else float("nan")
+        gain_t, gain_p = tf & ~pres_t, pf & ~pred_now
+        loss_t, loss_p = pres_t & ~tf, pred_now & ~pf
+        out[f"{tag}_gain_sorensen"] = _frac(2 * A[gain_t & gain_p].sum(), A[gain_t].sum() + A[gain_p].sum())
+        out[f"{tag}_loss_sorensen"] = _frac(2 * A[loss_t & loss_p].sum(), A[loss_t].sum() + A[loss_p].sum())
+        out[f"{tag}_class_agree"] = float(A[(2 * pres_t + tf) == (2 * pred_now + pf)].sum() / A.sum())
+        nov = f["novel"][up]
+        out[f"{tag}_novel_share"] = float(A[nov].sum() / A.sum())
+        out[f"{tag}_novel_err"] = _frac(A[nov & (pf != tf)].sum(), A[nov].sum())
+        out[f"{tag}_other_err"] = _frac(A[~nov & (pf != tf)].sum(), A[~nov].sum())
+        for mode, rate in DISPERSAL.items():
+            km = None if rate is None else rate * DECADES[per]
+            T = sdm.dispersal_limit(fine.xyz, pres_t, tf, km)
+            Pm = sdm.dispersal_limit(fine.xyz, pred_now, pf, km)
+            out[f"{tag}_{mode}_disp_sorensen"] = sdm.range_agreement(Pm, T, A)["sorensen"]
+            out[f"{tag}_{mode}_disp_area_ratio"] = _frac(A[Pm].sum(), A[T].sum())
+    return out
 
 
 if __name__ == "__main__":

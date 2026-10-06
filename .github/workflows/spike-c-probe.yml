@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
-      - run: python -u ctw/species/validate_probe.py
+      - run: python -u ctw/species/validate_probe2.py
         env:
           PYTHONUNBUFFERED: "1"
           PROBE_LIST: ctw/species/validate_probe_urls.txt
