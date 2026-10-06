@@ -27,7 +27,7 @@ GROUPS = {
     "tree": ([47126], 8, 180, 90), "wild_plant": ([47126], 8, 80, 40), "crop": ([], 0, 80, 40),
     "bird": ([3], 3, 180, 90), "mammal": ([40151], 3, 80, 40), "herp": ([26036, 20978], 2, 40, 20),
     "insect_arachnid": ([47158, 47119], 3, 60, 30), "fish": ([], 0, 20, 10)}
-POOL_FACTOR = 2.6   # enrich top POOL_FACTOR x quota per group (per region share) by iNat count
+POOL_FACTOR = 1.8   # enrich top POOL_FACTOR x quota per group (per region share) by iNat count
 
 sess = requests.Session()
 sess.headers.update({"User-Agent": UA, "Accept": "application/json"})
@@ -48,6 +48,13 @@ def get(url, params=None, tries=5, pause=0.0):
         except Exception:
             time.sleep(2 ** i + 1)
     return None
+
+def save_cache(path):
+    try:
+        snap = dict(CACHE)
+        with open(path, "w") as fh: json.dump(snap, fh)
+    except Exception as ex:
+        print("cache save failed", repr(ex), flush=True)
 
 def log(*a): print(*a, flush=True)
 
@@ -225,13 +232,13 @@ def main():
         return rec
     items = list(keep.items())
     out = []
-    with ThreadPoolExecutor(4) as ex:
+    with ThreadPoolExecutor(12) as ex:
         for i, r in enumerate(ex.map(work, items)):
             out.append(r)
             if i % 100 == 0:
                 log(f"  enriched {i}/{len(items)} {time.time()-t0:.0f}s")
-                json.dump(CACHE, open(cpath, "w"))
-    json.dump(CACHE, open(cpath, "w"))
+                save_cache(cpath)
+    save_cache(cpath)
     # 3. wikipedia
     log("wikipedia titles")
     nm = [r["name"] for r in out if "gbif_key" in r]
