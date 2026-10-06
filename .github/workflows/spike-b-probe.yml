@@ -1,0 +1,13 @@
+# Spike B: reachability, sizes and throughput of climate-stack sources (TerraClimate, WorldClim, CHELSA, DEM, SoilGrids).
+name: Spike B probe
+on:
+  push:
+    paths: [".github/run/spike-b"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - run: python -u ctw/species/spike_b_probe.py
