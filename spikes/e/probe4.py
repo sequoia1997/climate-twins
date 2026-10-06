@@ -28,9 +28,10 @@ def hosts():
     rid = [x["id"] for x in r["resources"] if x["format"] == "CSV"][0]
     rows, off = [], 0
     while True:
-        d = J("https://data.nhm.ac.uk/api/3/action/datastore_search?resource_id=%s&limit=30000&offset=%d" % (rid, off))["result"]
-        rows += d["records"]; off += 30000
-        if len(d["records"]) < 30000: break
+        d = J("https://data.nhm.ac.uk/api/3/action/datastore_search?resource_id=%s&limit=32000&offset=%d" % (rid, off))["result"]
+        n = len(d["records"]); rows += d["records"]; off += n
+        if off == n: print("first page returned", n, "records of total", d.get("total"))
+        if n == 0 or off >= d.get("total", 0): break
     rows = [{k: (v if v is not None else "") for k, v in x.items()} for x in rows]
     print("rows:", len(rows), "cols:", list(rows[0].keys()))
     sp = lambda r: (r["Insect Genus"] + " " + r["Insect Species"]).strip()
