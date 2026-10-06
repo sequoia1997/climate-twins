@@ -1,0 +1,33 @@
+# SPIKE D: build the species candidate list from iNaturalist, GBIF and Wikipedia pageviews (public APIs, no credentials).
+name: Spike D candidates
+on:
+  push:
+    paths: [".github/run/spike-d"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install requests
+      - name: Build candidates
+        run: python scripts/spike_d/build_candidates.py --outdir data/species --work work-spike-d
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spike-d-species
+          path: data/species/
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/species/candidates.csv data/species/shortlist_v1.csv data/species/excluded_pool.csv data/species/build_stats.json
+          git diff --cached --quiet && exit 0
+          git commit -m "spike D: species candidates from public popularity signals"
+          for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done
