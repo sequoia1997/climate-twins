@@ -46,7 +46,7 @@ def probe() -> int:
         for lic in ["CC0_1_0", "CC_BY_4_0", "CC_BY_NC_4_0"]:
             row["licence_by_basis"][lic] = gbif.facet_counts(key, "BASIS_OF_RECORD", license=lic, **base)
         row["basis_all_licences"] = gbif.facet_counts(key, "BASIS_OF_RECORD", **base)
-        row["establishment"] = gbif.facet_counts(key, "ESTABLISHMENT_MEANS", license="CC0_1_0;CC_BY_4_0", **base)
+        row["establishment"] = gbif.facet_counts(key, "ESTABLISHMENT_MEANS", license=["CC0_1_0", "CC_BY_4_0"], **base)
         res.append(row)
         print(sci, key, row["matchType"], row["licence_all"]["total"], flush=True)
     dump("probe.json", res)
