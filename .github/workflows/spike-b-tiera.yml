@@ -2,6 +2,8 @@
 # Manual or via the marker file (set the first line of .github/run/spike-b to "tiera" to run it on push).
 name: Spike B Tier A
 on:
+  push:
+    paths: [".github/run/spike-b"]
   workflow_dispatch:
 jobs:
   tiera:
