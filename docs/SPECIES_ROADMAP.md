@@ -277,3 +277,14 @@ Lessons from this project to apply: a visible status board; never trust a synthe
 2. Launch the four Phase 0 spikes in parallel (A–D above).
 3. Draft the species list v1 with quotas and the licence audit table.
 4. Report back with a go/no-go on the climate tier and occurrence route, and a refined schedule.
+
+---
+
+## 13. Decisions recorded (6 October 2026)
+
+- Intended use: education only. Wording stays "climate suitability, not a forecast". Revisit if use for planting or land decisions is ever wanted.
+- Crops and pests (ticks, mosquitoes) are in the first release.
+- Scope: global from the start. Rare and threatened species excluded to begin with.
+- Budget: no ceiling per phase. Spending is still tracked on the status board.
+- Ecologist reviewer: none identified yet. Until one is found, the Phase 3 validation gate (skill scores, hindcast, comparison with published projections) is the main quality control, and a one-page review brief will be prepared.
+- GBIF: account created. Needs repository secrets `GBIF_USER`, `GBIF_PWD`, `GBIF_EMAIL` (Settings, Secrets and variables, Actions). A short Actions job will confirm the login works without printing it.
