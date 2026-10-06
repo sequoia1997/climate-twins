@@ -122,22 +122,33 @@ def institutions() -> pd.DataFrame:
 
 def download_and_clean() -> int:
     cfg = C.config()
-    keys_in = json.loads(os.environ.get("DOWNLOAD_KEYS") or "{}")        # reuse earlier downloads: {"Acer saccharum": "0001234-..."}
+    kf = C.ROOT / ".github" / "run" / "spike-a-keys.json"                # keys of downloads already requested (reuse, do not repeat)
+    keys_in = json.loads(os.environ.get("DOWNLOAD_KEYS") or (kf.read_text() if kf.exists() else "{}"))        # reuse earlier downloads: {"Acer saccharum": "0001234-..."}
     probe_file = OUT / "probe.json"
     taxa = {r["name"]: r["taxonKey"] for r in json.load(open(probe_file))} if probe_file.exists() else {s: gbif.match(s)["usageKey"] for s, _, _ in gbif.PILOT}
     t0 = time.time()
     keys = {}
-    for sci, _, _ in gbif.PILOT:
-        keys[sci] = keys_in.get(sci) or gbif.request_download(taxa[sci])
-        print("requested", sci, keys[sci], flush=True)
-    dump("download_keys.json", keys)
     cont, gj = continents(cfg)
     inst = institutions()
     ref = occ.reference_points(C.ROOT / "data" / "world_targets.csv", gj, inst)
     print("reference points", ref["kind"].value_counts().to_dict(), flush=True)
     land = occ.land_mask_default()
-    results, pending = {}, dict(keys)
-    while pending:
+    results, pending = {}, {}
+    queue = [sci for sci, _, _ in gbif.PILOT]
+    while pending or queue:
+        for sci in list(queue):                                          # GBIF allows 3 simultaneous downloads per user (HTTP 420 beyond)
+            if len(pending) >= 3 and sci not in keys_in:
+                break
+            try:
+                keys[sci] = keys_in.get(sci) or gbif.request_download(taxa[sci])
+            except RuntimeError as e:
+                if "420" in str(e):
+                    break
+                raise
+            pending[sci] = keys[sci]
+            queue.remove(sci)
+            dump("download_keys.json", keys)
+            print("requested", sci, keys[sci], f"t+{round(time.time() - t0)}s", flush=True)
         for sci, key in list(pending.items()):
             s = gbif.status(key)
             if s["status"] in ("PREPARING", "RUNNING", "SUSPENDED"):
