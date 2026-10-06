@@ -7,7 +7,9 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
-      - run: python ctw/species/validate_probe.py
+      - run: python -u ctw/species/validate_probe.py
+        env:
+          PYTHONUNBUFFERED: "1"

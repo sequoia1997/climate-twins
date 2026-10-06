@@ -92,7 +92,7 @@ def strip(h):
 
 def probe(u):
     try:
-        r = urllib.request.urlopen(urllib.request.Request(u, headers={**UA, "Range": "bytes=0-60000"}), timeout=40)
+        r = urllib.request.urlopen(urllib.request.Request(u, headers={**UA, "Range": "bytes=0-60000"}), timeout=15)
         b = r.read(60000)
         ct = r.headers.get("content-type", ""); cl = r.headers.get("content-range") or r.headers.get("content-length")
         print("\n=== %s\nHTTP %s | %s | size/range: %s | final: %s" % (u, r.status, ct, cl, r.url))
