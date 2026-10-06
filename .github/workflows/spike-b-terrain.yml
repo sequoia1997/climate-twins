@@ -1,0 +1,14 @@
+# Spike B: terrain (Copernicus GLO-90) and soil (SoilGrids) access test over a 2 x 2 degree window.
+name: Spike B terrain
+on:
+  push:
+    paths: [".github/run/spike-b"]
+  workflow_dispatch:
+jobs:
+  terrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install -q numpy rasterio
+      - run: python -u ctw/species/terrain_test.py

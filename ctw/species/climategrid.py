@@ -205,9 +205,10 @@ def fill_nearest(a):
     return a[tuple(idx)]
 
 
-def regrid_bilinear(coarse, lat_c, lon_c, lat_f, lon_f):
+def regrid_bilinear(coarse, lat_c, lon_c, lat_f, lon_f, wrap=True):
     """Bilinear interpolation of a coarse field (..., ny, nx) onto the fine lat/lon vectors. lat_c descending or ascending,
-    lon_c ascending; NaN in the coarse field is first filled by the nearest valid cell. Longitudes outside the coarse range wrap."""
+    lon_c ascending; NaN in the coarse field is first filled by the nearest valid cell. With wrap=True (a global field)
+    longitudes wrap around; with wrap=False (a regional subset) they are clamped at the edge."""
     lat_c = np.asarray(lat_c, "float64"); lon_c = np.asarray(lon_c, "float64")
     lead = coarse.shape[:-2]
     c = coarse.reshape(-1, *coarse.shape[-2:]).astype("float64")
@@ -215,9 +216,10 @@ def regrid_bilinear(coarse, lat_c, lon_c, lat_f, lon_f):
         lat_c = lat_c[::-1]; c = c[:, ::-1]
     res = lon_c[1] - lon_c[0]
     fy = np.clip((np.asarray(lat_f, "float64") - lat_c[0]) / (lat_c[1] - lat_c[0]), 0, len(lat_c) - 1 - 1e-9)
-    fx = (((np.asarray(lon_f, "float64") - lon_c[0]) / res) % len(lon_c))
-    y0 = fy.astype(int); wy = (fy - y0)[:, None]
-    x0 = fx.astype(int); x1 = (x0 + 1) % len(lon_c); wx = (fx - x0)[None, :]
+    fx = (np.asarray(lon_f, "float64") - lon_c[0]) / res
+    fx = fx % len(lon_c) if wrap else np.clip(fx, 0, len(lon_c) - 1 - 1e-9)
+    y0 = np.floor(fy).astype(int); wy = (fy - y0)[:, None]
+    x0 = np.floor(fx).astype(int); x1 = (x0 + 1) % len(lon_c) if wrap else np.minimum(x0 + 1, len(lon_c) - 1); wx = (fx - x0)[None, :]
     out = np.empty((c.shape[0], len(lat_f), len(lon_f)), "float32")
     for k in range(c.shape[0]):
         g = fill_nearest(c[k])

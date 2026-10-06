@@ -1,0 +1,19 @@
+# Spike B Tier A: TerraClimate native regional read, predictor build, future (NEX change factors) and comparison with WorldClim / CHELSA.
+# Manual or via the marker file (set the first line of .github/run/spike-b to "tiera" to run it on push).
+name: Spike B Tier A
+on:
+  workflow_dispatch:
+jobs:
+  tiera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install -q numpy scipy h5py fsspec aiohttp requests rasterio
+      - name: TerraClimate regional read, baselines, checks
+        run: /usr/bin/time -v python -u ctw/species/tierA_test.py tc 2>&1 | grep -E "RESULT|Maximum resident|Elapsed|Error|Traceback" 
+      - name: Future and comparison
+        run: /usr/bin/time -v python -u ctw/species/tierA_test.py compare 2>&1 | grep -vE "^\s+(Page|Swaps|File|Socket|Signals|Volun|Invol|Average|Major|Minor|Exit|Percent|System|User|Command)"
+      - run: du -sh spike-out/*
+      - uses: actions/upload-artifact@v4
+        with: { name: spike-b-tiera, path: spike-out/*.npz }
