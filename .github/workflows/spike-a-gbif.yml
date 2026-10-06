@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
-      - run: pip install requests
+      - run: pip install -r requirements.txt
       - name: Authenticated call (prints only the HTTP status)
         env:
           GBIF_USER: ${{ secrets.GBIF_USER }}
@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip }
-      - run: pip install requests
+      - run: pip install -r requirements.txt
       - name: Species match and facet counts (public API, no login)
         run: python -m ctw.species.spike_a probe
       - run: cat work/spike-a/probe.json
