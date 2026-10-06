@@ -26,12 +26,20 @@ S("A. GloBI per-dataset licences (Zenodo interpreted data products)", globi_data
 def hosts():
     r = J("https://data.nhm.ac.uk/api/3/action/package_show?id=hosts")["result"]
     rid = [x["id"] for x in r["resources"] if x["format"] == "CSV"][0]
-    rows, off = [], 0
+    import time
+    rows, off, tot = [], 0, None
     while True:
-        d = J("https://data.nhm.ac.uk/api/3/action/datastore_search?resource_id=%s&limit=32000&offset=%d" % (rid, off))["result"]
-        n = len(d["records"]); rows += d["records"]; off += n
-        if off == n: print("first page returned", n, "records of total", d.get("total"))
-        if n == 0 or off >= d.get("total", 0): break
+        d = None
+        for attempt in range(8):
+            try:
+                d = J("https://data.nhm.ac.uk/api/3/action/datastore_search?resource_id=%s&limit=1000&offset=%d&sort=_id" % (rid, off))["result"]; break
+            except Exception as e:
+                print("  retry at offset", off, repr(e)); time.sleep(2 + attempt * 2)
+        if d is None: print("  gave up at offset", off); break
+        n = len(d["records"]); rows += d["records"]; off += n; tot = d.get("total")
+        if n == 0 or off >= tot: break
+        time.sleep(0.2)
+    print("fetched", len(rows), "of", tot)
     rows = [{k: (v if v is not None else "") for k, v in x.items()} for x in rows]
     print("rows:", len(rows), "cols:", list(rows[0].keys()))
     sp = lambda r: (r["Insect Genus"] + " " + r["Insect Species"]).strip()
