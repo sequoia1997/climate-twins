@@ -1,0 +1,13 @@
+# Spike B probe 3: CHELSA v2.1 enumeration.
+name: Spike B probe 3
+on:
+  push:
+    paths: [".github/run/spike-b"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: python -u ctw/species/spike_b_probe3.py
