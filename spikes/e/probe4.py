@@ -25,9 +25,13 @@ S("A. GloBI per-dataset licences (Zenodo interpreted data products)", globi_data
 
 def hosts():
     r = J("https://data.nhm.ac.uk/api/3/action/package_show?id=hosts")["result"]
-    url = [x["url"] for x in r["resources"] if x["format"] == "CSV"][0]
-    b = get(url, timeout=300).decode("utf8", "replace")
-    rows = list(csv.DictReader(io.StringIO(b)))
+    rid = [x["id"] for x in r["resources"] if x["format"] == "CSV"][0]
+    rows, off = [], 0
+    while True:
+        d = J("https://data.nhm.ac.uk/api/3/action/datastore_search?resource_id=%s&limit=30000&offset=%d" % (rid, off))["result"]
+        rows += d["records"]; off += 30000
+        if len(d["records"]) < 30000: break
+    rows = [{k: (v if v is not None else "") for k, v in x.items()} for x in rows]
     print("rows:", len(rows), "cols:", list(rows[0].keys()))
     sp = lambda r: (r["Insect Genus"] + " " + r["Insect Species"]).strip()
     ins = {sp(r) for r in rows}; fam = {r["Insect Family"] for r in rows}
@@ -58,31 +62,3 @@ def hosts():
         v = byins.get(nm, []); print(f"  {nm}: rows={len(v)} host families={collections.Counter(x['Hostplant Family'] for x in v).most_common(4)}")
 S("B. HOSTS full CSV analysis", hosts)
 
-def avonet():
-    subprocess.run(["pip", "install", "-q", "openpyxl"], check=False)
-    import openpyxl
-    b = get("https://ndownloader.figshare.com/files/34480856", timeout=300); os.makedirs("av", exist_ok=True); open("av/a.xlsx", "wb").write(b)
-    wb = openpyxl.load_workbook("av/a.xlsx", read_only=True); ws = wb["Metadata"]
-    for row in ws.iter_rows(values_only=True):
-        if row[0] in ("Hand-Wing.Index", "Migration", "Mass", "Range.Size", "Habitat", "Primary.Lifestyle", "Trophic.Niche"): print(" ", {k: (str(v)[:230] if v else v) for k, v in zip(("var", "desc", "type", "units", "src"), row)})
-    ws = wb["AVONET1_BirdLife"]; it = ws.iter_rows(values_only=True); h = next(it); ix = {k: i for i, k in enumerate(h)}
-    mig = collections.Counter(); hwi = []
-    for r in it:
-        mig[r[ix["Migration"]]] += 1
-        if r[ix["Hand-Wing.Index"]] is not None: hwi.append(float(r[ix["Hand-Wing.Index"]]))
-    hwi.sort(); print("Migration code counts:", dict(mig), "HWI n=%d min=%.1f p10=%.1f median=%.1f p90=%.1f max=%.1f" % (len(hwi), hwi[0], hwi[len(hwi)//10], hwi[len(hwi)//2], hwi[9*len(hwi)//10], hwi[-1]))
-S("C. AVONET metadata and distributions", avonet)
-
-def ecocrop():
-    for u in ("https://api.github.com/repos/cropmodels/Recocrop/contents/inst/parameters", "https://api.github.com/repos/cropmodels/Recocrop/contents/data", "https://api.github.com/repos/cropmodels/Recocrop/license", "https://gaez.fao.org/pages/ecocrop-search"):
-        try:
-            b = get(u, timeout=60); t = b.decode("utf8", "replace")
-            if "api.github" in u: print(u, "->", t[:700].replace("\n", " "))
-            else: print(u, "-> OK len", len(b), re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t))[:300])
-        except Exception as e: print(u, "ERR", e)
-S("D. EcoCrop mirrors", ecocrop)
-
-def tamme():
-    t = get("https://esapubs.org/archive/ecol/E095/045/suppl-1.php").decode("utf8", "replace")
-    print(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t))[600:1800]); print(re.findall(r'href="([^"]+\.(?:csv|txt|zip|xlsx?|R|pdf))"', t))
-S("E. Tamme 2014 supplement", tamme)
