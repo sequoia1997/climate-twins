@@ -1,0 +1,79 @@
+# Spike A: GBIF occurrence downloads for the pilot species, cleaning, licence counts. See docs/spikes/A-occurrences.md.
+# Runs when .github/run/spike-a changes, or by hand. The GBIF credentials (secrets GBIF_USER, GBIF_PWD, GBIF_EMAIL) are used only
+# through env in the steps that call api.gbif.org, and nothing prints them (the runner masks secret values in logs anyway).
+name: spike-a-gbif
+on:
+  push:
+    paths: [".github/run/spike-a"]
+  workflow_dispatch:
+    inputs:
+      download_keys:
+        description: 'Reuse earlier downloads, JSON {"Acer saccharum": "<key>", ...} (empty: request new ones)'
+        type: string
+        default: ""
+permissions:
+  contents: read
+env:
+  PYTHONUNBUFFERED: "1"
+  CTW_WORK: ${{ github.workspace }}/work
+  SPIKE_OUT: ${{ github.workspace }}/work/spike-a
+jobs:
+  login:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install requests
+      - name: Authenticated call (prints only the HTTP status)
+        env:
+          GBIF_USER: ${{ secrets.GBIF_USER }}
+          GBIF_PWD: ${{ secrets.GBIF_PWD }}
+          GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+        run: python -m ctw.species.spike_a login
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install requests
+      - name: Species match and facet counts (public API, no login)
+        run: python -m ctw.species.spike_a probe
+      - run: cat work/spike-a/probe.json
+      - uses: actions/upload-artifact@v4
+        with: { name: spike-a-probe, path: work/spike-a }
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pytest pyarrow
+      - run: python -m pytest tests/test_species_occ.py tests/test_species_gbif.py -q
+  download:
+    needs: [login]
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pyarrow
+      - name: Request, wait, fetch and clean (GBIF downloads can queue for a long time)
+        env:
+          GBIF_USER: ${{ secrets.GBIF_USER }}
+          GBIF_PWD: ${{ secrets.GBIF_PWD }}
+          GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+          DOWNLOAD_KEYS: ${{ inputs.download_keys }}
+        run: |
+          python -m ctw.species.spike_a download
+          df -h . | tail -1
+      - run: cat work/spike-a/results.json
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: spike-a-results, path: work/spike-a }
