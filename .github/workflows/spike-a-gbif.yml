@@ -55,6 +55,8 @@ jobs:
       - run: pip install -r requirements.txt pytest pyarrow
       - run: python -m pytest tests/test_species_occ.py tests/test_species_gbif.py -q
   download:
+    # Requests real GBIF downloads: only when the commit message contains [download], or by hand.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[download]')
     needs: [login]
     runs-on: ubuntu-latest
     timeout-minutes: 340
