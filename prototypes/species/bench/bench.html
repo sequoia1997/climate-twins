@@ -1,0 +1,96 @@
+<!doctype html><meta charset="utf-8"><title>delivery bench</title>
+<body style="margin:0;background:#222"><canvas id="c"></canvas>
+<script src="vendor/pmtiles.js"></script><script src="vendor/geotiff.js"></script>
+<script>
+// Spike G delivery bench: one species, one scenario, world view -> first draw; then period switch, scenario switch.
+// Query: css (square canvas CSS px), z (tile zoom for PNG/WebP/PMTiles), f (pool factor for CTS/COG: width 8640/f), sp.
+const Q = new URLSearchParams(location.search), CSS = +Q.get("css"), Z = +Q.get("z"), F = +Q.get("f"), SP = Q.get("sp");
+const DPR = devicePixelRatio, c = document.getElementById("c");
+c.width = c.height = Math.round(CSS * DPR); c.style.width = c.style.height = CSS + "px";
+const gl = c.getContext("webgl2", { preserveDrawingBuffer: true, antialias: false });
+const VS = `#version 300 es
+in vec2 p; out vec2 v; void main(){ v = p*0.5+0.5; v.y = 1.0-v.y; gl_Position = vec4(p,0,1);}`;
+const FS = `#version 300 es
+precision highp float; precision highp int; uniform sampler2D uS,uB; uniform int uEq,uPer; in vec2 v; out vec4 o;
+void main(){ vec2 uv=v;
+  if(uEq==1){ float my=1.0-2.0*v.y; float lat=degrees(atan(sinh(my*3.14159265))); uv=vec2(v.x,(90.0-lat)/180.0);}
+  ivec4 s=ivec4(floor(texture(uS,uv)*255.0+0.5)); int b=int(floor(texture(uB,uv).r*255.0+0.5))&127;
+  int f=(uPer==0?s.r:s.g)&127; bool n=b>=44, u=f>=44;
+  vec3 col=vec3(0.07,0.08,0.10);
+  if(n&&u) col=vec3(0.85); else if(n) col=vec3(0.9,0.3,0.2); else if(u) col=vec3(0.2,0.6,0.95);
+  o=vec4(col,1);}`;
+function sh(t, s) { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; }
+const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+const tex = [gl.createTexture(), gl.createTexture()];
+function upload(i, src) {
+  gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tex[i]);
+  for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  if (src.data) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, src.w, src.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, src.data);
+  else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+}
+gl.uniform1i(gl.getUniformLocation(pr, "uS"), 0); gl.uniform1i(gl.getUniformLocation(pr, "uB"), 1);
+const uEq = gl.getUniformLocation(pr, "uEq"), uPer = gl.getUniformLocation(pr, "uPer");
+const px = new Uint8Array(4);
+function draw(per) { gl.uniform1i(uPer, per); gl.viewport(0, 0, c.width, c.height); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+function counts() { const W = c.width, H = c.height, a = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, a); let lost = 0, kept = 0, gained = 0;
+  for (let i = 0; i < a.length; i += 4) { const r = a[i], g = a[i + 1]; if (r > 200 && g > 200) kept++; else if (r > 200) lost++; else if (a[i + 2] > 200) gained++; } return { lost, kept, gained }; }
+
+const buf = async (u, r) => new Uint8Array(await (await fetch(u, r ? { headers: { Range: `bytes=${r[0]}-${r[1]}` } } : {})).arrayBuffer());
+async function bitmap(b) { return createImageBitmap(new Blob([b]), { colorSpaceConversion: "none", premultiplyAlpha: "none" }); }
+
+async function loadTiles(ext, set, ssp) {
+  const root = `d/${ssp}/${SP}/${set}/${ext}`, idx = (await (await fetch(root + "/index.json")).json()).filter(t => t[0] === Z), M = 256 << Z;
+  const cv = new OffscreenCanvas(M, M), cx = cv.getContext("2d");
+  await Promise.all(idx.map(async ([z, x, y]) => { const bm = await createImageBitmap(await (await fetch(`${root}/${z}/${x}/${y}.${ext}`)).blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none" }); cx.drawImage(bm, x * 256, y * 256); }));
+  return { src: cv, eq: 0, bytes: M * M * 4 };
+}
+async function loadPm(set, ssp) {
+  const p = new pmtiles.PMTiles(`${location.origin}/d/${ssp}/${SP}/${set}/x.pmtiles`), M = 256 << Z, cv = new OffscreenCanvas(M, M), cx = cv.getContext("2d"), n = 1 << Z, jobs = [];
+  for (let x = 0; x < n; x++) for (let y = 0; y < n; y++) jobs.push((async () => { const t = await p.getZxy(Z, x, y); if (!t) return; const bm = await bitmap(t.data); cx.drawImage(bm, x * 256, y * 256); })());
+  await Promise.all(jobs);
+  return { src: cv, eq: 0, bytes: M * M * 4 };
+}
+const inflate = async b => new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+async function loadCts(set, ssp) {
+  const url = `d/${ssp}/${SP}/${set}/x.cts`, head = await buf(url, [0, 16383]), dv = new DataView(head.buffer), n = dv.getUint32(4, true);
+  const H = JSON.parse(new TextDecoder().decode(head.subarray(8, 8 + n))), BS = H.bs, nb = H.bands.length;
+  let L = H.levels.findIndex(l => l.f === F), eidx = 8 + n; for (let i = 0; i < L; i++) eidx += 8 * H.levels[i].bx * H.levels[i].by;
+  const lv = H.levels[L], cnt = lv.bx * lv.by, ent = [];
+  for (let i = 0; i < cnt; i++) ent.push([dv.getUint32(eidx + 8 * i, true), dv.getUint32(eidx + 8 * i + 4, true)]);
+  const ne = ent.filter(e => e[1] > 0); const out = new Uint8Array(lv.w * lv.h * 4);
+  if (ne.length) {
+    const a = Math.min(...ne.map(e => e[0])), b = Math.max(...ne.map(e => e[0] + e[1])), body = await buf(url, [a, b - 1]);
+    await Promise.all(ent.map(async (e, i) => { if (!e[1]) return; const raw = await inflate(body.subarray(e[0] - a, e[0] - a + e[1])), bx = i % lv.bx, by = (i / lv.bx) | 0;
+      for (let k = 0; k < nb; k++) for (let r = 0; r < BS; r++) { const y = by * BS + r; if (y >= lv.h) break; let acc = 0, o = k * BS * BS + r * BS;
+        for (let q = 0; q < BS; q++) { acc = (acc + raw[o + q]) & 255; const x = bx * BS + q; if (x < lv.w) out[(y * lv.w + x) * 4 + k] = acc; } } }));
+  }
+  return { src: { data: out, w: lv.w, h: lv.h }, eq: 1, bytes: out.length };
+}
+let pool; async function loadCog(set, ssp) {
+  const t = await GeoTIFF.fromUrl(`${location.origin}/d/${ssp}/${SP}/${set}/x.tif`, { blockSize: 1 << 20, cacheSize: 1e9 }), ni = await t.getImageCount(), W = 8640 / F; let img;
+  for (let i = 0; i < ni; i++) { const g = await t.getImage(i); if (g.getWidth() === W) { img = g; break; } }
+  pool = pool || new GeoTIFF.Pool(); const r = await img.readRasters({ interleave: true, pool }), nb = img.getSamplesPerPixel(), w = img.getWidth(), h = img.getHeight(), out = new Uint8Array(w * h * 4);
+  for (let i = 0, j = 0; i < w * h; i++) { for (let k = 0; k < nb; k++) out[j + k] = r[i * nb + k]; j += 4; }
+  return { src: { data: out, w, h }, eq: 1, bytes: out.length };
+}
+const LOAD = { png: (s, p) => loadTiles("png", s, p), webp: (s, p) => loadTiles("webp", s, p), pmtiles: loadPm, cts: loadCts, cog: loadCog };
+async function show(fmt, ssp, first) {
+  const t0 = performance.now();
+  const [sc, ba] = await Promise.all([LOAD[fmt]("scen", ssp), first ? LOAD[fmt]("base", ssp) : Promise.resolve(null)]);
+  const t1 = performance.now(); upload(0, sc.src); if (ba) upload(1, ba.src); gl.uniform1i(uEq, sc.eq); draw(0); const t2 = performance.now();
+  return { load_ms: t1 - t0, upload_draw_ms: t2 - t1, total_ms: t2 - t0, texture_bytes: sc.bytes + (ba ? ba.bytes : 0) };
+}
+window.go = async (fmt, ssp, ssp2) => {
+  const r = { fmt };
+  Object.assign(r, { first: await show(fmt, ssp, true) });
+  r.counts = counts();
+  const t = performance.now(); for (let i = 0; i < 20; i++) draw(i & 1); r.period_switch_ms = (performance.now() - t) / 20;
+  if (ssp2) r.scenario_switch = await show(fmt, ssp2, false);
+  return r;
+};
+window.ready = true;
+</script>
