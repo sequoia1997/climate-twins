@@ -67,13 +67,15 @@ def fetch(link: str, dest: Path) -> Path:
         f.unlink()
     except zipfile.BadZipFile:
         f.rename(dest / "dl.parquet")
+    print("fetched", [(str(q.relative_to(dest)), q.stat().st_size) for q in sorted(dest.rglob("*")) if q.is_file()][:20], flush=True)
     return dest
 
 
 def read_batches(folder: Path):
     import pyarrow.parquet as pq
     files = sorted(glob.glob(str(folder / "**" / "*.parquet"), recursive=True)) + sorted(glob.glob(str(folder / "**" / "0*"), recursive=True))
-    files = [f for f in dict.fromkeys(files) if os.path.isfile(f)]
+    files = [f for f in dict.fromkeys(files) if os.path.isfile(f) and os.path.getsize(f) > 8 and open(f, "rb").read(4) == b"PAR1"]
+    print("parquet files:", [(os.path.relpath(f, folder), os.path.getsize(f)) for f in files][:12], flush=True)
     if files:
         for f in files:
             pf = pq.ParquetFile(f)
@@ -159,6 +161,8 @@ def download_and_clean() -> int:
                    "licence": s.get("license"), "link": s.get("downloadLink"), "wall_s_since_submit": round(time.time() - t0),
                    "citation": gbif.citation(key, s)}
             if s["status"] == "SUCCEEDED":
+              try:
+                tf = time.time()
                 dest = fetch(s["downloadLink"], Path(os.environ.get("SPIKE_TMP", "/tmp/spike-a")) / sci.replace(" ", "_"))
                 kind = dict((a, k) for a, _, k in gbif.PILOT)[sci]
                 cl = occ.Cleaner(kind=kind, land=land, ref=ref, establishment="drop" if kind != "animal" else "off")
@@ -175,9 +179,12 @@ def download_and_clean() -> int:
                             "countries_after": int(out["countrycode"].nunique()) if "countrycode" in out else None})
                 out.to_csv(OUT / f"thinned_{sci.replace(' ', '_')}.csv.gz", index=False, compression="gzip")
                 os.system(f"rm -rf '{dest}'")
+                row["fetch_and_clean_s"] = round(time.time() - tf)
+              except Exception as e:                                     # keep the other species going; the error text has no secrets
+                row["error"] = f"{type(e).__name__}: {e}"[:400]
             results[sci] = row
             dump("results.json", results)
-            print("done", sci, row["status"], row.get("records"), flush=True)
+            print("done", sci, json.dumps({k: v for k, v in row.items() if k != "link"}, default=str), flush=True)
         if pending:
             time.sleep(30)
     return 0

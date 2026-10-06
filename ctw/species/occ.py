@@ -140,7 +140,7 @@ class Cleaner:
         # 5 establishment means
         est = (df["establishmentmeans"].astype(str).str.upper() if "establishmentmeans" in df
                else pd.Series("", index=df.index))
-        bad = est.isin(MANAGED | INTRODUCED) if self.drop_introduced else est.isin(MANAGED)
+        bad = est.isin(MANAGED) | (est.str.startswith("INTRODUCED") | est.isin(INTRODUCED) if self.drop_introduced else False)
         df = df.assign(escaped=bad.to_numpy())
         if self.establishment == "drop":
             df = df[~df["escaped"].to_numpy()]

@@ -70,6 +70,8 @@ def test_establishment_modes():
                (47.5, 12.5, None, "IT", "2020-01-03", "a", "introduced"), (48.5, 13.5, None, "IT", "2020-01-04", "a", None)])
     out, _ = occ.clean(df, kind="tree")
     assert sorted(out["lat"]) == [45.5, 48.5]
+    v = recs([(45.5, 10.5, None, "IT", "2020-01-01", "a", "introducedAssistedColonisation"), (46.5, 11.5, None, "IT", "2020-01-02", "a", "nativeReintroduced")])
+    assert len(occ.clean(v, kind="tree")[0]) == 1                  # GBIF's camelCase vocabulary values
     out, _ = occ.clean(df, kind="tree", drop_introduced=False)
     assert len(out) == 3
     out, _ = occ.clean(df, kind="crop", establishment="flag")
