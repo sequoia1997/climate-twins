@@ -1,0 +1,13 @@
+# Spike C: reachability and metadata probe of validation data sources (no secrets). Runs on push of the trigger file, or by hand.
+name: Spike C probe
+on:
+  push:
+    paths: [".github/run/spike-c"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: python ctw/species/validate_probe.py
