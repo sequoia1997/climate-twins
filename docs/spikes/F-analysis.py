@@ -123,7 +123,7 @@ if __name__ == "__main__":
     e1 = load("E1")
     if e1 is not None:
         e1 = add(e1)
-        print("### E1 by number of records (median and quartiles over 6 species x 3 seeds)\n")
+        print("### E1 by number of records (median and quartiles over 7 species x 3 seeds)\n")
         print(table(e1, "n_req", ["n_rec", "cv_auc", "cv_tss", "cv_boyce"] + HEAD, ["records used", "CV AUC", "CV TSS", "CV Boyce"] + HN), "\n")
         s5 = e1[e1.n_req == 500]
         print("### E1 per species at 500 records (mean of 3 seeds)\n")
@@ -164,7 +164,7 @@ if __name__ == "__main__":
         if x is None:
             continue
         x = add(x)
-        print(f"### {n} (median and quartiles; 6 species x 3 seeds)\n")
+        print(f"### {n} (median and quartiles; 7 species x 3 seeds)\n")
         print(table(x, by, ["n_rec", "cv_auc", "cv_boyce"] + HEAD, ["records", "CV AUC", "CV Boyce"] + HN), "\n")
         print(f"### {n} per species, present Sorensen / 2100 Sorensen (mean of 3 seeds)\n")
         pt = x.groupby(["label", "species"])[["now_sorensen", P2 + "sorensen"]].mean().round(2)
