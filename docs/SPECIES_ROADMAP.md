@@ -326,3 +326,15 @@ Overall: **GO WITH CHANGES.** The method works on virtual species; the data rout
 
 ### Proposed next step: the pilot (Phases 1 to 3)
 Build the global Tier A grid in bands; the occurrence pipeline with native-range masks; the modelling engine with the gates above; hindcast on North American birds (Breeding Bird Survey) and trees (forest plots); about 25 pilot species including the seven spike species. Exit gate: skill thresholds met and hindcast reproduces observed shifts reasonably, or we stop before any interface work.
+
+---
+
+## 16. Owner decisions, 13 October 2026
+
+- **Goal confirmed:** a few hundred popular species with current and future distributions from data and modelling. Future maps are always labelled "projected climate suitability"; no page claims to predict where a species will be. Birds failed the real-change hindcast (direction at chance) while passing static transfer, so range-shift claims are not made; the result is recorded per species as a separate pass / fail / untested badge.
+- **Tiers:** A = present-day skill validated against an independent survey; B = spatial-block CV skill only; C = below the gate, not shown.
+- **Crops:** model where the crop is grown today (cultivated records), labelled "where the climate suits growing it", and kept separate from wild species. Wild native-range masking does not apply to crops.
+- **Licence filter:** stays CC0 and CC-BY only. Relaxing it to include CC-BY-NC is a legal question to settle first.
+- **Photos:** silhouettes by default on species pages; licence-filtered photos later.
+- **Map delivery:** custom compact binary format (CTS) on a Cloudflare R2 bucket, accepted.
+- **Open:** whether GBIF accepts one DOI for a multi-species batch download in a derived dataset (W2 to verify before scaling).
