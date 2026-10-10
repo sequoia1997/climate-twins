@@ -154,7 +154,45 @@ def climate_source(root: str = None):
     return src, src.spec
 
 
-def species_inputs(meta: dict, spec: GridSpec):
-    """(Occurrences, native mask or None, target-group density or None, DOIs) for one species from W2's products.
-    Filled in once W2 publishes its outputs (see docs/pilot/W3-engine.md, section 'Waiting on others')."""
-    raise NotImplementedError("W2 occurrence products are not published yet")
+def _load_grid(path):
+    """A boolean / float grid from .npy or .npz (first array) or .npz with key 'mask' / 'density'."""
+    if path.endswith(".npy"):
+        return np.load(path)
+    z = np.load(path)
+    for k in ("mask", "native", "density", "data"):
+        if k in z.files:
+            return z[k]
+    return z[z.files[0]]
+
+
+def species_inputs(meta: dict, spec: GridSpec, root: str = None):
+    """(Occurrences, native mask or None, target-group density or None, DOIs) for one species from W2's release assets in $W3_OCC:
+      w2-cells-<Genus_species>.parquet   one row per occupied cell: row, col, year_min, year_max, n_records, n_events, n_1970_1999, n_2000_2020, n_2021_plus
+      w2-report-<Genus_species>.json     cleaning report with the GBIF download `doi`
+      w2-native-<Genus_species>.(npy|npz)  native-range mask   [file name is a GUESS until W2 documents it; None when absent]
+      w2-tg-<group>.(npy|npz)            target-group record density grid [same caveat]
+    A missing native mask leaves the mandatory range check 'missing' (Tier 3) rather than silently skipping it."""
+    import glob
+    import json
+    import pandas as pd
+    from .grid import Occurrences
+    root = root or os.environ.get("W3_OCC", "work/occ")
+    tag = meta["scientific_name"].replace(" ", "_")
+    df = pd.read_parquet(os.path.join(root, f"w2-cells-{tag}.parquet"))
+    occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
+    native = density = None
+    for pat, which in ((f"w2-native-{tag}.*", "native"), (f"w2-tg-{meta.get('group')}.*", "density")):
+        f = sorted(glob.glob(os.path.join(root, pat)))
+        if f:
+            g = _load_grid(f[0])
+            if which == "native":
+                native = g.astype(bool)
+            else:
+                density = g.astype(np.float32)
+    dois = []
+    rp = os.path.join(root, f"w2-report-{tag}.json")
+    if os.path.exists(rp):
+        r = json.load(open(rp))
+        if r.get("doi"):
+            dois.append("https://doi.org/" + r["doi"])
+    return occ, native, density, dois
