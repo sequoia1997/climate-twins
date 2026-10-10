@@ -1,0 +1,26 @@
+scientific_name,group,gbif_taxon_key,given_key,match_type,status,rank,accepted_key,class_name,kingdom,class_key,phylum_key
+Turdus migratorius,bird,9510564,9510564,EXACT,ACCEPTED,SPECIES,9510564,Aves,Animalia,212,44
+Cardinalis cardinalis,bird,2490384,2490384,EXACT,ACCEPTED,SPECIES,2490384,Aves,Animalia,212,44
+Zenaida macroura,bird,2495347,2495347,EXACT,ACCEPTED,SPECIES,2495347,Aves,Animalia,212,44
+Cyanocitta cristata,bird,2482593,2482593,EXACT,ACCEPTED,SPECIES,2482593,Aves,Animalia,212,44
+Agelaius phoeniceus,bird,9409198,9409198,EXACT,ACCEPTED,SPECIES,9409198,Aves,Animalia,212,44
+Hirundo rustica,bird,9515886,,EXACT,ACCEPTED,SPECIES,9515886,Aves,Animalia,212,44
+Melospiza melodia,bird,2492196,,EXACT,ACCEPTED,SPECIES,2492196,Aves,Animalia,212,44
+Thryothorus ludovicianus,bird,2493801,,EXACT,ACCEPTED,SPECIES,2493801,Aves,Animalia,212,44
+Sialia sialis,bird,2490941,,EXACT,ACCEPTED,SPECIES,2490941,Aves,Animalia,212,44
+Spinus tristis,bird,5231640,,EXACT,ACCEPTED,SPECIES,5231640,Aves,Animalia,212,44
+Acer saccharum,tree,3189859,3189859,EXACT,ACCEPTED,SPECIES,3189859,Magnoliopsida,Plantae,220,7707728
+Acer rubrum,tree,3189883,3189883,EXACT,ACCEPTED,SPECIES,3189883,Magnoliopsida,Plantae,220,7707728
+Pinus strobus,tree,5284982,5284982,EXACT,ACCEPTED,SPECIES,5284982,Pinopsida,Plantae,194,7707728
+Populus tremuloides,tree,3040215,3040215,EXACT,ACCEPTED,SPECIES,3040215,Magnoliopsida,Plantae,220,7707728
+Quercus alba,tree,2879737,,EXACT,ACCEPTED,SPECIES,2879737,Magnoliopsida,Plantae,220,7707728
+Odocoileus virginianus,mammal,2440965,2440965,EXACT,ACCEPTED,SPECIES,2440965,Mammalia,Animalia,359,44
+Danaus plexippus,insect_arachnid,5133088,5133088,EXACT,ACCEPTED,SPECIES,5133088,Insecta,Animalia,216,54
+Ixodes scapularis,insect_arachnid,2182727,2182727,EXACT,ACCEPTED,SPECIES,2182727,Arachnida,Animalia,367,54
+Erithacus rubecula,bird,2492462,2492462,EXACT,ACCEPTED,SPECIES,2492462,Aves,Animalia,212,44
+Quercus robur,tree,2878688,2878688,EXACT,ACCEPTED,SPECIES,2878688,Magnoliopsida,Plantae,220,7707728
+Vitis vinifera,crop,5372392,5372392,EXACT,ACCEPTED,SPECIES,5372392,Magnoliopsida,Plantae,220,7707728
+Vulpes vulpes,mammal,5219243,5219243,EXACT,ACCEPTED,SPECIES,5219243,Mammalia,Animalia,359,44
+Dacelo novaeguineae,bird,2475648,2475648,EXACT,ACCEPTED,SPECIES,2475648,Aves,Animalia,212,44
+Adansonia digitata,tree,5406695,5406695,EXACT,ACCEPTED,SPECIES,5406695,Magnoliopsida,Plantae,220,7707728
+Danaus chrysippus,insect_arachnid,7642610,7642610,EXACT,ACCEPTED,SPECIES,7642610,Insecta,Animalia,216,54
