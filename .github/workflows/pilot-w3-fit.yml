@@ -147,7 +147,7 @@ jobs:
           for s in $(echo '${{ needs.plan.outputs.species }}' | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)))"); do
             if [ ! -f work/w3/$s/summary.json ]; then gh release download species-pilot-data -p "w3_${s}_summary.json" -O /tmp/s.json --clobber 2>/dev/null && mkdir -p work/w3/$s && cp /tmp/s.json work/w3/$s/summary.json || true; fi
           done
-          python -m ctw.species.run_pilot report --out work/w3 --md work/w3/REPORT.md
+          python -m ctw.species.run_pilot report --out work/w3 --md work/w3/REPORT.md --full
           cat work/w3/REPORT.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with: { name: w3-report, path: work/w3/REPORT.md }

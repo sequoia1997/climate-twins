@@ -134,9 +134,82 @@ def report(out: Path, key: str = "SSP2-4.5|2081-2100") -> str:
             _f(sk["cv_boyce"]), _f(gam), rc["status"], "" if sc.get("novel_share") is None else f"{100 * sc['novel_share']:.0f}",
             _f(s["area_now_km2"] / 1000, 0), "withheld" if sc.get("withheld") else _f(m.get("change_pct"), 1),
             "withheld" if sc.get("withheld") else _f(m.get("shift_km"), 0), why))
-    lines += ["", "Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 (floor 0.6 uncalibrated), novel climate 15%, range check omission <= 0.40 and "
-              "commission <= 0.30 (uncalibrated). Dispersal rule and gate limits are listed in each summary.json."]
+    lines += ["", "Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard confidence (Tier C below 0.5), novel climate 15%, native-range commission <= 0.30 "
+              "(uncalibrated; omission is reported, not gated, against a native mask), at least 80% of records inside the predicted range. Dispersal rule and gate limits are listed in each summary.json."]
     return "\n".join(lines) + "\n"
+
+
+BENCH = ROOT / "data" / "species" / "w4" / "distrib2024_summary.csv"
+BENCH_SCEN = {"SSP2-4.5": "SSP2-45", "SSP5-8.5": "SSP5-85"}
+MIGRATORY = {   # pilot species whose records mix seasons or locations (the cells file has years but no months); judgement, not data
+    "hirundo_rustica": "long-distance migrant: breeds in the north, winters in Africa, South America and southern Asia; the curated native list has no South America",
+    "turdus_migratorius": "partial migrant: northern breeders winter in the southern US and Mexico, so winter records extend the range south",
+    "agelaius_phoeniceus": "partial migrant, large winter flocks in the south",
+    "zenaida_macroura": "partial migrant, northern birds winter in the south",
+    "spinus_tristis": "nomadic partial migrant, winter range far south of the breeding range",
+    "sialia_sialis": "partial migrant",
+    "cyanocitta_cristata": "partial migrant (irregular)",
+    "melospiza_melodia": "partial migrant (northern populations)",
+    "erithacus_rubecula": "partial migrant: northern and eastern birds winter in the south and west of Europe",
+    "danaus_plexippus": "long-distance migrant: breeding in the north, overwintering in central Mexico and coastal California",
+    "danaus_chrysippus": "migratory in parts of its range",
+}
+
+
+def full_report(out: Path, bench: Path = BENCH) -> str:
+    """Longer report: per species tier and gates, every scenario and period, tree benchmark, caveats."""
+    rows = [json.loads(p.read_text()) for p in sorted(Path(out).glob("*/summary.json"))]
+    L = [report(out), "## Area now and future, shift, novelty (unlimited dispersal; limited and none for 2081-2100)", "",
+         "| species | tier | scenario | period | area now (1000 km2) | area future (1000 km2) | change % | shift km | bearing | novel % | models agree % | change % limited | change % none |",
+         "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for s in rows:
+        for k, sc in s["scenarios"].items():
+            u = sc["modes"].get("unlimited", {})
+            w = sc.get("withheld")
+            lim, non = sc["modes"].get("limited", {}), sc["modes"].get("none", {})
+            L.append("| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(
+                s["species"]["scientific_name"], s["tier"], sc["ssp"], sc["period"], _f(u.get("area_now", 0) / 1000, 0),
+                "withheld" if w else _f(u.get("area_fut", 0) / 1000, 0), "withheld" if w else _f(u.get("change_pct"), 1),
+                "withheld" if w else _f(u.get("shift_km"), 0), "withheld" if w else _f(u.get("bearing"), 0),
+                _f(100 * sc["novel_share"], 1), "" if w or u.get("agree_share") is None else _f(100 * u["agree_share"], 0),
+                "" if w else _f(lim.get("change_pct"), 1), "" if w else _f(non.get("change_pct"), 1)))
+    # tree benchmark
+    try:
+        import csv as _csv
+        B = list(_csv.DictReader(open(bench)))
+    except Exception:
+        B = []
+    trees = [s for s in rows if s["species"].get("group") == "tree"]
+    if trees and B:
+        L += ["", "## Pilot trees against the published USFS projection (RDS-2024-0020, W4 summary `distrib2024_summary.csv`)", "",
+              "Benchmark = centroid of the DISTRIB suitability map (probability threshold in column 2) for 1991-2020 against 2070-2100; ours = centroid of the climatically suitable "
+              "area, unlimited dispersal, 2081-2100. The two use different models, thresholds, domains (DISTRIB is the eastern US only) and climate sources, so agreement in direction and order of magnitude is the "
+              "most that can be asked; the centroid shift is reported with the area change.", "",
+              "| species | scenario | ours: shift km / bearing / area change % | DISTRIB thr 1: km / bearing / area change % | DISTRIB thr 5: km / bearing / area change % |", "|---|---|---|---|---|"]
+        for s in trees:
+            for ssp, bs in BENCH_SCEN.items():
+                sc = s["scenarios"].get(f"{ssp}|2081-2100", {})
+                u = sc.get("modes", {}).get("unlimited", {})
+                ours = "withheld" if sc.get("withheld") else f"{_f(u.get('shift_km'), 0)} / {_f(u.get('bearing'), 0)} / {_f(u.get('change_pct'), 1)}"
+                cells = []
+                for thr in ("1.0", "5.0"):
+                    r = next((r for r in B if r["species"] == s["species"]["scientific_name"] and r["scenario"] == bs and r["threshold"] == thr), None)
+                    cells.append("n/a" if r is None else f"{float(r['km']):.0f} / {float(r['bearing']):.0f} / {100 * float(r['area_change']):.1f}")
+                L.append(f"| {s['species']['scientific_name']} | {ssp} | {ours} | {cells[0]} | {cells[1]} |")
+    L += ["", "## Migratory birds and mixed seasons", "",
+          "The W2 cell table has years but no months, so breeding and non-breeding records are pooled. Pilot species where this matters (judgement, not measured):", ""]
+    for s in rows:
+        m = MIGRATORY.get(s["species"]["id"])
+        if m:
+            L.append(f"- {s['species']['scientific_name']}: {m}")
+    L += ["", "A breeding-season restriction needs W2 to keep `month` (eventDate) in the cell aggregation, to write per-season record counts (for example May to July in the northern "
+          "hemisphere, the reverse in the southern, none for tropical residents), to build target-group density grids for the same months, and the native mask for the breeding range only. "
+          "Climate predictors would then need to be breeding-season variables or stay annual (a documented choice). Not done in this run."]
+    L += ["", "## Crops", ""]
+    for s in rows:
+        if s["species"].get("kind") == "crop":
+            L.append(f"- {s['species']['scientific_name']}: {s['wording']}. Records used: {s['records']['thinned_cells']} cells from the cultivated-treatment download (W2 `keep_cultivated` true).")
+    return "\n".join(L) + "\n"
 
 
 # --------------------------------------------------------------------------- W4 evidence
@@ -209,6 +282,7 @@ def main(argv=None):
     c.add_argument("--out", default="work/w3")
     c.add_argument("--md", default=None)
     c.add_argument("--key", default="SSP2-4.5|2081-2100")
+    c.add_argument("--full", action="store_true")
     args = ap.parse_args(argv)
     if args.cmd == "list":
         if args.synthetic:
@@ -231,7 +305,7 @@ def main(argv=None):
         print(" ".join(inputs.tiles_for(rows[args.species]["native_continents_curated"])))
         return 0
     if args.cmd == "report":
-        md = report(Path(args.out), args.key)
+        md = full_report(Path(args.out)) if args.full else report(Path(args.out), args.key)
         if args.md:
             Path(args.md).write_text(md)
         print(md)
