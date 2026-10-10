@@ -161,7 +161,9 @@ requirements.txt. Job logs cannot be read from the sandbox (log downloads redire
   native-masked** (sugar maple has cells in Latvia, Japan) and no native-range or target-group density grids are published, so a real fit would be Tier 3 (range check missing) and unweighted. **Waiting on W2.**
 - Speed finding [V: local timing]: W1's `apply_deltas` costs about 140 microseconds per cell (200,000 cells: 27.6 s). A 3 million cell domain, 11 or more models and 4 scenario-periods would take
   hours. `W1Source` therefore evaluates the deltas on a lattice of representative cells (spacing 4 cells, plus any cell farther than 8 cells from one) and adds the change to each cell's own fine
-  baseline from the pred files (cost / 16; env `W3_DECIMATE=1` disables). The change fields come from a 0.25 degree source, so this should lose little, but the effect on the range was **not measured [U]**.
+  baseline from the pred files (cost / 16; env `W3_DECIMATE=1` disables). Decimation check on real W1 data [V: local run, tile r1c1, 120 x 8640 band, 46,436 land cells, climate model MIROC6, SSP5-8.5 2081-2100]: decimated (spacing 4) against every-cell evaluation
+differ by a mean absolute 0.014 C (99th percentile 0.11 C) for bio1, 0.018 C (0.12) for bio6, 1.9 mm (17.5) for bio12 and 3.7 mm (28) for cwd, i.e. 0.3 to 0.6% of the spread of the field, and the band
+takes 0.64 s instead of 15.7 s (25 times faster). The effect on a fitted range was not measured separately; an error of 0.02 C is far below the threshold uncertainty.
 
 ## 9. Waiting on others
 

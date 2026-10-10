@@ -206,14 +206,15 @@ def climate_source(root: str = None):
     return src, src.spec
 
 
-def _load_grid(path):
-    """A boolean / float grid from .npy or .npz (first array) or .npz with key 'mask' / 'density'."""
+def _load_grid(path, key=None):
+    """A grid from .npy or .npz. Keys tried: `key`, mask / native / density / data / grid (a 3-layer grid uses layer 0 = all years)."""
     if path.endswith(".npy"):
         return np.load(path)
     z = np.load(path)
-    for k in ("mask", "native", "density", "data"):
+    for k in ((key,) if key else ()) + ("mask", "native", "density", "data", "grid", "all"):
         if k in z.files:
-            return z[k]
+            g = z[k]
+            return g[0] if g.ndim == 3 else g
     return z[z.files[0]]
 
 
@@ -230,17 +231,34 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None):
     from .grid import Occurrences
     root = root or os.environ.get("W3_OCC", "work/occ")
     tag = meta["scientific_name"].replace(" ", "_")
-    df = pd.read_parquet(os.path.join(root, f"w2-cells-{tag}.parquet"))
+    one = os.path.join(root, f"w2-cells-{tag}.parquet")
+    allp = os.path.join(root, "occ_cells_pilot_v1.parquet")           # W2's final product (all species, native cells only)
+    if os.path.exists(allp):
+        df = pd.read_parquet(allp)
+        df = df[df["species"] == meta["scientific_name"]]
+    else:
+        df = pd.read_parquet(one)
     occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
     native = density = None
-    for pat, which in ((f"w2-native-{tag}.*", "native"), (f"w2-tg-{meta.get('group')}.*", "density")):
+    nm = os.path.join(root, "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
+    if os.path.exists(nm):
+        z = np.load(nm)
+        if f"{tag}__final" in z.files:
+            native = np.unpackbits(z[f"{tag}__final"], axis=1)[:, :spec.W].astype(bool)
+    for pat in (f"w2-native-{tag}.*",):
         f = sorted(glob.glob(os.path.join(root, pat)))
-        if f:
-            g = _load_grid(f[0])
-            if which == "native":
-                native = g.astype(bool)
-            else:
-                density = g.astype(np.float32)
+        if f and native is None:
+            native = _load_grid(f[0]).astype(bool)
+    tg = {"tree": "plant", "crop": "plant"}.get(meta.get("group"), meta.get("group"))
+    if len(df) and "tg_group" in df.columns:
+        tg = df["tg_group"].iloc[0]
+    for pat in (f"tg_density_{tg}_v1.npz", f"w2-tg-{tg}.npz", f"tg_density_{meta.get('group')}_v1.npz", f"tg_density_{meta.get('tg_group', '')}_v1.npz", f"w2-tg-{meta.get('group')}.npz"):
+        f = os.path.join(root, pat)
+        if os.path.exists(f):
+            g = _load_grid(f, "all").astype(np.float32)
+            if g.sum() > 0:
+                density = g
+                break
     dois = []
     rp = os.path.join(root, f"w2-report-{tag}.json")
     if os.path.exists(rp):
