@@ -1,0 +1,36 @@
+# W4 pilot: full BBS hindcast (fit the W3 pipeline on 1966-1985 climate and BBS routes, score 2005-2024), report to docs/pilot/W4-hindcast-report-bbs.md.
+# Needs the W1 hindcast tiles (hind_1966-1985, hind_2005-2024) and base tiles of the North American tiles on release species-pilot-data and the W4 BBS files.
+name: Pilot W4 hindcast
+on:
+  push:
+    paths: [".github/run/pilot-w4-hindcast"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  hindcast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    env: { PYTHONUNBUFFERED: "1", GH_TOKEN: "${{ github.token }}" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
+      - name: Download inputs
+        run: |
+          mkdir -p work/clim work/bbs
+          args=()
+          for t in r0c0 r0c1 r1c0 r1c1; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "pred_hind_1966-1985_${t}.npz" -p "pred_hind_2005-2024_${t}.npz"); done
+          gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
+          gh release download species-pilot-data -D work/bbs -p "bbs_routes_fit.csv" -p "bbs_route_cells.csv" -p "bbs_presence_long.csv.gz" --clobber
+          ls -la work/clim work/bbs
+      - run: python -u -m ctw.species.w4_hindcast_run --clim work/clim --bbs work/bbs --out w4-out
+      - name: Upload and commit the report
+        run: |
+          gh release upload species-pilot-data w4-out/bbs_hindcast_results.json w4-out/bbs_hindcast_report.md --clobber
+          cp w4-out/bbs_hindcast_report.md docs/pilot/W4-hindcast-report-bbs.md
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add docs/pilot/W4-hindcast-report-bbs.md
+          git commit -m "W4: first BBS hindcast report (Actions)" || exit 0
+          for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
