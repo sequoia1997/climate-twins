@@ -41,14 +41,17 @@ def test_hindcast_bbs_end_to_end():
     pres = presence(src, routes)
     assert pres.p1.sum() > 60
     q = routes.sample(frac=0.7, random_state=1)
-    results, g, v, cs, fits = HR.hindcast_bbs({"virtual": 1}, routes, q, pres, SPEC, src, cfg=PL.FitConfig(n_jobs=1, check_model=False, cv_folds=3), n_boot=40,
-                                              log=lambda *a: None)
-    r = results["virtual"]
-    assert r["auc2"] > 0.8                                   # the climate niche is recoverable and transfers to window 2
-    assert g["status"] == "insufficient data"               # one species is never a conclusive group
-    assert not v["virtual"]["tier1"]
-    md = H.report("bbs", "synthetic", results, g, v)
-    assert "INSUFFICIENT DATA" in md
-    # the scores were produced by a fit that never saw window 2: scoring window 2 with window 1 climate gives different scores
+    out, fits = HR.hindcast_bbs({"virtual": 1}, routes, q, pres, SPEC, src, cfg=PL.FitConfig(n_jobs=1, check_model=False, cv_folds=3), n_boot=40,
+                                log=lambda *a: None)
+    assert set(out) == {"blocked", "fit_cells"}
+    for mode, (results, g, v, cs) in out.items():
+        r = results["virtual"]
+        assert r["auc2"] > 0.8, mode                         # the climate niche is recoverable and transfers to window 2
+        assert g["status"] == "insufficient data"           # one species is never a conclusive group
+        assert not v["virtual"]["tier1"]
+        assert "INSUFFICIENT DATA" in H.report("bbs", "synthetic", results, g, v)
+    # the blocked variant scores every comparable cell with a model that did not see it; its CV skill is presence-absence based
+    cvb = out["blocked"][0]["virtual"]["cv"]
+    assert cvb["source"].startswith("presence-absence") and cvb["auc"] > 0.8
     sc = HR.score_cells(fits["virtual"], src, q.row.values, q.col.values)
     assert np.abs(sc.score2 - sc.score1).mean() > 0

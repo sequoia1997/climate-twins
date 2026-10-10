@@ -69,43 +69,68 @@ def cv_of(fit) -> dict:
     return dict(tss=m.get("tss", np.nan), auc=m.get("auc", np.nan), boyce=m.get("boyce", np.nan))
 
 
-def pa_block_cv(fit, spec, src, routes_fit: pd.DataFrame, pres_cells: pd.DataFrame, w1=W1, k=5, block_km=400.0, seed=0) -> dict:
-    """Presence-absence spatial-block CV in window 1 for BBS: every window-1 route cell is a presence (species detected) or a true absence
-    (route surveyed, species not detected). Same predictors and model class as the production fit (LightGBM), blocks of block_km, threshold =
-    5th percentile of out-of-fold presence scores (as production). This is the skill gate for BBS: unlike the pipeline's presence-versus-
-    background CV it measures discrimination against real absences, which is what a widespread species needs to be judged on."""
+def blocked_scores(spec, src, routes_fit: pd.DataFrame, routes_q: pd.DataFrame, pres_cells: pd.DataFrame, pred, w1=W1, w2=W2, k=5, block_km=400.0, seed=0):
+    """Spatially blocked cross-fitted hindcast scores (the strict variant). Training cells are the window-1 route cells with a true presence (species
+    detected) or true absence (route surveyed, not detected). Cells are split into spatial blocks of block_km; for each fold a LightGBM model of the
+    production class (`sdm.GBM`, the pipeline's predictors `pred`) is fitted on window-1 climate and window-1 labels OUTSIDE the block and scores the
+    comparable (evaluation) cells INSIDE the block under window-1 and window-2 climate. Every evaluation cell is therefore scored by a model that never
+    saw that place or window 2: this removes the memorisation of local climate that makes the fit-cell variant look better than it is. The presence
+    threshold is the 5th percentile of the out-of-fold presence scores (as production). Returns (scores DataFrame row, col, score1, score2; threshold;
+    cv dict with presence-absence AUC, TSS and Boyce from the same out-of-fold scores)."""
     from . import sdm
-    cells = routes_fit[["row", "col"]].drop_duplicates()
-    X = src.baseline_points(cells.row.values, cells.col.values, fit.pred, window=w1).astype(float)
+    tr = routes_fit[["row", "col"]].drop_duplicates().reset_index(drop=True)
+    X = src.baseline_points(tr.row.values, tr.col.values, pred, window=w1).astype(float)
     ok = np.isfinite(X).all(1)
-    cells, X = cells[ok], X[ok]
+    tr, X = tr[ok].reset_index(drop=True), X[ok]
     key = set(zip(pres_cells.row, pres_cells.col))
-    y = np.array([(r, c) in key for r, c in zip(cells.row, cells.col)], int)
+    y = np.array([(r, c) in key for r, c in zip(tr.row, tr.col)], int)
+    ev = routes_q[["row", "col"]].drop_duplicates().reset_index(drop=True)
+    X1 = src.baseline_points(ev.row.values, ev.col.values, pred, window=w1).astype(float)
+    X2 = src.baseline_points(ev.row.values, ev.col.values, pred, window=w2).astype(float)
+    oke = np.isfinite(X1).all(1) & np.isfinite(X2).all(1)
+    ev, X1, X2 = ev[oke].reset_index(drop=True), X1[oke], X2[oke]
+    nan = dict(tss=np.nan, auc=np.nan)
     if y.sum() < 20 or (y == 0).sum() < 20:
-        return dict(tss=np.nan, auc=np.nan)
-    km = spec.km_xy(cells.row.values, cells.col.values)
-    folds = sdm.block_folds(km, block_km, k, y.astype(float), seed)
-    oof = np.full(len(y), np.nan)
+        return pd.DataFrame(columns=["row", "col", "score1", "score2"]), np.nan, nan
+    allrc = pd.concat([tr[["row", "col"]], ev[["row", "col"]]], ignore_index=True)
+    km = spec.km_xy(allrc.row.values, allrc.col.values)
+    wts = np.r_[y.astype(float), np.zeros(len(ev))]
+    folds = sdm.block_folds(km, block_km, k, wts, seed)
+    ftr, fev = folds[:len(tr)], folds[len(tr):]
+    oof = np.full(len(tr), np.nan)
+    s1, s2 = np.full(len(ev), np.nan), np.full(len(ev), np.nan)
     for f in range(k):
-        te = folds == f
-        if te.sum() == 0 or y[~te].sum() < 10:
+        te, ee = ftr == f, fev == f
+        if y[~te].sum() < 10 or (y[~te] == 0).sum() < 10:
             continue
-        oof[te] = sdm.GBM(seed=seed, n_jobs=1).fit(X[~te], y[~te]).raw(X[te])
-    m = np.isfinite(oof)
-    pos, neg = oof[m & (y == 1)], oof[m & (y == 0)]
+        m = sdm.GBM(seed=seed, n_jobs=1).fit(X[~te], y[~te])
+        if te.any():
+            oof[te] = m.raw(X[te])
+        if ee.any():
+            s1[ee], s2[ee] = m.raw(X1[ee]), m.raw(X2[ee])
+    mk = np.isfinite(oof)
+    pos, neg = oof[mk & (y == 1)], oof[mk & (y == 0)]
     if len(pos) < 10 or len(neg) < 10:
-        return dict(tss=np.nan, auc=np.nan)
+        return pd.DataFrame(columns=["row", "col", "score1", "score2"]), np.nan, nan
     thr = sdm.threshold(pos, neg, "p05")
-    return dict(auc=sdm.auc(pos, neg), tss=sdm.tss(pos, neg, thr), boyce=sdm.boyce(pos, oof[m]), n_pres=int(len(pos)), n_abs=int(len(neg)), source="presence-absence block CV")
+    cv = dict(auc=sdm.auc(pos, neg), tss=sdm.tss(pos, neg, thr), boyce=sdm.boyce(pos, oof[mk]), n_pres=int(len(pos)), n_abs=int(len(neg)), source="presence-absence spatial-block CV")
+    good = np.isfinite(s1) & np.isfinite(s2)
+    return pd.DataFrame(dict(row=ev.row.values[good], col=ev.col.values[good], score1=s1[good], score2=s2[good])), thr, cv
 
 
 def hindcast_bbs(species: dict, routes_fit: pd.DataFrame, routes_q: pd.DataFrame, pres: pd.DataFrame, spec, src, *, cfg: PL.FitConfig | None = None,
-                 block: int = 1, n_boot: int = 300, w1=W1, w2=W2, test="bbs", th=H.TH, native=None, log=print):
+                 block: int = 1, n_boot: int = 300, w1=W1, w2=W2, test="bbs", th=H.TH, native=None, modes=("blocked", "fit_cells"), log=print):
     """species: {display name: AOU}. routes_fit: routes with enough window-1 years (columns country, state, route, lat, lon, row, col) used for
     the fit; routes_q: routes qualifying in both windows (the comparable cells); pres: bbs.route_presence output over routes_fit and routes_q.
-    Returns (results, group verdict, species verdicts, cellsets, fits)."""
+    Two variants per species, both fitted on window 1 only:
+      fit_cells  the production fit (pipeline.fit_species on BBS window-1 presences, target-group density = route density), scored at the comparable
+                 cells, most of which it saw in window 1 (optimistic for static skill);
+      blocked    spatially blocked cross-fitting (`blocked_scores`): every comparable cell is scored by a model that never saw it (strict).
+    Returns {mode: (results, group verdict, species verdicts, cellsets)} and the fits."""
     density = route_density(spec, routes_fit.row.values, routes_fit.col.values)
-    cellsets, cv, fits, n_el = {}, {}, {}, 0
+    sets = {m: {} for m in modes}
+    cvs = {m: {} for m in modes}
+    fits, n_el = {}, 0
     for name, aou in species.items():
         p = pres[(pres.AOU == aou) & pres.p1].merge(routes_fit[["country", "state", "route", "row", "col"]], on=["country", "state", "route"])
         cells = p[["row", "col"]].drop_duplicates()
@@ -113,13 +138,21 @@ def hindcast_bbs(species: dict, routes_fit: pd.DataFrame, routes_q: pd.DataFrame
             log(f"{name}: only {len(cells)} window-1 presence cells, skipped")
             continue
         fit = fit_window1(name, spec, src, cells.row.values, cells.col.values, density=density, native=native, cfg=cfg, w1=w1)
-        sc = score_cells(fit, src, routes_q.row.values, routes_q.col.values, w1, w2)
-        cs = bbs.species_cellset(routes_q, pres, aou, block=block, scores=sc, thr=fit.thr)
-        cv_pa = pa_block_cv(fit, spec, src, routes_fit, cells, w1)
-        cellsets[name], cv[name], fits[name] = cs, cv_pa, fit
-        cv[name]["w3_background_cv"] = cv_of(fit)
+        fits[name] = fit
         q = pres[(pres.AOU == aou)].merge(routes_q[["country", "state", "route"]], on=["country", "state", "route"])
         n_el += int(H.eligible(int(q.p1.sum()), int(q.p2.sum()), test, th))
-        log(f"{name}: fit on {len(cells)} cells, PA cv {cv_pa}, W3 cv {cv[name]['w3_background_cv']}, thr {fit.thr:.3f}")
-    results, g, verdicts = H.run_test(cellsets, test, cv=cv, th=th, n_eligible=n_el, n_boot=n_boot)
-    return results, g, verdicts, cellsets, fits
+        w3cv = cv_of(fit)
+        if "fit_cells" in modes:
+            sc = score_cells(fit, src, routes_q.row.values, routes_q.col.values, w1, w2)
+            sets["fit_cells"][name] = bbs.species_cellset(routes_q, pres, aou, block=block, scores=sc, thr=fit.thr)
+            cvs["fit_cells"][name] = dict(w3cv, w3_background_cv=w3cv, source="W3 presence-vs-background spatial CV")
+        if "blocked" in modes:
+            sc, thr, cv_pa = blocked_scores(spec, src, routes_fit, routes_q, cells, fit.pred, w1, w2)
+            if len(sc):
+                sets["blocked"][name] = bbs.species_cellset(routes_q, pres, aou, block=block, scores=sc, thr=thr)
+                cvs["blocked"][name] = dict(cv_pa, w3_background_cv=w3cv)
+        log(f"{name}: fit on {len(cells)} cells, W3 cv {w3cv}, blocked PA cv {cvs['blocked'].get(name, {}).get('auc')}/{cvs['blocked'].get(name, {}).get('tss')}, thr {fit.thr:.3f}")
+    out = {}
+    for m in modes:
+        out[m] = H.run_test(sets[m], test, cv=cvs[m], th=th, n_eligible=n_el, n_boot=n_boot) + (sets[m],)
+    return out, fits
