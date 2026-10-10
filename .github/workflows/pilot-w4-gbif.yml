@@ -1,0 +1,34 @@
+name: Pilot W4 GBIF split
+on:
+  push:
+    paths: [".github/run/pilot-w4-gbif"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  gbif:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    env: { PYTHONUNBUFFERED: "1", GH_TOKEN: "${{ github.token }}" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
+      - name: Download inputs
+        run: |
+          mkdir -p work/clim work/w2
+          args=()
+          for t in r0c1 r0c2 r1c1 r1c2; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "pred_hind_1966-1985_${t}.npz" -p "pred_hind_2005-2024_${t}.npz"); done
+          gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
+          gh release download species-pilot-data -D work/w2 -p "w2-cells-Erithacus_rubecula.parquet" -p "w2-cells-Quercus_robur.parquet" -p "w2-tg-bird.npz" -p "w2-tg-plant.npz" --clobber || echo "some W2 inputs missing"
+          ls -la work/clim work/w2
+      - run: python -u -m ctw.species.w4_gbif_run --w2 work/w2 --clim work/clim --out w4-out
+      - name: Upload and commit
+        run: |
+          gh release upload species-pilot-data w4-out/gbif_split_report.md --clobber
+          cp w4-out/gbif_split_report.md docs/pilot/W4-hindcast-report-gbif.md
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add docs/pilot/W4-hindcast-report-gbif.md
+          git commit -m "W4: GBIF split report (Actions)" || exit 0
+          for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
