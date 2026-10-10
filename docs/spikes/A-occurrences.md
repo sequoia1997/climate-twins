@@ -83,3 +83,7 @@ Counts from the public occurrence-search facets, with the same coordinate / no-i
 - Reading: for the two birds, the bulk of data is CC-BY (eBird, iNaturalist); for monarch, tick and sugar maple, roughly half is lost, which matters most for the species with the fewest records (maple 3.7k final cells, tick 1.3k).
 - Licensing/legal: whether a non-commercial licence blocks use as an input to published derived outputs on a free, educational site is a legal question, left to the owner (roadmap section 14) [U].
 
+## 5. GBIF open data on AWS S3 (tested from this sandbox, 10 Oct 2026)
+- Bucket `gbif-open-data-us-east-1` is reachable anonymously over HTTPS from this sandbox (listing and range requests return 200/206) [V: curl, 10 Oct 2026]. Monthly snapshots exist from 2021-04-13 to 2026-10-01 [V: S3 listing]. The latest, `occurrence/2026-10-01/`, is 9,927 objects, 288 GB of Parquet (`occurrence.parquet/000001` ... `010448`) plus a `citation.txt` containing a GBIF download citation with DOI 10.15468/dl.tup2g6 [V: S3 listing and file].
+- DuckDB 1.5.6 query: IN PROGRESS (result below when finished).
+
