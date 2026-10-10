@@ -337,7 +337,7 @@ def diag():
     """Why did the target-group SQL return 0 rows? One taxon-only query that groups by the columns the real filter tests and prints the
     values GBIF's SQL engine uses for them (no credentials printed)."""
     sql = ('SELECT license, hasCoordinate, hasGeospatialIssues, occurrenceStatus, basisOfRecord, '
-           'FLOOR((90 - decimalLatitude) * 24) AS r, IF("year" <= 1999, 1, 2) AS p, COUNT(*) AS n FROM occurrence WHERE species = 'Ixodes scapularis' '
+           'FLOOR((90 - decimalLatitude) * 24) AS r, IF("year" <= 1999, 1, 2) AS p, COUNT(*) AS n FROM occurrence WHERE species = \'Ixodes scapularis\' '
            'GROUP BY license, hasCoordinate, hasGeospatialIssues, occurrenceStatus, basisOfRecord, FLOOR((90 - decimalLatitude) * 24), IF("year" <= 1999, 1, 2)')
     t0 = time.time()
     while True:
