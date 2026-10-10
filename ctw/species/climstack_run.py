@@ -141,12 +141,13 @@ def build_window(rows, cols, tile, out, procs=4, years=None, windows=None, uploa
             if done % 10 == 0 or done == len(jobs):
                 log(f"{tile}: {done}/{len(jobs)} var-years, {time.time() - t0:.0f}s (last {dtm:.0f}s)")
             del x, ok
-    clim = {}
-    for (w, v), s in sums.items():
-        c = cnts[(w, v)]
+    clim, ymax = {}, {}
+    for key in list(sums):                                # free the accumulators as we go: peak memory stays near 3 GB
+        s, c = sums.pop(key), cnts.pop(key)
         with np.errstate(invalid="ignore", divide="ignore"):
-            clim[(w, v)] = np.where(c > 0, s / np.maximum(c, 1), np.nan).astype("float32")
-        s[...] = 0
+            clim[key] = np.where(c > 0, s / np.maximum(c, 1), np.nan).astype("float32")
+        ymax[key] = int(c.max())
+        del s, c
     nyear = {w: b - a + 1 for w, (a, b) in windows.items()}
     base = next(w for w in windows if w.startswith("base"))
     land = np.ones(shape[1:], bool)
@@ -172,7 +173,7 @@ def build_window(rows, cols, tile, out, procs=4, years=None, windows=None, uploa
         p = os.path.join(out, f"pred_{prod}_{tile}.npz"); S.save_pred(p, tile, land, P, prod); files.append(p)
         stats["products"][prod] = {"seconds": round(time.time() - t1), "nan_cells": int((~np.isfinite(P)).any(0).sum()),
                                    "mean": {nm: float(np.nanmean(P[k])) for k, nm in enumerate(S.NAMES)},
-                                   "years_per_var": {v: int(cnts[(w, v)].max()) for v in S.PRED_VARS}, "expected_years": nyear[w]}
+                                   "years_per_var": {v: ymax[(w, v)] for v in S.PRED_VARS}, "expected_years": nyear[w]}
         log(f"{tile}: {prod} predicted in {time.time() - t1:.0f}s")
     if not n_land:                                   # an all-ocean tile still gets (tiny) files so that a rerun skips it
         for prod in list(windows):
