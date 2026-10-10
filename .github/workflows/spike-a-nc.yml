@@ -1,0 +1,33 @@
+# Spike A follow-up: cell-level cost of the CC0 + CC-BY licence filter (one extra download per species, includes CC-BY-NC), and a look at
+# GBIF's derived-dataset API. Runs when .github/run/spike-a-nc changes, or by hand. Secrets used only in the step that calls GBIF; never printed.
+name: spike-a-nc
+on:
+  push:
+    paths: [".github/run/spike-a-nc"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  PYTHONUNBUFFERED: "1"
+  CTW_WORK: ${{ github.workspace }}/work
+  SPIKE_OUT: ${{ github.workspace }}/work/spike-a
+jobs:
+  nc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pyarrow
+      - name: Request, wait, clean twice, compare
+        env:
+          GBIF_USER: ${{ secrets.GBIF_USER }}
+          GBIF_PWD: ${{ secrets.GBIF_PWD }}
+          GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+        run: python -m ctw.species.spike_a_nc
+      - run: cat work/spike-a/nc_results.json
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: spike-a-nc, path: work/spike-a }
