@@ -83,6 +83,21 @@ Counts from the public occurrence-search facets, with the same coordinate / no-i
 - Reading: for the two birds, the bulk of data is CC-BY (eBird, iNaturalist); for monarch, tick and sugar maple, roughly half is lost, which matters most for the species with the fewest records (maple 3.7k final cells, tick 1.3k).
 - Licensing/legal: whether a non-commercial licence blocks use as an input to published derived outputs on a free, educational site is a legal question, left to the owner (roadmap section 14) [U].
 
+### 4b. Licence loss measured after cleaning and thinning (the number that matters for modelling)
+Follow-up run 38055782451 (workflow spike-a-nc, commit b3f5034, 10 Oct 2026): one extra download per species that also includes CC-BY-NC, cleaned twice with the same pipeline, once with all licences and once restricted to CC0 + CC-BY. Three species were chosen: the two with the largest record-level loss and the sugar maple [V: run 38055782451; data in `docs/spikes/data/spike-a/nc-run-results.json`].
+
+| Species | Download DOI (with NC) | Records, all licences | Cells (2.5 arc-min), all licences | Cells, CC0 + CC-BY | Cells that exist only because of CC-BY-NC | Cell loss |
+|---|---|---|---|---|---|---|
+| Sugar maple | 10.15468/dl.26u9mg | 54,907 | 11,611 | 3,749 | 7,862 | **67.7%** |
+| Monarch | 10.15468/dl.bwmrn5 | 763,891 | 56,132 | 15,201 | 40,931 | **72.9%** |
+| Blacklegged tick | 10.15468/dl.9y2662 | 16,837 | 5,669 | 1,276 | 4,393 | **77.5%** |
+
+- Record-level loss was 46% / 47% / 52%; cell-level loss is **68% to 78%**: the NC records are not redundant repeats, they cover most of the occupied cells. Dropping CC-BY-NC cuts the number of occupied cells to roughly a quarter to a third [V].
+- Where the lost cells are: sugar maple 7,812 of 7,862 in North America (44 in Europe); monarch 37,149 NA, 2,254 Oceania, 846 Europe, 637 South America; tick 4,392 of 4,393 in NA [V: continents_only_nc]. The continent mix is therefore about the same; the licence loss thins the coverage, not the geography [V].
+- The CC0 + CC-BY side reproduced the earlier run (maple 3,749 cells vs 3,739; monarch 15,201 vs 15,157; tick 1,276 vs 1,275): the slight differences are new records since 6 Oct [V, compare section 3].
+- What is NOT known: whether a model fitted to the quarter of cells is worse. All three still exceed the 50 to 100 cell minimum, so the species would not be excluded; the effect on skill needs a test (fit both, compare held-out AUC/TSS) once the SDM engine exists [U].
+- Not measured for the robins, oak and grape; by the record-level loss (1% to 26%) they are far less affected [V for record level; cell level U].
+
 ## 5. GBIF open data on AWS S3 (tested from this sandbox, 10 Oct 2026)
 - The bucket `gbif-open-data-us-east-1` is reachable anonymously from this sandbox: S3 listing, ranged GET and DuckDB 1.5.6 (`httpfs`) all work [V: curl and DuckDB runs in this sandbox, 10 Oct 2026]. Practical trap: this sandbox injects dummy AWS credentials into the environment, which make DuckDB fail with HTTP 403 "InvalidAccessKeyId"; unset them or create an empty S3 secret (`CREATE SECRET (TYPE s3, PROVIDER config, KEY_ID '', SECRET '', REGION 'us-east-1')`) [V].
 - Monthly snapshots from 2021-04-13 to 2026-10-01 [V: listing]. The latest, `occurrence/2026-10-01/`, is 9,927 objects and 288 GB of Parquet (`occurrence.parquet/000001` to `010448`) plus `citation.txt` containing a GBIF download citation with DOI 10.15468/dl.tup2g6, i.e. one DOI for the whole snapshot [V: listing, file content].
