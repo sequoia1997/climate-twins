@@ -118,7 +118,22 @@ Verified (probe run 38072865229, ranged reads of the zip central directories and
   Value ranges, e.g. sugar maple current 0 to 52, SSP2-45 0 to 30, SSP5-85 0 to 28 (relative abundance falls under warming in the model). **[V 38072865229]**
 - Both are US government data, "can be used without additional permissions or fees", citation required (Peters et al. 2019; Prasad et al. 2024). **[V 38072387399]**
 - `ctw/species/w4_distrib_run.py` (workflow `pilot-w4-distrib.yml`) summarises RDS-2024-0020 for the five trees: centroid, leading and trailing edge, area change and shift between 1991-2020 and 2070-2100 for both scenarios at
-  two presence cutoffs (relative abundance 1 and 5). Output `data/species/w4/distrib2024_summary.csv`. **[run pending]**
+  two presence cutoffs (relative abundance 1 and 5). Output `data/species/w4/distrib2024_summary.csv`. **[V run 38073318194]** Published model, 1991-2020 to 2070-2100, cells with relative abundance of at least 5 (20 km equal-area cells; cutoff 1 gives similar shifts, see the csv):
+
+| species | scenario | cells now / future | centroid shift km | bearing | leading edge km | trailing edge km | area change |
+|---|---|---|---|---|---|---|---|
+| Acer saccharum | SSP2-45 | 4154 / 4749 | 575 | 360 | 622 | 447 | +14% |
+| Acer saccharum | SSP5-85 | 4154 / 6454 | 894 | 358 | 1048 | 585 | +55% |
+| Acer rubrum | SSP2-45 | 6106 / 6127 | 458 | 28 | 403 | 104 | +0% |
+| Acer rubrum | SSP5-85 | 6106 / 6917 | 753 | 16 | 802 | 85 | +13% |
+| Pinus strobus | SSP2-45 | 2389 / 3093 | 493 | 30 | 395 | 612 | +29% |
+| Pinus strobus | SSP5-85 | 2389 / 3329 | 812 | 19 | 759 | 857 | +39% |
+| Populus tremuloides | SSP2-45 | 9711 / 15448 | 630 | 335 | 559 | 382 | +59% |
+| Populus tremuloides | SSP5-85 | 9711 / 17900 | 863 | 342 | 739 | 574 | +84% |
+| Quercus alba | SSP2-45 | 3996 / 3657 | 302 | 62 | 241 | 13 | -8% |
+| Quercus alba | SSP5-85 | 3996 / 3782 | 521 | 36 | 546 | 36 | -5% |
+
+  These are the benchmark numbers our W3 projections must be near or explain (sugar maple and quaking aspen move 500 to 900 km north-north-west to north by 2100; white oak moves north-east and loses area at the 5 cutoff).
 - Comparison plan: for each species compare that summary with our W3 projection for the same period and scenario (centroid shift in km and bearing, area change, edges) and explain or flag differences. Not a hindcast, and the two
   models are not independent in what they were fitted on (both use FIA). **[waiting for W3 projections]**
 
