@@ -321,6 +321,36 @@ def acquire(hours: float):
     return 0 if not failed else 1
 
 
+def diag():
+    """Why did the target-group SQL return 0 rows? One taxon-only query that groups by the columns the real filter tests and prints the
+    values GBIF's SQL engine uses for them (no credentials printed)."""
+    sql = ('SELECT license, hasCoordinate, hasGeospatialIssues, occurrenceStatus, basisOfRecord, '
+           'FLOOR((90 - decimalLatitude) * 24) AS r, IF("year" <= 1999, 1, 2) AS p, COUNT(*) AS n FROM occurrence WHERE speciesKey = 2182727 '
+           'GROUP BY license, hasCoordinate, hasGeospatialIssues, occurrenceStatus, basisOfRecord, FLOOR((90 - decimalLatitude) * 24), IF("year" <= 1999, 1, 2)')
+    t0 = time.time()
+    while True:
+        try:
+            key = request_sql(sql); break
+        except RuntimeError as e:
+            log("request:", str(e)[:300])
+            if "420" not in str(e) or time.time() - t0 > 3600:
+                return 1
+            time.sleep(60)
+    log("diag download", key)
+    s = gbif.wait(key, every=30, limit_s=90 * 60)
+    log("status", s.get("status"), s.get("totalRecords"))
+    if s.get("status") == "SUCCEEDED":
+        import io, zipfile
+        z = zipfile.ZipFile(io.BytesIO(requests.get(s["downloadLink"], timeout=300).content))
+        df = pd.read_csv(z.open(z.namelist()[0]), sep="\t")
+        for c in ["license", "hasCoordinate", "hasGeospatialIssues", "occurrenceStatus", "basisOfRecord"]:
+            if c in df:
+                log(c, df.groupby(c)["n"].sum().to_dict())
+        log("columns", list(df.columns), "rows", len(df))
+        log(df.head(8).to_string())
+    return 0
+
+
 # --------------------------------------------------------------------------- assemble
 def sha256(p: Path) -> str:
     h = hashlib.sha256()
@@ -460,4 +490,4 @@ if __name__ == "__main__":
     if cmd == "acquire":
         hrs = float(sys.argv[sys.argv.index("--hours") + 1]) if "--hours" in sys.argv else 5.5
         sys.exit(acquire(hrs))
-    sys.exit({"assemble": assemble}[cmd]())
+    sys.exit({"assemble": assemble, "diag": diag}[cmd]())

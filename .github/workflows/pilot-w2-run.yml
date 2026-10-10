@@ -13,15 +13,13 @@ on:
         default: "acquire"
 permissions:
   contents: write
-concurrency:
-  group: pilot-w2-run
-  cancel-in-progress: false
 env:
   PYTHONUNBUFFERED: "1"
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   W2_WORK: ${{ github.workspace }}/work/w2
 jobs:
   acquire:
+    concurrency: { group: pilot-w2-acquire, cancel-in-progress: false }
     if: (github.event_name == 'workflow_dispatch' && inputs.stage == 'acquire') || contains(github.event.head_commit.message, '[acquire]')
     runs-on: ubuntu-latest
     timeout-minutes: 355
@@ -45,7 +43,23 @@ jobs:
           d=json.load(open("work/w2/w2-state.json"))
           print(json.dumps({k:{x:v.get(x) for x in ("key","doi","records","status","processed")} for k,v in d.items() if not k.startswith("_")}))
           PY
+  diag:
+    if: (github.event_name == 'workflow_dispatch' && inputs.stage == 'diag') || contains(github.event.head_commit.message, '[diag]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pyarrow
+      - name: One diagnostic SQL download (prints value formats only)
+        env:
+          GBIF_USER: ${{ secrets.GBIF_USER }}
+          GBIF_PWD: ${{ secrets.GBIF_PWD }}
+          GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+        run: python -m ctw.species.w2run diag
   assemble:
+    concurrency: { group: pilot-w2-assemble, cancel-in-progress: false }
     if: (github.event_name == 'workflow_dispatch' && inputs.stage == 'assemble') || contains(github.event.head_commit.message, '[assemble]')
     runs-on: ubuntu-latest
     timeout-minutes: 120
