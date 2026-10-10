@@ -8,6 +8,7 @@ which is the sampling effort, so the background corrects for where routes exist.
 used in the fit, the predictor selection or the threshold.
 """
 from __future__ import annotations
+import dataclasses
 import numpy as np
 import pandas as pd
 
@@ -48,7 +49,10 @@ def route_density(spec: grid.GridSpec, rows, cols) -> np.ndarray:
 def fit_window1(name, spec, src, rows, cols, density=None, native=None, group="bird", cfg: PL.FitConfig | None = None, w1=W1, log=lambda *a: None):
     """Production fit on window-1 climate and window-1 route presences (rows, cols of the cells where the species is present)."""
     occ = grid.Occurrences(rows, cols)
-    return PL.fit_species(name, spec, WindowSource(src, w1), occ, native=native, density=density, group=group, cfg=cfg or PL.FitConfig(), log=log)
+    cfg = cfg or PL.FitConfig()
+    if hasattr(cfg, "window"):                               # W3's own hook (FitConfig.window); WindowSource below keeps older pipelines working
+        cfg = dataclasses.replace(cfg, window=w1)
+    return PL.fit_species(name, spec, WindowSource(src, w1), occ, native=native, density=density, group=group, cfg=cfg, log=log)
 
 
 def score_cells(fit, src: grid.ClimateSource, rows, cols, w1=W1, w2=W2) -> pd.DataFrame:
