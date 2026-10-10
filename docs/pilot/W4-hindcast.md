@@ -109,10 +109,18 @@ Results: **[waiting for first real run]**
 
 ## 5. Test 4: comparison with published tree projections
 
-Verified so far: RDS-2024-0020 contains `Acer_saccharum` (SPCD 318). Presence of red maple, eastern white pine, quaking aspen, white oak and the same five in RDS-2019-0029: see run log of probe 3 (workflow
-`pilot-w4-probe3.yml`); results are filled in below. Comparison plan: for each species compute the DISTRIB suitability centroid and the leading and trailing latitude edges under the baseline and under SSP2-4.5 and
-SSP5-8.5, and compare with our W3 projection for the matching period and scenario (centroid shift in km and bearing, area change), with differences explained or flagged. This is a required check
-(roadmap 3.4 item 3) but not a hindcast. **[waiting for W3 projections]**
+Verified (probe run 38072865229, ranged reads of the zip central directories and extraction of the five species):
+- **RDS-2019-0029 (DISTRIB-II, eastern US, 167 MB zip, 1,041 entries):** contains all five pilot trees as `Data/sp<SPCD>_hybrid_2100.shp` (SPCD 318 sugar maple, 316 red maple, 129 eastern white pine, 746 quaking aspen, 802 white oak) plus
+  `_Species_List.csv`; shapefiles on the hybrid 10/20 km lattice. Eastern US only, so aspen is only partly covered. **[V 38072865229]**
+- **RDS-2024-0020 (North America, 412 MB zip, 13,102 entries):** one folder per species (`Data/Acer_saccharum/` and the other four all present). Per species: `Actual_sp<SPCD>.tif` (uint8 observed index),
+  `CurrentPredicted_Consensus_sp<SPCD>.tif` (float32, relative abundance, 1991-2020), `SSP2-45_Predicted_Consensus_*.tif` and `SSP5-85_Predicted_Consensus_*.tif` (float32, 2070-2100) and `*_HQCL_*.tif`
+  (habitat quality and colonisation likelihood). All rasters: Albers Equal Area (centre 40N, 96W, standard parallels 20 and 60), 378 x 409 cells of 20 km, bounds (-5105795, -2951323, 3074205, 4608677) m.
+  Value ranges, e.g. sugar maple current 0 to 52, SSP2-45 0 to 30, SSP5-85 0 to 28 (relative abundance falls under warming in the model). **[V 38072865229]**
+- Both are US government data, "can be used without additional permissions or fees", citation required (Peters et al. 2019; Prasad et al. 2024). **[V 38072387399]**
+- `ctw/species/w4_distrib_run.py` (workflow `pilot-w4-distrib.yml`) summarises RDS-2024-0020 for the five trees: centroid, leading and trailing edge, area change and shift between 1991-2020 and 2070-2100 for both scenarios at
+  two presence cutoffs (relative abundance 1 and 5). Output `data/species/w4/distrib2024_summary.csv`. **[run pending]**
+- Comparison plan: for each species compare that summary with our W3 projection for the same period and scenario (centroid shift in km and bearing, area change, edges) and explain or flag differences. Not a hindcast, and the two
+  models are not independent in what they were fitted on (both use FIA). **[waiting for W3 projections]**
 
 ## 6. Test 3: GBIF before and after, European species (European robin, English oak)
 
