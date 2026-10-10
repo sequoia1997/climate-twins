@@ -17,14 +17,14 @@ def fetch(name, dest):
             print("  retry", name, k, type(e).__name__, e, flush=True); time.sleep(5 * (k + 1))
     return False
 
-ap = argparse.ArgumentParser(); ap.add_argument("--out", default="w4-out"); ap.add_argument("--work", default="w4-work"); ap.add_argument("--states", default="")
+ap = argparse.ArgumentParser(); ap.add_argument("--out", default="w4-out"); ap.add_argument("--work", default="w4-work"); ap.add_argument("--states", default=""); ap.add_argument("--plots-only", action="store_true"); ap.add_argument("--agg", default="")
 a = ap.parse_args(); os.makedirs(a.out, exist_ok=True); os.makedirs(a.work, exist_ok=True)
 fetch("REF_SPECIES.csv", f"{a.work}/REF_SPECIES.csv")
 ref = pd.read_csv(f"{a.work}/REF_SPECIES.csv", usecols=["SPCD", "COMMON_NAME", "SCIENTIFIC_NAME"])
 print(ref[ref.SPCD.isin(fia.PILOT_TREES)].to_string(), flush=True)
 PCOLS = ["CN", "STATECD", "PLOT_STATUS_CD", "MEASYEAR", "CYCLE", "SUBCYCLE", "LAT", "LON", "DESIGNCD"]
 tables, infos = [], []
-for st in (a.states.split() or fia.CONUS):
+for st in ([] if a.agg else (a.states.split() or fia.CONUS)):
     t0 = time.time()
     pf, tf, sf = (f"{a.work}/{st}_{k}.csv" for k in ("PLOT", "TREE", "SEEDLING"))
     if not fetch(f"{st}_PLOT.csv", pf) or not fetch(f"{st}_TREE.csv", tf):
@@ -41,9 +41,20 @@ for st in (a.states.split() or fia.CONUS):
     if len(tab): tables.append(tab)
     for f in (pf, tf, sf):
         if os.path.exists(f): os.remove(f)
+if a.agg:
+    import glob
+    tables = [pd.read_csv(f) for f in sorted(glob.glob(f"{a.agg}/**/fia_plots*.csv.gz", recursive=True))]
+    infos = [pd.read_csv(f) for f in sorted(glob.glob(f"{a.agg}/**/fia_cycles*.csv", recursive=True))]
+    infos = [pd.concat(infos)] if infos else []
+if not tables:
+    pd.DataFrame(infos).to_csv(f"{a.out}/fia_cycles-{a.states.replace(' ', '_')}.csv", index=False)
+    print("no usable plots for", a.states); sys.exit(0)
 plots = pd.concat(tables, ignore_index=True)
-plots.to_csv(f"{a.out}/fia_plots.csv.gz", index=False)
-pd.DataFrame(infos).to_csv(f"{a.out}/fia_cycles.csv", index=False)
+sfx = ("-" + a.states.replace(" ", "_")) if a.plots_only else ""
+plots.to_csv(f"{a.out}/fia_plots{sfx}.csv.gz", index=False)
+(pd.concat(infos) if a.agg else pd.DataFrame(infos)).to_csv(f"{a.out}/fia_cycles{sfx}.csv", index=False)
+if a.plots_only:
+    sys.exit(0)
 print("plots", len(plots), "by window", plots.window.value_counts().to_dict(), "states", plots.state.nunique())
 rows = []
 for spcd, nm in fia.PILOT_TREES.items():
