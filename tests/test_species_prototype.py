@@ -47,10 +47,14 @@ async def main():
             await pg.goto(f"http://127.0.0.1:{port}/index.html")
             await settle(pg)
             # the map drew something: read back the canvas
-            lit = await pg.evaluate("""() => { const m = window.__map, c = m.getCanvas(); const t = document.createElement('canvas'); t.width = c.width; t.height = c.height;
-                const x = t.getContext('2d'); x.drawImage(c, 0, 0); const a = x.getImageData(0, 0, t.width, t.height).data; let n = 0; const r0 = a[0], g0 = a[1], b0 = a[2];
-                for (let i = 0; i < a.length; i += 4) if (Math.abs(a[i] - r0) + Math.abs(a[i + 1] - g0) + Math.abs(a[i + 2] - b0) > 30) n++; return n; }""")
-            if lit < 500: fails.append(f"{name}: map canvas looks empty ({lit} px differ from the corner)")
+            import io
+            from PIL import Image
+            box = await pg.evaluate("(() => { const r = document.getElementById('map').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
+            im = Image.open(io.BytesIO(await pg.screenshot(clip=dict(x=box[0], y=box[1], width=min(box[2], w), height=min(box[3], h * 0.5))))).convert("RGB")
+            cols = im.getcolors(maxcolors=1 << 20) or []
+            # the range is drawn in 3 strong colours (lost orange, gained blue, kept grey): count distinct saturated pixels
+            lit = sum(n for n, (r_, g_, b_) in cols if max(r_, g_, b_) - min(r_, g_, b_) > 60)
+            if lit < 300: fails.append(f"{name}: map canvas looks empty ({lit} px differ from the corner)")
             ov = await pg.evaluate("[document.documentElement.scrollWidth, innerWidth, document.getElementById('panel').scrollWidth, document.getElementById('panel').clientWidth]")
             if ov[0] > ov[1] or ov[2] > ov[3] + 1: fails.append(f"{name}: horizontal overflow {ov}")
             unnamed = await pg.evaluate("""[...document.querySelectorAll('button,input,select')].filter(e => !(e.getAttribute('aria-label') || e.textContent.trim() || (e.labels && e.labels.length) || e.getAttribute('title'))).map(e => e.outerHTML.slice(0, 80))""")
@@ -75,6 +79,25 @@ async def main():
             else:
                 await pg.evaluate("document.getElementById('panel').scrollTop=1e5"); await pg.wait_for_timeout(300)
                 if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-panel-bottom.png"))
+            # figures: only ONE of Values / Change is visible at a time, and clicking chart rows never reveals the other
+            for card in ("#summary", "#dep-card"):
+                async def vis():
+                    return await pg.evaluate("""c => [...document.querySelectorAll(c + ' .v-abs')].filter(e => e.offsetParent).length + ':' + [...document.querySelectorAll(c + ' .v-chg')].filter(e => e.offsetParent).length""", card)
+                a0 = await vis(); n_abs, n_chg = map(int, a0.split(":"))
+                if not ((n_abs > 0) ^ (n_chg > 0)): fails.append(f"{name}: {card} shows both or neither figure view {a0}")
+                row = pg.locator(f"{card} .crow").first
+                if await row.count():
+                    await row.click(force=True); await row.focus()
+                    if await vis() != a0: fails.append(f"{name}: clicking a row in {card} changed the visible view")
+                await pg.click(f"{card} .vt button[data-v=chg]")
+                n_abs, n_chg = map(int, (await vis()).split(":"))
+                if n_abs or not n_chg and card == "#summary": fails.append(f"{name}: {card} Change view wrong {n_abs}:{n_chg}")
+                await pg.click(f"{card} .vt button[data-v=abs]")
+            head_txt = await pg.inner_text("#sp-head")
+            if "Tier" not in head_txt or "not a forecast" not in head_txt or "synthetic" not in head_txt.lower(): fails.append(f"{name}: badge or disclaimer missing: {head_txt[:120]}")
+            # a Tier 1 species shows Tier 1
+            await pg.fill("#search", "maple"); await pg.keyboard.press("ArrowDown"); await pg.keyboard.press("Enter"); await pg.wait_for_timeout(600)
+            if "Tier 1" not in await pg.inner_text("#sp-head"): fails.append(f"{name}: maple should show Tier 1")
             # keyboard: Tab reaches the first controls in order
             await pg.focus("#search"); seq = []
             for _ in range(6):

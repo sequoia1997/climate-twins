@@ -1,6 +1,6 @@
 # Spike G: delivering species maps to the browser, and a prototype species page
 
-Status: **draft 1 (delivery measurements and hosting plan written; prototype tests and screenshots being finalised).**
+Status: **complete for the spike (measurements, hosting plan, prototype, tests, screenshots).** Open decisions are in section 6.
 Everything in `prototypes/species/` is **synthetic prototype data**: invented species, a made-up climate field over the site's
 real 0.5 degree land mask upsampled to 1/24 degree (~4.6 km). Nothing here is ecology and nothing may be quoted as a result.
 
@@ -97,7 +97,7 @@ Verified in this repository and sandbox:
 - The site is one Cloudflare Worker with static assets from `./site` (`wrangler.jsonc`), deployed by `.github/workflows/deploy.yml` (`cloudflare/wrangler-action@v4`) on push to main (paths `site/**`, `web/**`, ...).
   `site/` is 27 MB in 75 files. The workflow has **no R2 step** and nothing for large data.
 - The sandbox reaches only GCS/S3 and the GitHub API, so **no Cloudflare behaviour was tested** (no bucket, no CORS, no range test against R2).
-- The bench server returned `Range`, CORS and 200/206 correctly, which tests our client code, not R2.
+- The bench's own HTTPS server (`bench/serve.js`) is local; it says nothing about R2 behaviour.
 
 Assumed (Cloudflare documentation as recalled; confirm on the pricing and limits pages before building):
 - R2 free tier: 10 GB-month storage, 1 M Class A and 10 M Class B operations per month, **no egress fee**. Above: ~$0.015/GB-month, $4.50 per M Class A, $0.36 per M Class B.
@@ -134,7 +134,58 @@ Secrets: an R2 token scoped to the one bucket in the `production` environment, l
 
 ## 3. Prototype page
 
-`prototypes/species/index.html` (one file; MapLibre from the same CDN as the site; data in `prototypes/species/data/`: 12 invented species x base + 4 scenarios, novelty layers, `stats.json`, 10.6 MB).
-Rebuild with `python prototypes/species/synth.py WORK` then `build_site_data.py WORK prototypes/species/data`.
+`prototypes/species/index.html`: one file, MapLibre from the same CDN as the site (offline test uses a local copy), data in `prototypes/species/data/` (12 invented species x base + 4 scenarios in the lite CTS format, 4 novelty layers, land mask, `stats.json`; 10.6 MB). Rebuild: `synth.py WORK`, `encode.py`, `build_site_data.py WORK prototypes/species/data`.
+Open it with any static server in `prototypes/species/`. Visual language copied from `web/index.html` (fonts, ink/paper tokens, chips, Values / Change pill, bottom sheet on phones). **Every screen carries "Synthetic prototype data".**
 
-(Next revision: feature list, screenshots, test results, decisions, open questions, what could not be verified.)
+What it has:
+- **Species search** (combobox: type, arrow keys, Enter) plus a list; 12 invented species in 6 groups (Trees, Crops, Birds, Mammals, Reptiles, Pests and vectors).
+- **Map shows** Now / Future / Change. Change uses lost = orange **diagonal hatching**, kept = grey, gained = blue **dots**; so no meaning rides on colour alone. Orange vs blue is colour-blind safe (both against grey); legend lives on the map (collapsed by default on phones so it does not hide the range) and the same words appear in the text description.
+- **Scenario** (SSP1-2.6 .. SSP5-8.5) and **period** (2050 / 2100). Period, dispersal, view and overlays are shader uniforms (no fetch); scenario fetches one file.
+- **Dispersal-bound** toggle: unlimited / limited (invented reach 80 km by 2050, 220 km by 2100, labelled as an assumption) / none; stats recompute from the same data.
+- **Model agreement** shading (dotted where fewer than 6 of 8 members agree) and **novel-climate** shading (diagonal lines where the future climate has no present-day match), both off by default, both in the legend and in text.
+- **Summary stats**: area now / future / change, range-centre shift in km and direction (arrow + words), lost / kept / gained areas, share of models agreeing. A text description of the map is in a disclosure and a live region.
+- **Reliability tier badge**: "Tier 1" (tested against real observed change) or "Tier 2" (skill-checked only), with a text explanation; Tier 3 species are not shown (per the roadmap decision). The badge uses a symbol and words, not colour alone. Tier assignment here is synthetic (3 of 12 are Tier 1).
+- The sentence **"Climate suitability, not a forecast."** under the species name, in the legend and in the footer.
+- **Dependencies card** ("Depends on" / "Depended on by", links open the other species): now-vs-future overlap bars in the site's Values / Change style. Only ONE of the two views is in the DOM flow at a time (`.fig[data-view]` hides the other), switched only by the Values / Change toggle; tapping or focusing a row does nothing to the view (tested).
+- **Place-centred list** ("Species where you are"): place select (or tap the map for the nearest of 24 places), "N of 12 tracked species lose / M gain", group chips, rows with an icon and the word loses / gains / keeps. Default place is Madrid so the list is not empty (several places have no species at all in the invented data).
+- Light and dark (system, plus a button), keyboard operable (all controls are buttons, inputs or a combobox with visible focus rings), `prefers-reduced-motion` respected.
+
+## 4. Tests and screenshots
+
+`tests/test_species_prototype.py` (Playwright, offline: `PW_CHROMIUM` and `PW_MAPLIBRE_DIR`), run at 1440 x 900 and 390 x 844 (dpr 2, touch), light and dark: 4 runs, **all pass**. For each it checks:
+no JS error, the map actually shows range colours (screenshot pixel count, since a WebGL canvas cannot be read back), no horizontal overflow before and after interaction, no unnamed control, searching "tick" and "maple" selects the species, scenario / period / dispersal / overlay clicks work, the Tier badge and "not a forecast" and "synthetic" text are present, a Tier 1 species shows Tier 1, **each figure (summary and dependencies) shows exactly one of Values or Change, clicking a row never changes it, and the toggle works**, mobile sheet expand / collapse, Tab order starts with buttons.
+
+Screenshots (`docs/spikes/img/`; all synthetic data):
+
+| | |
+|---|---|
+| ![desktop light](img/desktop-light-change.png) desktop light, change view | ![desktop dark overlays](img/desktop-dark-ssp585-2100-limited-overlays.png) desktop dark, SSP5-8.5 2100, limited dispersal, agreement and novelty on |
+| ![mobile light](img/mobile-light-change.png) mobile light, legend collapsed | ![mobile dark sheet](img/mobile-dark-sheet-full.png) mobile dark, sheet expanded |
+| ![desktop panel](img/desktop-light-panel-bottom.png) dependencies and place list | ![desktop dark panel](img/desktop-dark-panel-bottom.png) same, dark |
+
+Fixed in this pass: the test's blank-canvas check always read 0 (WebGL without a preserved buffer) so it never ran; replaced by a screenshot check. The reliability badge was High/Moderate/Low, now Tier 1 / Tier 2 as required; place list default was an empty place; legend covered the range on phones (now collapsed there); Values-bar labels were clipped at the panel edge (bar lengths shortened).
+
+## 5. Decisions made in this spike
+
+1. Deliver species as **CTS binary, lite classified product**, base + per-scenario files, per species, fetched whole, coloured in a shader. (Section 1.3.)
+2. Host on **R2 behind a custom domain**, content-hashed immutable files, small `index.json` as the only mutable file; separate publish workflow. (Section 2.)
+3. The page needs no refetch for period, dispersal, view or overlays; one file for a scenario change.
+4. The figure toggle pattern (one view at a time) applies to every Values / Change figure on the species page.
+5. A model-agreement and novelty shading are overlays with legend entries, not separate maps.
+
+## 6. Open questions and what could not be verified
+
+Owner decisions:
+- Continuous suitability ramp or three classes? (about 5x the bytes: 1.3 GB vs 265 MB for 350 species, still cheap to host.)
+- Is a custom binary format acceptable, or should it be PNG tiles (safe fallback, measured slightly slower)?
+- Custom domain for data (`data.climatetwins.org`) and an R2 token for the publish workflow.
+- Wording of the tier badge, and whether Tier 2 species get the map at full prominence.
+
+Not verified (be careful quoting any of the above):
+- **Everything is synthetic.** Real SDM output has patchier ranges, so real file sizes will be larger than measured here; re-run the bench on the Phase 3 pilot.
+- **No Cloudflare behaviour was tested** (R2 CORS, ranges, caching, custom domain, prices and limits are from documentation as recalled).
+- Delivery timings are headless Chromium with software WebGL and CDP throttling, on localhost, one species benchmarked end to end, 3 runs; no real phone, no real network, no Safari or Firefox.
+- The bench draws a whole-world texture; zoomed panning with block-level reads is implemented in the prototype but its cost was not benchmarked.
+- Screen reader behaviour (VoiceOver, NVDA) was not tested; only roles, names, focus order and live-region text were checked by script. Colour contrast was checked by eye and by the `dataviz` palette rules, not with an automated audit of the page.
+- Colour-blind simulation was not run on the screenshots; the safety argument is hatching/dots plus hue pair, not a measured simulation.
+- The test cannot catch a wrong pixel; only a human looking at the screenshots does.

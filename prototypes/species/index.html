@@ -164,7 +164,7 @@ details p{font-size:.9rem}
     <button id="themebtn" type="button" aria-label="Switch light and dark map" title="Light / dark"></button>
     <div id="synpill">Synthetic prototype data</div>
     <div id="busy" role="status" hidden>Updating map...</div>
-    <details id="legend" open><summary>Legend</summary><div id="lg"></div></details>
+    <details id="legend"><summary>Legend</summary><div id="lg"></div></details>
     <div id="attrib">Prototype. Not real species data.</div>
   </div>
   <aside id="panel" aria-label="Species panel">
@@ -211,7 +211,7 @@ const $ = id => document.getElementById(id);
 const BS = 256, NX = 8640, NY = 4320, LEVELS = [8, 4, 2, 1];
 const MIN = "−";
 let ST = null, map = null, gl = null, glr = null;
-const S = { sp: "s01", ssp: "ssp245", per: 0, view: "change", disp: "unlimited", agree: false, novel: false, place: 0, group: "All", q: "", figview: "abs", depview: "abs" };
+const S = { sp: "s01", ssp: "ssp245", per: 0, view: "change", disp: "unlimited", agree: false, novel: false, place: 8, group: "All", q: "", figview: "abs", depview: "abs" };
 const SHOWN = { sp: null, ssp: null };           // what the map draws; swapped once the new blocks are in memory
 const DISP_DESC = { unlimited: "Any suitable cell can be reached.", limited: "New range only within about 80 km (2050) or 220 km (2100) of the present range.", none: "No spreading: the species keeps only the part of its range that stays suitable." };
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -375,10 +375,14 @@ const PERLAB = () => ST.periods[S.per];
 const sspLabel = () => ST.ssp_labels[ST.ssps.indexOf(S.ssp)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+const TIER1 = new Set(["s01", "s02", "s08"]);   // synthetic assignment: pretend these were tested against real observed change
 function reliability(sp) {
   const v = ST.species[sp].by["ssp245|2050|unlimited"].agree_share, a = ST.species[sp].area_now_km2;
-  if (a < 1e5) return { t: "Low", c: "q-low", sym: "○", why: "small range" };
-  return v >= 0.8 ? { t: "High", c: "q-good", sym: "●●●", why: "models agree" } : v >= 0.6 ? { t: "Moderate", c: "q-partial", sym: "●●○", why: "models partly agree" } : { t: "Low", c: "q-low", sym: "●○○", why: "models disagree" };
+  const ag = v == null ? "" : v >= 0.8 ? "models mostly agree" : v >= 0.6 ? "models partly agree" : "models often disagree";
+  const small = a < 1e5 ? "small range, treat with extra care" : "";
+  return TIER1.has(sp)
+    ? { t: "Tier 1", c: "q-good", sym: "●●", why: "tested against real observed change", ag, small }
+    : { t: "Tier 2", c: "q-partial", sym: "●○", why: "skill-checked only, not tested against real change", ag, small };
 }
 function arrowSvg(b) { return `<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20" fill="none" stroke="var(--rule)" stroke-width="2"/><g transform="rotate(${b} 22 22)"><path d="M22 6v28M22 6l-7 9M22 6l7 9" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`; }
 
@@ -406,13 +410,13 @@ function pick(id) { S.sp = id; renderResults(); update(true, true); }
 function head() {
   const sp = ST.species[S.sp], r = reliability(S.sp);
   $("sp-head").innerHTML = `<h2>${esc(sp.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(sp.sci)}</i> (placeholder name) &middot; ${esc(sp.group)} &middot; <span class="syn"><strong>synthetic</strong></span></p>
-  <p style="margin:6px 0"><span class="badge ${r.c}" title="Reliability: ${r.why}"><span aria-hidden="true">${r.sym}</span> Reliability: ${r.t}</span> <span class="small">${r.why}</span></p>
+  <p style="margin:6px 0"><span class="badge ${r.c}" title="${r.t}: ${r.why}"><span aria-hidden="true">${r.sym}</span> ${r.t}</span> <span class="small">${r.why}${r.ag ? "; " + r.ag : ""}${r.small ? "; " + r.small : ""}. Reliability tier (synthetic assignment).</span></p>
   <p class="disc">Climate suitability, not a forecast.</p>`;
   $("sh-title").textContent = sp.name;
 }
 function bars(rows, max, signed) {            // rows: [label, value, cssColor, text]
   return rows.map(([lab, v, col, txt]) => {
-    const w = max > 0 ? Math.abs(v) / max * (signed ? 48 : 78) : 0;
+    const w = max > 0 ? Math.abs(v) / max * (signed ? 44 : 66) : 0;
     const pos = signed ? (v >= 0 ? `left:50%;width:${w}%` : `right:50%;width:${w}%`) : `left:0;width:${w}%`;
     const lbl = signed && v < 0 ? "end" : "";
     return `<div class="crow"><div class="lab">${esc(lab)}</div><div class="trk">${signed ? '<span class="zero" style="left:50%"></span>' : ""}<span class="bar ${lbl}" style="${pos};--c:${col}"><b>${esc(txt)}</b></span></div></div>`;
@@ -494,6 +498,7 @@ const SW = {
   ctr: `<svg width="28" height="14" aria-hidden="true"><circle cx="5" cy="7" r="4" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M10 7h8" stroke="var(--ink)" stroke-width="2"/><circle cx="23" cy="7" r="4" fill="var(--ink)"/></svg>`
 };
 function legend() {
+  if (!legend.init) { legend.init = 1; $("legend").open = !matchMedia("(max-width:820px) and (orientation:portrait)").matches; }
   const per = PERLAB(), k = [];
   if (S.view === "change") k.push([SW.lost, `Lost: suitable now, not by ${per}`], [SW.kept, "Kept: suitable now and later"], [SW.gain, `Gained: suitable by ${per} only`]);
   else k.push([SW.ramp, `${S.view === "now" ? "Now" : "By " + per}: suitability, lower to higher (3 classes)`]);
