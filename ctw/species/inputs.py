@@ -288,6 +288,8 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None):
     else:
         rp = os.path.join(root, f"w2-report-{tag}.json")
         r = json.load(open(rp)) if os.path.exists(rp) else {}
+    cm = r.get("cultivated_managed_records") or {}
+    meta["cultivated_verified"] = bool(kind == "crop" and cm.get("kept", 0) > 0)       # records flagged cultivated / managed by the source, kept for the crop
     if r.get("doi"):
         dois.append("https://doi.org/" + r["doi"])
     for d_ in (r.get("target_group_dois") or []):

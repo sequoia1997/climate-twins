@@ -443,7 +443,9 @@ def test_crop_kind_exempts_native_commission_but_not_recall(world, fitted):
     crop = SM.build_summary(fit, proj, meta, expert=tiny_native)
     assert wild["gates"]["range_check"]["status"] == "fail" and wild["tier"] == "C" and wild["species"]["kind"] == "wild"
     assert crop["gates"]["range_check"]["status"] == "exempt_crop" and "commission_vs_native_reported" in crop["gates"]["range_check"]
-    assert crop["tier"] == "B" and crop["species"]["kind"] == "crop" and "growing" in crop["wording"]
+    assert crop["tier"] == "B" and crop["species"]["kind"] == "crop" and crop["wording"].startswith("climate like where") and "growing it" not in crop["wording"].split("(")[0]
+    ver = SM.build_summary(fit, proj, dict(meta, cultivated_verified=True), expert=tiny_native)
+    assert ver["wording"].startswith("where the climate suits growing it") and ver["species"]["cultivated_verified"] is True
     assert SM.species_kind(dict(group="tree", kind="crop")) == "crop"
     files = cts.species_files(proj, "c", meta=dict(kind="crop", tier="B"))
     data = files["c_base.cts"]

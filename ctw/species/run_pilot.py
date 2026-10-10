@@ -98,7 +98,7 @@ def run_species(meta: dict, src, spec, occ, native, density, outdir: Path, *, la
     (d / "summary.json").write_text(SM.dumps(summ))
     if summ["published"]:
         (d / "cts").mkdir(exist_ok=True)
-        for name, data in cts.species_files(proj, sid, product, meta=dict(kind=summ["species_kind"], tier=summ["tier"], range_shifts_tested=summ["range_shifts_tested"], cv_kind=summ["cv_kind"], confidence=summ["confidence"])).items():
+        for name, data in cts.species_files(proj, sid, product, meta=dict(kind=summ["species_kind"], wording=summ["wording"], tier=summ["tier"], range_shifts_tested=summ["range_shifts_tested"], cv_kind=summ["cv_kind"], confidence=summ["confidence"])).items():
             (d / "cts" / name).write_bytes(data)
         info = cts.prototype_stats_entry(summ)
         (d / "cts" / "stats_entry.json").write_text(json.dumps(info, separators=(",", ":")))

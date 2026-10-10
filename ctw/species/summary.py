@@ -10,6 +10,7 @@ from .pipeline import Fit
 from .project import Projection, MODES, THR7, AGREE_MIN, area_of, range_stats
 from . import gates as G
 
+LABELS = {"vitis_vinifera": "grapevines"}
 SCHEMA = "ctw-species-summary/1"
 
 
@@ -75,7 +76,8 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
     auc = cv["metrics"]["gbm"]["auc"]
     ev = G.evaluate(n_gate=fit.records["n_gate"], n_used=fit.records["n_used"], cv_auc=auc, area_now=a_now, novel_shares=novel_shares,
                     check_change=check_change, main_change=main_change, rng_check=rng, validation=validation, range_shift_test=range_shift_test,
-                    cv_kind=fit.cv.get("kind", "presence_background"), record_recall=recall, species_kind=kind, cfg=gate_cfg)
+                    cv_kind=fit.cv.get("kind", "presence_background"), record_recall=recall, species_kind=kind,
+                    cultivated_verified=bool(meta.get("cultivated_verified")), record_label=meta.get("record_label") or LABELS.get(meta.get("id") or _slug(meta.get("scientific_name", "")), (meta.get("common_name") or fit.species).lower() + " plants"), cfg=gate_cfg)
     # withhold shift numbers where novel climate dominates (numbers kept under 'audit' for reviewers, not for display)
     for k, w in ev["withheld"].items():
         if w:
@@ -86,7 +88,7 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
                                         f"(limit {gate_cfg.novel_max:.0%}): shift numbers withheld")
     summ = dict(
         schema=SCHEMA,
-        species=dict(kind=kind, id=meta.get("id") or _slug(meta.get("scientific_name", fit.species)), scientific_name=meta.get("scientific_name", fit.species),
+        species=dict(kind=kind, cultivated_verified=bool(meta.get("cultivated_verified")), id=meta.get("id") or _slug(meta.get("scientific_name", fit.species)), scientific_name=meta.get("scientific_name", fit.species),
                      common_name=meta.get("common_name"), group=meta.get("group"), gbif_taxon_key=meta.get("gbif_taxon_key"),
                      validation_plan=meta.get("validation_plan")),
         tier=ev["tier"], range_shifts_tested=ev["range_shifts_tested"], cv_kind=ev["cv_kind"], confidence=ev["confidence"], published=ev["published"], hard_failures=ev["hard_failures"], soft_flags=ev["soft_flags"],

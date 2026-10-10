@@ -94,7 +94,7 @@ def range_check(now: np.ndarray, spec: GridSpec, rec_rc: np.ndarray, expert: np.
 
 def evaluate(*, n_gate: int, n_used: int, cv_auc: float, area_now: float, novel_shares: dict, check_change: dict, main_change: dict,
              rng_check: dict, validation: dict = None, range_shift_test: dict = None, cv_kind: str = "presence_background", record_recall: float = None,
-             species_kind: str = "wild", cfg: GateConfig = GateConfig()) -> dict:
+             species_kind: str = "wild", cultivated_verified: bool = False, record_label: str = "the species", cfg: GateConfig = GateConfig()) -> dict:
     """Apply the gates. novel_shares: {'ssp|period': share of the (present or unlimited-future) area flagged novel};
     check_change / main_change: {'ssp|period': percent area change under the GAM check / the main model}.
     validation: None or {'kind': 'bbs'|'fia'|..., 'passed': bool, ...}: static skill against an independent survey (W4).
@@ -159,5 +159,8 @@ def evaluate(*, n_gate: int, n_used: int, cv_auc: float, area_now: float, novel_
     return dict(gates=g, tier=tier, confidence="low" if (soft and tier != "C") else "standard", published=tier != "C", hard_failures=hard,
                 soft_flags=soft, withheld=withheld, config=asdict(cfg), range_shifts_tested=rs_status, cv_kind=cv_kind,
                 species_kind=species_kind,
-                wording=("where the climate suits growing it (a model of climate suitability for the cultivated crop, not a forecast or an expected range)"
+                wording=(("where the climate suits growing it (a model of climate suitability for the cultivated crop, not a forecast or an expected range)"
+                          if cultivated_verified else
+                          f"climate like where {record_label} are recorded (a model of climate similarity to the recorded locations; the records are not verified as cultivated, "
+                          "so this is not a statement about where the crop can be grown, and not a forecast or an expected range)")
                          if species_kind == "crop" else "projected climate suitability (a model of climate suitability, not a forecast or an expected range)"))
