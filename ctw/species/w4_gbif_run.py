@@ -15,6 +15,7 @@ src, spec = inputs.climate_source(a.clim)
 B = 12
 def blocks(g):  # (H, W) -> (H/B, W/B) sums
     return g.reshape(g.shape[0] // B, B, g.shape[1] // B, B).sum((1, 3))
+diag = []
 sets = {"well": {}, "all": {}}; cv = {}; names = {}; extra = []; n_el = 0; obs_rows = []
 t0 = time.time()
 for disp, (slug, tgg) in SP.items():
@@ -41,6 +42,8 @@ for disp, (slug, tgg) in SP.items():
     fit = HR.fit_window1(disp, spec, src, pc1.row.values, pc1.col.values, density=dens, group=tgg, cfg=PL.FitConfig(n_jobs=2, check_model=False), log=lambda *x: print(*x, flush=True))
     cb = tg.drop_duplicates(["row", "col"])
     sc = HR.score_cells(fit, src, cb.row.values + B // 2, cb.col.values + B // 2)
+    diag.append(f"{disp}: tg layer sums {[int(g[i].sum()) for i in range(g.shape[0])]}, nonzero cells {[int((g[i] > 0).sum()) for i in range(g.shape[0])]}, tg blocks p1>0 {int((p1_tg > 0).sum())} p2>0 {int((p2_tg > 0).sum())}, "
+                f"accessible {int(access.sum())}, usable blocks {len(br)}, score cells {len(sc)}, finite score cells {int(np.isfinite(sc.score1).sum()) if len(sc) else 0}, cellset sizes well/all computed next")
     print(disp, "accessible blocks with tg in both periods:", len(br), "score cells:", len(sc), "presence cells p1/p2:", len(pc1), len(pc2),
           "well-sampled blocks:", len(GS.well_sampled(tg, tgg)), flush=True)
     for variant, wo in (("well", True), ("all", False)):
@@ -60,4 +63,5 @@ for variant in ("well", "all"):
 md += "\n## Effort-bias gap (well-sampled versus all blocks)\n\n| species | presence cells p1 / p2 | blocks well / all | shift km well / all | northward km well / all |\n|---|---|---|---|---|\n"
 for d, gp, n1, n2 in extra:
     md += f"| {d} | {n1} / {n2} | {gp['n_well']} / {gp['n_all']} | {gp['well_km']:.0f} / {gp['all_km']:.0f} | {gp['well_north']:.0f} / {gp['all_north']:.0f} |\n"
+md += "\n## Diagnostics\n\n" + "\n".join("- " + d for d in diag) + "\n"
 open(f"{a.out}/gbif_split_report.md", "w").write(md); print(md)
