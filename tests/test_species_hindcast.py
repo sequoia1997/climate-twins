@@ -143,3 +143,10 @@ def test_report_renders():
     assert "INSUFFICIENT DATA" in md and "| sp0 |" in md and "Tier 1 earned" in md
     obs = {k: dict(r["obs"], n_cells=r["n_cells"]) for k, r in res.items()}
     assert "| sp1 |" in H.observed_table(obs)
+
+
+def test_permutation_null():
+    cs = cellset(0, 4)
+    assert H.permutation_p(cs, n=100) < 0.05          # a 4 degree shift is far outside label-swap noise
+    z = cellset(0, 0)
+    assert H.permutation_p(z, n=50) in (1.0,) or H.permutation_p(z, n=50) > 0.5

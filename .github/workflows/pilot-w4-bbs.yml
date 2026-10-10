@@ -1,0 +1,30 @@
+# W4 pilot: ingest the North American Breeding Bird Survey, compute observed change per species, upload to the species-pilot-data release.
+name: Pilot W4 BBS
+on:
+  push:
+    paths: [".github/run/pilot-w4-bbs"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bbs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env: { PYTHONUNBUFFERED: "1", GH_TOKEN: "${{ github.token }}" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install numpy pandas scipy
+      - run: python -u -m ctw.species.w4_bbs_run --out w4-out --work w4-work
+      - name: Upload to release species-pilot-data (idempotent create)
+        run: |
+          gh release view species-pilot-data >/dev/null 2>&1 || gh release create species-pilot-data --title "Species pilot data" --notes "Inputs and outputs of the species pilot workstreams" || true
+          gh release upload species-pilot-data w4-out/bbs_route_cells.csv w4-out/bbs_presence_long.csv.gz w4-out/bbs_observed_change.csv --clobber
+      - name: Commit the small observed-change table
+        run: |
+          mkdir -p data/species/w4 && cp w4-out/bbs_observed_change.csv data/species/w4/
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add data/species/w4/bbs_observed_change.csv
+          git commit -m "W4: BBS observed change table (Actions)" || exit 0
+          for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done

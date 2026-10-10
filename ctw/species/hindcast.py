@@ -150,6 +150,26 @@ def observed_change(cs: CellSet, n_boot: int = 500, seed: int = 0, noise_se: flo
 
 
 # --------------------------------------------------------------------------- null baselines
+def permutation_p(cs: "CellSet", n: int = 500, seed: int = 0) -> float:
+    """Label-swap null for the OBSERVED shift: for every cell, swap its window-1 and window-2 presence with probability 0.5 (no true
+    change, same cells and prevalence structure) and recompute the centroid shift. Returns the share of null shifts at least as large
+    as the observed one (one-sided). Clusters (e.g. routes) are swapped together."""
+    obs = range_change(cs.lat, cs.lon, cs.area, cs.obs1, cs.obs2)["km"]
+    if not np.isfinite(obs):
+        return math.nan
+    rng = np.random.default_rng(seed)
+    if cs.cluster is not None:
+        u, inv = np.unique(cs.cluster, return_inverse=True)
+    cnt = 0
+    for _ in range(n):
+        flip = rng.random(len(u) if cs.cluster is not None else len(cs.lat)) < 0.5
+        f = flip[inv] if cs.cluster is not None else flip
+        a, b = np.where(f, cs.obs2, cs.obs1), np.where(f, cs.obs1, cs.obs2)
+        k = range_change(cs.lat, cs.lon, cs.area, a, b)["km"]
+        cnt += bool(np.isfinite(k) and k >= obs)
+    return (cnt + 1) / (n + 1)
+
+
 def random_shift_errors(obs_km: float, n: int = 2000, seed: int = 0) -> np.ndarray:
     """Vector error (km) of a prediction that has the observed shift magnitude but a random bearing: 2 s |sin(d/2)| with d
     uniform on the circle. Its median is the benchmark a model with the right magnitude but no directional skill reaches."""
