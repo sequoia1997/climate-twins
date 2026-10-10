@@ -299,3 +299,30 @@ Lessons from this project to apply: a visible status board; never trust a synthe
 - **Dependencies layer (Layer 3) is smaller than planned.** Expect roughly 25 to 40 reviewed obligate or near-obligate pairs, not 100. The big interaction database (GloBI) is too noisy to ingest as a source; every pair shown needs a person-read citation and a specialist reviewer. A mycorrhizal dataset is non-commercial only and conflicts with the licence filter. The "limited dispersal" bound is uncalibrated (about 10 times uncertain) until the hindcast calibrates it.
 - **iNaturalist data comes through GBIF.** The CC0 and CC-BY filter drops observations licensed CC-BY-NC. Spike A is counting the loss; whether non-commercial records may be used as model inputs for a free educational site that publishes only derived outputs is a legal question to settle before relaxing the filter.
 - **Spikes A, B, D, F and G were interrupted by a usage limit and restarted on 10 October.**
+
+---
+
+## 15. Phase 0 outcome (spikes A to G, 10 October 2026)
+
+Overall: **GO WITH CHANGES.** The method works on virtual species; the data routes work; the main risks are licensing, native-range handling, validation outside North America, and the dependency layer being small. Detailed findings: `docs/spikes/A` to `G`.
+
+### Corrections to this roadmap
+- **Cell counts were understated:** global land is about 12.5 million cells at 2.5 arc-minute (not 6 million) and about 313 million at 30 arc-second (not 150 million). Build globally in latitude bands (a whole-globe read peaked at ~8 GB RAM).
+- **Water balance:** use TerraClimate's own deficit and evapotranspiration for the baseline (our own deficit calculation runs about 25% low).
+- **Baseline periods:** WorldClim 1970 to 2000 is 0.87 C cooler than TerraClimate 1991 to 2020, and CHELSA 1981 to 2010 is 0.73 C cooler, so 1 km sources need explicit period bridging. Seasonality predictors (bio15, bio17) agree poorly between sources (r 0.67 to 0.94).
+- **Native range is mandatory.** GBIF rarely records native versus introduced (about 1%), so introduced populations (sugar maple in Europe, monarch in Oceania) survive cleaning. Restrict training to native-range polygons.
+- **Check the duplicate-removal step** (it removed 87% of monarch records) before trusting the cleaning.
+- **Modelling defaults (from virtual-species tests):** at least 100 thinned records (narrow-range species about 500); target-group background to correct sampling bias; choose predictors by ecology, not "all 16"; one boosted-tree model matched the four-model ensemble; do not rely on AUC alone; flag novel climate (withhold shift numbers when more than 15% of the area is novel). Resolution matters most for narrow species. The method misses non-climatic range limits, so expert-range or hindcast checks are mandatory.
+- **Licence filter:** CC0 and CC-BY only loses 46% of sugar maple, 47% of monarch and 52% of tick records (68 to 78% of occupied cells for those three). Decide on CC-BY-NC for model inputs (legal question) before relaxing it.
+- **Delivery:** custom compact binary format drawn on the GPU (about 226 KB per species for one scenario; about 265 MB for 350 species by 4 scenarios) on a Cloudflare R2 bucket, separate publish workflow. Tested on synthetic data only.
+- **Species list:** `data/species/shortlist_v1.csv` (381 species, balanced by region and group), with known fixes needed: one vulnerable bumblebee still in candidates, 19 species failed name matching, insects over quota (48 versus 30). Show silhouettes by default, not photos.
+- **Dependencies:** about 25 to 40 reviewed pairs, not 100 (see section 14).
+
+### Decisions still needed from the owner
+1. Whether CC-BY-NC records may be used as model inputs (legal check).
+2. Silhouettes by default instead of photos (recommended).
+3. Accept a custom file format for map delivery, a continuous versus classed colour ramp, and the data value range.
+4. Whether to go straight to the Phase 1 to 3 pilot (grid, occurrence pipeline, model engine and hindcast on about 25 species).
+
+### Proposed next step: the pilot (Phases 1 to 3)
+Build the global Tier A grid in bands; the occurrence pipeline with native-range masks; the modelling engine with the gates above; hindcast on North American birds (Breeding Bird Survey) and trees (forest plots); about 25 pilot species including the seven spike species. Exit gate: skill thresholds met and hindcast reproduces observed shifts reasonably, or we stop before any interface work.
