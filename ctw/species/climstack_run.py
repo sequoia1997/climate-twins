@@ -106,7 +106,7 @@ def tc_jobs(years=None, windows=None):
 def _read(args):
     v, y, rows, cols = args
     from . import tc_region as TC
-    for k in range(4):
+    for k in range(8):
         try:
             x, dtm = TC.read_months(v, y, rows, cols)
             if x.shape[0] != 12:
@@ -114,7 +114,7 @@ def _read(args):
             return v, y, x, dtm
         except Exception as e:  # noqa: BLE001
             log("read failed", v, y, repr(e)[:200], "retry", k)
-            time.sleep(10 * (k + 1))
+            time.sleep(min(15 * (k + 1), 90))
     raise RuntimeError(f"cannot read {v} {y}")
 
 

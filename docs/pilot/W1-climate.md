@@ -67,3 +67,6 @@ Pending: final file inventory, QA numbers, known limits (sections 3 to 6 are fil
 ## 3. Progress
 
 - 18:20 UTC: first tiles done in Actions [V: run 38073242901]: r1c2 (Europe, 0-45N, 0-90E) in about 30 min, r0c0 done; other priority tiles still running. NEX: 12 of 20 models finished in about 25 min each [V: run 38073242908]. Stage 2 launched: `tc:rest` (marker commit).
+- 18:55 UTC: priority set complete on the release [V: meta_tc_r0c0..r1c2, meta_fut_r0c0..r1c2, 20 `deltas_<model>.npz`, `deltas_ensemble_median.npz`, `meta_ens.json`]. That is
+  baseline, both hindcast windows and the four ensemble-median futures for tiles r0c0, r0c1, r0c2, r1c0, r1c1, r1c2 (north of the equator, 180W-90E), plus basem for apply_deltas.
+  `tc:rest` run 38075334199 in progress for the other 10 tiles; tile r2c0 failed after 2 min because TerraClimate returned 404 for the 1966 files (transient, files exist; HEAD 200 afterwards) [V: job 114281056421]. Fix: 8 retries with backoff; r2c0 relaunched alone.
