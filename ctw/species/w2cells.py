@@ -76,8 +76,11 @@ def _hash(df: pd.DataFrame, cols: list[str]) -> np.ndarray:
 class CellCleaner:
     """Feed it chunks of one species' records, then call finish() -> (cells, report)."""
 
-    def __init__(self, land=None, ref=None, max_unc_m=10_000.0, radius_m=None):
+    def __init__(self, land=None, ref=None, max_unc_m=10_000.0, radius_m=None, keep_cultivated=False):
+        """keep_cultivated: crops are modelled where they are cultivated, so the establishmentMeans step only counts, never drops."""
         self.land, self.ref, self.max_unc_m, self.radius_m = land, ref, max_unc_m, radius_m
+        self.keep_cultivated = keep_cultivated
+        self.datasets: dict[str, int] = {}
         self.left = dict.fromkeys(STEPS, 0)
         self.est_dropped: dict[str, int] = {}
         self.licences: dict[str, int] = {}
@@ -113,13 +116,17 @@ class CellCleaner:
             bad = est.isin(DROP_EST) | est.str.startswith("INTRODUCED")
             for k, v in est[bad].value_counts().items():
                 self.est_dropped[str(k)] = self.est_dropped.get(str(k), 0) + int(v)
-            df = df[~bad.to_numpy()]
+            if not self.keep_cultivated:
+                df = df[~bad.to_numpy()]
         L["establishment"] += len(df)
         yr = pd.to_numeric(df["year"], errors="coerce") if "year" in df else pd.Series(np.nan, index=df.index)
         df = df[yr.notna().to_numpy()]; yr = yr[yr.notna()]
         L["year"] += len(df)
         if not len(df):
             return
+        if "datasetkey" in df:
+            for k, v in df["datasetkey"].value_counts().items():
+                self.datasets[str(k)] = self.datasets.get(str(k), 0) + int(v)
         d = pd.DataFrame({"lat5": np.round(df["decimallatitude"].to_numpy(), 5), "lon5": np.round(df["decimallongitude"].to_numpy(), 5),
                           "ev": df["eventdate"].astype("string").fillna("").to_numpy() if "eventdate" in df else "",
                           "rec": df["recordedby"].astype("string").fillna("").to_numpy() if "recordedby" in df else "",
@@ -166,8 +173,9 @@ class CellCleaner:
             left = int(self.left[s])
             steps.append({"step": s, "left": left, "removed": 0 if prev is None else prev - left})
             prev = left
-        return {"steps": steps, "establishment_dropped": self.est_dropped, "licences_in_file": self.licences,
-                "countries_in_file": dict(sorted(self.countries.items(), key=lambda kv: -kv[1])[:15])}
+        return {"steps": steps, "establishment_dropped": {} if self.keep_cultivated else self.est_dropped, "licences_in_file": self.licences,
+                "countries_in_file": dict(sorted(self.countries.items(), key=lambda kv: -kv[1])[:15]),
+                "establishment_flagged_" + ("kept" if self.keep_cultivated else "dropped"): self.est_dropped, "keep_cultivated": self.keep_cultivated}
 
 
 def institutions(cache: Path, tries: int = 6) -> pd.DataFrame:

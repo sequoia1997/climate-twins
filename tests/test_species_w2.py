@@ -103,3 +103,11 @@ def test_griis_units_requires_explicit_introduced():
     rows = [{"country": "US", "locality": "Hawaii", "establishmentMeans": "INTRODUCED", "status": "PRESENT"},
             {"country": "AU", "locality": None, "establishmentMeans": None, "status": "PRESENT"}]
     assert N.griis_units(rows, feats) == {0}
+
+
+def test_crops_keep_cultivated_records_and_dataset_counts():
+    rows = [(1, 40.51, -75.51, 1990, "1990", "a", "d1", "o1", "CULTIVATED"), (2, 41.51, -75.51, 1990, "1990", "a", "d2", "o2", "INTRODUCED")]
+    cc = W.CellCleaner(keep_cultivated=True)
+    cc.feed(recs(rows))
+    cells, rep = cc.finish()
+    assert len(cells) == 2 and rep["establishment_dropped"] == {} and cc.datasets == {"d1": 1, "d2": 1}

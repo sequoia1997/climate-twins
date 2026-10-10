@@ -170,6 +170,7 @@ def download_meta(s: dict, key: str) -> dict:
 
 
 _REF = {}
+GROUP_OF = {r["scientific_name"]: r["group"] for r in csv.DictReader(open(ROOT / "data" / "species" / "pilot_v1.csv"))}
 
 
 def ref_set():
@@ -179,6 +180,7 @@ def ref_set():
 
 
 def process_species(sci: str, key: str, state: State):
+    group = GROUP_OF.get(sci, "")
     import shutil, zipfile
     job = f"species:{sci}"
     t0 = time.time()
@@ -194,15 +196,17 @@ def process_species(sci: str, key: str, state: State):
         zf.extractall(tmp)
     z.unlink()
     ref, land = ref_set()
-    cc = w2cells.CellCleaner(land=land, ref=ref)
+    cc = w2cells.CellCleaner(land=land, ref=ref, keep_cultivated=(group == "crop"))
     for d in w2cells.read_batches(tmp):
         cc.feed(d)
     cells, rep = cc.finish()
     shutil.rmtree(tmp, ignore_errors=True)
-    rep.update({"species": sci, "download_key": key, "process_s": round(time.time() - t0), **{k: meta[k] for k in ("doi", "records", "created", "citation", "licence")}})
+    rep.update({"group": group, "treatment": "crop_cultivated" if group == "crop" else "wild_native", "species": sci, "download_key": key, "process_s": round(time.time() - t0), **{k: meta[k] for k in ("doi", "records", "created", "citation", "licence")}})
     out = WORK / "cells"; out.mkdir(parents=True, exist_ok=True)
     cells.to_parquet(out / f"w2-cells-{slug(sci)}.parquet", compression="zstd", index=False)
     (out / f"w2-report-{slug(sci)}.json").write_text(json.dumps(rep, indent=1))
+    (out / f"w2-datasets-{slug(sci)}.json").write_text(json.dumps(cc.datasets))
+    rel_put(out / f"w2-datasets-{slug(sci)}.json")
     rel_put(out / f"w2-cells-{slug(sci)}.parquet")
     rel_put(out / f"w2-report-{slug(sci)}.json")
     state.set(job, **meta, processed=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
@@ -258,7 +262,7 @@ def acquire(hours: float):
         jobs.append((f"species:{sci}", "species", sci, lambda t=r["taxon_key"]: gbif.request_download(t)))
 
     def done(job, kind, name):
-        return (f"w2-cells-{slug(name)}.parquet" in have and f"w2-report-{slug(name)}.json" in have) if kind == "species" else (f"w2-tg-{name}.npz" in have and (state.get(job).get("total") or 0) > 0)
+        return (f"w2-cells-{slug(name)}.parquet" in have and f"w2-report-{slug(name)}.json" in have and f"w2-datasets-{slug(name)}.json" in have) if kind == "species" else (f"w2-tg-{name}.npz" in have and (state.get(job).get("total") or 0) > 0)
 
     for g in tg.GROUPS:        # an earlier SQL download that came back empty is never reused
         if state.get(f"tg:{g}").get("processed") and not (state.get(f"tg:{g}").get("total") or 0) > 0:
@@ -395,7 +399,8 @@ def assemble():
         cur = N.curated_mask(r["native_continents_curated"], fe, lab)
         has_w = sci in wcvp
         wm = N.tdwg_mask(wcvp[sci]["native"], td, labt) if has_w else None
-        final = wm if has_w else cur
+        is_crop = r["group"] == "crop"
+        final = np.ones((N.NROW, N.NCOL), bool) if is_crop else (wm if has_w else cur)
         gi = N.griis_units(griis.get(sci, []), fe)
         gm = np.zeros(len(fe) + 1, bool)
         for i in gi:
@@ -410,7 +415,8 @@ def assemble():
         rm_cont = pd.Series(unit_cont[lab[removed["row"].to_numpy(), removed["col"].to_numpy()]]).value_counts().to_dict()
         ambiguous = [x for x in griis.get(sci, []) if not ((x.get("establishmentMeans") or "").upper().startswith("INTRODUCED"))]
         rep["native_mask"] = {
-            "source": "WCVP (data, TDWG level 3)" if has_w else "curated (our judgement, Natural Earth subunits)",
+            "source": ("none: crop modelled where cultivated (owner decision, no wild native-range mask)" if is_crop else "WCVP (data, TDWG level 3)" if has_w else "curated (our judgement, Natural Earth subunits)"),
+            "treatment": "crop_cultivated" if is_crop else "wild_native",
             "curated_spec": r["native_continents_curated"], "mask_cells_land_curated": int(cur.sum()), "mask_cells_final": int(final.sum()),
             "cells_in": int(len(cells)), "cells_kept": int(keep.sum()), "cells_removed": int((~keep).sum()),
             "records_in": int(cells["n_records"].sum()), "records_kept": int(cells.loc[keep, "n_records"].sum()),
@@ -421,12 +427,14 @@ def assemble():
             "griis_units": sorted({fe[i]["properties"]["NAME"] for i in gi}),
             "griis_rows_total": len(griis.get(sci, [])), "griis_rows_ambiguous_not_applied": len(ambiguous),
             "wcvp_native_areas": len(wcvp[sci]["native"]) if has_w else None}
-        masks[f"{slug(sci)}__final"] = np.packbits(final, axis=1)
+        if not is_crop:
+            masks[f"{slug(sci)}__final"] = np.packbits(final, axis=1)
         masks[f"{slug(sci)}__curated"] = np.packbits(cur, axis=1)
         for df, bucket in ((cells[keep], species_tables), (removed, excluded_tables)):
             df = df.copy()
             df.insert(0, "species", sci); df.insert(0, "species_key", r["taxon_key"])
             df["group"] = r["group"]; df["tg_group"] = tgname
+            df["treatment"] = "crop_cultivated" if is_crop else "wild_native"
             bucket.append(df)
         pooled.setdefault(tgname, np.zeros((3, 1, 1)))      # placeholder: pooled fallback is built below only when the group grid is missing
         report[sci] = rep
@@ -456,13 +464,16 @@ def assemble():
             for k, v in lk.items():
                 df.loc[m, k] = v
             df.loc[m, "tg_source"] = src
-    ordered = ["species_key", "species", "group", "tg_group", "row", "col", "lat", "lon", "year_min", "year_max", "n_records", "n_events",
+    ordered = ["species_key", "species", "group", "treatment", "tg_group", "row", "col", "lat", "lon", "year_min", "year_max", "n_records", "n_events",
                "n_1970_1999", "n_2000_2020", "n_2021_plus", "native_curated", "native_wcvp", "griis_intro", "tg_block_p1", "tg_block_p2", "ws20", "ws100", "tg_source"]
     main, excl = main[ordered], excl[ordered] if len(excl) else excl
     files = {}
 
     def save(df, name):
         p = out / name; df.to_parquet(p, compression="zstd", index=False); files[name] = p
+    crops = main[main["treatment"] == "crop_cultivated"]
+    main = main[main["treatment"] == "wild_native"]
+    save(crops, f"occ_cells_crops_cultivated_pilot_{VERSION}.parquet")      # crops: where cultivated, no wild native-range mask
     save(main, f"occ_cells_pilot_{VERSION}.parquet")
     main.to_csv(out / f"occ_cells_pilot_{VERSION}.csv.gz", index=False, compression="gzip"); files[f"occ_cells_pilot_{VERSION}.csv.gz"] = out / f"occ_cells_pilot_{VERSION}.csv.gz"
     save(excl, f"occ_cells_pilot_{VERSION}_excluded_non_native.parquet")
@@ -479,6 +490,9 @@ def assemble():
             np.savez_compressed(p, all=grid[0], p1_1970_1999=grid[1], p2_2000_2020=grid[2]); files[p.name] = p
     for sci, rep in report.items():
         rep["download_state"] = {k: v for k, v in state.get(f"species:{sci}").items() if k not in ("predicate",)}
+        dp = rel_get(f"w2-datasets-{slug(sci)}.json", WORK / "cells" / f"w2-datasets-{slug(sci)}.json")
+        if dp:
+            rep["dataset_counts"] = json.load(open(dp))      # records per GBIF datasetKey (input for a derived-dataset registration)
     summary = {"version": VERSION, "built": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "species": report,
                "target_group_downloads": {g: {k: v for k, v in state.get(f"tg:{g}").items()} for g in tg.GROUPS}}
     p = out / f"w2_report_pilot_{VERSION}.json"; p.write_text(json.dumps(summary, indent=1, default=str)); files[p.name] = p
