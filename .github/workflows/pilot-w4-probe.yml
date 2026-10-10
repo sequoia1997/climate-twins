@@ -1,0 +1,14 @@
+# W4 pilot: structure probe of BBS, FIA and USFS tree-projection data (no secrets).
+name: Pilot W4 probe
+on:
+  push:
+    paths: [".github/run/pilot-w4-probe"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - run: python -u ctw/species/w4_probe.py
+        env: { PYTHONUNBUFFERED: "1" }
