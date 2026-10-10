@@ -25,13 +25,19 @@ jobs:
           gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
           gh release download species-pilot-data -D work/bbs -p "bbs_routes_fit.csv" -p "bbs_route_cells.csv" -p "bbs_presence_long.csv.gz" --clobber
           ls -la work/clim work/bbs
-      - run: python -u -m ctw.species.w4_hindcast_run --clim work/clim --bbs work/bbs --out w4-out
+      - name: Run (block size from the trigger file, e.g. 'block=12' for 0.5 degree cells; default 1)
+        run: |
+          B=$(grep -o 'block=[0-9]*' .github/run/pilot-w4-hindcast | cut -d= -f2 || true); B=${B:-1}
+          echo "BLOCK=$B" >> $GITHUB_ENV
+          python -u -m ctw.species.w4_hindcast_run --clim work/clim --bbs work/bbs --out w4-out --block $B
       - name: Upload and commit the report
         run: |
-          gh release upload species-pilot-data w4-out/bbs_hindcast_results.json w4-out/bbs_hindcast_report.md --clobber
-          cp w4-out/bbs_hindcast_report.md docs/pilot/W4-hindcast-report-bbs.md
+          SUF=""; [ "$BLOCK" != "1" ] && SUF="-block$BLOCK"
+          cp w4-out/bbs_hindcast_results.json w4-out/bbs_hindcast_results$SUF.json; cp w4-out/bbs_hindcast_report.md w4-out/bbs_hindcast_report$SUF.md
+          gh release upload species-pilot-data w4-out/bbs_hindcast_results$SUF.json w4-out/bbs_hindcast_report$SUF.md --clobber
+          cp w4-out/bbs_hindcast_report.md docs/pilot/W4-hindcast-report-bbs$SUF.md
           git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
-          cp w4-out/bbs_hindcast_results.json data/species/w4/
-          git add docs/pilot/W4-hindcast-report-bbs.md data/species/w4/bbs_hindcast_results.json
+          cp w4-out/bbs_hindcast_results.json data/species/w4/bbs_hindcast_results$SUF.json
+          git add docs/pilot/W4-hindcast-report-bbs$SUF.md data/species/w4/bbs_hindcast_results$SUF.json
           git commit -m "W4: first BBS hindcast report (Actions)" || exit 0
           for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
