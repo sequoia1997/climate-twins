@@ -237,11 +237,22 @@ def acquire(hours: float):
     have = rel_assets()
     rows = pilot()
     jobs = []        # (job id, kind, name, request fn)
+    def req_tg(g):
+        last = None
+        for yq in ([YEAR_Q] if os.environ.get("W2_YEAR_Q") else ['"year"', "`year`", "year"]):
+            try:
+                return request_sql(tg.sql_for(g, yq))
+            except RuntimeError as e:
+                last = e
+                if "HTTP 400" not in str(e):
+                    raise
+                log("sql refused", g, yq, str(e)[:200])
+        raise last
+    for g in tg.GROUPS:            # target-group SQL downloads first: they are the slowest and the least certain
+        jobs.append((f"tg:{g}", "tg", g, lambda g=g: req_tg(g)))
     for r in rows:
         sci = r["scientific_name"]
         jobs.append((f"species:{sci}", "species", sci, lambda t=r["taxon_key"]: gbif.request_download(t)))
-    for g in tg.GROUPS:
-        jobs.append((f"tg:{g}", "tg", g, lambda g=g: request_sql(tg.sql_for(g, YEAR_Q))))
 
     def done(job, kind, name):
         return (f"w2-cells-{slug(name)}.parquet" in have and f"w2-report-{slug(name)}.json" in have) if kind == "species" else f"w2-tg-{name}.npz" in have

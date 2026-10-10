@@ -13,6 +13,9 @@ on:
         default: "acquire"
 permissions:
   contents: write
+concurrency:
+  group: pilot-w2-run
+  cancel-in-progress: false
 env:
   PYTHONUNBUFFERED: "1"
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
