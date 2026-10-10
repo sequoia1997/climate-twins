@@ -288,3 +288,14 @@ Lessons from this project to apply: a visible status board; never trust a synthe
 - Budget: no ceiling per phase. Spending is still tracked on the status board.
 - Ecologist reviewer: none identified yet. Until one is found, the Phase 3 validation gate (skill scores, hindcast, comparison with published projections) is the main quality control, and a one-page review brief will be prepared.
 - GBIF: account created. Needs repository secrets `GBIF_USER`, `GBIF_PWD`, `GBIF_EMAIL` (Settings, Secrets and variables, Actions). A short Actions job will confirm the login works without printing it.
+
+---
+
+## 14. Updates after the Phase 0 spikes (10 October 2026)
+
+- **European Breeding Bird Atlas data is paid, so it is dropped.** The planned second validation test is gone. Europe and other regions outside North America can only be checked with weaker free tests (GBIF before/after splits restricted to well-sampled cells, transfer tests to other continents, free national monitoring data to be investigated).
+- **Validation is tiered, and every species page states its tier:** Tier 1, tested against real observed change (North American birds from the Breeding Bird Survey, plus whatever else the free tests support); Tier 2, spatial hold-out skill only, clearly labelled; Tier 3, below the skill gate, not shown. Pilot species without a verified validation dataset (monarch, blacklegged tick, wine grape) start at Tier 2.
+- **Do not use in the public pipeline:** eBird Status and Trends (no redistribution without written permission), Christmas Bird Count (not open), eBMS (signed licence). Optional private sanity checks only, kept out of the repo.
+- **Dependencies layer (Layer 3) is smaller than planned.** Expect roughly 25 to 40 reviewed obligate or near-obligate pairs, not 100. The big interaction database (GloBI) is too noisy to ingest as a source; every pair shown needs a person-read citation and a specialist reviewer. A mycorrhizal dataset is non-commercial only and conflicts with the licence filter. The "limited dispersal" bound is uncalibrated (about 10 times uncertain) until the hindcast calibrates it.
+- **iNaturalist data comes through GBIF.** The CC0 and CC-BY filter drops observations licensed CC-BY-NC. Spike A is counting the loss; whether non-commercial records may be used as model inputs for a free educational site that publishes only derived outputs is a legal question to settle before relaxing the filter.
+- **Spikes A, B, D, F and G were interrupted by a usage limit and restarted on 10 October.**
