@@ -1,0 +1,36 @@
+# W2 probe: GBIF SQL download syntax, cached download liveness, release access. Push a change to .github/run/pilot-w2 with [probe] in the
+# commit message, or run by hand. Secrets only reach the step that calls GBIF; nothing prints them.
+name: pilot-w2-probe
+on:
+  push:
+    paths: [".github/run/pilot-w2"]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+jobs:
+  probe:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[probe]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Release species-pilot-data (create if missing)
+        env: { GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+        run: |
+          gh release view species-pilot-data >/dev/null 2>&1 && echo "release exists" || \
+            gh release create species-pilot-data --title "Species pilot data" --notes "Data assets of the species pilot (workstreams W1 to W5)." || gh release view species-pilot-data
+          gh release view species-pilot-data --json assets --jq '.assets[] | [.name,.size] | @tsv' || true
+      - name: GBIF probe
+        env:
+          GBIF_USER: ${{ secrets.GBIF_USER }}
+          GBIF_PWD: ${{ secrets.GBIF_PWD }}
+          GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+        run: python -m ctw.species.w2_probe
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: w2-probe, path: work/w2 }
