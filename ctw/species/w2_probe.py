@@ -14,10 +14,12 @@ SQL_TPL = ("SELECT FLOOR((90 - decimalLatitude) * 24) AS r, FLOOR((decimalLongit
 
 def variants():
     tick = "speciesKey = 2182727"
-    return {"if_alias": SQL_TPL.format(period="IF(year <= 1999, 1, 2)", taxon=tick),
-            "case_alias": SQL_TPL.format(period="CASE WHEN year <= 1999 THEN 1 ELSE 2 END", taxon=tick),
-            "int_div": SQL_TPL.format(period="FLOOR(year / 2000)", taxon=tick),
-            "classkey": SQL_TPL.format(period="IF(year <= 1999, 1, 2)", taxon="classKey IN (367)")}
+    out = {}
+    for yname, yq in (("dq", '"year"'), ("bt", "`year`"), ("plain", "year")):
+        t = SQL_TPL.replace("year >= 1970 AND year <= 2020", f"{yq} >= 1970 AND {yq} <= 2020")
+        out[f"if_{yname}"] = t.format(period=f"IF({yq} <= 1999, 1, 2)", taxon=tick)
+        out[f"case_{yname}"] = t.format(period=f"CASE WHEN {yq} <= 1999 THEN 1 ELSE 2 END", taxon=tick)
+    return out
 
 
 def validate(sql: str) -> list:
@@ -56,7 +58,7 @@ def main() -> int:
     # 2 SQL validation endpoints
     v = variants()
     res["validate"] = {}
-    for name, sql in list(v.items())[:2]:
+    for name, sql in []:
         res["validate"][name] = validate(sql)
         for line in res["validate"][name]:
             print("validate", name, *line)
