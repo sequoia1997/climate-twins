@@ -12,7 +12,7 @@ local command) or **[U]** (unverified).
 | BBS ingest and observed-change metrics (`bbs.py`, `w4_bbs_run.py`, workflow `pilot-w4-bbs.yml`) | done, real run verified (section 3) |
 | FIA ingest and tree change test (`fia.py`, `w4_fia_run.py`, workflow `pilot-w4-fia.yml`) | code done and tested on synthetic data; first real run: see section 4 |
 | Comparison with published tree projections | species presence verified in RDS-2024-0020 (section 5); comparison with our model waits for W3 |
-| GBIF before and after protocol for the two European species | protocol written (section 6); waits for W2's time-split product |
+| GBIF before and after for the two European species (`gbif_split.py`, `w4_gbif_run.py`, workflow `pilot-w4-gbif.yml`) | protocol and code done and tested; real run executes end to end but **waits for W2's target-group grids**: the `w2-tg-bird.npz` and `w2-tg-plant.npz` on the release are all zeros at 18:55 UTC (run 38077216009, diagnostics in `docs/pilot/W4-hindcast-report-gbif.md`), so no block can be called well sampled and no absence defined |
 | Full BBS model hindcast (`hindcast_run.py`, `w4_hindcast_run.py`, workflow `pilot-w4-hindcast.yml`) | **done: group test FAILS (change), static skill good, no Tier 1** (section 3b) |
 
 **Key structural finding (important for the pilot exit gate).** The minimum-species rules of C-validation 4.7 (30 species for BBS, 20 for FIA) cannot be
@@ -171,7 +171,7 @@ Verified (probe run 38072865229, ranged reads of the zip central directories and
 
 ## 6. Test 3: GBIF before and after, European species (European robin, English oak)
 
-Protocol (not yet run; waits for W2's time-split product, `docs/pilot/W2-occurrences.md`):
+Protocol (code runs; waits for W2's target-group grids, `docs/pilot/W2-occurrences.md`; per-species cell tables for the robin and the oak are on the release: `w2-cells-Erithacus_rubecula.parquet` has 24,849 native cells with records in 1970-1999 and 144,096 in 2000-2020 [V 38077216009], a sixfold rise in effort that is exactly why raw counts must never be compared):
 - Split 1970-1999 versus 2000-2020 (C-validation 4.2). Records only from CC0 and CC-BY sources as the W2 filter delivers.
 - Analysis cell 0.5 degree. A cell is **well sampled** when the number of target-group records (all birds for the robin, all vascular plants for the oak) is at least 20 in **both** periods
   (C-validation 4.3, N = 20, a proposal). Presence = at least one record of the species in the period; absence = well-sampled cell with no record.
