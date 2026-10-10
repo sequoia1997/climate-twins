@@ -52,3 +52,8 @@ Periods 1970-1999 and 2000-2020, 0.5 degree blocks, well sampled = target group 
 |---|---|---|---|---|
 | European robin | 24849 / 144096 | 0 / 0 | nan / nan | nan / nan |
 | English oak | 26374 / 56796 | 0 / 0 | nan / nan | nan / nan |
+
+## Diagnostics
+
+- European robin: tg layer sums [0, 0, 0], nonzero cells [0, 0, 0], tg blocks p1>0 0 p2>0 0, accessible 15715, usable blocks 0, score cells 0, finite score cells 0, cellset sizes well/all computed next
+- English oak: tg layer sums [0, 0, 0], nonzero cells [0, 0, 0], tg blocks p1>0 0 p2>0 0, accessible 14122, usable blocks 0, score cells 0, finite score cells 0, cellset sizes well/all computed next
