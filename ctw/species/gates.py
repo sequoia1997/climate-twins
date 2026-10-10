@@ -38,6 +38,7 @@ class GateConfig:
     novel_max: float = 0.15              # F: withhold shift numbers above 15% novel area
     omission_max: float = 0.40           # UNCALIBRATED: share of the expert / native range the model calls unsuitable
     commission_max: float = 0.30         # UNCALIBRATED: share of the predicted range outside the expert / native range
+    recall_min: float = 0.8              # share of the training records inside the predicted present range (p05 threshold gives ~0.95)
     unrecorded_km: float = 500.0         # predicted-suitable area farther than this from any record is reported (warning only)
     unrecorded_warn: float = 0.5
     gam_disagree_pp: float = 25.0        # UNCALIBRATED: |area change main - check| above this percentage points -> low confidence
@@ -49,11 +50,11 @@ def area(mask: np.ndarray, spec: GridSpec) -> float:
 
 
 def range_check(now: np.ndarray, spec: GridSpec, rec_rc: np.ndarray, expert: np.ndarray = None, kind: str = "native_range",
-                cfg: GateConfig = GateConfig()) -> dict:
+                cfg: GateConfig = GateConfig(), species_kind: str = "wild") -> dict:
     """Mandatory check against an expert / native range (bool global grid, may be coarser). Always also reports `unrecorded_share`,
     the share of the present predicted area farther than cfg.unrecorded_km from any record (F: non-climatic limits are the blind spot).
     status: 'pass' | 'fail' | 'missing' (no expert range supplied)."""
-    out = dict(kind=kind if expert is not None else "none", status="missing")
+    out = dict(kind=kind if expert is not None else "none", status="missing", species_kind=species_kind)
     a_now = area(now, spec)
     if len(rec_rc) and a_now > 0:
         rec = np.zeros((spec.H, spec.W), bool)
@@ -62,6 +63,15 @@ def range_check(now: np.ndarray, spec: GridSpec, rec_rc: np.ndarray, expert: np.
         out["unrecorded_share"] = round(area(now & ~near, spec) / a_now, 4)
     else:
         out["unrecorded_share"] = None
+    if species_kind == "crop":
+        # Crops are modelled on cultivated records and mean "where the climate suits growing it": the native range is not the reference, so
+        # commission against it is reported, not gated. The recall / empty-prediction gate in evaluate() still applies.
+        if expert is not None:
+            from .grid import resample
+            ex = expert if expert.shape == (spec.H, spec.W) else resample(expert.astype(np.uint8), spec).astype(bool)
+            out["commission_vs_native_reported"] = round(area(now & ~ex, spec) / a_now, 4) if a_now else None
+        out["status"] = "exempt_crop"
+        return out
     if expert is None:
         return out
     from .grid import resample
@@ -83,7 +93,8 @@ def range_check(now: np.ndarray, spec: GridSpec, rec_rc: np.ndarray, expert: np.
 
 
 def evaluate(*, n_gate: int, n_used: int, cv_auc: float, area_now: float, novel_shares: dict, check_change: dict, main_change: dict,
-             rng_check: dict, validation: dict = None, range_shift_test: dict = None, cv_kind: str = "presence_background", cfg: GateConfig = GateConfig()) -> dict:
+             rng_check: dict, validation: dict = None, range_shift_test: dict = None, cv_kind: str = "presence_background", record_recall: float = None,
+             species_kind: str = "wild", cfg: GateConfig = GateConfig()) -> dict:
     """Apply the gates. novel_shares: {'ssp|period': share of the (present or unlimited-future) area flagged novel};
     check_change / main_change: {'ssp|period': percent area change under the GAM check / the main model}.
     validation: None or {'kind': 'bbs'|'fia'|..., 'passed': bool, ...}: static skill against an independent survey (W4).
@@ -122,6 +133,12 @@ def evaluate(*, n_gate: int, n_used: int, cv_auc: float, area_now: float, novel_
         hard.append(f"range check failed (omission {rng_check.get('omission')}, commission {rng_check.get('commission')})")
     if rng_check.get("unrecorded_share") is not None and rng_check["unrecorded_share"] > cfg.unrecorded_warn:
         soft.append(f"{rng_check['unrecorded_share']:.0%} of the predicted area is more than {cfg.unrecorded_km:.0f} km from any record")
+    # 4b sanity that the range check cannot be satisfied by predicting (almost) nothing: commission is 0 for an empty map
+    g["record_recall"] = dict(value=None if record_recall is None else round(float(record_recall), 4), min=cfg.recall_min)
+    if area_now <= 0:
+        hard.append("the predicted present range is empty")
+    elif record_recall is not None and record_recall < cfg.recall_min:
+        hard.append(f"only {record_recall:.0%} of the records fall in the predicted range (minimum {cfg.recall_min:.0%})")
     # 5 transparent check model
     diffs = {k: abs(main_change[k] - check_change[k]) for k in check_change if k in main_change
              and np.isfinite(main_change[k]) and np.isfinite(check_change[k])}
@@ -141,4 +158,6 @@ def evaluate(*, n_gate: int, n_used: int, cv_auc: float, area_now: float, novel_
     tier = "C" if hard else ("A" if ev_ok else "B")
     return dict(gates=g, tier=tier, confidence="low" if (soft and tier != "C") else "standard", published=tier != "C", hard_failures=hard,
                 soft_flags=soft, withheld=withheld, config=asdict(cfg), range_shifts_tested=rs_status, cv_kind=cv_kind,
-                wording="projected climate suitability (a model of climate suitability, not a forecast or an expected range)")
+                species_kind=species_kind,
+                wording=("where the climate suits growing it (a model of climate suitability for the cultivated crop, not a forecast or an expected range)"
+                         if species_kind == "crop" else "projected climate suitability (a model of climate suitability, not a forecast or an expected range)"))

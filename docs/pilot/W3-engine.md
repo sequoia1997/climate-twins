@@ -175,6 +175,39 @@ peak memory about 2.4 GB at last look. Extrapolating: 24 models would take about
 fixed: omission now only gates against a true expert/atlas range, a native mask gates on commission (predicted area outside the native range) alone. This is a real-data finding about the check, not about the maple.
 These numbers are an engine test with interim inputs, not the pilot result.
 
+## 8d. Review item: the omission-versus-commission gate change (made after seeing a result)
+
+**What changed.** The mandatory range check first required omission <= 0.40 and commission <= 0.30 against the native-range mask. After the first real fit it requires **commission <= 0.30 only** when the
+reference is a native-range mask (kind `native_range`); omission is still computed, stored (`omission`, `omission_gates: false`) and shown, and it still gates when the reference is a true expert or atlas
+range (kind `expert_range`). Crops: see 8e.
+
+**Why.** Before/after on the one real fit so far (sugar maple, 4 trial inputs listed in 8c; reference = my continent-level North America mask, area 25.8 million km2):
+
+| | omission | commission | verdict before | verdict after |
+|---|---|---|---|---|
+| Acer saccharum, 3,674 records, CV AUC 0.83, Boyce 0.94 | 0.850 (predicted range covers 15% of North America) | 0.019 | fail, Tier C | pass, Tier B |
+
+Omission asks "how much of the reference does the model call suitable". A native range (continent or botanical-country polygons) is the area where the species can occur, not where its climate is suitable
+today, so every species with a climate niche narrower than its continent has high omission. It measures the coarseness of the mask, not the quality of the fit. Commission asks the question the check exists
+for (F section 6, item 4): does the model put the species where it is not native, i.e. is there a non-climatic limit the climate model cannot see.
+
+**Why it cannot hide a bad fit.** Removing omission from the gate opens one hole: a model that predicts almost nothing has commission near 0. Two things close it, both in `gates.evaluate` and tested:
+(1) `record_recall`: at least 80% of the training records must lie inside the predicted present range (the p05 threshold gives about 95% by construction, so a fit failing this is broken), and an empty
+present range is a hard failure; (2) the skill gates (CV AUC floor, record counts) and the novelty withholding are unchanged. A model that spills outside the native range still fails on commission
+(`test_range_check_flags_non_climatic_limits`, `test_crop_kind_exempts_native_commission_but_not_recall`), a nearly empty model fails on recall
+(`test_range_check_cannot_be_passed_by_predicting_nothing`), and the same coarse-mask numbers fail when the reference is declared an expert range
+(`test_native_omission_reported_not_gated_but_commission_gates`) [V: local pytest, 35 pass]. What the change does not catch: an over-prediction that stays inside the (large) native mask, for example a
+species restricted to one region of a continent. That case is the same blind spot F documented; the unrecorded-area warning (predicted area more than 500 km from any record) is the only flag for it, and a
+finer mask (W2's WCVP botanical countries for plants) narrows it. Reviewers should decide whether to add an expert-range or atlas check for the species where this matters.
+
+## 8e. Crops (owner decision)
+
+`species.kind` is `crop` when the pilot table `group` is `crop` (a `kind` column overrides), else `wild`; it is in the summary (`species.kind`, `species_kind`), the report, the CTS header `meta.kind` and
+`stats_entry.json`. A crop is modelled on cultivated records and its wording is "where the climate suits growing it" (not a range, not a forecast). The native-range commission check is skipped for crops
+(status `exempt_crop`; the commission against the native mask is still stored as `commission_vs_native_reported`), and a missing native mask no longer fails them. Recall, empty-range, records, skill, novelty and
+check-model gates still apply. Licences stay CC0 and CC-BY. **Open item for W2:** `w2cells.py` drops `establishmentMeans` CULTIVATED / MANAGED records for every species, which removes exactly the records a
+crop model needs (wine grape); W2 must keep them for crops, or the crop fit will describe the wild vine.
+
 ## 9. Waiting on others
 
 - W1: tile files and `apply_deltas` are on the code side; the release has no climate assets yet [as of this entry]. When they appear: run one species end to end and record time and memory.

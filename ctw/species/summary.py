@@ -30,6 +30,12 @@ def _clean(o):
     return o
 
 
+def species_kind(meta: dict) -> str:
+    """'crop' (modelled on cultivated records, read as where the climate suits growing it) or 'wild'. meta['kind'] wins, else group == 'crop'."""
+    k = (meta.get("kind") or "").strip().lower()
+    return k if k in ("wild", "crop") else ("crop" if meta.get("group") == "crop" else "wild")
+
+
 def key(ssp: str, period: str) -> str:
     return f"{ssp}|{period}"
 
@@ -40,7 +46,10 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
     spec = fit.spec
     now = proj.now
     a_now = area_of(now, spec)
-    rng = G.range_check(now, spec, fit.pres_rc, expert, expert_kind, gate_cfg)
+    kind = species_kind(meta)
+    rng = G.range_check(now, spec, fit.pres_rc, expert, expert_kind, gate_cfg, kind)
+    n_p = fit.records["n_used"]
+    recall = float((fit.score(fit.ref[:n_p]) >= fit.thr).mean()) if n_p else None
     by, audit, novel_shares, main_change, check_change = {}, {}, {}, {}, {}
     for (ssp, period), sc in proj.scen.items():
         k = key(ssp, period)
@@ -66,7 +75,7 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
     auc = cv["metrics"]["gbm"]["auc"]
     ev = G.evaluate(n_gate=fit.records["n_gate"], n_used=fit.records["n_used"], cv_auc=auc, area_now=a_now, novel_shares=novel_shares,
                     check_change=check_change, main_change=main_change, rng_check=rng, validation=validation, range_shift_test=range_shift_test,
-                    cv_kind=fit.cv.get("kind", "presence_background"), cfg=gate_cfg)
+                    cv_kind=fit.cv.get("kind", "presence_background"), record_recall=recall, species_kind=kind, cfg=gate_cfg)
     # withhold shift numbers where novel climate dominates (numbers kept under 'audit' for reviewers, not for display)
     for k, w in ev["withheld"].items():
         if w:
@@ -77,11 +86,11 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
                                         f"(limit {gate_cfg.novel_max:.0%}): shift numbers withheld")
     summ = dict(
         schema=SCHEMA,
-        species=dict(id=meta.get("id") or _slug(meta.get("scientific_name", fit.species)), scientific_name=meta.get("scientific_name", fit.species),
+        species=dict(kind=kind, id=meta.get("id") or _slug(meta.get("scientific_name", fit.species)), scientific_name=meta.get("scientific_name", fit.species),
                      common_name=meta.get("common_name"), group=meta.get("group"), gbif_taxon_key=meta.get("gbif_taxon_key"),
                      validation_plan=meta.get("validation_plan")),
         tier=ev["tier"], range_shifts_tested=ev["range_shifts_tested"], cv_kind=ev["cv_kind"], confidence=ev["confidence"], published=ev["published"], hard_failures=ev["hard_failures"], soft_flags=ev["soft_flags"],
-        wording=ev["wording"],
+        wording=ev["wording"], species_kind=kind, record_recall=recall,
         area_now_km2=a_now,
         records=dict(raw=fit.records["n_raw"], flagged_excluded=fit.records["n_flagged"], thinned_cells=fit.records["n_cells"],
                      gate_cells=fit.records["n_gate"], used_in_fit=fit.records["n_used"], background=fit.records["n_bg"],

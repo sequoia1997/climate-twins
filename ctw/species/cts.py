@@ -143,7 +143,7 @@ def prototype_stats_entry(summary: dict, bbox: list = None) -> dict:
     'place' table is not produced here (it needs the place list); scenario / period combinations that were withheld are omitted."""
     sp = summary["species"]
     info = dict(id=sp["id"], name=sp.get("common_name") or sp["scientific_name"], sci=sp["scientific_name"], group=sp.get("group"),
-                deps=[], by={}, place={}, area_now_km2=summary["area_now_km2"], tier=summary["tier"], confidence=summary["confidence"], range_shifts_tested=summary.get("range_shifts_tested"), cv_kind=summary.get("cv_kind"),
+                deps=[], by={}, place={}, area_now_km2=summary["area_now_km2"], tier=summary["tier"], confidence=summary["confidence"], range_shifts_tested=summary.get("range_shifts_tested"), kind=summary.get("species_kind"), cv_kind=summary.get("cv_kind"),
                 bbox=bbox or [-180, -60, 180, 80])
     for k, sc in summary["scenarios"].items():
         if sc.get("withheld"):

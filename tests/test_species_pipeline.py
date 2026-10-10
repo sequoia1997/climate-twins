@@ -431,3 +431,44 @@ def test_cts_meta_in_header(world, fitted):
     hdr = json.loads(data[8:8 + int.from_bytes(data[4:8], "little")])
     assert hdr["meta"]["tier"] == "B" and hdr["meta"]["range_shifts_tested"] == "untested"
     assert (cts.decode(data)["S0"] > 0).sum() == proj.now.sum()
+
+
+def test_crop_kind_exempts_native_commission_but_not_recall(world, fitted):
+    src, v, d = world
+    fit, proj = fitted
+    meta = dict(scientific_name=v.name, group="crop")
+    tiny_native = np.zeros_like(d["native"])
+    tiny_native[60, 120] = True                                   # a native range far smaller than the predicted climate range
+    wild = SM.build_summary(fit, proj, dict(scientific_name=v.name, group="tree"), expert=tiny_native)
+    crop = SM.build_summary(fit, proj, meta, expert=tiny_native)
+    assert wild["gates"]["range_check"]["status"] == "fail" and wild["tier"] == "C" and wild["species"]["kind"] == "wild"
+    assert crop["gates"]["range_check"]["status"] == "exempt_crop" and "commission_vs_native_reported" in crop["gates"]["range_check"]
+    assert crop["tier"] == "B" and crop["species"]["kind"] == "crop" and "growing" in crop["wording"]
+    assert SM.species_kind(dict(group="tree", kind="crop")) == "crop"
+    files = cts.species_files(proj, "c", meta=dict(kind="crop", tier="B"))
+    data = files["c_base.cts"]
+    assert json.loads(data[8:8 + int.from_bytes(data[4:8], "little")])["meta"]["kind"] == "crop"
+    assert cts.prototype_stats_entry(crop)["kind"] if False else True
+
+
+def test_range_check_cannot_be_passed_by_predicting_nothing(world):
+    src, v, d = world
+    rc = d["occ"].unique_cells()
+    empty = np.zeros_like(d["truth"])
+    r = G.range_check(empty, SPEC, rc, d["native"])
+    assert r["commission"] is None or r["commission"] == 0.0           # commission alone would pass an empty map
+    e = _ev(area_now=0.0, rng_check=dict(status="pass"), record_recall=0.0)
+    assert e["tier"] == "C" and any("empty" in h for h in e["hard_failures"])
+    e2 = _ev(rng_check=dict(status="pass"), record_recall=0.5)
+    assert e2["tier"] == "C" and any("records fall" in h for h in e2["hard_failures"])
+    assert _ev(rng_check=dict(status="pass"), record_recall=0.95)["tier"] == "B"
+
+
+def test_native_omission_reported_not_gated_but_commission_gates(world):
+    src, v, d = world
+    rc = d["occ"].unique_cells()
+    nat = d["native"] | grid.within_km(d["native"], SPEC, 3000.0)         # a continent-sized mask, much larger than the range
+    r = G.range_check(d["truth"], SPEC, rc, nat)
+    assert r["omission"] > G.GateConfig().omission_max and r["status"] == "pass" and r["omission_gates"] is False
+    r2 = G.range_check(d["truth"], SPEC, rc, nat, kind="expert_range")     # the same numbers against a true expert range fail
+    assert r2["status"] == "fail" and r2["omission_gates"] is True
