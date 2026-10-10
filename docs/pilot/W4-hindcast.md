@@ -13,7 +13,7 @@ local command) or **[U]** (unverified).
 | FIA ingest and tree change test (`fia.py`, `w4_fia_run.py`, workflow `pilot-w4-fia.yml`) | code done and tested on synthetic data; first real run: see section 4 |
 | Comparison with published tree projections | species presence verified in RDS-2024-0020 (section 5); comparison with our model waits for W3 |
 | GBIF before and after protocol for the two European species | protocol written (section 6); waits for W2's time-split product |
-| Full model hindcast (fit window 1, predict window 2, score) | **waiting** for W1 climate for both windows and W3 pipeline (section 7) |
+| Full model hindcast runner (`hindcast_run.py`, `w4_hindcast_run.py`, workflow `pilot-w4-hindcast.yml`) | code done; tested end to end on W3's synthetic climate. Real run **waiting** for W1 tiles r0c1, r1c0, r1c1 (release has only r0c0 and r1c2 at 18:25 UTC) |
 
 **Key structural finding (important for the pilot exit gate).** The minimum-species rules of C-validation 4.7 (30 species for BBS, 20 for FIA) cannot be
 met by the pilot list: `data/species/pilot_v1.csv` has **10 birds** with a BBS plan and **5 trees** with an FIA plan, and the two European species
@@ -185,7 +185,6 @@ Report generator: `hindcast.report(...)` and `observed_table(...)` write markdow
 
 ## 8. Waiting on others (nothing blocks the data side)
 
-- W1 (`docs/pilot/W1-climate.md`): TerraClimate 1966-1985 and 2005-2024 mean predictors on the 1/24 degree grid. **Waiting.**
+- W1 (`docs/pilot/W1-climate.md`): hindcast tiles `pred_hind_1966-1985_<tile>.npz` and `pred_hind_2005-2024_<tile>.npz`. On the release at 18:25 UTC: r0c0 and r1c2 only; BBS needs r0c0, r0c1, r1c0, r1c1. **Waiting for the remaining tiles** (W1 TerraClimate tiles job queued).
 - W2 (`docs/pilot/W2-occurrences.md`): thinned occurrences, native-range masks, time-split product for the two European species. **Waiting.**
-- W3 (`docs/pilot/W3-engine.md`, `ctw/species/pipeline.py`): fit and predict interface; current repo state is a skeleton. Until it lands the hindcast code is written against `sdm.py` (`run_sdm`, `Settings`) and the `CellSet` contract.
-  Hindcast runner to be added once the interface is fixed.
+- W3 pipeline landed (`pipeline.fit_species`, `FitConfig.window`, `inputs.W1Source`). `hindcast_run.py` fits with it on window-1 climate and BBS window-1 route presences (target-group density = route density), scores both windows at the route cells and runs `hindcast.run_test`. **[V: unit test on the synthetic climate, `tests/test_species_hindcast_run.py`]**
