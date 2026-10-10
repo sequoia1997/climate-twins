@@ -18,6 +18,15 @@ WINDOW_PRODUCT = {"1991-2020": "base_1991-2020", "1966-1985": "hind_1966-1985", 
 SPEC = GridSpec(G.NLAT, G.NLON)
 
 
+def tcr_likely_models() -> list:
+    """Models of the site's default ensemble (config.toml [models]: TCR within tcr_likely)."""
+    import tomllib
+    from pathlib import Path
+    c = tomllib.load(open(Path(__file__).resolve().parents[2] / "config.toml", "rb"))
+    lo, hi = c["models"]["tcr_likely"]
+    return [m["name"] for m in c["models"]["list"] if lo <= m["tcr"] <= hi]
+
+
 class W1Source(ClimateSource):
     """ClimateSource over W1's tile files. Bands are read from the tile files directly (no whole-grid arrays). For futures,
     `prepare(domain)` builds one BaselineStack of the domain's land cells (monthly baseline, about 340 bytes per cell) and keeps it for
@@ -29,8 +38,17 @@ class W1Source(ClimateSource):
         self.names = tuple(names or CS.NAMES)
         self._lib = CS.DeltaLibrary(self.root)
         avail = [m for m in self._lib.models() if m != "ensemble_median"]
-        sel = models or (os.environ.get("W3_MODELS", "").split(",") if os.environ.get("W3_MODELS") else None)
-        self._models = [m for m in avail if (not sel or m in sel)]
+        env = os.environ.get("W3_MODELS", "")
+        if models:
+            sel = list(models)
+        elif env and env != "all":
+            sel = env.split(",")
+        elif env == "all":
+            sel = None
+        else:
+            sel = tcr_likely_models()            # the site's default ensemble: models with TCR in config.toml [models] tcr_likely
+        self._models = [m for m in avail if (not sel or m in sel)] or avail
+        self.ppt_mode = os.environ.get("W3_PPT", "")     # "none": precipitation change factors forced to 1 (sensitivity run)
         self._tiles = {}            # (product, tile) -> loaded pred dict (small LRU)
         self._stack = None
         self._interp = {}
@@ -153,7 +171,8 @@ class W1Source(ClimateSource):
         it = self._interp.get((r0, r1))
         if it is None:
             it = self._interp[(r0, r1)] = CS.PointInterp(d.lat, d.lon, sub.lat, sub.lon)
-        res = CS.apply_deltas(sub, d, model, SSP_NAME[ssp], period, interp=it)
+        kw = dict(ppt_ratio=(1.0, 1.0)) if self.ppt_mode == "none" else {}
+        res = CS.apply_deltas(sub, d, model, SSP_NAME[ssp], period, interp=it, **kw)
         full = st.subset(slice(a, b))
         pb = self._base_full(r0, r1, a, b, names)
         for k, n in enumerate(names):
@@ -231,13 +250,16 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None):
     from .grid import Occurrences
     root = root or os.environ.get("W3_OCC", "work/occ")
     tag = meta["scientific_name"].replace(" ", "_")
-    one = os.path.join(root, f"w2-cells-{tag}.parquet")
-    allp = os.path.join(root, "occ_cells_pilot_v1.parquet")           # W2's final product (all species, native cells only)
-    if os.path.exists(allp):
-        df = pd.read_parquet(allp)
+    kind = (meta.get("kind") or ("crop" if meta.get("group") == "crop" else "wild")).lower()
+    f_crop = os.path.join(root, "occ_cells_crops_cultivated_pilot_v1.parquet")
+    f_wild = os.path.join(root, "occ_cells_pilot_v1.parquet")                      # W2 final: native cells only, 24 wild species
+    one = os.path.join(root, f"w2-cells-{tag}.parquet")                           # interim per-species file (fallback)
+    src_file = f_crop if (kind == "crop" and os.path.exists(f_crop)) else (f_wild if os.path.exists(f_wild) else one)
+    df = pd.read_parquet(src_file)
+    if "species" in df.columns:
         df = df[df["species"] == meta["scientific_name"]]
-    else:
-        df = pd.read_parquet(one)
+    if not len(df):
+        raise ValueError(f"no occurrence cells for {meta['scientific_name']} in {src_file}")
     occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
     native = density = None
     nm = os.path.join(root, "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
@@ -260,9 +282,14 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None):
                 density = g
                 break
     dois = []
-    rp = os.path.join(root, f"w2-report-{tag}.json")
+    rp = os.path.join(root, "w2_report_pilot_v1.json")
     if os.path.exists(rp):
-        r = json.load(open(rp))
-        if r.get("doi"):
-            dois.append("https://doi.org/" + r["doi"])
+        r = json.load(open(rp))["species"].get(meta["scientific_name"], {})
+    else:
+        rp = os.path.join(root, f"w2-report-{tag}.json")
+        r = json.load(open(rp)) if os.path.exists(rp) else {}
+    if r.get("doi"):
+        dois.append("https://doi.org/" + r["doi"])
+    for d_ in (r.get("target_group_dois") or []):
+        dois.append(d_)
     return occ, native, density, dois

@@ -1,0 +1,41 @@
+{
+ "status": "fail",
+ "group_status": "fail",
+ "group_checks": [
+  {
+   "name": "direction of shift",
+   "value": "12/25 agree (p=0.655)",
+   "need": ">= 70% and p < 0.05",
+   "ok": false
+  },
+  {
+   "name": "median shift ratio (model / observed)",
+   "value": "0.84",
+   "need": "0.5 to 2.0",
+   "ok": true
+  },
+  {
+   "name": "shift error below no-change error",
+   "value": "median 103 km vs 75 km",
+   "need": "model error < no-change error (median)",
+   "ok": false
+  },
+  {
+   "name": "area change sign and per-cell correlation",
+   "value": "sign 18/40, median r -0.01",
+   "need": "sign majority and r >= 0.3",
+   "ok": false
+  },
+  {
+   "name": "beats no-change null in TSS (window 2)",
+   "value": "12/40",
+   "need": ">= 60% of species",
+   "ok": false
+  }
+ ],
+ "species_direction_agree": false,
+ "species_shift_error_km": 74.56864606136429,
+ "species_nochange_error_km": 53.07003267218559,
+ "interpretation": "Change test fails: publish current suitability only, hide future projections for this group, or label as suitable climate not expected range.",
+ "from_file": "data/species/w4/bbs_hindcast_results.json"
+}

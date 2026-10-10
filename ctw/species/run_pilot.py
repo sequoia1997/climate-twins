@@ -139,6 +139,38 @@ def report(out: Path, key: str = "SSP2-4.5|2081-2100") -> str:
     return "\n".join(lines) + "\n"
 
 
+# --------------------------------------------------------------------------- W4 evidence
+def make_evidence(w4_json: Path, table: Path, out: Path) -> int:
+    """W4's BBS hindcast (blocked presence-absence variant) -> per-species evidence files for --validation-dir / --shift-dir.
+      validation/<id>.json  {kind: 'bbs', passed, static metrics}   passed = presence-absence blocked-CV skill gate AND window-2 transfer
+      shift/<id>.json       {status: group change verdict ('fail' for the birds), group checks, species numbers}
+    Species are matched to the pilot table by common name (case-insensitive). Species without BBS evidence get no file (untested)."""
+    d = json.loads(Path(w4_json).read_text())["blocked"]
+    names = {r["common_name"].strip().lower(): r for r in read_table(table)}
+    (out / "validation").mkdir(parents=True, exist_ok=True)
+    (out / "shift").mkdir(parents=True, exist_ok=True)
+    n = 0
+    for bbs_name, res in d["species"].items():
+        r = names.get(bbs_name.strip().lower())
+        if r is None:
+            continue
+        cv = res.get("cv") or {}
+        passed = bool(res.get("cv_gate")) and bool(res.get("transfer_ok"))
+        val = dict(kind="bbs", passed=passed, source=cv.get("source"), cv_auc=cv.get("auc"), cv_tss=cv.get("tss"), cv_boyce=cv.get("boyce"),
+                   n_presence_routes=cv.get("n_pres"), n_absence_routes=cv.get("n_abs"), window2_auc=res.get("auc2"), window2_tss=res.get("tss2"),
+                   window2_boyce=res.get("boyce2"), w3_background_cv=cv.get("w3_background_cv"), cv_gate=res.get("cv_gate"), transfer_ok=res.get("transfer_ok"),
+                   from_file="data/species/w4/bbs_hindcast_results.json")
+        g = d["group"]
+        sh = dict(status="fail" if g["status"] == "fail" else ("pass" if g["status"] == "pass" else "untested"), group_status=g["status"],
+                  group_checks=g["checks"], species_direction_agree=res.get("direction_agree"), species_shift_error_km=res.get("shift_error_km"),
+                  species_nochange_error_km=res.get("shift_error_nochange_km"), interpretation=g.get("interpretation"),
+                  from_file="data/species/w4/bbs_hindcast_results.json")
+        (out / "validation" / f"{r['id']}.json").write_text(json.dumps(val, indent=1))
+        (out / "shift" / f"{r['id']}.json").write_text(json.dumps(sh, indent=1))
+        n += 1
+    return n
+
+
 # --------------------------------------------------------------------------- main
 def _synthetic_inputs(name: str):
     from . import synthetic as SY
@@ -155,6 +187,11 @@ def main(argv=None):
     a = sub.add_parser("list")
     a.add_argument("--table", default=str(TABLE))
     a.add_argument("--synthetic", action="store_true")
+    e = sub.add_parser("evidence")
+    e.add_argument("--w4", default=str(ROOT / "data" / "species" / "w4" / "bbs_hindcast_results.json"))
+    e.add_argument("--table", default=str(TABLE))
+    e.add_argument("--out", default=str(ROOT / "data" / "species" / "w3" / "evidence"))
+    sub.add_parser("models")
     t = sub.add_parser("tiles")
     t.add_argument("--species", required=True)
     t.add_argument("--table", default=str(TABLE))
@@ -179,6 +216,14 @@ def main(argv=None):
             print(json.dumps([v.name for v in SY.CATALOGUE]))
         else:
             print(json.dumps([r["id"] for r in read_table(Path(args.table))]))
+        return 0
+    if args.cmd == "evidence":
+        n = make_evidence(Path(args.w4), Path(args.table), Path(args.out))
+        print(f"wrote evidence for {n} species to {args.out}")
+        return 0
+    if args.cmd == "models":
+        from . import inputs
+        print(" ".join(inputs.tcr_likely_models()))
         return 0
     if args.cmd == "tiles":
         from . import inputs

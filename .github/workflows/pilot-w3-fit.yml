@@ -80,7 +80,8 @@ jobs:
           mkdir -p work/clim
           tiles="$(python -m ctw.species.run_pilot tiles --species ${{ matrix.species }})"
           echo "tiles: $tiles"
-          args=(-p "deltas_*.npz")
+          args=()
+          for m in $(python -m ctw.species.run_pilot models); do args+=(-p "deltas_${m}.npz"); done
           for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "basem_${t}.npz"); done
           gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
           du -sh work/clim; ls work/clim | head -50
@@ -88,7 +89,7 @@ jobs:
         if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
         run: |
           mkdir -p work/occ
-          gh release download species-pilot-data -D work/occ -p "occ_cells_pilot_v1.parquet" -p "native_masks_pilot_v1.npz" -p "tg_density_*_v1.npz" -p "w2_report_pilot_v1.json" -p "w2-*" --clobber || echo "no W2 assets yet"
+          gh release download species-pilot-data -D work/occ -p "occ_cells_pilot_v1.parquet" -p "occ_cells_crops_cultivated_pilot_v1.parquet" -p "native_masks_pilot_v1.npz" -p "tg_density_*_v1.npz" -p "w2_report_pilot_v1.json" --clobber || echo "no W2 assets yet"
           ls -la work/occ | head -40
       - name: Fit, project and write
         if: steps.skip.outputs.done != 'true'
@@ -99,7 +100,7 @@ jobs:
           flags=""
           if [ "${{ needs.plan.outputs.synthetic }}" = "true" ]; then flags="--synthetic"; fi
           if [ "${{ needs.plan.outputs.force }}" = "true" ]; then flags="$flags --force"; fi
-          python -u -m ctw.species.run_pilot fit --species "${{ matrix.species }}" --out work/w3 $flags --jobs 4
+          python -u -m ctw.species.run_pilot fit --species "${{ matrix.species }}" --out work/w3 $flags --jobs 4 --validation-dir data/species/w3/evidence/validation --shift-dir data/species/w3/evidence/shift
       - name: Save working directory for resume
         if: always() && steps.skip.outputs.done != 'true'
         uses: actions/cache/save@v4
