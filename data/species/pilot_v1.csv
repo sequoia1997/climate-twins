@@ -1,0 +1,26 @@
+scientific_name,common_name,group,native_continents_curated,gbif_taxon_key,validation_plan
+Turdus migratorius,American robin,bird,NORTH_AMERICA,9510564,BBS hindcast
+Cardinalis cardinalis,Northern cardinal,bird,NORTH_AMERICA,2490384,BBS hindcast
+Zenaida macroura,Mourning dove,bird,NORTH_AMERICA,2495347,BBS hindcast
+Cyanocitta cristata,Blue jay,bird,NORTH_AMERICA,2482593,BBS hindcast
+Agelaius phoeniceus,Red-winged blackbird,bird,NORTH_AMERICA,9409198,BBS hindcast
+Hirundo rustica,Barn swallow,bird,NORTH_AMERICA;EUROPE;ASIA;AFRICA,,BBS hindcast (NA breeding population)
+Melospiza melodia,Song sparrow,bird,NORTH_AMERICA,,BBS hindcast
+Thryothorus ludovicianus,Carolina wren,bird,NORTH_AMERICA,,BBS hindcast (northward expansion)
+Sialia sialis,Eastern bluebird,bird,NORTH_AMERICA,,BBS hindcast
+Spinus tristis,American goldfinch,bird,NORTH_AMERICA,,BBS hindcast
+Acer saccharum,Sugar maple,tree,NORTH_AMERICA,3189859,FIA change test
+Acer rubrum,Red maple,tree,NORTH_AMERICA,3189883,FIA change test
+Pinus strobus,Eastern white pine,tree,NORTH_AMERICA,5284982,FIA change test
+Populus tremuloides,Quaking aspen,tree,NORTH_AMERICA,3040215,FIA change test
+Quercus alba,White oak,tree,NORTH_AMERICA,,FIA change test
+Odocoileus virginianus,White-tailed deer,mammal,NORTH_AMERICA,2440965,spatial CV only (Tier 2)
+Danaus plexippus,Monarch,insect_arachnid,NORTH_AMERICA,5133088,spatial CV only (Tier 2); native range only
+Ixodes scapularis,Blacklegged tick,insect_arachnid,NORTH_AMERICA,2182727,spatial CV only (Tier 2)
+Erithacus rubecula,European robin,bird,EUROPE,2492462,GBIF before/after in well-sampled cells
+Quercus robur,English oak,tree,EUROPE,2878688,GBIF before/after in well-sampled cells
+Vitis vinifera,Wine grape,crop,EUROPE;ASIA(W),5372392,"spatial CV only (Tier 2); cultivated, native range wild only"
+Vulpes vulpes,Red fox,mammal,NORTH_AMERICA;EUROPE;ASIA;AFRICA(N),5219243,spatial CV only (Tier 2); native range only (introduced in Australia)
+Dacelo novaeguineae,Laughing kookaburra,bird,OCEANIA,2475648,spatial CV only (Tier 2)
+Adansonia digitata,African baobab,tree,AFRICA,5406695,spatial CV only (Tier 2); cultivated records
+Danaus chrysippus,Plain tiger,insect_arachnid,ASIA;AFRICA;OCEANIA(N),7642610,spatial CV only (Tier 2)
