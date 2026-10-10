@@ -68,4 +68,6 @@ bg = np.load("tg_plant.npz")["all"]                                    # target-
 ```
 
 ## 9. Remaining
+At the last check (run 38073761140 still in progress, only the three small spike-A species stored as `w2-cells-*`; target-group downloads bird 0019445, mammal 0019446, insect_arachnid 0019447 queued at GBIF) nothing else had finished. Local development runs reproduced all 7 spike-A species end to end (cells for the two robins and oak, too), so the code path is proven; the published numbers must come from the Actions run. If the run ends by time limit, push any change to `.github/run/pilot-w2` with `[acquire]` in the commit message: it resumes from the release state. Then push with `[assemble]`.
+
 Wait for the GBIF queue (16 to 35 minutes per download, 3 at once), then run stage assemble, fill section 7, add DOIs.
