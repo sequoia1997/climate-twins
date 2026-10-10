@@ -1,6 +1,6 @@
 # W4: real-history validation (hindcast) for the species pilot
 
-Status: **in progress.** Last update: 10 October 2026. Owner: workstream W4. This document extends and updates `docs/spikes/C-validation.md`
+Status: **first results in for BBS, FIA and published projections; GBIF split waits for W2 target-group grids.** Last update: 10 October 2026. Owner: workstream W4. This document extends and updates `docs/spikes/C-validation.md`
 (spike C) and `docs/spikes/C-reviewer-brief.md`; it does not replace them. Every claim is marked **[V run N]** (verified in a GitHub Actions run or a
 local command) or **[U]** (unverified).
 
