@@ -165,6 +165,16 @@ requirements.txt. Job logs cannot be read from the sandbox (log downloads redire
 differ by a mean absolute 0.014 C (99th percentile 0.11 C) for bio1, 0.018 C (0.12) for bio6, 1.9 mm (17.5) for bio12 and 3.7 mm (28) for cwd, i.e. 0.3 to 0.6% of the spread of the field, and the band
 takes 0.64 s instead of 15.7 s (25 times faster). The effect on a fitted range was not measured separately; an error of 0.02 C is far below the threshold uncertainty.
 
+## 8c. First real fit (sugar maple, interim data) [V: local run, 10 Oct]
+
+Acer saccharum from W2's interim cell table (3,741 cells, 3,674 used; not yet native-masked), a continent-level native mask I built with `native.curated_mask("NORTH_AMERICA")` (W2's final masks were not
+published), no target-group density (W2's interim `w2-tg-*` grids are all zero, so a uniform background), W1 tiles r0c0-r1c1 and **3 climate models** (CanESM5, GFDL-ESM4, MIROC6). Result: predictors bio6, bio12,
+bio15 (bio1 dropped, |r| 0.96 with bio6); CV AUC 0.83, TSS 0.53, Boyce 0.94 (presence-background blocked CV); present suitable area 3.9 million km2; SSP5-8.5 2081-2100 +3.1% area, centroid shift 827 km at
+bearing 29 degrees (the area change is small and the shift sign depends on the 3-model sample; not a result). Time 336 s (fit 8 s, projection 324 s for 3 models x 4 scenario-periods) on this 4 core sandbox,
+peak memory about 2.4 GB at last look. Extrapolating: 24 models would take about 45 minutes. **First attempt gave Tier C** because the range check compared omission with a whole-continent mask (omission 0.85);
+fixed: omission now only gates against a true expert/atlas range, a native mask gates on commission (predicted area outside the native range) alone. This is a real-data finding about the check, not about the maple.
+These numbers are an engine test with interim inputs, not the pilot result.
+
 ## 9. Waiting on others
 
 - W1: tile files and `apply_deltas` are on the code side; the release has no climate assets yet [as of this entry]. When they appear: run one species end to end and record time and memory.

@@ -73,7 +73,11 @@ def range_check(now: np.ndarray, spec: GridSpec, rec_rc: np.ndarray, expert: np.
     if out["omission"] is None or out["commission"] is None:
         out["status"] = "fail"
     else:
-        out["status"] = "pass" if (out["omission"] <= cfg.omission_max and out["commission"] <= cfg.commission_max) else "fail"
+        # A native-range mask (continent or botanical-country polygons) is far larger than the area a species occupies, so omission against it is
+        # reported but only gates when the reference is a true expert / atlas range (found on real data: sugar maple vs North America, omission 0.85).
+        om_ok = out["omission"] <= cfg.omission_max or kind == "native_range"
+        out["status"] = "pass" if (om_ok and out["commission"] <= cfg.commission_max) else "fail"
+        out["omission_gates"] = kind != "native_range"
     out["limits"] = dict(omission_max=cfg.omission_max, commission_max=cfg.commission_max, uncalibrated=True)
     return out
 
