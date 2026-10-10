@@ -34,6 +34,8 @@ class W1Source(ClimateSource):
         self._tiles = {}            # (product, tile) -> loaded pred dict (small LRU)
         self._stack = None
         self._interp = {}
+        self._plan = {}
+        self.decimate = int(os.environ.get("W3_DECIMATE", "4"))
 
     # ---- baseline / hindcast windows
     def _pred(self, product, tile):
@@ -105,6 +107,37 @@ class W1Source(ClimateSource):
         self._stack = CS.BaselineStack({k: np.concatenate([p.monthly[k] for p in parts], axis=1)[:, order] for k in parts[0].monthly},
                                        cat([p.lat for p in parts]), cat([p.lon for p in parts]), cat([p.row for p in parts]), cat([p.col for p in parts]))
         self._interp = {}
+        self._plan = {}
+
+    def _band_plan(self, r0, r1, a, b):
+        """Representative cells of a band and, for every cell, its nearest representative (cached per band). Representatives are the cells on
+        a regular lattice of spacing `decimate` plus any cell farther than 2 x spacing from one (islands, coast). The change signal of the
+        deltas is smooth (0.25 degree source), so it is computed on representatives only and added to every cell's own fine baseline;
+        this cuts the cost of apply_deltas (about 140 microseconds per cell, measured) by decimate**2."""
+        key = (r0, r1)
+        if key in self._plan:
+            return self._plan[key]
+        from scipy.spatial import cKDTree
+        st = self._stack
+        row, col = st.row[a:b], st.col[a:b]
+        f = self.decimate
+        if f <= 1:
+            idx = np.arange(b - a)
+            near = idx
+        else:
+            idx = np.nonzero((row % f == 0) & (col % f == 0))[0]
+            if len(idx) == 0:
+                idx = np.array([0])
+            xy = np.stack([row, col], 1).astype(float)
+            d, _ = cKDTree(xy[idx]).query(xy)
+            extra = np.nonzero(d > 2 * f)[0]
+            if len(extra):
+                idx = np.union1d(idx, extra)
+            _, near = cKDTree(xy[idx]).query(xy)
+        sub = st.subset(slice(a, b)).subset(idx)
+        base = CS.predict({k: sub.monthly[k] for k in CS.PRED_VARS})                  # baseline predictors from the same monthly data
+        self._plan[key] = (idx, near, sub, base)
+        return self._plan[key]
 
     def future_band(self, ssp, period, model, r0, r1, names=None):
         names = tuple(names or self.names)
@@ -115,15 +148,34 @@ class W1Source(ClimateSource):
         out = np.full((len(names), r1 - r0, self.spec.W), np.nan, np.float32)
         if b <= a:
             return out
-        sub = st.subset(slice(a, b))
+        idx, near, sub, base = self._band_plan(r0, r1, a, b)
         d = self._lib.get_model(model)
         it = self._interp.get((r0, r1))
         if it is None:
             it = self._interp[(r0, r1)] = CS.PointInterp(d.lat, d.lon, sub.lat, sub.lon)
         res = CS.apply_deltas(sub, d, model, SSP_NAME[ssp], period, interp=it)
+        full = st.subset(slice(a, b))
+        pb = self._base_full(r0, r1, a, b, names)
         for k, n in enumerate(names):
-            out[k, sub.row - r0, sub.col] = res[n]
+            j = CS.NAMES.index(n)
+            delta = (res[n] - base[j])[near]
+            v = pb[k] + delta
+            if n in NONNEG:
+                v = np.maximum(v, 0)
+            out[k, full.row - r0, full.col] = v
         return out
+
+    def _base_full(self, r0, r1, a, b, names):
+        """The fine baseline predictors (from W1's pred files) at the band's stack cells, (len(names), n)."""
+        k = ("pb", r0, r1, names)
+        if k not in self._plan:
+            st = self._stack
+            row, col = st.row[a:b], st.col[a:b]
+            self._plan[k] = self.baseline_band(r0, r1, names)[:, row - r0, col]
+        return self._plan[k]
+
+
+NONNEG = {"bio12", "bio15", "bio17", "gdd", "cwd", "aet", "bio4"}
 
 
 # Tiles (rows from 90N in steps of 45 degrees, columns from 180W in steps of 90 degrees) that cover a continent plus a margin for the
