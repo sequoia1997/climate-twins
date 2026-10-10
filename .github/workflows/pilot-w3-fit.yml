@@ -1,0 +1,163 @@
+# Species pilot W3: fit, validate, project and summarise one species per matrix job; then one report job writes the markdown gate table.
+# Trigger: push to .github/run/pilot-w3 (content: "all", "synthetic", or species ids/slugs separated by spaces or commas, e.g. "acer_saccharum turdus_migratorius")
+# or workflow_dispatch. Resumable: each job restores the working directory of the previous attempt from the Actions cache (the Python stages skip
+# what is DONE, resume from fit.pkl, or restart the projection), and a species with a summary already on the release is skipped unless "force".
+# Inputs come from the release `species-pilot-data` (W1 tiles/deltas, W2 occurrence products); outputs go back to the same release as
+# w3_<slug>_summary.json and w3_<slug>_cts.zip, and the gate table is committed to docs/pilot/W3-fit-report.md.
+name: Pilot W3 fit
+on:
+  push:
+    paths: [".github/run/pilot-w3"]
+  workflow_dispatch:
+    inputs:
+      sel:
+        description: "all | synthetic | species ids separated by spaces (add 'force' to refit)"
+        default: "all"
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      species: ${{ steps.p.outputs.species }}
+      synthetic: ${{ steps.p.outputs.synthetic }}
+      force: ${{ steps.p.outputs.force }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: p
+        env:
+          INPUT: ${{ inputs.sel }}
+        run: |
+          sel="$INPUT"
+          if [ -z "$sel" ]; then sel="$(tr '\n,' '  ' < .github/run/pilot-w3)"; fi
+          echo "selection: $sel"
+          python3 - "$sel" >> "$GITHUB_OUTPUT" <<'PY'
+          import csv, json, re, sys
+          words = re.split(r"[\s,]+", sys.argv[1].strip())
+          synthetic = "synthetic" in words
+          force = "force" in words
+          if synthetic:
+              ids = ["broad", "moderate", "cold_limited", "narrow", "region_excluded"]
+          else:
+              allids = [re.sub(r"[^a-z0-9]+", "_", r["scientific_name"].lower()).strip("_") for r in csv.DictReader(open("data/species/pilot_v1.csv", encoding="utf-8"))]
+              pick = [w for w in words if w in allids]
+              ids = allids if ("all" in words or not pick) else pick
+          print("species=" + json.dumps(ids))
+          print("synthetic=" + ("true" if synthetic else "false"))
+          print("force=" + ("true" if force else "false"))
+          PY
+  fit:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      max-parallel: 25
+      matrix:
+        species: ${{ fromJson(needs.plan.outputs.species) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
+      - name: Restore previous attempt
+        uses: actions/cache/restore@v4
+        with:
+          path: work/w3
+          key: w3-${{ matrix.species }}-none
+          restore-keys: w3-${{ matrix.species }}-
+      - name: Skip if the release already has this species
+        id: skip
+        if: needs.plan.outputs.force != 'true' && needs.plan.outputs.synthetic != 'true'
+        run: |
+          if gh release view species-pilot-data --json assets -q '.assets[].name' | grep -qx "w3_${{ matrix.species }}_summary.json"; then echo "done=true" >> "$GITHUB_OUTPUT"; else echo "done=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Download climate stack (W1) for this species' continents
+        if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
+        run: |
+          mkdir -p work/clim
+          tiles="$(python -m ctw.species.run_pilot tiles --species ${{ matrix.species }})"
+          echo "tiles: $tiles"
+          args=(-p "deltas_*.npz")
+          for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "basem_${t}.npz"); done
+          gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
+          du -sh work/clim; ls work/clim | head -50
+      - name: Download occurrence products (W2)
+        if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
+        run: |
+          mkdir -p work/occ
+          gh release download species-pilot-data -D work/occ -p "w2_*" --clobber || echo "no W2 assets yet"
+          ls -la work/occ | head -40
+      - name: Fit, project and write
+        if: steps.skip.outputs.done != 'true'
+        env:
+          W3_CLIM: work/clim
+          W3_OCC: work/occ
+        run: |
+          flags=""
+          if [ "${{ needs.plan.outputs.synthetic }}" = "true" ]; then flags="--synthetic"; fi
+          if [ "${{ needs.plan.outputs.force }}" = "true" ]; then flags="$flags --force"; fi
+          python -u -m ctw.species.run_pilot fit --species "${{ matrix.species }}" --out work/w3 $flags --jobs 4
+      - name: Save working directory for resume
+        if: always() && steps.skip.outputs.done != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: work/w3
+          key: w3-${{ matrix.species }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload to the release
+        if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
+        run: |
+          d=work/w3/${{ matrix.species }}
+          test -f $d/summary.json || exit 0
+          cp $d/summary.json w3_${{ matrix.species }}_summary.json
+          files=(w3_${{ matrix.species }}_summary.json)
+          if [ -d $d/cts ]; then (cd $d/cts && zip -qr ../../../../w3_${{ matrix.species }}_cts.zip .); files+=(w3_${{ matrix.species }}_cts.zip); fi
+          gh release upload species-pilot-data "${files[@]}" --clobber
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: w3-${{ matrix.species }}
+          path: |
+            work/w3/${{ matrix.species }}/summary.json
+            work/w3/${{ matrix.species }}/cts
+            work/w3/${{ matrix.species }}/DONE
+          if-no-files-found: ignore
+  report:
+    needs: [plan, fit]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: w3-*
+          path: collected
+      - name: Rebuild the directory layout and the gate table
+        run: |
+          mkdir -p work/w3
+          for d in collected/w3-*; do s="${d#collected/w3-}"; mkdir -p "work/w3/$s"; cp -r "$d"/. "work/w3/$s"/ 2>/dev/null || true; done
+          # species finished in earlier runs: summaries from the release
+          for s in $(echo '${{ needs.plan.outputs.species }}' | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)))"); do
+            if [ ! -f work/w3/$s/summary.json ]; then gh release download species-pilot-data -p "w3_${s}_summary.json" -O /tmp/s.json --clobber 2>/dev/null && mkdir -p work/w3/$s && cp /tmp/s.json work/w3/$s/summary.json || true; fi
+          done
+          python -m ctw.species.run_pilot report --out work/w3 --md work/w3/REPORT.md
+          cat work/w3/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with: { name: w3-report, path: work/w3/REPORT.md }
+      - name: Commit the gate table and the summaries
+        if: needs.plan.outputs.synthetic != 'true'
+        run: |
+          mkdir -p data/species/w3
+          cp work/w3/REPORT.md docs/pilot/W3-fit-report.md
+          for f in work/w3/*/summary.json; do s="$(basename $(dirname $f))"; cp "$f" "data/species/w3/${s}_summary.json"; done
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/pilot/W3-fit-report.md data/species/w3
+          git diff --cached --quiet && exit 0
+          git commit -m "W3: pilot fit report and species summaries (Actions run ${{ github.run_id }})"
+          for i in 1 2 3; do git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done

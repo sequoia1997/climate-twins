@@ -384,3 +384,22 @@ def test_run_species_resumes_and_writes_everything(tmp_path, world):
 def test_pilot_table_reads():
     rows = RP.read_table()
     assert len(rows) == 25 and rows[0]["id"] == "turdus_migratorius" and rows[0]["group"] == "bird"
+
+
+def test_window_years_and_score_cells_for_hindcast(world):
+    src, v, d = world
+    base = PL.fit_species(v.name, SPEC, src, d["occ"], land=d["land"], native=d["native"], density=d["density"], cfg=PL.FitConfig(check_model=False))
+    early = PL.fit_species(v.name, SPEC, src, d["occ"], land=d["land"], native=d["native"], density=d["density"],
+                           cfg=PL.FitConfig(check_model=False, years=(1990, 2002), window="1966-1985"))
+    assert 0 < early.records["n_used"] < base.records["n_used"]
+    r, c = np.nonzero(d["truth"])
+    a = early.score_cells(src, r, c, "1966-1985")
+    b = early.score_cells(src, r, c, "2005-2024")
+    assert np.isfinite(a).all() and np.isfinite(b).all() and not np.allclose(a, b)        # the climate window changes the score
+    assert np.isnan(early.score_cells(src, np.array([0]), np.array([0]), "2005-2024")).all()      # no data -> NaN
+
+
+def test_tiles_for_continents():
+    from ctw.species import inputs
+    assert "r1c1" in inputs.tiles_for("NORTH_AMERICA") and "r0c2" in inputs.tiles_for("EUROPE;ASIA(W)")
+    assert len(inputs.tiles_for("")) == 16

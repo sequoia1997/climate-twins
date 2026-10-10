@@ -155,6 +155,9 @@ def main(argv=None):
     a = sub.add_parser("list")
     a.add_argument("--table", default=str(TABLE))
     a.add_argument("--synthetic", action="store_true")
+    t = sub.add_parser("tiles")
+    t.add_argument("--species", required=True)
+    t.add_argument("--table", default=str(TABLE))
     b = sub.add_parser("fit")
     b.add_argument("--species", required=True, help="scientific name (or slug)")
     b.add_argument("--table", default=str(TABLE))
@@ -175,6 +178,11 @@ def main(argv=None):
             print(json.dumps([v.name for v in SY.CATALOGUE]))
         else:
             print(json.dumps([r["id"] for r in read_table(Path(args.table))]))
+        return 0
+    if args.cmd == "tiles":
+        from . import inputs
+        rows = {r["id"]: r for r in read_table(Path(args.table))}
+        print(" ".join(inputs.tiles_for(rows[args.species]["native_continents_curated"])))
         return 0
     if args.cmd == "report":
         md = report(Path(args.out), args.key)

@@ -18,7 +18,7 @@ import numpy as np
 from scipy import stats
 
 from . import sdm
-from .grid import GridSpec, ClimateSource, Occurrences, land_mask, within_km, PREDICTORS
+from .grid import GridSpec, ClimateSource, Occurrences, land_mask, within_km, PREDICTORS, BASELINE
 
 # Priority order, most to least biologically informative for range limits (mean temperature, cold limit, heat limit, water balance,
 # annual rain, then dry-season rain, rain seasonality, temperature seasonality, actual evapotranspiration, growing degree days).
@@ -52,6 +52,8 @@ class FitConfig:
     allow_flags: int = 0             # record flag bits that are tolerated; any other bit excludes the record
     check_model: bool = True
     gate_cell_deg: float = 0.125     # records are counted per cell of this size for the record-count gate (F counted 15 km cells)
+    window: str = BASELINE           # climate window the fit uses (hindcast fits use '1966-1985')
+    years: tuple = None              # (first, last) record year to use; records without a year are then dropped
     seed: int = 0
     n_jobs: int = 1
 
@@ -106,6 +108,8 @@ def prepare_records(occ: Occurrences, spec: GridSpec, cfg: FitConfig) -> dict:
     cells of `gate_cell_deg` (the unit of the minimum-records gate)."""
     n_raw = len(occ.rows)
     ok = (occ.flags & ~cfg.allow_flags) == 0
+    if cfg.years is not None:
+        ok &= (occ.years >= cfg.years[0]) & (occ.years <= cfg.years[1])
     o = occ.select(ok)
     rc = o.unique_cells()
     f = spec.coarse_factor(cfg.gate_cell_deg)
@@ -227,6 +231,16 @@ class Fit:
     def check_score(self, X: np.ndarray, chunk: int = 1_000_000) -> np.ndarray:
         return _batched(self.check.raw, X, chunk)
 
+    def score_cells(self, src: ClimateSource, rows: np.ndarray, cols: np.ndarray, window: str = BASELINE) -> np.ndarray:
+        """Suitability at cells under a climate window (NaN where the window has no data): the hook for hindcast scoring (W4), e.g. a model
+        fitted with FitConfig(window='1966-1985', years=(1966, 1985)) scored under window '2005-2024'."""
+        X = src.baseline_points(rows, cols, self.pred, window).astype(float)
+        ok = np.isfinite(X).all(1)
+        out = np.full(len(rows), np.nan, np.float32)
+        if ok.any():
+            out[ok] = self.score(X[ok])
+        return out
+
     def set_jobs(self, n_jobs: int):
         self.cfg = FitConfig(**{**self.cfg.__dict__, "n_jobs": n_jobs})
         try:
@@ -256,7 +270,7 @@ def fit_species(name: str, spec: GridSpec, src: ClimateSource, occ: Occurrences,
     rec["n_outside_domain"] = int((~inside).sum())
     rc = rc[inside]
     # presences on cells with data
-    P_all = src.baseline_points(rc[:, 0], rc[:, 1], names)
+    P_all = src.baseline_points(rc[:, 0], rc[:, 1], names, cfg.window)
     okp = np.isfinite(P_all).all(1)
     rc, P_all = rc[okp], P_all[okp]
     rec["n_no_climate"] = int((~okp).sum())
@@ -270,8 +284,8 @@ def fit_species(name: str, spec: GridSpec, src: ClimateSource, occ: Occurrences,
         wfn = lambda r, c: grid_at(density, spec, r, c)                      # noqa: E731
     br, bc = sample_cells(train, wfn, n_bg, rng, cfg.tg_floor if wfn else 0.0)
     er, ec = sample_cells(train, None, cfg.n_eval, rng)                       # uniform reference / evaluation cells
-    B_all = src.baseline_points(br, bc, names)
-    E_all = src.baseline_points(er, ec, names)
+    B_all = src.baseline_points(br, bc, names, cfg.window)
+    E_all = src.baseline_points(er, ec, names, cfg.window)
     okb, oke = np.isfinite(B_all).all(1), np.isfinite(E_all).all(1)
     br, bc, B_all = br[okb], bc[okb], B_all[okb]
     er, ec, E_all = er[oke], ec[oke], E_all[oke]
