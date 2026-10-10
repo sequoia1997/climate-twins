@@ -9,7 +9,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 285
     env:
       PYTHONUNBUFFERED: "1"
     steps:
@@ -17,8 +17,32 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - run: pip install requests
+      - name: Seed cache from the cancelled first run (once)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: spike-d-species
+          run-id: "37527131651"
+          github-token: ${{ github.token }}
+          path: seed-cache
+      - uses: actions/cache/restore@v4
+        id: rc
+        with:
+          path: work-spike-d
+          key: spike-d-cache-none
+          restore-keys: spike-d-cache-
+      - name: Use seed cache if no newer cache
+        run: |
+          mkdir -p work-spike-d
+          [ -f work-spike-d/cache.json ] || { [ -f seed-cache/work-spike-d/cache.json ] && cp seed-cache/work-spike-d/cache.json work-spike-d/cache.json; } || true
+          ls -la work-spike-d
       - name: Build candidates
         run: python scripts/spike_d/build_candidates.py --outdir data/species --work work-spike-d
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: work-spike-d
+          key: spike-d-cache-${{ github.run_id }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

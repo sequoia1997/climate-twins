@@ -33,12 +33,12 @@ sess = requests.Session()
 sess.headers.update({"User-Agent": UA, "Accept": "application/json"})
 CACHE = {}
 
-def get(url, params=None, tries=5, pause=0.0):
+def get(url, params=None, tries=3, pause=0.0):
     key = url + "?" + urllib.parse.urlencode(sorted((params or {}).items()))
     if key in CACHE: return CACHE[key]
     for i in range(tries):
         try:
-            r = sess.get(url, params=params, timeout=60)
+            r = sess.get(url, params=params, timeout=30)
             if r.status_code == 200:
                 j = r.json(); CACHE[key] = j
                 if pause: time.sleep(pause)
@@ -104,7 +104,7 @@ def gbif_enrich(key):
         for c in f["counts"]: tgt[c["name"]] = c["count"]
     n = d["gbif_records"]
     if n >= 20:
-        off = random.Random(key).randint(0, max(0, min(n - 300, 90000)))
+        off = random.Random(key).randint(0, max(0, min(n - 300, 3000)))
         j = get(GBIF + "/occurrence/search", dict(base, limit=300, offset=off))
         pts = [(r["decimalLatitude"], r["decimalLongitude"]) for r in (j or {}).get("results", [])
                if "decimalLatitude" in r and "decimalLongitude" in r]
@@ -164,7 +164,7 @@ def top_continent(cont):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", default="data/species"); ap.add_argument("--work", default="work-spike-d")
-    ap.add_argument("--limit-test", action="store_true")
+    ap.add_argument("--limit-test", action="store_true"); ap.add_argument("--budget-min", type=float, default=230)
     a = ap.parse_args()
     os.makedirs(a.outdir, exist_ok=True); os.makedirs(a.work, exist_ok=True)
     cpath = os.path.join(a.work, "cache.json")
@@ -230,15 +230,24 @@ def main():
         except Exception as ex:
             rec["error"] = repr(ex)[:120]
         return rec
-    items = list(keep.items())
+    items = sorted(keep.items(), key=lambda kv: (kv[1]["source"] != "seed", -(kv[1]["inat"] or {}).get("regional", 0) if kv[1]["inat"] else 0))
     out = []
+    deadline = t0 + a.budget_min * 60
+    from concurrent.futures import as_completed
+    skipped = 0
     with ThreadPoolExecutor(12) as ex:
-        for i, r in enumerate(ex.map(work, items)):
-            out.append(r)
+        futs = []
+        for it in items:
+            futs.append(ex.submit(lambda it=it: work(it) if time.time() < deadline else None))
+        for i, f in enumerate(as_completed(futs)):
+            r = f.result()
+            if r is None: skipped += 1
+            else: out.append(r)
             if i % 100 == 0:
-                log(f"  enriched {i}/{len(items)} {time.time()-t0:.0f}s")
+                log(f"  enriched {i}/{len(items)} {time.time()-t0:.0f}s skipped={skipped}")
                 save_cache(cpath)
     save_cache(cpath)
+    if skipped: log(f"BUDGET HIT: {skipped} species not enriched this run; rerun to continue from cache")
     # 3. wikipedia
     log("wikipedia titles")
     nm = [r["name"] for r in out if "gbif_key" in r]
@@ -366,7 +375,7 @@ def main():
                  candidate_report=rep1, shortlist_report=rep2,
                  excluded_reasons=dict(collections.Counter(x for r in excluded for x in r["excl"])),
                  coverage=dict(pageviews=sum(1 for r in rows if r.get("pageviews") is not None), rows=len(rows)),
-                 seconds=round(time.time() - t0))
+                 unenriched_skipped=skipped, seconds=round(time.time() - t0))
     json.dump(stats, open(os.path.join(a.outdir, "build_stats.json"), "w"), indent=1)
     log(json.dumps(stats, indent=1)[:6000])
 
