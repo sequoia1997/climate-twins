@@ -9,7 +9,7 @@ from ctw.species import hindcast as H
 URL = "https://www.fs.usda.gov/rds/archive/products/RDS-2024-0020/RDS-2024-0020.zip"
 SP = {318: ("Acer_saccharum", "Acer saccharum"), 316: ("Acer_rubrum", "Acer rubrum"), 129: ("Pinus_strobus", "Pinus strobus"),
       746: ("Populus_tremuloides", "Populus tremuloides"), 802: ("Quercus_alba", "Quercus alba")}
-b = urllib.request.urlopen(urllib.request.Request(URL, headers={"User-Agent": "climate-twins-w4/0.1"}), timeout=900).read()
+b = urllib.request.urlopen(urllib.request.Request(URL, headers={"User-Agent": "climate-twins-w4/0.1 (mailto:forest4science@gmail.com)"}), timeout=900).read()
 z = zipfile.ZipFile(io.BytesIO(b)); os.makedirs("rds20", exist_ok=True)
 rows = []
 def load(folder, stem, spcd):
