@@ -31,6 +31,7 @@ jobs:
           gh release upload species-pilot-data w4-out/bbs_hindcast_results.json w4-out/bbs_hindcast_report.md --clobber
           cp w4-out/bbs_hindcast_report.md docs/pilot/W4-hindcast-report-bbs.md
           git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
-          git add docs/pilot/W4-hindcast-report-bbs.md
+          cp w4-out/bbs_hindcast_results.json data/species/w4/
+          git add docs/pilot/W4-hindcast-report-bbs.md data/species/w4/bbs_hindcast_results.json
           git commit -m "W4: first BBS hindcast report (Actions)" || exit 0
           for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done

@@ -343,12 +343,13 @@ def report(test: str, title: str, results: dict, group: dict, verdicts: dict, th
     out = [f"## {title}", "", f"**Group verdict: {group['status'].upper()}** ({group['n_eligible']} eligible species, minimum {group['need']}). {group['interpretation']} Bearing within 90 degrees (any direction, reported not scored): {group.get('bearing_agree', 'n/a')}.", "",
            "| group check | value | needed | result |", "|---|---|---|---|"]
     out += [f"| {c['name']} | {c['value']} | {c['need']} | {'ok' if c['ok'] else 'not met'} |" for c in group["checks"]]
-    out += ["", "| species | AUC w2 | TSS w2 | Boyce w2 | TSS no-change (model, w1 climate) | TSS persistence | obs shift km / bearing | model shift km / bearing | ratio | bearing err | direction | edge err hi / lo km | area change obs / model | cell corr |",
-            "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    out += ["", "| species | CV AUC / TSS (w1) | prevalence w1 / w2 | AUC w2 | TSS w2 | Boyce w2 | TSS no-change (model, w1 climate) | TSS persistence | obs shift km / bearing | model shift km / bearing | ratio | bearing err | direction | edge err hi / lo km | area change obs / model | cell corr |",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for sp, r in results.items():
         o, m = r["obs"], r["mod"]
         d = {True: "agree", False: "WRONG", None: "not detectable"}[r["direction_agree"]]
-        out.append(f"| {nm(sp)} | {_f(r['auc2'])} | {_f(r['tss2'])} | {_f(r['boyce2'])} | {_f(r['tss2_null_model_t1'])} | {_f(r['tss2_null_persist'])} | "
+        cvt = r.get("cv") or {}
+        out.append(f"| {nm(sp)} | {_f(cvt.get('auc'))} / {_f(cvt.get('tss'))} | {r['n_obs1'] / max(r['n_cells'], 1):.2f} / {r['n_obs2'] / max(r['n_cells'], 1):.2f} | {_f(r['auc2'])} | {_f(r['tss2'])} | {_f(r['boyce2'])} | {_f(r['tss2_null_model_t1'])} | {_f(r['tss2_null_persist'])} | "
                    f"{_f(o['km'], 0)} / {_f(o['bearing'], 0)} | {_f(m['km'], 0)} / {_f(m['bearing'], 0)} | {_f(r['shift_ratio'])} | {_f(r['bearing_error'], 0)} | {d} | "
                    f"{_f(r['edge_hi_error_km'], 0)} / {_f(r['edge_lo_error_km'], 0)} | {_f(o['area_change'], 2)} / {_f(m['area_change'], 2)} | {_f(r['cell_change_corr'])} |")
     out += ["", "| species | tier | Tier 1 earned | reasons if not |", "|---|---|---|---|"]
