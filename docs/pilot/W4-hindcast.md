@@ -66,7 +66,36 @@ Pipeline (`ctw/species/bbs.py`, `w4_bbs_run.py`):
    is treated as noise) and a **label-swap permutation test** (swap window labels per cell, share of null shifts at least as large).
 5. Eligible species for a group test: at least 100 route-presences in both windows.
 
-Results: **[waiting for first real run; see "Results" below when filled]**
+Results (first real run, Actions run 38072944625, all values **[V 38072944625]**; table `data/species/w4/bbs_observed_change.csv`, full files in release `species-pilot-data`):
+
+- 5,838 routes in `Routes.csv`; 127,646 acceptable route-years (1966 to 2024); 5,130 routes have any acceptable year; **1,062 qualify** (at least 10 acceptable years in both windows): 956 US, 106 Canada, all
+  standard roadside routes (RouteTypeID 1), on 1,061 distinct 1/24 degree cells. `States.zip` holds 62 state and province CSVs with columns RouteDataID, CountryNum, StateNum, Route, RPID, Year, AOU,
+  Count10 to Count50, StopTotal, SpeciesTotal (route-year totals are used). 726 species have detections; 335 have at least 20 route-presences in one window; **150 are eligible** (at least 100 route-presences in both windows).
+- Only 1,062 routes meet the strict sampling rule, so the test has about one thousand comparable cells. Statistical power per species is moderate.
+- The 10 pilot birds that have a BBS plan are all eligible (the European robin and kookaburra are not in the BBS list, as expected). Observed change of the pilot birds (km, bearing, northward component km):
+
+| species | routes present w1 / w2 | shift km | bearing | north km (SE) | detectable | perm. p |
+|---|---|---|---|---|---|---|
+| Mourning dove | 1005 / 1035 | 47 | 61 | +22 (5) | yes | 0.00 |
+| Blue jay | 840 / 856 | 22 | 257 | -5 (6) | no | 0.02 |
+| Red-winged blackbird | 1039 / 1019 | 4 | 48 | +3 (5) | no | 0.83 |
+| American goldfinch | 815 / 845 | 23 | 251 | -8 (8) | no | 0.20 |
+| Song sparrow | 726 / 756 | 32 | 228 | -21 (7) | yes | 0.05 |
+| Northern cardinal | 709 / 778 | 66 | 26 | +59 (8) | yes | 0.00 |
+| Barn swallow | 998 / 999 | 53 | 170 | -52 (8) | yes | 0.00 |
+| Carolina wren | 410 / 542 | 140 | 27 | +125 (13) | yes | 0.00 |
+| American robin | 955 / 962 | 22 | 283 | +5 (5) | no | 0.02 |
+| Eastern bluebird | 617 / 768 | 82 | 23 | +76 (11) | yes | 0.00 |
+
+  Carolina wren, northern cardinal and eastern bluebird moved north-north-east, as the literature expects (Carolina wren: verified here from the data; literature expectation **[U]**). The American robin, the
+  headline pilot bird, has **no detectable shift** on this route set; its hindcast can only test static transfer, not the change.
+- Across all 150 eligible species, 87 have a detectable northward component; only 46 of those 87 (53 percent, binomial p = 0.67) moved north. The real continental signal is therefore **mixed**, not a uniform poleward shift,
+  so the proposed "direction of shift" test has a stringent bar: the model must predict species moving south or east as well. This is a finding about the data, not a result for the model. The report also scores bearing agreement
+  within 90 degrees (any direction) as an additional, unscored line.
+- Proposed validation set: `data/species/w4/bbs_validation_species.csv` lists the 145 eligible native species (introduced species such as House Sparrow, European Starling, House Finch removed because the pipeline fits
+  native-range data) and marks 40 as recommended: the 10 pilot birds plus 30 drawn at random (seed 20261010) from native species with at least 150 route-presences in each window. Random draw, so the choice cannot depend on the
+  species' observed shift. 24 of the 40 have a detectable shift. W2 would need GBIF occurrences for the 30 extra species and W3 would fit them (the same pipeline, not published as species pages).
+
 
 ## 4. Test 2: Forest Inventory and Analysis trees (change test with a lag caveat)
 
