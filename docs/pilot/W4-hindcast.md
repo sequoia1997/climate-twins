@@ -127,7 +127,8 @@ What this says, and what it does not:
   (barn swallow, others below the gate). Nothing here tests projections to 2050 or 2100.
 - **The pipeline's own CV is not a usable gate for BBS-trained fits.** `fit_species` scores presence against background drawn in proportion to route density, so for widespread species presence and background overlap and AUC is about 0.5 to 0.6 (W3 background CV in the
   `fit_cells` columns) even though the same species are discriminated from true absences with AUC 0.93. The blocked variant therefore uses true route absences for the gate. Neither measure is meaningful for species present at more than about 90 percent of routes (prevalence limits TSS).
-- Limitations to carry into any reading of this: route start cell stands for a 40 km route; 1,062 comparable routes; hindcast climate is a window mean, not year by year; model predictors are W3's default priority list; introduced species were excluded; no sensitivity run at 0.5 degree blocks yet (`--block 12`).
+- **Sensitivity (0.5 degree blocks, 905 blocks instead of 1,061 route cells; run 38077339184, `docs/pilot/W4-hindcast-report-bbs-block12.md`):** same verdict. Direction 10 of 22 agree (p = 0.74), shift error 107 km vs 78 km no-change, beats-null 11 of 40, median AUC on window 2 0.89, no Tier 1. The failure is therefore not caused by the route-start-cell approximation. **[V 38077339184]**
+- Limitations to carry into any reading of this: route start cell stands for a 40 km route; 1,062 comparable routes; hindcast climate is a window mean, not year by year; model predictors are W3's default priority list; introduced species were excluded; no sensitivity to predictor set or algorithm.
 
 ## 4. Test 2: Forest Inventory and Analysis trees (change test with a lag caveat)
 
