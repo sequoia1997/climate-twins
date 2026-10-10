@@ -164,49 +164,69 @@ def project_species(fit: Fit, src: ClimateSource, ssps, periods, *, group: str =
         cell_km = spec.dlat * 111.2
         f = int(np.clip(km / (4 * cell_km), 1, 6))                  # coarse block no wider than a quarter of the reach
         proj.reach[period] = within_km(now, spec, km, factor=f)
-    for ssp in ssps:
-        for period in periods:
-            if only is not None and (ssp, period) not in only:
-                continue
-            models = list(src.future_models(ssp, period))
-            M = len(models)
-            chk_models = models[:: max(1, M // max(cfg.check_models, 1))][:cfg.check_models] if fit.check is not None else []
-            S = np.zeros((H, W), np.uint8)
-            A = np.zeros((H, W), np.uint8)
-            N = np.zeros((H, W), np.uint8)
-            Cc = np.zeros((H, W), bool) if chk_models else None
-            mah_tot, mah_n = 0.0, 0
-            for r0, r1 in bands:
+    combos = [(ssp, period) for ssp in ssps for period in periods if only is None or (ssp, period) in only]
+    models = list(src.future_models(*combos[0])) if combos else []
+    for c in combos[1:]:
+        if list(src.future_models(*c)) != models:
+            raise ValueError("the climate-model list must be the same for every scenario / period")
+    M = len(models)
+    # Model-outer loop: a source that has to load a big per-model file (W1's deltas) loads it once per model, not once per band.
+    # Only one uint8 (quantised) score per model and domain cell is kept, never a fine-grid float field per model.
+    offs = np.cumsum([0] + [int(dom[r0:r1].sum()) for r0, r1 in bands])
+    ntot = int(offs[-1])
+    chk_models = models[:: max(1, M // max(cfg.check_models, 1))][:cfg.check_models] if fit.check is not None and M else []
+    Q = {c: np.zeros((M, ntot), np.uint8) for c in combos}
+    NV = {c: np.zeros(ntot, np.int16) for c in combos}
+    CQ = {c: np.zeros((len(chk_models), ntot), bool) for c in combos} if chk_models else {}
+    mah = {c: [0.0, 0] for c in combos}
+    for mi, m in enumerate(models):
+        for c in combos:
+            ssp, period = c
+            for bi, (r0, r1) in enumerate(bands):
                 d = dom[r0:r1]
-                n = int(d.sum())
-                sc = np.zeros((M, n), np.float32)
-                nvote = np.zeros(n, np.int16)
-                chk_sc = np.zeros((len(chk_models), n), np.float32)
-                for mi, m in enumerate(models):
-                    X = src.future_band(ssp, period, m, r0, r1, fit.pred)[:, d].T.astype(np.float64)
-                    ok = np.isfinite(X).all(1)
-                    if ok.any():
-                        sc[mi, ok] = fit.score(X[ok])
-                        nvote[ok] += _outside(ref_min, ref_max, X[ok])
-                        Z = X[ok] - mu
-                        dm = np.sqrt(np.maximum(np.einsum("ij,jk,ik->i", Z, P, Z), 0))
-                        mah_tot += float((dm > cut).sum())
-                        mah_n += int(ok.sum())
-                        if m in chk_models:
-                            chk_sc[chk_models.index(m), ok] = fit.check_score(X[ok])
-                med = np.median(sc, axis=0)
-                agree = (sc >= fit.thr).sum(0)
-                for arr, vals in ((S, quantise(med, fit.thr)), (A, np.rint(15.0 * agree / M).astype(np.uint8)),
-                                  (N, (nvote >= max(1, int(np.ceil(cfg.novel_vote * M)))).astype(np.uint8))):
-                    t = np.zeros(d.shape, np.uint8)
-                    t[d] = vals
-                    arr[r0:r1] = t
-                if Cc is not None:
-                    t = np.zeros(d.shape, bool)
-                    t[d] = np.median(chk_sc, axis=0) >= fit.check_thr
-                    Cc[r0:r1] = t
-            proj.scen[(ssp, period)] = Scenario(ssp, period, M, S, A, N, Cc, mah_tot / mah_n if mah_n else float("nan"))
-            log(f"projected {fit.species} {ssp} {period}: {M} models, suitable {area_of(S >= THR7, spec):.3e} km2")
+                sl = slice(int(offs[bi]), int(offs[bi + 1]))
+                X = src.future_band(ssp, period, m, r0, r1, fit.pred)[:, d].T.astype(np.float64)
+                ok = np.isfinite(X).all(1)
+                if not ok.any():
+                    continue
+                q = np.zeros(len(X), np.uint8)
+                q[ok] = quantise(fit.score(X[ok]), fit.thr)
+                Q[c][mi, sl] = q
+                nv = np.zeros(len(X), np.int16)
+                nv[ok] = _outside(ref_min, ref_max, X[ok])
+                NV[c][sl] += nv
+                Z = X[ok] - mu
+                dm = np.sqrt(np.maximum(np.einsum("ij,jk,ik->i", Z, P, Z), 0))
+                mah[c][0] += float((dm > cut).sum())
+                mah[c][1] += int(ok.sum())
+                if m in chk_models:
+                    cs = np.zeros(len(X), bool)
+                    cs[ok] = fit.check_score(X[ok]) >= fit.check_thr
+                    CQ[c][chk_models.index(m), sl] = cs
+        log(f"projected {fit.species} with climate model {m} ({mi + 1}/{M})")
+    for c in combos:
+        ssp, period = c
+        S = np.zeros((H, W), np.uint8)
+        A = np.zeros((H, W), np.uint8)
+        N = np.zeros((H, W), np.uint8)
+        Cc = np.zeros((H, W), bool) if chk_models else None
+        for bi, (r0, r1) in enumerate(bands):
+            d = dom[r0:r1]
+            sl = slice(int(offs[bi]), int(offs[bi + 1]))
+            q = Q[c][:, sl]
+            med = np.rint(np.median(q, axis=0)).astype(np.uint8)       # monotone in the score, so the median of quantised = quantised median
+            agree = (q >= THR7).sum(0)
+            vote = (NV[c][sl] >= max(1, int(np.ceil(cfg.novel_vote * M)))).astype(np.uint8)
+            for arr, vals in ((S, med), (A, np.rint(15.0 * agree / M).astype(np.uint8)), (N, vote)):
+                t = np.zeros(d.shape, np.uint8)
+                t[d] = vals
+                arr[r0:r1] = t
+            if Cc is not None:
+                t = np.zeros(d.shape, bool)
+                t[d] = np.median(CQ[c][:, sl], axis=0) >= 0.5
+                Cc[r0:r1] = t
+        proj.scen[c] = Scenario(ssp, period, M, S, A, N, Cc, mah[c][0] / mah[c][1] if mah[c][1] else float("nan"))
+        log(f"projected {fit.species} {ssp} {period}: {M} models, suitable {area_of(S >= THR7, spec):.3e} km2")
     return proj
 
 
