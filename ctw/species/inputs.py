@@ -112,7 +112,7 @@ class W1Source(ClimateSource):
                     continue
                 f = os.path.join(self.root, f"basem_r{tr}c{tc}.npz")
                 if not os.path.exists(f):
-                    raise FileNotFoundError(f)
+                    raise FileNotFoundError(f"{f}: the projection domain reaches tile r{tr}c{tc}, which was not downloaded (see run_pilot tiles)")
                 land, _, mon = CS.load_basem(f)
                 i, j = CS.land_index(land, (tr, tc))
                 keep = domain[i, j]

@@ -302,7 +302,9 @@ def main(argv=None):
     if args.cmd == "tiles":
         from . import inputs
         rows = {r["id"]: r for r in read_table(Path(args.table))}
-        print(" ".join(inputs.tiles_for(rows[args.species]["native_continents_curated"])))
+        r = rows[args.species]
+        # a crop has no native-range mask: its domain follows the cultivated records, which are worldwide
+        print(" ".join(inputs.tiles_for("" if r.get("group") == "crop" else r["native_continents_curated"])))
         return 0
     if args.cmd == "report":
         md = full_report(Path(args.out)) if args.full else report(Path(args.out), args.key)
