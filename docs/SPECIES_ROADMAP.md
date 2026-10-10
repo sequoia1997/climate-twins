@@ -338,3 +338,5 @@ Build the global Tier A grid in bands; the occurrence pipeline with native-range
 - **Photos:** silhouettes by default on species pages; licence-filtered photos later.
 - **Map delivery:** custom compact binary format (CTS) on a Cloudflare R2 bucket, accepted.
 - **Open:** whether GBIF accepts one DOI for a multi-species batch download in a derived dataset (W2 to verify before scaling).
+
+- **Validation set kept (13 October 2026):** the 30 random BBS birds added by W4 (`data/species/w4/bbs_validation_species.csv`) stay in the exit gate so the bird test is conclusive. Trees are accepted as "insufficient data" for the real-change test (5 trees against a minimum of 20) and carry the badge "range shifts untested"; adult trees lag the climate and no better free test exists.
