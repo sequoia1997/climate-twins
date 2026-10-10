@@ -156,6 +156,19 @@ Results of the observed-change part (Actions run 38077672558, by-state matrix; t
 - Coordinate fuzzing: public LAT/LON; not quantified here; the 0.5 degree blocks make the unquantified fuzzing (reported elsewhere as about a mile) negligible, but the rule itself is **[U]**.
 
 
+Model hindcast for the five trees (report `docs/pilot/W4-hindcast-report-fia.md`) **[V 38079164772]**: fitted on first-cycle plots with climate 1966-1985, scored under 2005-2024 (cycle years are not matched exactly to the two windows). **Group verdict: INSUFFICIENT DATA (5 species, minimum 20), so no tree can earn Tier 1 from this test and nothing here is a pass or a fail.** Illustrative numbers (blocked variant):
+
+| species | CV AUC / TSS | AUC window 2 | observed adult shift km (north km) | modelled shift km (north km) | direction |
+|---|---|---|---|---|---|
+| Sugar maple | 0.86 / 0.59 | 0.95 | 42 (+34) | 160 (+133) | agrees |
+| Red maple | 0.83 / 0.44 | 0.98 | 17 (-1) | 24 (-1) | not detectable |
+| Eastern white pine | 0.88 / 0.65 | 0.95 | 55 (-39) | 127 (+122) | wrong (observed moved south-west) |
+| Quaking aspen | 0.93 / 0.74 | 0.94 | 26 (-12) | 79 (+57) | not detectable |
+| White oak | 0.83 / 0.49 | 0.92 | 12 (-6) | 92 (+69) | not detectable |
+
+The model puts every species 25 to 140 km further north than the adults actually moved (modelled / observed ratio 1.4 to 8), which is the expected signature of lag: the climate moved, the adult trees mostly did not. This is the reason the protocol does not require a ratio of 1 for trees, and it is why
+tree maps must be labelled "suitable climate, not realised range" whatever the group test says. No group test is possible with five pilot trees; a conclusive tree test needs about 20 species with at least 500 plots per cycle (the FIA table can supply them; W2 would need GBIF records for the extra species, or the model could be fitted on FIA plots as here).
+
 ## 5. Test 4: comparison with published tree projections
 
 Verified (probe run 38072865229, ranged reads of the zip central directories and extraction of the five species):
