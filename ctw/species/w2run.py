@@ -170,6 +170,9 @@ def download_meta(s: dict, key: str) -> dict:
 
 
 _REF = {}
+SEASON_DEF = {"N": {"breeding": "May-Jul (months 5,6,7)", "winter": "Dec-Feb (12,1,2)"}, "S": {"breeding": "Nov-Jan (11,12,1)", "winter": "Jun-Aug (6,7,8)"},
+              "note": "the scheme is the hemisphere the SPECIES breeds in, applied to calendar months of every record wherever it was seen (a barn swallow in Argentina in January is a non-breeding record)"}
+SEASONAL = {r["scientific_name"]: r for r in csv.DictReader(open(ROOT / "data" / "species" / "native" / "curated_seasonal_v1.csv"))}
 GROUP_OF = {r["scientific_name"]: r["group"] for r in csv.DictReader(open(ROOT / "data" / "species" / "pilot_v1.csv"))}
 
 
@@ -331,6 +334,108 @@ def acquire(hours: float):
     log("failed:", failed, "| not yet processed:", left)
     (WORK / "acquire_summary.json").write_text(json.dumps({"failed": failed, "not_processed": left}, indent=1))
     return 0 if not failed else 1
+
+
+def process_seasonal(sci: str, state: State):
+    """Re-clean the cached download of one migratory species keeping the month, and store per-cell month / season counts. The cell set must
+    equal the v1 table's (checked); nothing existing is replaced."""
+    import shutil, zipfile
+    key = state.get(f"species:{sci}")["key"]
+    s = gbif.status(key)
+    if s["status"] != "SUCCEEDED":
+        raise RuntimeError(f"{sci}: download {key} is {s['status']}")
+    sch = SEASONAL[sci]["season_scheme"]
+    tmp = Path(os.environ.get("W2_TMP", tempfile.gettempdir())) / f"w2s-{slug(sci)}"
+    shutil.rmtree(tmp, ignore_errors=True)
+    z = fetch_zip(s["downloadLink"], tmp)
+    with zipfile.ZipFile(z) as zf:
+        zf.extractall(tmp)
+    z.unlink()
+    ref, land = ref_set()
+    cc = w2cells.CellCleaner(land=land, ref=ref, keep_cultivated=(GROUP_OF.get(sci) == "crop"))
+    cc.keep_months = True
+    for d in w2cells.read_batches(tmp):
+        cc.feed(d)
+    cells, rep = cc.finish()
+    sea = cc.finish_seasonal(sch)
+    shutil.rmtree(tmp, ignore_errors=True)
+    old = rel_get(f"w2-cells-{slug(sci)}.parquet", WORK / "cells" / f"w2-cells-{slug(sci)}.parquet")
+    chk = {"cells_now": int(len(cells)), "records_now": int(cells["n_records"].sum())}
+    if old:
+        o = pd.read_parquet(old)
+        chk.update({"cells_v1": int(len(o)), "records_v1": int(o["n_records"].sum()), "same_cells": bool(o[["row", "col"]].equals(cells[["row", "col"]]))})
+    chk["month_missing_records"] = int(sea["m00"].sum())
+    out = WORK / "seasonal"; out.mkdir(parents=True, exist_ok=True)
+    sea.to_parquet(out / f"w2-seasonal-{slug(sci)}.parquet", compression="zstd", index=False)
+    (out / f"w2-seasonal-check-{slug(sci)}.json").write_text(json.dumps(chk))
+    rel_put(out / f"w2-seasonal-{slug(sci)}.parquet"); rel_put(out / f"w2-seasonal-check-{slug(sci)}.json")
+    log("seasonal", sci, chk)
+    return True
+
+
+def seasonal():
+    ensure_release()
+    state = State()
+    have = rel_assets()
+    todo = [sci for sci in SEASONAL if f"w2-seasonal-{slug(sci)}.parquet" not in have]
+    log("seasonal species to do:", len(todo), "of", len(SEASONAL), "(no GBIF request is made: the cached downloads are re-read)")
+    failed = {}
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        futs = {sci: ex.submit(process_seasonal, sci, state) for sci in todo}
+        for sci, f in futs.items():
+            try:
+                f.result()
+            except Exception as e:
+                failed[sci] = f"{type(e).__name__}: {e}"[:300]; log("failed", sci, failed[sci])
+    return 1 if failed else 0
+
+
+def assemble_seasonal():
+    """occ_cells_pilot_v1_seasonal.parquet: per species and cell, month counts, breeding / winter counts, the seasonal native masks and the
+    well-sampled flags. Separate manifest; no existing asset is touched."""
+    ensure_release()
+    cache = WORK / "cache"; cache.mkdir(parents=True, exist_ok=True)
+    out = WORK / "final_seasonal"; out.mkdir(parents=True, exist_ok=True)
+    rows = {r["scientific_name"]: r for r in pilot()}
+    fe = N.subunits(cache); lab = N.label_raster(fe)
+    groups = {}
+    parts, report = [], {}
+    for sci, cfg in SEASONAL.items():
+        pth = rel_get(f"w2-seasonal-{slug(sci)}.parquet", WORK / "seasonal" / f"w2-seasonal-{slug(sci)}.parquet")
+        if not pth:
+            log("MISSING seasonal for", sci); continue
+        d = pd.read_parquet(pth)
+        ri, ci = d["row"].to_numpy(), d["col"].to_numpy()
+        br = N.curated_mask(cfg["breeding_native_spec"], fe, lab); wi = N.curated_mask(cfg["winter_native_spec"], fe, lab)
+        d["in_breeding_mask"], d["in_winter_mask"] = br[ri, ci], wi[ri, ci]
+        d["breeding_cell"] = d["in_breeding_mask"] & (d["n_breeding"] > 0)
+        d["winter_cell"] = d["in_winter_mask"] & (d["n_winter"] > 0)
+        tgname = tg.PILOT_GROUP_TO_TG[rows[sci]["group"]]
+        if tgname not in groups:
+            gp = rel_get(f"w2-tg-{tgname}.npz", WORK / "tg" / f"w2-tg-{tgname}.npz")
+            groups[tgname] = np.load(gp)["grid"]
+        lk = tg.lookup(groups[tgname], ri, ci)
+        d["tg_block_p1"], d["tg_block_p2"], d["ws20"], d["ws100"] = lk["tg_block_p1"], lk["tg_block_p2"], lk["ws20"], lk["ws100"]
+        d.insert(0, "species", sci); d.insert(0, "species_key", rows[sci]["taxon_key"])
+        parts.append(d)
+        chk = rel_get(f"w2-seasonal-check-{slug(sci)}.json", WORK / "seasonal" / f"w2-seasonal-check-{slug(sci)}.json")
+        report[sci] = {"season_scheme": cfg["season_scheme"], "breeding_native_spec": cfg["breeding_native_spec"], "winter_native_spec": cfg["winter_native_spec"],
+                       "cells_all": int(len(d)), "breeding_cells": int(d["breeding_cell"].sum()), "winter_cells": int(d["winter_cell"].sum()),
+                       "cells_in_both_seasons": int((d["breeding_cell"] & d["winter_cell"]).sum()),
+                       "records_breeding_months": int(d["n_breeding"].sum()), "records_winter_months": int(d["n_winter"].sum()),
+                       "records_other_months": int(sum(d[f"m{m:02d}"].sum() for m in range(1, 13)) - d["n_breeding"].sum() - d["n_winter"].sum()),
+                       "records_without_month": int(d["m00"].sum()), "consistency_check_vs_v1": json.load(open(chk)) if chk else None, "note": cfg["note"]}
+    df = pd.concat(parts, ignore_index=True)
+    p = out / f"occ_cells_pilot_{VERSION}_seasonal.parquet"; df.to_parquet(p, compression="zstd", index=False)
+    rp = out / f"w2_seasonal_report_{VERSION}.json"; rp.write_text(json.dumps(report, indent=1))
+    files = {p.name: p, rp.name: rp}
+    man = {"version": VERSION, "built": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+           "seasons": SEASON_DEF, "files": {n: {"bytes": f.stat().st_size, "sha256": sha256(f)} for n, f in files.items()}}
+    mp = out / f"manifest_w2_seasonal_{VERSION}.json"; mp.write_text(json.dumps(man, indent=1))
+    for f in list(files.values()) + [mp]:
+        rel_put(f)
+    log("published seasonal assets", len(df), "rows")
+    return 0
 
 
 def diag():
@@ -515,4 +620,4 @@ if __name__ == "__main__":
     if cmd == "acquire":
         hrs = float(sys.argv[sys.argv.index("--hours") + 1]) if "--hours" in sys.argv else 5.5
         sys.exit(acquire(hrs))
-    sys.exit({"assemble": assemble, "diag": diag}[cmd]())
+    sys.exit({"assemble": assemble, "diag": diag, "seasonal": seasonal, "assemble-seasonal": assemble_seasonal}[cmd]())

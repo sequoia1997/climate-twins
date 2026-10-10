@@ -140,3 +140,19 @@ def test_cultivated_counts_reported_kept_for_crops_dropped_for_wild():
         cells, rep = cc.finish()
         assert len(cells) == n_cells
         assert rep["cultivated_managed_records"] == {("kept" if keep else "dropped"): 2}
+
+
+def test_seasonal_counts_by_scheme():
+    def r(i, month, year, lat=40.51):
+        return (i, lat, -75.51, year, f"{year}-{month:02d}-01", "a", "d", f"o{i}", None, month)
+    cols = ["gbifid", "decimallatitude", "decimallongitude", "year", "eventdate", "recordedby", "datasetkey", "occurrenceid", "establishmentmeans", "month"]
+    rows = [r(1, 6, 1985), r(2, 1, 1985), r(3, 12, 2010), r(4, 9, 2010), r(5, 7, 2015)]
+    cc = W.CellCleaner(); cc.keep_months = True
+    cc.feed(pd.DataFrame(rows, columns=cols))
+    cells, _ = cc.finish()
+    n = cc.finish_seasonal("N").iloc[0]
+    assert (n.n_breeding, n.n_winter, n.m09, n.m00) == (2, 2, 1, 0)
+    assert (n.n_breeding_1970_1999, n.n_breeding_2000_2020, n.n_winter_1970_1999, n.n_winter_2000_2020) == (1, 1, 1, 1)
+    s = cc.finish_seasonal("S").iloc[0]
+    assert (s.n_breeding, s.n_winter) == (2, 2)          # S scheme: breeding Nov-Jan = months 12 and 1; winter Jun-Aug = months 6 and 7
+    assert n.n_breeding + n.n_winter + n.m09 == cells.n_records.iloc[0]

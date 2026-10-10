@@ -27,9 +27,13 @@ from . import occ
 NROW, NCOL = 4320, 8640
 RES = 1 / 24
 COLS = ["gbifid", "decimallatitude", "decimallongitude", "coordinateuncertaintyinmeters", "eventdate", "recordedby", "datasetkey", "occurrenceid",
-        "year", "establishmentmeans", "countrycode", "basisofrecord", "license"]
+        "year", "month", "establishmentmeans", "countrycode", "basisofrecord", "license"]
 STEPS = ["input", "coords", "uncertainty", "centroids", "land", "establishment", "year", "duplicates"]
 DROP_EST = {"MANAGED", "CULTIVATED", "VAGRANT", "INVASIVE", "NATURALISED", "NATURALIZED"}
+SEASONS = {   # breeding / winter calendar months by the hemisphere the species BREEDS in (scheme N = northern, S = southern)
+    "N": {"breeding": (5, 6, 7), "winter": (12, 1, 2)},
+    "S": {"breeding": (11, 12, 1), "winter": (6, 7, 8)},
+}
 P1 = (1970, 1999)
 P2 = (2000, 2020)
 
@@ -80,6 +84,8 @@ class CellCleaner:
         """keep_cultivated: crops are modelled where they are cultivated, so the establishmentMeans step only counts, never drops."""
         self.land, self.ref, self.max_unc_m, self.radius_m = land, ref, max_unc_m, radius_m
         self.keep_cultivated = keep_cultivated
+        self.keep_months = False          # set True to keep the month of each record for finish_seasonal()
+        self._deduped = None
         self.datasets: dict[str, int] = {}
         self.cultivated_seen = 0          # records with establishmentMeans MANAGED or CULTIVATED (kept for crops, dropped otherwise)
         self.left = dict.fromkeys(STEPS, 0)
@@ -137,6 +143,7 @@ class CellCleaner:
                           "gid": df["gbifid"].astype("string").fillna("").to_numpy() if "gbifid" in df else ""})
         d["identity"] = np.where(d["oid"].to_numpy() != "", d["oid"].to_numpy(), "gbif:" + d["gid"].to_numpy().astype(str))
         part = pd.DataFrame({"cell": cell_index(df["decimallatitude"].to_numpy(), df["decimallongitude"].to_numpy()).astype(np.int32),
+                             "month": (pd.to_numeric(df["month"], errors="coerce").fillna(0).clip(0, 12).to_numpy().astype(np.int8) if "month" in df else np.zeros(len(df), np.int8)),
                              "year": yr.to_numpy().astype(np.int16), "hid": _hash(d, ["ds", "identity"]), "hev": _hash(d, ["lat5", "lon5", "ev", "rec", "ds"])})
         if "countrycode" in df:
             for k, v in df["countrycode"].value_counts().items():
@@ -144,11 +151,13 @@ class CellCleaner:
         self._parts.append(part.reset_index(drop=True))
 
     def finish(self) -> tuple[pd.DataFrame, dict]:
-        cols = ["cell", "year", "hid", "hev"]
+        cols = ["cell", "year", "month", "hid", "hev"]
         d = pd.concat(self._parts, ignore_index=True) if self._parts else pd.DataFrame({c: [] for c in cols})
         self._parts = []
         d = d.drop_duplicates("hid")
         self.left["duplicates"] = len(d)
+        if self.keep_months:
+            self._deduped = d[["cell", "year", "month"]].copy()
         ev = d.drop_duplicates(["cell", "hev"]).groupby("cell").size().rename("n_events")
         y = d["year"].to_numpy()
         d = d.assign(p1=(y >= P1[0]) & (y <= P1[1]), p2=(y >= P2[0]) & (y <= P2[1]), p3=y > P2[1])
@@ -168,6 +177,32 @@ class CellCleaner:
         rep["n_cells"] = int(len(cells))
         rep["n_events"] = int(cells["n_events"].sum())
         return cells.sort_values(["row", "col"], ignore_index=True), rep
+
+    def finish_seasonal(self, scheme: str = "N") -> pd.DataFrame:
+        """Per-cell month counts (m01..m12, m00 = record without month) and season counts for the deduplicated records of the SAME cells that
+        finish() returned. Needs keep_months = True before feed(). Season counts: n_breeding, n_winter, and per period (1970-1999, 2000-2020)."""
+        d = self._deduped
+        if d is None:
+            raise RuntimeError("set keep_months = True before feeding")
+        sc = SEASONS[scheme]
+        mo = d["month"].to_numpy()
+        y = d["year"].to_numpy()
+        out = pd.DataFrame({"cell": d["cell"].to_numpy()})
+        for m in range(0, 13):
+            out[f"m{m:02d}"] = (mo == m)
+        br, wi = np.isin(mo, sc["breeding"]), np.isin(mo, sc["winter"])
+        p1, p2 = (y >= P1[0]) & (y <= P1[1]), (y >= P2[0]) & (y <= P2[1])
+        out["n_breeding"], out["n_winter"] = br, wi
+        out["n_breeding_1970_1999"], out["n_breeding_2000_2020"] = br & p1, br & p2
+        out["n_winter_1970_1999"], out["n_winter_2000_2020"] = wi & p1, wi & p2
+        g = out.groupby("cell").sum().astype(np.int32).reset_index()
+        g["row"] = (g["cell"] // NCOL).astype(np.int16)
+        g["col"] = (g["cell"] % NCOL).astype(np.int16)
+        g["lat"] = (90 - (g["row"].astype(float) + 0.5) * RES).round(6)
+        g["lon"] = (-180 + (g["col"].astype(float) + 0.5) * RES).round(6)
+        g["season_scheme"] = scheme
+        first = ["row", "col", "lat", "lon", "season_scheme"]
+        return g[first + [c for c in g.columns if c not in first + ["cell"]]].sort_values(["row", "col"], ignore_index=True)
 
     def report(self) -> dict:
         steps, prev = [], None
