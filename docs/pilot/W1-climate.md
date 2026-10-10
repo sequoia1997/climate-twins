@@ -5,6 +5,9 @@ Status log (newest last). Tags: [V: ...] verified by a command or Actions run na
 - 2026-10-10 17:50 UTC: code written and tested on a 100 x 100 cell window with real TerraClimate data [V: local run, 14 var-years in 93 s]
   and on NEX-GDDP for one model [V: local run in progress]. Release `species-pilot-data` is created by the first workflow run (the sandbox may not create
   releases). No stage has run in Actions yet.
+- 2026-10-10 17:55 UTC: stage 1 launched by pushing the marker `.github/run/pilot-w1` = `tc:priority nex` (commit 6d71c1f): TerraClimate priority tiles
+  (run 38073242901, 6 jobs) and NEX deltas for 20 models (run 38073242908). The `species-pilot-data` release exists (created by a workflow or another agent).
+  Expected: tile jobs 1-3 h, NEX jobs about 1 h (est. from local timings, [U]).
 
 ## 1. What is built
 
