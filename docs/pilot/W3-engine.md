@@ -140,7 +140,19 @@ for resume, outputs uploaded to the release `species-pilot-data` as `w3_<slug>_s
 
 ## 8. Actions dry run
 
-(filled in below when the first run finishes)
+Run 38075334221 (push to `.github/run/pilot-w3`, `synthetic`): plan, five fit jobs (broad, moderate, cold_limited, narrow, region_excluded) and the report job all succeeded
+[V: Actions API job conclusions]. The first attempt (run 38073703854) failed only in the report job because it installed numpy and scipy but `ctw.common` needs pandas and requests; fixed by installing
+requirements.txt. Job logs cannot be read from the sandbox (log downloads redirect to a blocked host), so the content of the synthetic gate table was not inspected.
+
+## 8b. Real-data status (10 Oct, later)
+
+- W1 on the release so far: tiles r0c0 and r1c2 (baseline and both hindcast windows), 11 of the climate models' `deltas_*`. Sugar maple etc. need r0c0, r0c1, r1c0, r1c1; not all there yet.
+- W2 on the release so far: `w2-cells-<Genus_species>.parquet` for Acer saccharum, Danaus plexippus, Ixodes scapularis (columns row, col, lat, lon, year_min, year_max, n_records, n_events, n_1970_1999,
+  n_2000_2020, n_2021_plus) and `w2-report-*.json` (with the GBIF DOI). `inputs.species_inputs` reads these [V: columns read from the real sugar maple file, 3,741 cells]. The cells are **not yet
+  native-masked** (sugar maple has cells in Latvia, Japan) and no native-range or target-group density grids are published, so a real fit would be Tier 3 (range check missing) and unweighted. **Waiting on W2.**
+- Speed finding [V: local timing]: W1's `apply_deltas` costs about 140 microseconds per cell (200,000 cells: 27.6 s). A 3 million cell domain, 11 or more models and 4 scenario-periods would take
+  hours. `W1Source` therefore evaluates the deltas on a lattice of representative cells (spacing 4 cells, plus any cell farther than 8 cells from one) and adds the change to each cell's own fine
+  baseline from the pred files (cost / 16; env `W3_DECIMATE=1` disables). The change fields come from a 0.25 degree source, so this should lose little, but the effect on the range was **not measured [U]**.
 
 ## 9. Waiting on others
 
