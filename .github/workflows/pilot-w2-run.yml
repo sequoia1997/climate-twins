@@ -20,7 +20,6 @@ env:
   PYTHONUNBUFFERED: "1"
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   W2_WORK: ${{ github.workspace }}/work/w2
-  W2_TMP: ${{ runner.temp }}
 jobs:
   acquire:
     if: (github.event_name == 'workflow_dispatch' && inputs.stage == 'acquire') || contains(github.event.head_commit.message, '[acquire]')
