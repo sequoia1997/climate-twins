@@ -1,0 +1,13 @@
+name: Pilot W4 probe 3
+on:
+  push:
+    paths: [".github/run/pilot-w4-probe3"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install numpy
+      - run: python -u ctw/species/w4_probe3.py
