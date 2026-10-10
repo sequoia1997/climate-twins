@@ -219,6 +219,8 @@ def evaluate_species(cs: CellSet, thr: float | None = None, th: Thresholds = TH,
     r["shift_ratio"] = float(mod["km"] / obs["km"]) if np.isfinite(obs["km"]) and obs["km"] > 0 and np.isfinite(mod["km"]) else math.nan
     r["bearing_error"] = sdm.angle_diff(mod["bearing"], obs["bearing"]) if np.isfinite(mod["bearing"]) and np.isfinite(obs["bearing"]) else math.nan
     r["direction_agree"] = (bool(np.sign(mod["north"]) == np.sign(obs["north"])) if np.isfinite(mod["north"]) and np.isfinite(obs["north"]) and obs["detectable"] else None)
+    # bearing agreement (any direction, not only north-south): within 90 degrees, for species whose shift distance is detectable
+    r["bearing_agree"] = (bool(r["bearing_error"] < 90) if np.isfinite(r["bearing_error"]) and obs["detectable_km"] else None)
     r["edge_hi_error_km"] = mod["edge_hi_km"] - obs["edge_hi_km"]
     r["edge_lo_error_km"] = mod["edge_lo_km"] - obs["edge_lo_km"]
     r["area_change_error"] = mod["area_change"] - obs["area_change"] if np.isfinite(mod["area_change"]) and np.isfinite(obs["area_change"]) else math.nan
@@ -252,6 +254,7 @@ def group_verdict(results: dict, test: str, th: Thresholds = TH, n_eligible: int
     sp = list(results.values())
     dirs = [r["direction_agree"] for r in sp if r["direction_agree"] is not None]
     k = int(sum(dirs)); n = len(dirs)
+    bdirs = [r["bearing_agree"] for r in sp if r.get("bearing_agree") is not None]
     ratios = np.array([r["shift_ratio"] for r in sp if r["shift_ratio"] is not None and np.isfinite(r["shift_ratio"])])
     corr = np.array([r["cell_change_corr"] for r in sp if np.isfinite(r["cell_change_corr"])])
     errs = [(r["shift_error_km"], r["shift_error_nochange_km"]) for r in sp if np.isfinite(r["shift_error_km"]) and np.isfinite(r["shift_error_nochange_km"])]
@@ -274,7 +277,7 @@ def group_verdict(results: dict, test: str, th: Thresholds = TH, n_eligible: int
         status = "insufficient data"
     else:
         status = "pass" if all(c["ok"] for c in checks) else "fail"
-    return dict(test=test, status=status, n_species=len(results), n_eligible=n_el, need=need, checks=checks,
+    return dict(test=test, status=status, bearing_agree=f"{int(sum(bdirs))}/{len(bdirs)}", n_species=len(results), n_eligible=n_el, need=need, checks=checks,
                 static_pass=bool(all(r["transfer_ok"] is not False and (r["boyce2"] is None or not np.isfinite(r["boyce2"]) or r["boyce2"] >= th.boyce) for r in sp) if sp else False),
                 interpretation=interpretation(status, checks))
 
@@ -337,7 +340,7 @@ def observed_table(obs_by_species: dict, names: dict | None = None) -> str:
 def report(test: str, title: str, results: dict, group: dict, verdicts: dict, th: Thresholds = TH, names: dict | None = None) -> str:
     """Markdown report for one test: group verdict, check table, species table, tier verdicts."""
     nm = lambda s: (names or {}).get(s, s)
-    out = [f"## {title}", "", f"**Group verdict: {group['status'].upper()}** ({group['n_eligible']} eligible species, minimum {group['need']}). {group['interpretation']}", "",
+    out = [f"## {title}", "", f"**Group verdict: {group['status'].upper()}** ({group['n_eligible']} eligible species, minimum {group['need']}). {group['interpretation']} Bearing within 90 degrees (any direction, reported not scored): {group.get('bearing_agree', 'n/a')}.", "",
            "| group check | value | needed | result |", "|---|---|---|---|"]
     out += [f"| {c['name']} | {c['value']} | {c['need']} | {'ok' if c['ok'] else 'not met'} |" for c in group["checks"]]
     out += ["", "| species | AUC w2 | TSS w2 | Boyce w2 | TSS no-change (model, w1 climate) | TSS persistence | obs shift km / bearing | model shift km / bearing | ratio | bearing err | direction | edge err hi / lo km | area change obs / model | cell corr |",
