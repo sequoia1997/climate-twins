@@ -51,7 +51,8 @@ the same default ensemble as the site. The ensemble-median product is the fine-g
 ## 2. Loading (exact)
 
 ```python
-# download once (any machine):  gh release download species-pilot-data -R sequoia1997/climate-twins -D clim -p "manifest.json" -p "*_r1c1.npz"
+S0 = None  # download once (any machine, no token needed; files are checked against manifest.json):
+# from ctw.species import climstack as S; S.download(["manifest.json", "pred_base_1991-2020_r1c1.npz", "basem_r1c1.npz"], "clim")
 from ctw.species import climstack as S
 vals = S.sample_points("clim", "base_1991-2020", lat=[45.5, 40.0], lon=[-122.7, -105.3])      # (10, n_points), order S.NAMES, NaN on sea
 grids, lat, lon = S.read_box("clim", "hind_2005-2024", (35, 60, -10, 30))                       # dict name -> (ny, nx) float32, NaN on sea
@@ -62,3 +63,7 @@ fut = S.apply_deltas(st, lib, "MIROC6", "ssp585", "2081-2100")                  
 ```
 
 Pending: final file inventory, QA numbers, known limits (sections 3 to 6 are filled as stages finish).
+
+## 3. Progress
+
+- 18:20 UTC: first tiles done in Actions [V: run 38073242901]: r1c2 (Europe, 0-45N, 0-90E) in about 30 min, r0c0 done; other priority tiles still running. NEX: 12 of 20 models finished in about 25 min each [V: run 38073242908]. Stage 2 launched: `tc:rest` (marker commit).

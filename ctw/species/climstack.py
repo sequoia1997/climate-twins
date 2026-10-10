@@ -365,3 +365,40 @@ def apply_deltas(baseline_stack, deltas, model, scenario, period, ppt_ratio=PPT_
     fp = m["ppt"] * np.clip(it(rp), *ppt_ratio)
     out = predict_future(m, fx, fn, fp, st.lat)
     return {nm: out[k] for k, nm in enumerate(NAMES)}
+
+
+# --------------------------------------------------------------------------- download from the release
+RELEASE_URL = "https://github.com/sequoia1997/climate-twins/releases/download/species-pilot-data/{name}"
+
+
+def download(names, dest, skip_existing=True, verify=True):
+    """Download release assets (public, no token needed) into directory `dest`. With verify=True the sha256 of each file is checked
+    against manifest.json (downloaded first). Returns the local paths."""
+    import hashlib
+    import urllib.request
+    os.makedirs(dest, exist_ok=True)
+
+    def get(name):
+        p = os.path.join(dest, name)
+        if skip_existing and os.path.exists(p):
+            return p
+        urllib.request.urlretrieve(RELEASE_URL.format(name=name), p + ".part")
+        os.replace(p + ".part", p)
+        return p
+
+    man = {}
+    if verify and "manifest.json" not in names:
+        with open(get("manifest.json")) as f:
+            man = json.load(f).get("files", {})
+    out = []
+    for n in names:
+        p = get(n)
+        if verify and n in man:
+            h = hashlib.sha256()
+            with open(p, "rb") as f:
+                for b in iter(lambda: f.read(1 << 24), b""):
+                    h.update(b)
+            if h.hexdigest() != man[n]["sha256"]:
+                raise IOError(f"checksum mismatch for {n}")
+        out.append(p)
+    return out
