@@ -244,3 +244,15 @@ Monarch, blacklegged tick and wine grape have **no verified hindcast dataset**: 
 6. The numbers attributed to Devictor et al., MESS thresholds, and the TSS/AUC rule-of-thumb bands are from memory.
 7. eBMS data access policy text; PECBMS public indices.
 8. The probe scripts and workflow (`.github/workflows/spike-c-probe.yml`, trigger file `.github/run/spike-c`) can be deleted after review.
+
+## 7. Update from workstream W4 (10 October 2026): what was verified
+
+Full detail, run ids and results are in `docs/pilot/W4-hindcast.md`. Changes to the conclusions above:
+
+- **Dropped and excluded by owner decision:** EBBA1/EBBA2 (paid), eBird Status and Trends, Christmas Bird Count, eBMS. Section 5 ranks 2, 6, 7 and the last row no longer apply. Europe has only the weak GBIF before/after test.
+- **BBS (row a) verified end to end** (Actions run 38072944625): CC0 confirmed in the item `rights` field; `Routes.csv`, `SpeciesList.csv`, `Weather.csv` (RunType, RPID) and `States.zip` (62 state/province CSVs with route-year totals) are plain CSV and need latin-1 decoding. 5,838 routes, 127,646 acceptable route-years, **1,062 routes meet the 10-years-in-each-window rule**, 150 species have at least 100 route-presences in both windows. The observed continental signal is mixed: of 87 eligible species with a detectable north-south shift only 46 moved north.
+- **FIA (row c1) verified** (probe 38072387399, runs 38077672558): state CSVs and tables as listed; first complete cycles are periodic inventories (1967 to 2001 depending on state) with different plot designs, latest 2014 to 2023; 47 of 48 conterminous states usable; coordinate fuzzing distance still **not** verified from FIA documentation.
+- **Published projections (section 2) verified:** all five pilot trees (sugar maple, red maple, eastern white pine, quaking aspen, white oak) are present in RDS-2019-0029 (eastern US, shapefiles named by FIA SPCD) and RDS-2024-0020 (North America, 20 km Albers rasters, current and two SSP scenarios). Audubon and the other taxa are unchanged (unverified).
+- **Minimum species (4.7) is binding:** the 10 pilot birds and 5 pilot trees are below the 30 and 20 species required, so the pilot list alone can only return "insufficient data". A random-draw validation set of 30 further BBS birds was added (`data/species/w4/bbs_validation_species.csv`).
+- **First hindcast results (BBS, 40 species):** static transfer good (median AUC on window 2 about 0.88), **change test fails** (direction of shift 12 of 25, shift error larger than no-change, per-cell change correlation about 0). Under the interpretation rules of 4.6 this is "static pass, change fail". Thresholds were not altered after seeing results.
+- **Skill gate caveat for BBS:** the presence-versus-background CV of the production fit is uninformative where the background is the survey route set (AUC 0.5 to 0.6 for widespread species); a presence-absence spatial-block CV with true route absences is used instead for BBS.
