@@ -1,0 +1,293 @@
+{
+ "candidates": 735,
+ "shortlist": 381,
+ "excluded": 165,
+ "enriched": 1463,
+ "errors": [
+  [
+   "Prunus dulcis",
+   "no GBIF species match"
+  ],
+  [
+   "Salix alba",
+   "no GBIF species match"
+  ],
+  [
+   "Chloris chloris",
+   "no GBIF species match"
+  ],
+  [
+   "Dasypus mexicanus",
+   "no GBIF species match"
+  ],
+  [
+   "Ardea coromanda",
+   "no GBIF species match"
+  ],
+  [
+   "Daptrius chimango",
+   "no GBIF species match"
+  ],
+  [
+   "Daptrius chimachima",
+   "no GBIF species match"
+  ],
+  [
+   "Graphium sarpedon",
+   "no GBIF species match"
+  ],
+  [
+   "Cinnyris ornatus",
+   "no GBIF species match"
+  ],
+  [
+   "Butorides atricapilla",
+   "no GBIF species match"
+  ],
+  [
+   "Tachyspiza badia",
+   "no GBIF species match"
+  ],
+  [
+   "Lupulella mesomelas",
+   "no GBIF species match"
+  ],
+  [
+   "Calotes wangi",
+   "no GBIF species match"
+  ],
+  [
+   "Sciurus brasiliensis",
+   "no GBIF species match"
+  ],
+  [
+   "Subulo gouazoubira",
+   "no GBIF species match"
+  ],
+  [
+   "Ficus sarmentosa",
+   "no GBIF species match"
+  ],
+  [
+   "Senegalia afra",
+   "no GBIF species match"
+  ],
+  [
+   "Ficus nervosa",
+   "no GBIF species match"
+  ],
+  [
+   "Erythrina afra",
+   "no GBIF species match"
+  ]
+ ],
+ "candidate_report": {
+  "tree": {
+   "quota": 180,
+   "got": 180,
+   "by_region": {
+    "AFRICA": 27,
+    "ASIA": 40,
+    "EUROPE": 27,
+    "NORTH_AMERICA": 32,
+    "SOUTH_AMERICA": 31,
+    "OCEANIA": 23
+   }
+  },
+  "wild_plant": {
+   "quota": 80,
+   "got": 80,
+   "by_region": {
+    "AFRICA": 10,
+    "ASIA": 18,
+    "EUROPE": 14,
+    "NORTH_AMERICA": 14,
+    "SOUTH_AMERICA": 14,
+    "OCEANIA": 10
+   }
+  },
+  "crop": {
+   "quota": 80,
+   "got": 80,
+   "by_region": {
+    "AFRICA": 12,
+    "ASIA": 25,
+    "EUROPE": 16,
+    "NORTH_AMERICA": 13,
+    "SOUTH_AMERICA": 10,
+    "OCEANIA": 4
+   }
+  },
+  "bird": {
+   "quota": 180,
+   "got": 180,
+   "by_region": {
+    "AFRICA": 27,
+    "ASIA": 40,
+    "EUROPE": 27,
+    "NORTH_AMERICA": 32,
+    "SOUTH_AMERICA": 31,
+    "OCEANIA": 23
+   }
+  },
+  "mammal": {
+   "quota": 80,
+   "got": 80,
+   "by_region": {
+    "AFRICA": 12,
+    "ASIA": 18,
+    "EUROPE": 12,
+    "NORTH_AMERICA": 14,
+    "SOUTH_AMERICA": 14,
+    "OCEANIA": 10
+   }
+  },
+  "herp": {
+   "quota": 40,
+   "got": 40,
+   "by_region": {
+    "AFRICA": 6,
+    "ASIA": 9,
+    "EUROPE": 6,
+    "NORTH_AMERICA": 7,
+    "SOUTH_AMERICA": 7,
+    "OCEANIA": 5
+   }
+  },
+  "insect_arachnid": {
+   "quota": 60,
+   "got": 75,
+   "by_region": {
+    "NORTH_AMERICA": 13,
+    "EUROPE": 22,
+    "AFRICA": 9,
+    "ASIA": 13,
+    "OCEANIA": 8,
+    "SOUTH_AMERICA": 10
+   }
+  },
+  "fish": {
+   "quota": 20,
+   "got": 20,
+   "by_region": {
+    "AFRICA": 2,
+    "ASIA": 4,
+    "EUROPE": 5,
+    "NORTH_AMERICA": 6,
+    "SOUTH_AMERICA": 2,
+    "OCEANIA": 1
+   }
+  }
+ },
+ "shortlist_report": {
+  "tree": {
+   "quota": 90,
+   "got": 91,
+   "by_region": {
+    "AFRICA": 14,
+    "ASIA": 20,
+    "EUROPE": 14,
+    "NORTH_AMERICA": 16,
+    "SOUTH_AMERICA": 15,
+    "OCEANIA": 12
+   }
+  },
+  "wild_plant": {
+   "quota": 40,
+   "got": 40,
+   "by_region": {
+    "AFRICA": 6,
+    "ASIA": 9,
+    "EUROPE": 6,
+    "NORTH_AMERICA": 7,
+    "SOUTH_AMERICA": 7,
+    "OCEANIA": 5
+   }
+  },
+  "crop": {
+   "quota": 40,
+   "got": 40,
+   "by_region": {
+    "AFRICA": 6,
+    "ASIA": 9,
+    "EUROPE": 7,
+    "NORTH_AMERICA": 7,
+    "SOUTH_AMERICA": 7,
+    "OCEANIA": 4
+   }
+  },
+  "bird": {
+   "quota": 90,
+   "got": 91,
+   "by_region": {
+    "AFRICA": 14,
+    "ASIA": 20,
+    "EUROPE": 14,
+    "NORTH_AMERICA": 16,
+    "SOUTH_AMERICA": 15,
+    "OCEANIA": 12
+   }
+  },
+  "mammal": {
+   "quota": 40,
+   "got": 40,
+   "by_region": {
+    "AFRICA": 6,
+    "ASIA": 9,
+    "EUROPE": 6,
+    "NORTH_AMERICA": 7,
+    "SOUTH_AMERICA": 7,
+    "OCEANIA": 5
+   }
+  },
+  "herp": {
+   "quota": 20,
+   "got": 20,
+   "by_region": {
+    "AFRICA": 3,
+    "ASIA": 4,
+    "EUROPE": 3,
+    "NORTH_AMERICA": 4,
+    "SOUTH_AMERICA": 3,
+    "OCEANIA": 3
+   }
+  },
+  "insect_arachnid": {
+   "quota": 30,
+   "got": 48,
+   "by_region": {
+    "NORTH_AMERICA": 10,
+    "EUROPE": 18,
+    "AFRICA": 4,
+    "ASIA": 7,
+    "SOUTH_AMERICA": 5,
+    "OCEANIA": 4
+   }
+  },
+  "fish": {
+   "quota": 10,
+   "got": 11,
+   "by_region": {
+    "AFRICA": 2,
+    "ASIA": 2,
+    "EUROPE": 2,
+    "NORTH_AMERICA": 2,
+    "SOUTH_AMERICA": 2,
+    "OCEANIA": 1
+   }
+  }
+ },
+ "excluded_reasons": {
+  "narrow": 128,
+  "domestic": 21,
+  "marine": 18,
+  "no_region": 41,
+  "no_records": 41
+ },
+ "coverage": {
+  "pageviews": 1315,
+  "rows": 1463
+ },
+ "unenriched_skipped": 0,
+ "seconds": 2152
+}
