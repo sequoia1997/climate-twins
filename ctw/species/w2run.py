@@ -222,6 +222,9 @@ def process_tg(group: str, key: str, state: State):
     shutil.rmtree(tmp, ignore_errors=True)
     z = fetch_zip(s["downloadLink"], tmp)
     g = tg.parse_tsv_zip(str(z))
+    if int(g[0].sum()) == 0:
+        state.set(job, **meta, processed=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), total=0)
+        raise RuntimeError(f"target group {group}: the SQL download is empty, not stored")
     out = WORK / "tg"; out.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(out / f"w2-tg-{group}.npz", grid=g)
     rel_put(out / f"w2-tg-{group}.npz")
@@ -255,8 +258,12 @@ def acquire(hours: float):
         jobs.append((f"species:{sci}", "species", sci, lambda t=r["taxon_key"]: gbif.request_download(t)))
 
     def done(job, kind, name):
-        return (f"w2-cells-{slug(name)}.parquet" in have and f"w2-report-{slug(name)}.json" in have) if kind == "species" else f"w2-tg-{name}.npz" in have
+        return (f"w2-cells-{slug(name)}.parquet" in have and f"w2-report-{slug(name)}.json" in have) if kind == "species" else (f"w2-tg-{name}.npz" in have and (state.get(job).get("total") or 0) > 0)
 
+    for g in tg.GROUPS:        # an earlier SQL download that came back empty is never reused
+        if state.get(f"tg:{g}").get("processed") and not (state.get(f"tg:{g}").get("total") or 0) > 0:
+            state.set(f"tg:{g}", key=None, processed=None, total=None, status=None)
+            log("discarded empty target-group download", g)
     todo = [j for j in jobs if not done(*j[:3])]
     log(f"{len(jobs) - len(todo)} of {len(jobs)} jobs already stored, {len(todo)} to do")
     deadline = time.time() + hours * 3600
