@@ -10,7 +10,7 @@ local command) or **[U]** (unverified).
 |---|---|
 | Metrics, nulls, thresholds, minimum-species rule, verdicts, report generator (`ctw/species/hindcast.py`) | done, unit-tested on synthetic data (`tests/test_species_hindcast.py`) |
 | BBS ingest and observed-change metrics (`bbs.py`, `w4_bbs_run.py`, workflow `pilot-w4-bbs.yml`) | done, real run verified (section 3) |
-| FIA ingest and tree change test (`fia.py`, `w4_fia_run.py`, workflow `pilot-w4-fia.yml`) | code done and tested on synthetic data; first real run: see section 4 |
+| FIA ingest and tree change test (`fia.py`, `w4_fia_run.py`, workflow `pilot-w4-fia2.yml`) | done: observed adult and seedling change for the five trees (section 4); model hindcast `pilot-w4-fia-hindcast.yml` running |
 | Comparison with published tree projections | species presence verified in RDS-2024-0020 (section 5); comparison with our model waits for W3 |
 | GBIF before and after for the two European species (`gbif_split.py`, `w4_gbif_run.py`, workflow `pilot-w4-gbif.yml`) | protocol and code done and tested; real run executes end to end but **waits for W2's target-group grids**: the `w2-tg-bird.npz` and `w2-tg-plant.npz` on the release are all zeros at 18:55 UTC (run 38077216009, diagnostics in `docs/pilot/W4-hindcast-report-gbif.md`), so no block can be called well sampled and no absence defined |
 | Full BBS model hindcast (`hindcast_run.py`, `w4_hindcast_run.py`, workflow `pilot-w4-hindcast.yml`) | **done: group test FAILS (change), static skill good, no Tier 1** (section 3b) |
@@ -138,7 +138,23 @@ least 5.0 inches DBH only; plots aggregated to 0.5 degree blocks with at least 8
 presence = at least one adult in the rarefied sample; weight one per block. Seedlings versus adults in the latest cycle (SEEDLING table) gives a lower-lag signal: centroid of seedling blocks minus centroid of adult blocks.
 Per-block measurement years (t1, t2) are output so the climate windows (30 years ending at each measurement) can be chosen by W3; proposed: bin the window end to the nearest 5 years.
 
-Results: **[waiting for first real run]**
+Results of the observed-change part (Actions run 38077672558, by-state matrix; the original single-job run 38072837001 was still running after more than 90 minutes and was superseded; numbers in `data/species/w4/fia_cycles.csv`, `fia_observed_change.csv`) **[V 38077672558]**:
+- 47 of 48 conterminous states are usable; Texas is dropped (interval between its first and latest complete cycle is only 12 years). First complete cycle per state ranges from 1967 (SC) to 2001 (WA) in median measurement year, the latest from 2014 (UT) to 2023;
+  block-level median years are 1985 and 2019. After the 8-plot rule and rarefaction, **1,933 blocks of 0.5 degree** are comparable. The DESIGNCD = 1 only sensitivity variant is unusable (first cycles are periodic designs: no design-1 plots in cycle 1), which confirms that the design change between first and latest cycle cannot be removed; rarefaction to equal plot numbers is the only control.
+- Observed adult change between the first and the latest cycle (eligible = at least 500 plots with the species in each cycle; all five are eligible, but five species is far below the 20 needed for a conclusive group):
+
+| species | shift km (95% CI) | bearing | north km (SE) | detectable | permutation p | leading / trailing edge km | seedlings minus adults, northward km (SE) |
+|---|---|---|---|---|---|---|---|
+| Sugar maple | 42 (21 to 65) | 36 | +34 (9) | yes | 0.00 | +1 / +61 | +10 (6) |
+| Red maple | 17 (6 to 29) | 266 | -1 (6) | no | 0.01 | +4 / +1 | -6 (4) |
+| Eastern white pine | 55 (38 to 82) | 224 | -39 (11) | yes (southward) | 0.00 | 0 / -52 | +45 (11) |
+| Quaking aspen | 26 (6 to 86) | 242 | -12 (9) | no | 0.40 | +2 / -50 | +14 (7) |
+| White oak | 12 (2 to 27) | 118 | -6 (7) | no | 0.34 | -6 / +1 | -44 (8) |
+
+  Adult trees moved little (tens of km over about 34 years, against several hundred km of isotherm shift), which is the lag the literature describes (Zhu et al. 2012; Fei et al. 2017). Only sugar maple (northeast) and white pine (southwest, opposite to climate) have a detectable adult shift. Seedlings
+  are north of adults for white pine and sugar maple and south of adults for white oak; these are single-cycle contrasts and an indication, not a hindcast. For comparison, the published DISTRIB model moves sugar maple 575 km (SSP2-4.5) by 2100.
+- Coordinate fuzzing: public LAT/LON; not quantified here; the 0.5 degree blocks make the unquantified fuzzing (reported elsewhere as about a mile) negligible, but the rule itself is **[U]**.
+
 
 ## 5. Test 4: comparison with published tree projections
 
