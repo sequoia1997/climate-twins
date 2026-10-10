@@ -94,7 +94,10 @@ def gbif_match(name):
 def gbif_enrich(key):
     d = {}
     j = get(f"{GBIF}/species/{key}/iucnRedListCategory")
-    d["iucn"] = (j or {}).get("category") or "NE"
+    _m = {"LEAST_CONCERN": "LC", "NEAR_THREATENED": "NT", "VULNERABLE": "VU", "ENDANGERED": "EN", "CRITICALLY_ENDANGERED": "CR",
+          "EXTINCT_IN_THE_WILD": "EW", "EXTINCT": "EX", "DATA_DEFICIENT": "DD", "NOT_EVALUATED": "NE"}
+    _c = (j or {}).get("category") or "NE"
+    d["iucn"] = _m.get(_c, _c)
     base = dict(taxonKey=key, hasCoordinate="true", hasGeospatialIssue="false", occurrenceStatus="PRESENT")
     j = get(GBIF + "/occurrence/search", dict(base, limit=0, facet=["continent", "country"], facetLimit=60))
     d["gbif_records"] = (j or {}).get("count", 0)
