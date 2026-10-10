@@ -88,7 +88,7 @@ jobs:
         if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
         run: |
           mkdir -p work/occ
-          gh release download species-pilot-data -D work/occ -p "w2_*" --clobber || echo "no W2 assets yet"
+          gh release download species-pilot-data -D work/occ -p "occ_cells_pilot_v1.parquet" -p "native_masks_pilot_v1.npz" -p "tg_density_*_v1.npz" -p "w2_report_pilot_v1.json" -p "w2-*" --clobber || echo "no W2 assets yet"
           ls -la work/occ | head -40
       - name: Fit, project and write
         if: steps.skip.outputs.done != 'true'
