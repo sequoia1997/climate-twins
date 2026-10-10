@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v5
-      - run: pip install -q numpy scipy h5py fsspec aiohttp requests rasterio
+      - run: pip install -q numpy scipy pandas h5py fsspec aiohttp requests rasterio
       - name: TerraClimate regional read, baselines, checks
         run: /usr/bin/time -v python -u ctw/species/tierA_test.py tc 2>&1 | grep -E "RESULT|Maximum resident|Elapsed|Error|Traceback" 
       - name: Future and comparison

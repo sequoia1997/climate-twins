@@ -143,7 +143,11 @@ def _chelsa_month(args):
     u = f"/vsicurl/https://os.unil.cloud.switch.ch/chelsa02/chelsa/global/climatologies/{var}/1981-2010/CHELSA_{var}_{m:02d}_1981-2010_V.2.1.tif"
     with rasterio.open(u) as ds:
         fine = 5
-        w = rasterio.windows.Window(COLS.start * fine, ROWS.start * fine, (COLS.stop - COLS.start) * fine, (ROWS.stop - ROWS.start) * fine)
+        # CHELSA starts at ~84N (20880 rows), TerraClimate at 90N: shift rows by the difference in top edge (fixes the first run's misalignment)
+        top_tc = 90.0 - ROWS.start / 24.0
+        r0 = int(round((ds.bounds.top - top_tc) * 120))
+        c0 = int(round((-180.0 - ds.bounds.left) * 120)) + COLS.start * fine
+        w = rasterio.windows.Window(c0, r0, (COLS.stop - COLS.start) * fine, (ROWS.stop - ROWS.start) * fine)
         a = ds.read(1, window=w, masked=True)
         sc, off = ds.scales[0], ds.offsets[0]
     x = a.astype("float32").filled(np.nan) * sc + off
