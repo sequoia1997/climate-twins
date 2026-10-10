@@ -55,3 +55,24 @@ def test_hindcast_bbs_end_to_end():
     assert cvb["source"].startswith("presence-absence") and cvb["auc"] > 0.8
     sc = HR.score_cells(fits["virtual"], src, q.row.values, q.col.values)
     assert np.abs(sc.score2 - sc.score1).mean() > 0
+
+
+def test_hindcast_fia_plumbing():
+    import ctw.species.fia as fia
+    src = grid.SyntheticClimate(SPEC, n_models=2)
+    rng = np.random.default_rng(3)
+    land = grid.land_mask(src)
+    rr, cc = np.nonzero(land[15:105]); rr += 15
+    rows = []
+    for w in (1, 2):
+        pick = rng.choice(len(rr), 1800, replace=False)
+        r, c = rr[pick], cc[pick]
+        x = src.baseline_points(r, c, ("bio1",), window=HR.W1 if w == 1 else HR.W2)[:, 0]
+        present = np.isfinite(x) & (x >= 12) & (x <= 30)
+        rows.append(pd.DataFrame(dict(state=1, window=w, cn=np.arange(len(r)) + w * 10000, lat=SPEC.lat(r), lon=SPEC.lon(c), measyear=1985 if w == 1 else 2019,
+                                      designcd=1, cycle=w, a318=present.astype(int))))
+    plots = pd.concat(rows, ignore_index=True)
+    out, fits = HR.hindcast_fia({"virtual tree": 318}, plots, SPEC, src, cfg=PL.FitConfig(n_jobs=1, check_model=False, cv_folds=3), n_boot=30, block=16, min_plots=8, log=lambda *a: None)
+    for mode, (res, g, v, cs) in out.items():
+        assert "virtual tree" in res and g["status"] == "insufficient data", mode
+        assert res["virtual tree"]["auc2"] > 0.7

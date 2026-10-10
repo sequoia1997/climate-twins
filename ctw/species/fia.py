@@ -95,18 +95,23 @@ def state_plot_table(plot: pd.DataFrame, tree_chunks, seed_chunks=None, spcds=tu
     return out, info
 
 
-def block_ids(lat, lon, block: int = BLOCK):
-    r, c = bbs.grid_rc(lat, lon)
+def block_ids(lat, lon, block: int = BLOCK, rc_of=None):
+    r, c = (rc_of or bbs.grid_rc)(lat, lon)
     return r // block, c // block
 
 
 def species_cellset(plots: pd.DataFrame, spcd: int, block: int = BLOCK, min_plots: int = MIN_PLOTS, cap: int = CAP, seed: int = 0,
-                    designcd1_only: bool = False, min_interval: float = MIN_INTERVAL) -> tuple[H.CellSet, dict]:
+                    designcd1_only: bool = False, min_interval: float = MIN_INTERVAL, scores: pd.DataFrame | None = None,
+                    thr: float | None = None, rc_of=None) -> tuple[H.CellSet, dict]:
     """CellSet of adult presence in the first versus the latest cycle on blocks with at least min_plots plots in both cycles, rarefied to
     n = min(n1, n2, cap) random plots per block and window. Weight 1 per block. Also returns counts (plots with the species in each window,
     blocks) for the eligibility rule (>= 500 plots with the species in each cycle, C-validation 4.7)."""
     d = plots[plots.designcd == 1] if designcd1_only else plots
-    d = d.assign(br=block_ids(d.lat.values, d.lon.values, block)[0], bc=block_ids(d.lat.values, d.lon.values, block)[1])
+    if scores is not None:      # model scores per 1/24 degree cell (row, col, score1, score2); a block's score is the mean over its plots' cells
+        rr, cc = (rc_of or bbs.grid_rc)(d.lat.values, d.lon.values)
+        d = d.assign(row=rr, col=cc).merge(scores[["row", "col", "score1", "score2"]], on=["row", "col"], how="left")
+    bid = block_ids(d.lat.values, d.lon.values, block, rc_of)
+    d = d.assign(br=bid[0], bc=bid[1])
     rng = np.random.default_rng(seed)
     rows = []
     for (br, bc), g in d.groupby(["br", "bc"]):
@@ -118,13 +123,19 @@ def species_cellset(plots: pd.DataFrame, spcd: int, block: int = BLOCK, min_plot
         t1, t2 = g1.measyear.median(), g2.measyear.median()
         if t2 - t1 < min_interval:
             continue
-        rows.append(dict(br=br, bc=bc, lat=g.lat.mean(), lon=g.lon.mean(), o1=bool((s1[f"a{spcd}"] > 0).any()), o2=bool((s2[f"a{spcd}"] > 0).any()),
-                         n=n, t1=t1, t2=t2))
+        row = dict(br=br, bc=bc, lat=g.lat.mean(), lon=g.lon.mean(), o1=bool((s1[f"a{spcd}"] > 0).any()), o2=bool((s2[f"a{spcd}"] > 0).any()),
+                   n=n, t1=t1, t2=t2)
+        if scores is not None:
+            row.update(m1=g.score1.mean(), m2=g.score2.mean())
+        rows.append(row)
     r = pd.DataFrame(rows)
     if r.empty:
         cs = H.CellSet(np.array([]), np.array([]), np.array([]), np.array([], bool), np.array([], bool))
     else:
-        cs = H.CellSet(r.lat.values, r.lon.values, np.ones(len(r)), r.o1.values, r.o2.values)
+        if scores is not None:
+            r = r.dropna(subset=["m1", "m2"])
+        cs = H.CellSet(r.lat.values, r.lon.values, np.ones(len(r)), r.o1.values, r.o2.values, r.m1.values if scores is not None else None,
+                       r.m2.values if scores is not None else None, thr)
         cs.cluster = r.br.values.astype(np.int64) * 100000 + r.bc.values
     cnt = dict(plots_w1=int((d[d.window == 1][f"a{spcd}"] > 0).sum()), plots_w2=int((d[d.window == 2][f"a{spcd}"] > 0).sum()), blocks=len(r),
                t1=float(r.t1.median()) if len(r) else np.nan, t2=float(r.t2.median()) if len(r) else np.nan)

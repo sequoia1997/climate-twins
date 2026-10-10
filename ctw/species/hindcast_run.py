@@ -156,3 +156,43 @@ def hindcast_bbs(species: dict, routes_fit: pd.DataFrame, routes_q: pd.DataFrame
     for m in modes:
         out[m] = H.run_test(sets[m], test, cv=cvs[m], th=th, n_eligible=n_el, n_boot=n_boot) + (sets[m],)
     return out, fits
+
+
+def hindcast_fia(species: dict, plots: pd.DataFrame, spec, src, *, cfg: PL.FitConfig | None = None, n_boot: int = 300, w1=W1, w2=W2, test="fia",
+                 th=H.TH, modes=("blocked", "fit_cells"), seed: int = 0, block: int | None = None, min_plots: int | None = None, log=print):
+    """FIA tree hindcast: species {name: SPCD}; plots = fia.state_plot_table output for all states (columns lat, lon, window, a<SPCD>, ...).
+    Fit on the first complete cycle (window 1 plots: adult present = presence, forested plot without the species = absence), score the block means
+    under hindcast climate 1966-1985 and 2005-2024 (the first cycles centre on about 1985 and the latest on about 2019; the per-state cycle years
+    are not matched exactly, documented), and compare with the observed adult change. Trees lag climate, so this is a change test with a caveat."""
+    from . import fia
+    rc_of = lambda la, lo: (spec.row_of(la), spec.col_of(lo))                                   # noqa: E731
+    kw = {k: v for k, v in (('block', block), ('min_plots', min_plots)) if v is not None}
+    pr, pc = rc_of(plots.lat.values, plots.lon.values)
+    plots = plots.assign(row=pr, col=pc)
+    w1p = plots[plots.window == 1]
+    fit_all = w1p[["row", "col"]].drop_duplicates().reset_index(drop=True)
+    ev = plots[["row", "col"]].drop_duplicates().reset_index(drop=True)
+    density = route_density(spec, fit_all.row.values, fit_all.col.values)
+    sets, cvs, fits, n_el = {m: {} for m in modes}, {m: {} for m in modes}, {}, 0
+    for name, spcd in species.items():
+        cells = w1p[w1p[f"a{spcd}"] > 0][["row", "col"]].drop_duplicates()
+        if len(cells) < 20:
+            log(f"{name}: only {len(cells)} presence cells, skipped"); continue
+        fit = fit_window1(name, spec, src, cells.row.values, cells.col.values, density=density, cfg=cfg, group="tree", w1=w1)
+        fits[name] = fit
+        w3cv = cv_of(fit)
+        cnt = None
+        if "fit_cells" in modes:
+            sc = score_cells(fit, src, ev.row.values, ev.col.values, w1, w2)
+            sets["fit_cells"][name], cnt = fia.species_cellset(plots, spcd, seed=spcd, scores=sc, thr=fit.thr, rc_of=rc_of, **kw)
+            cvs["fit_cells"][name] = dict(w3cv, w3_background_cv=w3cv, source="W3 presence-vs-background spatial CV")
+        if "blocked" in modes:
+            sc, thr, cv_pa = blocked_scores(spec, src, fit_all, ev, cells, fit.pred, w1, w2)
+            if len(sc):
+                sets["blocked"][name], cnt = fia.species_cellset(plots, spcd, seed=spcd, scores=sc, thr=thr, rc_of=rc_of, **kw)
+                cvs["blocked"][name] = dict(cv_pa, w3_background_cv=w3cv)
+        if cnt:
+            n_el += int(H.eligible(cnt["plots_w1"], cnt["plots_w2"], test, th))
+        log(f"{name}: {len(cells)} presence cells, W3 cv {w3cv}, blocks {cnt['blocks'] if cnt else 0}")
+    out = {m: H.run_test(sets[m], test, cv=cvs[m], th=th, n_eligible=n_el, n_boot=n_boot) + (sets[m],) for m in modes}
+    return out, fits
