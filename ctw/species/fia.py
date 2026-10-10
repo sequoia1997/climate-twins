@@ -30,6 +30,7 @@ CAP = 30
 
 def complete_cycles(plots: pd.DataFrame, complete_frac: float = COMPLETE_FRAC, min_interval: int = MIN_INTERVAL) -> dict:
     """plots: PLOT rows of one state (PLOT_STATUS_CD 1 or 2) with CYCLE, SUBCYCLE, MEASYEAR. Returns dict(first, last, ok, why, t1, t2, table)."""
+    plots = plots.dropna(subset=["CYCLE", "MEASYEAR"]).assign(SUBCYCLE=lambda d: d.SUBCYCLE.fillna(0))
     g = plots.groupby("CYCLE").agg(n=("MEASYEAR", "size"), nsub=("SUBCYCLE", "nunique"), maxsub=("SUBCYCLE", "max"), t=("MEASYEAR", "median")).reset_index()
     periodic = g.maxsub == 0
     ann = g[~periodic]
