@@ -51,20 +51,76 @@ the same default ensemble as the site. The ensemble-median product is the fine-g
 ## 2. Loading (exact)
 
 ```python
-S0 = None  # download once (any machine, no token needed; files are checked against manifest.json):
-# from ctw.species import climstack as S; S.download(["manifest.json", "pred_base_1991-2020_r1c1.npz", "basem_r1c1.npz"], "clim")
 from ctw.species import climstack as S
-vals = S.sample_points("clim", "base_1991-2020", lat=[45.5, 40.0], lon=[-122.7, -105.3])      # (10, n_points), order S.NAMES, NaN on sea
-grids, lat, lon = S.read_box("clim", "hind_2005-2024", (35, 60, -10, 30))                       # dict name -> (ny, nx) float32, NaN on sea
-# one climate model on demand (needs basem_<tile>.npz and deltas_<model>.npz in the directory):
-st = S.load_baseline("clim", bbox=(40, 50, -10, 10))                                             # BaselineStack of land cells
-lib = S.DeltaLibrary("clim")
-fut = S.apply_deltas(st, lib, "MIROC6", "ssp585", "2081-2100")                                  # dict name -> (n,) float32, same cells as st (st.row, st.col)
+# download (public release, no token; each file is checked against manifest.json). Needs only numpy.
+S.download(["manifest.json", "landmask.npz", "pred_base_1991-2020_r1c1.npz", "basem_r1c1.npz", "deltas_MIROC6.npz"], "clim")
+vals = S.sample_points("clim", "base_1991-2020", lat=[40.0, 35.0], lon=[-105.3, -100.0])    # (10, n_points), order S.NAMES, NaN on sea
+grids, lat, lon = S.read_box("clim", "base_1991-2020", (30, 45, -110, -90))                  # dict name -> (ny, nx) float32, NaN on sea (needs the tiles covering the box)
+# one climate model on demand (basem_<tile>.npz and deltas_<model>.npz in the directory):
+st = S.load_baseline("clim", bbox=(35, 45, -110, -100))                                      # BaselineStack: land cells, st.lat, st.lon, st.row, st.col
+fut = S.apply_deltas(st, S.DeltaLibrary("clim"), "MIROC6", "ssp585", "2081-2100")            # dict name -> (n,) float32 for the cells of st
 ```
+Land mask: `landmask.npz` (`land_packed` = np.packbits of the (4320, 8640) boolean grid, row 0 = north; 12,532,612 land cells).
+Each `pred_*` file also carries its tile's mask. Tile `r<i>c<j>` covers rows 1080i..1080i+1079 and columns 2160j..2160j+2159.
 
-Pending: final file inventory, QA numbers, known limits (sections 3 to 6 are filled as stages finish).
+## 3. Release inventory [V: manifest.json built 2026-10-10 19:24 UTC, 149 files, 4.75 GB; no expected file missing]
 
-## 3. Progress
+- Tiles: all 16 (r0c0 .. r3c3), including all-ocean tiles (tiny files).
+- 7 products x 16 tiles = 112 `pred_*` files: `base_1991-2020`, `hind_1966-1985`, `hind_2005-2024`, and `fut_{ssp245,ssp585}_{2041-2060,2081-2100}_ensmedian`.
+- 16 `basem_<tile>.npz` (baseline monthly climatology for `apply_deltas`).
+- 21 delta files: ACCESS-CM2, BCC-CSM2-MR, CNRM-CM6-1, CNRM-ESM2-1, CanESM5, EC-Earth3, EC-Earth3-Veg-LR, FGOALS-g3, GFDL-ESM4, GISS-E2-1-G, INM-CM4-8, INM-CM5-0, IPSL-CM6A-LR, KACE-1-0-G, MIROC-ES2L, MIROC6, MPI-ESM1-2-HR, MPI-ESM1-2-LR, MRI-ESM2-0, UKESM1-0-LL (the 20 models of data/nexdeltas.npz; each about 66 MB) and `deltas_ensemble_median.npz` (median of the likely-TCR models, listed in its meta and in `meta_ens.json`).
+- `landmask.npz`, `manifest.json` (grid definition, predictor list and units, products, per-file sha256 and bytes), `qa_report.json`, `meta_*.json` (per job), plus intermediate `nexclim_*` files (coarse per-model monthly climatologies) kept for reuse.
+- Missing: nothing in the contract. Not built: other hindcast windows, 4 other SSPs (the NEX files exist; deltas could be extended), per-model fine grids (by design).
+
+## 4. QA [V: qa_report.json from the assemble/QA run, commit 6e6bd87 workflow; numbers below copied from it]
+
+**Spike B box (lat 40-60, lon 0-20) vs a direct TerraClimate read with the spike's own function**: 152,100 land cells in both; every predictor identical (max abs difference 0.0007, gdd; bio15 differences zero). Means match the spike document (bio1 9.85, bio12 822 mm, gdd 2299 deg C days; cwd 200 and aet 533 mm are TerraClimate's own values, which equal the spike's TerraClimate-based numbers).
+
+**Stack vs the site's present climate at its 2,386 places** (nearest 2.5' cell, all places on a land cell; site seasonal tmax/tmin/precipitation; ours minus site):
+
+| group | annual mean temp bias / MAE (C) | annual precip bias / MAE (mm), ratio | seasonal tmax bias | seasonal precip r |
+|---|---|---|---|---|
+| all (2386) | +0.28 / 0.33 (r 0.9986) | -17 / 46, ratio 0.999 | +0.25..+0.35 | 0.991-0.994 |
+| North America (790) | +0.39 / 0.47 | -57 / 90, ratio 0.92 | +0.37..+0.62 | 0.96-0.98 |
+| world (1596) | +0.22 / 0.26 | +2.7 / 24, ratio 1.005 | +0.18..+0.22 | 0.996-0.998 |
+| site source PRISM (635, US) | +0.40 / 0.45 | -77 / 84, ratio 0.91 | +0.41..+0.66 | 0.98 |
+| site source TerraClimate (1751) | +0.23 / 0.28 | +4.9 / 32, ratio 1.006 | +0.20..+0.24 | 0.99 |
+
+Reading: the world places use TerraClimate on a coarser grid, so the +0.2 C is the 2.5' cell versus the site's coarser average (the stack is warmer because cells keep their own, often lower-lying, character) and tmin +0.2 likewise. In the US the site uses PRISM, which is wetter (by 8-9%) and cooler than TerraClimate at the 4 km cell; this is a product difference and applies to every place in the US, so US species models fitted on this stack see slightly drier and warmer conditions than the site's maps.
+
+**Hindcast plausibility** (area-weighted land means; ours, difference between windows):
+
+| change | bio1 C | bio5 C | bio6 C | bio12 mm | gdd | cwd mm |
+|---|---|---|---|---|---|---|
+| 1991-2020 minus 1966-1985 | +0.87 | +0.78 | +1.04 | -10 (ratio 0.986) | +192 | +37 |
+| 2005-2024 minus 1966-1985 | +1.22 | +1.19 | +1.23 | -13 (ratio 0.982) | +275 | +59 |
+
+Warming by latitude band (2005-2024 minus 1966-1985, bio1): 90-66.5N +2.13, 66.5-45N +1.56, 45-23.5N +1.38, 23.5N-0 +1.08, 0-23.5S +0.89, 23.5-45S +0.70, south of 45S +0.74. Plausible: about 1.2 C global land warming over about 40 years with Arctic amplification (the mid-1970s to mid-2010s window shift is 40 years). The drying (-13 mm) is TerraClimate's own signal (it includes the Sahel/Amazon/Australia pattern); treat the precipitation trend as uncertain.
+
+**Futures (ensemble-median, area-weighted global land, change from the 1991-2020 baseline)**:
+
+| product | bio1 C | bio6 C | bio12 mm | gdd | cwd mm |
+|---|---|---|---|---|---|
+| ssp245 2041-2060 | +1.51 | +1.63 | +12 | +364 | +35 |
+| ssp245 2081-2100 | +2.40 | +2.65 | +19 | +581 | +57 |
+| ssp585 2041-2060 | +2.02 | +2.21 | +12 | +491 | +46 |
+| ssp585 2081-2100 | +4.63 | +5.13 | +24 | +1150 | +112 |
+
+**Our coarse deltas vs the repo's own `data/nexdeltas.npz` at the 2,386 places** (20 models; annual mean of monthly (dtx+dtn)/2): ssp245 2041-2060 mean bias +0.002 C, RMSE 0.14 C, r 0.953; ssp585 2081-2100 bias +0.03 C, RMSE 0.15 C, r 0.989. Differences come from 20 vs 10 sampled years per window and bilinear interpolation vs nearest NEX cell. The annual mean of monthly precipitation ratios agrees poorly (r 0.2-0.37, bias -0.12/-0.17) because that statistic is dominated by dry-month ratios, where we set the ratio to 1 below 0.05 mm/day of model baseline precipitation and the repo only when the baseline is zero; compare annual totals instead (bio12 changes are in the table above).
+
+## 5. Known limits
+
+- Seasonality predictors (bio4, bio15, bio17) derive from a smooth 25 km change field applied to monthly values; Spike B found r 0.67-0.94 against WorldClim futures for bio15/bio17. Use them with a sensitivity run.
+- cwd and aet baselines are TerraClimate's own; futures use baseline plus the change in our simplified bucket model (own balance biases the deficit about 25% low, so the change, not the level, is modelled) [spike B].
+- Futures are change factors from NEX-GDDP (bias-corrected statistical downscaling at 25 km) on a 4 km baseline; terrain-scale change differences are not represented. The 1991-2020 baseline for the NEX models is historical to 2014 plus SSP2-4.5 for 2015-2020.
+- Hindcast windows use TerraClimate before 1980 when station coverage is thinner; trends in precipitation there are less certain. 1986-1990 are not used.
+- Predictors come from window climatologies (monthly means), not annual extremes; bio5 and bio6 are monthly mean daily maxima/minima, not absolute extremes.
+- bio15 is set to 0 where annual precipitation is 0. The ensemble median product is the climate under the median change (no per-model spread; use `apply_deltas` for any model).
+- Resolution 2.5 arc-minutes (about 4.5 km at the equator); mountain cells hide up to 5-8 C of within-cell range (Spike B).
+- TerraClimate land mask: Antarctica and small islands are absent where TerraClimate has no data; land cells are 12,532,612.
+- Not covered: the ocean, and latitudes south of 60S for the NEX deltas (nearest fill; no land of interest).
+
+## 6. Progress log (stages)
 
 - 18:20 UTC: first tiles done in Actions [V: run 38073242901]: r1c2 (Europe, 0-45N, 0-90E) in about 30 min, r0c0 done; other priority tiles still running. NEX: 12 of 20 models finished in about 25 min each [V: run 38073242908]. Stage 2 launched: `tc:rest` (marker commit).
 - 18:55 UTC: priority set complete on the release [V: meta_tc_r0c0..r1c2, meta_fut_r0c0..r1c2, 20 `deltas_<model>.npz`, `deltas_ensemble_median.npz`, `meta_ens.json`]. That is
