@@ -20,7 +20,7 @@ jobs:
       - name: Upload to release species-pilot-data (idempotent create)
         run: |
           gh release view species-pilot-data >/dev/null 2>&1 || gh release create species-pilot-data --title "Species pilot data" --notes "Inputs and outputs of the species pilot workstreams" || true
-          gh release upload species-pilot-data w4-out/bbs_route_cells.csv w4-out/bbs_presence_long.csv.gz w4-out/bbs_observed_change.csv --clobber
+          gh release upload species-pilot-data w4-out/bbs_route_cells.csv w4-out/bbs_routes_fit.csv w4-out/bbs_presence_long.csv.gz w4-out/bbs_observed_change.csv --clobber
       - name: Commit the small observed-change table
         run: |
           mkdir -p data/species/w4 && cp w4-out/bbs_observed_change.csv data/species/w4/
