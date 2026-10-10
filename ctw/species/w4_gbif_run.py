@@ -41,6 +41,8 @@ for disp, (slug, tgg) in SP.items():
     fit = HR.fit_window1(disp, spec, src, pc1.row.values, pc1.col.values, density=dens, group=tgg, cfg=PL.FitConfig(n_jobs=2, check_model=False), log=lambda *x: print(*x, flush=True))
     cb = tg.drop_duplicates(["row", "col"])
     sc = HR.score_cells(fit, src, cb.row.values + B // 2, cb.col.values + B // 2)
+    print(disp, "accessible blocks with tg in both periods:", len(br), "score cells:", len(sc), "presence cells p1/p2:", len(pc1), len(pc2),
+          "well-sampled blocks:", len(GS.well_sampled(tg, tgg)), flush=True)
     for variant, wo in (("well", True), ("all", False)):
         cs = GS.species_cellset(occ, tg, disp, tgg, well_only=wo, scores=sc, thr=fit.thr)
         sets[variant][disp] = cs

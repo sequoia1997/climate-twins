@@ -123,6 +123,12 @@ def observed_change(cs: CellSet, n_boot: int = 500, seed: int = 0, noise_se: flo
     est = range_change(cs.lat, cs.lon, cs.area, cs.obs1, cs.obs2)
     rng = np.random.default_rng(seed)
     n = len(cs.lat)
+    if n == 0:
+        out = dict(est)
+        for k in ("km", "north", "east", "edge_hi_km", "edge_lo_km", "area_change", "bearing"):
+            out[k + "_se"] = out[k + "_lo"] = out[k + "_hi"] = math.nan
+        out["detectable"] = out["detectable_km"] = False
+        return out
     keys = ["km", "north", "east", "edge_hi_km", "edge_lo_km", "area_change", "bearing"]
     draws = {k: [] for k in keys}
     if cs.cluster is not None:
