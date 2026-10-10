@@ -86,7 +86,7 @@ Each `pred_*` file also carries its tile's mask. Tile `r<i>c<j>` covers rows 108
 | site source PRISM (635, US) | +0.40 / 0.45 | -77 / 84, ratio 0.91 | +0.41..+0.66 | 0.98 |
 | site source TerraClimate (1751) | +0.23 / 0.28 | +4.9 / 32, ratio 1.006 | +0.20..+0.24 | 0.99 |
 
-Reading: the world places use TerraClimate on a coarser grid, so the +0.2 C is the 2.5' cell versus the site's coarser average (the stack is warmer because cells keep their own, often lower-lying, character) and tmin +0.2 likewise. In the US the site uses PRISM, which is wetter (by 8-9%) and cooler than TerraClimate at the 4 km cell; this is a product difference and applies to every place in the US, so US species models fitted on this stack see slightly drier and warmer conditions than the site's maps.
+Reading [U, explanation not tested]: the world places use TerraClimate on a coarser grid, so the +0.2 C is the 2.5' cell versus the site's coarser average (the stack is warmer because cells keep their own, often lower-lying, character) and tmin +0.2 likewise. In the US the site uses PRISM, which is wetter (by 8-9%) and cooler than TerraClimate at the 4 km cell; this is a product difference and applies to every place in the US, so US species models fitted on this stack see slightly drier and warmer conditions than the site's maps.
 
 **Hindcast plausibility** (area-weighted land means; ours, difference between windows):
 
