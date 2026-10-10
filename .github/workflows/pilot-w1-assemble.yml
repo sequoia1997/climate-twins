@@ -1,0 +1,43 @@
+# Species pilot W1: land mask + manifest.json (inventory with checksums, grid definition, variable list) uploaded to the release, and the
+# QA report. Marker lines in .github/run/pilot-w1: "assemble", "qa".
+name: Pilot W1 assemble and QA
+on:
+  push:
+    paths: [".github/run/pilot-w1"]
+  workflow_dispatch:
+    inputs:
+      sel:
+        description: "assemble | qa | assemble qa"
+        default: "assemble"
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - id: p
+        env:
+          INPUT: ${{ inputs.sel }}
+        run: |
+          sel="$INPUT"
+          if [ -z "$sel" ]; then sel="$(tr '\n' ' ' < .github/run/pilot-w1)"; fi
+          echo "selection: $sel"
+          echo "asm=$(echo "$sel" | grep -qE '(^| )assemble( |$)' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "qa=$(echo "$sel" | grep -qE '(^| )qa( |$)' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v6
+        if: steps.p.outputs.asm == 'true' || steps.p.outputs.qa == 'true'
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+        if: steps.p.outputs.asm == 'true' || steps.p.outputs.qa == 'true'
+      - run: python -u -m ctw.species.climstack_run assemble --out pilot-out --upload
+        if: steps.p.outputs.asm == 'true'
+      - run: python -u -m ctw.species.climstack_qa --out pilot-out --upload
+        if: steps.p.outputs.qa == 'true'
+      - uses: actions/upload-artifact@v4
+        if: steps.p.outputs.qa == 'true'
+        with: { name: pilot-w1-qa, path: pilot-out/qa*.json }

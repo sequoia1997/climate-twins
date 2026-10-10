@@ -1,0 +1,65 @@
+# Species pilot W1: TerraClimate tiles -> baseline monthly + predictor products (1991-2020, 1966-1985, 2005-2024), published to the
+# release `species-pilot-data`. Start by editing .github/run/pilot-w1: a line "tc:priority" (North America + Europe tiles),
+# "tc:rest", "tc:all" or "tc:r1c1" (one tile). Each tile job is resumable: it skips itself when its meta_tc_<tile>.json asset exists.
+name: Pilot W1 TerraClimate tiles
+on:
+  push:
+    paths: [".github/run/pilot-w1"]
+  workflow_dispatch:
+    inputs:
+      sel:
+        description: "tc:priority | tc:rest | tc:all | tc:r1c1"
+        default: "tc:priority"
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.p.outputs.run }}
+      tiles: ${{ steps.p.outputs.tiles }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: p
+        env:
+          INPUT: ${{ inputs.sel }}
+        run: |
+          sel="$INPUT"
+          if [ -z "$sel" ]; then sel="$(tr '\n' ' ' < .github/run/pilot-w1)"; fi
+          echo "selection: $sel"
+          python3 - "$sel" >> "$GITHUB_OUTPUT" <<'PY'
+          import sys, json, re
+          P = ["r0c0", "r0c1", "r0c2", "r1c0", "r1c1", "r1c2"]
+          A = [f"r{r}c{c}" for r in range(4) for c in range(4)]
+          tiles = []
+          for m in re.findall(r"tc:(\w+)", sys.argv[1]):
+              tiles += P if m == "priority" else [t for t in A if t not in P] if m == "rest" else A if m == "all" else [m]
+          tiles = list(dict.fromkeys(tiles))
+          print("run=" + ("true" if tiles else "false"))
+          print("tiles=" + json.dumps(tiles))
+          PY
+      - name: Ensure the release exists
+        run: |
+          gh release view species-pilot-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create species-pilot-data --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Species pilot data" --notes "Climate predictor stack and data products for the species pilot (W1). Inventory: manifest.json. See docs/pilot/W1-climate.md." --prerelease || true
+  tile:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        tile: ${{ fromJson(needs.plan.outputs.tiles) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: /usr/bin/time -v python -u -m ctw.species.climstack_run tc --tile "${{ matrix.tile }}" --out pilot-out --upload 2>&1 | grep -vE "^\s+(Page|Swaps|File|Socket|Signals|Volun|Invol|Average|Major|Minor|Exit|Percent|System|User|Command)"
+        shell: bash
+      - run: df -h . | tail -1; ls -l pilot-out
+        if: always()
