@@ -118,7 +118,7 @@ def route_presence(det: pd.DataFrame, min_det: int = MIN_DET) -> pd.DataFrame:
     return det
 
 
-def species_cellset(routes_q: pd.DataFrame, pres: pd.DataFrame, aou: int, block: int = 1) -> H.CellSet:
+def species_cellset(routes_q: pd.DataFrame, pres: pd.DataFrame, aou: int, block: int = 1, scores: pd.DataFrame | None = None, thr: float | None = None) -> H.CellSet:
     """CellSet of one species on the qualifying routes' start cells. routes_q: qualifying routes with row, col, lat, lon;
     pres: route_presence output. Routes in the same cell are merged (present when any route is). block > 1 coarsens the grid to
     block x block native cells (for example 12 = 0.5 degrees). Cell weight is 1 (the sampling unit), not area."""
@@ -126,8 +126,15 @@ def species_cellset(routes_q: pd.DataFrame, pres: pd.DataFrame, aou: int, block:
     r = routes_q.merge(p, on=["country", "state", "route"], how="left")
     r["p1"], r["p2"] = r.p1.fillna(False).astype(bool), r.p2.fillna(False).astype(bool)
     r["crow"], r["ccol"] = r.row // block, r.col // block
-    g = r.groupby(["crow", "ccol"]).agg(lat=("lat", "mean"), lon=("lon", "mean"), o1=("p1", "max"), o2=("p2", "max"), n=("route", "size")).reset_index()
-    cs = H.CellSet(g.lat.values, g.lon.values, np.ones(len(g)), g.o1.values, g.o2.values)
+    if scores is not None:                       # model scores at the start cell: columns row, col, score1, score2 (W3 contract)
+        r = r.merge(scores[["row", "col", "score1", "score2"]], on=["row", "col"], how="left")
+        r = r.dropna(subset=["score1", "score2"])
+    agg = dict(lat=("lat", "mean"), lon=("lon", "mean"), o1=("p1", "max"), o2=("p2", "max"), n=("route", "size"))
+    if scores is not None:
+        agg.update(s1=("score1", "mean"), s2=("score2", "mean"))
+    g = r.groupby(["crow", "ccol"]).agg(**agg).reset_index()
+    cs = H.CellSet(g.lat.values, g.lon.values, np.ones(len(g)), g.o1.values, g.o2.values,
+                   g.s1.values if scores is not None else None, g.s2.values if scores is not None else None, thr)
     cs.cluster = (g.crow.values.astype(np.int64) * 100000 + g.ccol.values)
     return cs
 

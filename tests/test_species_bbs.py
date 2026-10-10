@@ -72,3 +72,17 @@ def test_observed_table_runs():
     sp = pd.DataFrame({"AOU": [100, 200], "english": ["a", "b"], "sci": ["A a", "B b"], "Order": ["", ""], "Family": ["", ""]})
     t = bbs.observed_table(rq, pres, sp, n_boot=20, min_routes=5, log=lambda *a: None)
     assert set(t.AOU) == {100, 200} and not t.eligible.any() and t.set_index("AOU").loc[100, "north"] > 0
+
+
+def test_cellset_with_scores():
+    r, w, zb = make_world()
+    routes = bbs.read_routes(io.StringIO(r)); runs = bbs.acceptable_runs(io.StringIO(w))
+    q = bbs.qualifying_routes(runs)
+    rq = routes.merge(q[q.qualifies], on=["country", "state", "route"])
+    pres = bbs.route_presence(bbs.detections(zb, runs, log=lambda *a: None))
+    sc = rq[["row", "col", "lat"]].copy()
+    sc["score1"] = (sc.lat < 40).astype(float); sc["score2"] = (sc.lat < 42).astype(float)
+    cs = bbs.species_cellset(rq, pres, 100, scores=sc[["row", "col", "score1", "score2"]], thr=0.5)
+    from ctw.species import hindcast as H
+    res, g, v = H.run_test({"x": cs}, "bbs", cv={"x": dict(tss=0.8, auc=0.95)}, n_boot=20, n_eligible=1)
+    assert res["x"]["direction_agree"] is True and res["x"]["beats_null"] and res["x"]["auc2"] > 0.95
