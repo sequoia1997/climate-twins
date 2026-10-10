@@ -35,7 +35,7 @@ def key(ssp: str, period: str) -> str:
 
 
 def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray = None, expert_kind: str = "native_range",
-                  validation: dict = None, gate_cfg: G.GateConfig = G.GateConfig(), dois: list = None) -> dict:
+                  validation: dict = None, range_shift_test: dict = None, gate_cfg: G.GateConfig = G.GateConfig(), dois: list = None) -> dict:
     """meta: species table row (scientific_name, common_name, group, validation_plan, gbif_taxon_key, ...)."""
     spec = fit.spec
     now = proj.now
@@ -65,7 +65,8 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
     cv = fit.cv
     auc = cv["metrics"]["gbm"]["auc"]
     ev = G.evaluate(n_gate=fit.records["n_gate"], n_used=fit.records["n_used"], cv_auc=auc, area_now=a_now, novel_shares=novel_shares,
-                    check_change=check_change, main_change=main_change, rng_check=rng, validation=validation, cfg=gate_cfg)
+                    check_change=check_change, main_change=main_change, rng_check=rng, validation=validation, range_shift_test=range_shift_test,
+                    cv_kind=fit.cv.get("kind", "presence_background"), cfg=gate_cfg)
     # withhold shift numbers where novel climate dominates (numbers kept under 'audit' for reviewers, not for display)
     for k, w in ev["withheld"].items():
         if w:
@@ -79,13 +80,13 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
         species=dict(id=meta.get("id") or _slug(meta.get("scientific_name", fit.species)), scientific_name=meta.get("scientific_name", fit.species),
                      common_name=meta.get("common_name"), group=meta.get("group"), gbif_taxon_key=meta.get("gbif_taxon_key"),
                      validation_plan=meta.get("validation_plan")),
-        tier=ev["tier"], confidence=ev["confidence"], published=ev["published"], hard_failures=ev["hard_failures"], soft_flags=ev["soft_flags"],
+        tier=ev["tier"], range_shifts_tested=ev["range_shifts_tested"], cv_kind=ev["cv_kind"], confidence=ev["confidence"], published=ev["published"], hard_failures=ev["hard_failures"], soft_flags=ev["soft_flags"],
         wording=ev["wording"],
         area_now_km2=a_now,
         records=dict(raw=fit.records["n_raw"], flagged_excluded=fit.records["n_flagged"], thinned_cells=fit.records["n_cells"],
                      gate_cells=fit.records["n_gate"], used_in_fit=fit.records["n_used"], background=fit.records["n_bg"],
                      no_climate=fit.records.get("n_no_climate")),
-        skill=dict(cv_auc=auc, cv_tss=cv["metrics"]["gbm"]["tss"], cv_boyce=cv["metrics"]["gbm"]["boyce"], cv_auc_domain=cv["metrics"]["gbm"]["auc_dom"],
+        skill=dict(cv_kind=ev["cv_kind"], cv_auc=auc, cv_tss=cv["metrics"]["gbm"]["tss"], cv_boyce=cv["metrics"]["gbm"]["boyce"], cv_auc_domain=cv["metrics"]["gbm"]["auc_dom"],
                    check_model=cv["metrics"].get("gam"), folds_used=cv["folds_used"], folds=cv["folds"], block_km=cv["block_km"],
                    threshold=fit.thr, threshold_method=fit.note["threshold_method"], threshold_source=fit.note["threshold_source"],
                    thresholds_all=fit.thr_all, note="AUC is against a target-group background and rewards niche specificity; Boyce is reported, not gated"),
@@ -97,7 +98,7 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
         audit_withheld=audit,
         gates=ev["gates"],
         gate_config=ev["config"],
-        validation=validation,
+        validation=validation, range_shift_test=range_shift_test,
         model=dict(main="LightGBM", check="penalised-spline GAM (logistic)", background=fit.cfg.bias, seed=fit.cfg.seed),
         data_dois=dois or [],
     )

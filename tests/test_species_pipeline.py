@@ -231,26 +231,26 @@ def _ev(**kw):
 
 
 def test_gate_tiers():
-    assert _ev()["tier"] == 2 and _ev()["confidence"] == "standard" and _ev()["published"]
-    assert _ev(validation=dict(kind="bbs", passed=True))["tier"] == 1
-    assert _ev(validation=dict(kind="bbs", passed=False))["tier"] == 2
-    assert _ev(validation=dict(kind="gbif_before_after", passed=True))["tier"] == 2          # not in tier1_kinds by default
+    assert _ev()["tier"] == "B" and _ev()["confidence"] == "standard" and _ev()["published"]
+    assert _ev(validation=dict(kind="bbs", passed=True))["tier"] == "A"
+    assert _ev(validation=dict(kind="bbs", passed=False))["tier"] == "B"
+    assert _ev(validation=dict(kind="gbif_before_after", passed=True))["tier"] == "B"          # not in tierA_kinds by default
     e = _ev(n_gate=99)
-    assert e["tier"] == 3 and not e["published"] and "fewer than 100" in e["hard_failures"][0]
+    assert e["tier"] == "C" and not e["published"] and "fewer than 100" in e["hard_failures"][0]
     e = _ev(cv_auc=0.65)                                                                     # lower discrimination: tier kept, confidence low
-    assert e["tier"] == 2 and e["confidence"] == "low" and "lower discrimination" in e["soft_flags"][0]
-    assert _ev(cv_auc=0.52)["tier"] == 2 and _ev(cv_auc=0.52)["confidence"] == "low" and _ev(cv_auc=0.45)["tier"] == 3 and _ev(cv_auc=float("nan"))["tier"] == 3
+    assert e["tier"] == "B" and e["confidence"] == "low" and "lower discrimination" in e["soft_flags"][0]
+    assert _ev(cv_auc=0.52)["tier"] == "B" and _ev(cv_auc=0.52)["confidence"] == "low" and _ev(cv_auc=0.45)["tier"] == "C" and _ev(cv_auc=float("nan"))["tier"] == "C"
     assert _ev(n_gate=250)["confidence"] == "low"
     assert _ev(area_now=5e4, n_gate=400)["confidence"] == "low"                              # narrow range needs about 500
     assert _ev(area_now=5e4, n_gate=600)["confidence"] == "standard"
-    assert _ev(rng_check=dict(status="missing"))["tier"] == 3                                # the range check is mandatory
-    assert _ev(rng_check=dict(status="fail", omission=0.5, commission=0.1))["tier"] == 3
+    assert _ev(rng_check=dict(status="missing"))["tier"] == "C"                                # the range check is mandatory
+    assert _ev(rng_check=dict(status="fail", omission=0.5, commission=0.1))["tier"] == "C"
     assert _ev(check_change={"a|b": -40.0})["confidence"] == "low"
 
 
 def test_novelty_gate_withholds_per_scenario():
     e = _ev(novel_shares={"x": 0.16, "y": 0.15, "z": 0.0})
-    assert e["withheld"] == {"x": True, "y": False, "z": False} and e["tier"] == 2
+    assert e["withheld"] == {"x": True, "y": False, "z": False} and e["tier"] == "B"
 
 
 def test_range_check_flags_non_climatic_limits(world):
@@ -273,7 +273,7 @@ def test_summary_content_and_json(world, fitted):
     meta = dict(scientific_name=v.name, common_name="Virtual", group="tree", gbif_taxon_key="1", validation_plan="spatial CV only")
     s = SM.build_summary(fit, proj, meta, expert=d["native"], dois=["10.15468/dl.example"])
     s2 = json.loads(SM.dumps(s))
-    assert s2["schema"] == SM.SCHEMA and s2["tier"] in (1, 2, 3) and s2["data_dois"] == ["10.15468/dl.example"]
+    assert s2["schema"] == SM.SCHEMA and s2["tier"] in ("A", "B", "C") and s2["data_dois"] == ["10.15468/dl.example"]
     assert s2["gates"]["range_check"]["kind"] == "native_range" and s2["gate_config"]["min_records"] == 100
     k = "SSP5-8.5|2081-2100"
     sc = s2["scenarios"][k]
@@ -403,3 +403,31 @@ def test_tiles_for_continents():
     from ctw.species import inputs
     assert "r1c1" in inputs.tiles_for("NORTH_AMERICA") and "r0c2" in inputs.tiles_for("EUROPE;ASIA(W)")
     assert len(inputs.tiles_for("")) == 16
+
+
+def test_range_shift_status_is_recorded_separately_and_never_changes_tier():
+    base = _ev()
+    assert base["range_shifts_tested"] == "untested" and base["cv_kind"] == "presence_background"
+    fail = _ev(validation=dict(kind="bbs", passed=True), range_shift_test=dict(status="fail"), cv_kind="presence_absence")
+    assert fail["tier"] == "A" and fail["range_shifts_tested"] == "fail" and fail["cv_kind"] == "presence_absence"
+    assert _ev(range_shift_test=dict(passed=True))["range_shifts_tested"] == "pass"
+    assert "expected range" in base["wording"] and "projected climate suitability" in base["wording"]
+
+
+def test_absences_make_the_cv_presence_absence(world):
+    src, v, d = world
+    ab = grid.Occurrences(*np.nonzero(d["land"] & ~d["truth"]))
+    fit = PL.fit_species(v.name, SPEC, src, d["occ"], land=d["land"], native=d["native"], absences=ab, cfg=PL.FitConfig(check_model=False))
+    assert fit.cv["kind"] == "presence_absence" and fit.records["n_bg"] > 100
+    s = SM.build_summary(fit, PR.project_species(fit, src, ("SSP5-8.5",), ("2081-2100",), group="tree"), dict(scientific_name=v.name, group="tree"),
+                         expert=d["native"], validation=dict(kind="bbs", passed=True), range_shift_test=dict(status="fail"))
+    assert s["skill"]["cv_kind"] == "presence_absence" and s["range_shifts_tested"] == "fail" and s["cv_kind"] == "presence_absence"
+
+
+def test_cts_meta_in_header(world, fitted):
+    fit, proj = fitted
+    f = cts.species_files(proj, "x", meta=dict(tier="B", range_shifts_tested="untested", cv_kind="presence_background"))
+    data = f["x_base.cts"]
+    hdr = json.loads(data[8:8 + int.from_bytes(data[4:8], "little")])
+    assert hdr["meta"]["tier"] == "B" and hdr["meta"]["range_shifts_tested"] == "untested"
+    assert (cts.decode(data)["S0"] > 0).sum() == proj.now.sum()

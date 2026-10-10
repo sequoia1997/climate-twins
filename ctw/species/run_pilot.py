@@ -69,7 +69,7 @@ def load_fit(d: Path) -> PL.Fit:
 
 def run_species(meta: dict, src, spec, occ, native, density, outdir: Path, *, land=None, ssps=SSPS, periods=PERIODS, cfg: PL.FitConfig = None,
                 pcfg: PR.ProjConfig = None, gate_cfg: G.GateConfig = None, validation: dict = None, expert_kind: str = "native_range",
-                dois: list = None, force: bool = False, product: str = "lite", log=print) -> dict:
+                dois: list = None, range_shift_test: dict = None, force: bool = False, product: str = "lite", log=print) -> dict:
     """Fit, project, summarise and write one species. Returns the summary dict."""
     cfg = cfg or PL.FitConfig()
     pcfg = pcfg or PR.ProjConfig()
@@ -91,19 +91,19 @@ def run_species(meta: dict, src, spec, occ, native, density, outdir: Path, *, la
     t1 = time.time()
     proj = PR.project_species(fit, src, ssps, periods, group=meta.get("group"), cfg=pcfg, log=log)
     t2 = time.time()
-    summ = SM.build_summary(fit, proj, meta, expert=native, expert_kind=expert_kind, validation=validation, gate_cfg=gate_cfg, dois=dois)
+    summ = SM.build_summary(fit, proj, meta, expert=native, expert_kind=expert_kind, validation=validation, range_shift_test=range_shift_test, gate_cfg=gate_cfg, dois=dois)
     summ["provenance"] = dict(code=_git_sha(), python=platform.python_version(), seconds=dict(fit=round(t1 - t0, 1), project=round(t2 - t1, 1)),
                               made=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), grid=[spec.H, spec.W],
                               product=product, climate_models={f"{s}|{p}": proj.scen[(s, p)].n_models for (s, p) in proj.scen})
     (d / "summary.json").write_text(SM.dumps(summ))
     if summ["published"]:
         (d / "cts").mkdir(exist_ok=True)
-        for name, data in cts.species_files(proj, sid, product).items():
+        for name, data in cts.species_files(proj, sid, product, meta=dict(tier=summ["tier"], range_shifts_tested=summ["range_shifts_tested"], cv_kind=summ["cv_kind"], confidence=summ["confidence"])).items():
             (d / "cts" / name).write_bytes(data)
         info = cts.prototype_stats_entry(summ)
         (d / "cts" / "stats_entry.json").write_text(json.dumps(info, separators=(",", ":")))
     (d / "DONE").write_text(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
-    log(f"{sid}: tier {summ['tier']} ({summ['confidence']}), AUC {summ['skill']['cv_auc']}, {time.time() - t0:.0f} s")
+    log(f"{sid}: tier {summ['tier']} shifts {summ['range_shifts_tested']} ({summ['confidence']}), AUC {summ['skill']['cv_auc']}, {time.time() - t0:.0f} s")
     return summ
 
 
@@ -118,10 +118,10 @@ def report(out: Path, key: str = "SSP2-4.5|2081-2100") -> str:
     for p in sorted(Path(out).glob("*/summary.json")):
         rows.append(json.loads(p.read_text()))
     lines = ["# W3 fit report: gate table", "",
-             f"Species fitted: {len(rows)}. Tier 1 = tested against real change, Tier 2 = skill-checked only, Tier 3 = below a hard gate (not shown). "
+             f"Species fitted: {len(rows)}. Tier A = static skill validated against an independent survey, Tier B = spatial-block CV skill only, Tier C = below a hard gate (not shown); 'shifts' = range-shift test pass/fail/untested. "
              f"Change columns are the unlimited-dispersal area change for {key}; 'withheld' means more than 15% novel climate.", "",
-             "| species | group | tier | conf. | thinned cells | CV AUC | CV TSS | Boyce | check GAM AUC | range check | novel % | area now (1000 km2) | change % | shift km | reasons |",
-             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+             "| species | group | tier | shifts | CV kind | conf. | thinned cells | CV AUC | CV TSS | Boyce | check GAM AUC | range check | novel % | area now (1000 km2) | change % | shift km | reasons |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for s in rows:
         sp, sk, g = s["species"], s["skill"], s["gates"]
         sc = s["scenarios"].get(key, {})
@@ -129,8 +129,8 @@ def report(out: Path, key: str = "SSP2-4.5|2081-2100") -> str:
         gam = (sk.get("check_model") or {}).get("auc")
         rc = g["range_check"]
         why = "; ".join(s["hard_failures"] + s["soft_flags"])
-        lines.append("| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(
-            sp["scientific_name"], sp.get("group") or "", s["tier"], s["confidence"], s["records"]["gate_cells"], _f(sk["cv_auc"]), _f(sk["cv_tss"]),
+        lines.append("| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(
+            sp["scientific_name"], sp.get("group") or "", s["tier"], s.get("range_shifts_tested"), s.get("cv_kind"), s["confidence"], s["records"]["gate_cells"], _f(sk["cv_auc"]), _f(sk["cv_tss"]),
             _f(sk["cv_boyce"]), _f(gam), rc["status"], "" if sc.get("novel_share") is None else f"{100 * sc['novel_share']:.0f}",
             _f(s["area_now_km2"] / 1000, 0), "withheld" if sc.get("withheld") else _f(m.get("change_pct"), 1),
             "withheld" if sc.get("withheld") else _f(m.get("shift_km"), 0), why))
@@ -166,6 +166,7 @@ def main(argv=None):
     b.add_argument("--force", action="store_true")
     b.add_argument("--jobs", type=int, default=int(os.environ.get("W3_JOBS", os.cpu_count() or 1)))
     b.add_argument("--product", default="lite", choices=["lite", "full"])
+    b.add_argument("--shift-dir", default=None, help="directory of <slug>.json range-shift test results (W4)")
     b.add_argument("--validation-dir", default=None, help="directory of <slug>.json external change-test evidence (e.g. BBS hindcast)")
     c = sub.add_parser("report")
     c.add_argument("--out", default="work/w3")
@@ -206,9 +207,13 @@ def main(argv=None):
     if args.validation_dir:
         p = Path(args.validation_dir) / f"{meta['id']}.json"
         validation = json.loads(p.read_text()) if p.exists() else None
+    shift = None
+    if args.shift_dir:
+        p = Path(args.shift_dir) / f"{meta['id']}.json"
+        shift = json.loads(p.read_text()) if p.exists() else None
     src, spec = inputs.climate_source()
     occ, native, density, dois = inputs.species_inputs(meta, spec)
-    run_species(meta, src, spec, occ, native, density, out, cfg=cfg, pcfg=pcfg, validation=validation, dois=dois, force=args.force,
+    run_species(meta, src, spec, occ, native, density, out, cfg=cfg, pcfg=pcfg, validation=validation, range_shift_test=shift, dois=dois, force=args.force,
                 product=args.product)
     return 0
 

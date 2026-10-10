@@ -1,14 +1,18 @@
 """Quality gates and tier assignment for the species pilot (W3), from docs/spikes/F-sdm-engine.md section 6.
 
-Tiers (docs/SPECIES_ROADMAP.md section 14):
-  Tier 1  tested against real observed change (external evidence record with a kind in GateConfig.tier1_kinds, passed)
-  Tier 2  spatial hold-out skill checked only (all hard gates pass, no change test)
-  Tier 3  below a hard gate: not shown. The reasons are recorded; nothing is silently dropped.
+Tiers (owner decision after W4's BBS hindcast; the future map is always "projected climate suitability", never an expected range):
+  Tier A  static skill validated against an independent survey (external evidence with kind in GateConfig.tierA_kinds, passed; birds: BBS)
+  Tier B  spatial-block cross-validation skill only (all hard gates pass)
+  Tier C  below a hard gate: not shown. The reasons are recorded; nothing is silently dropped.
+Range-shift prediction is recorded separately as `range_shifts_tested`: 'pass' | 'fail' | 'untested' (W4: birds fail, direction at chance),
+from an external `range_shift_test` record. It never changes the tier; the site must not present shifts as predictions where it is 'fail'.
+CV kind: presence-vs-background blocked CV is not a usable gate for survey-trained fits (W4), so when true absences are supplied the CV is
+presence-absence blocked CV; otherwise background CV. The summary says which (`skill.cv_kind`).
 `confidence` is separate: 'low' marks lower discrimination (CV AUC < 0.7), few records, a narrow range with fewer than 500 records, or
-a check-model disagreement. A low-confidence species stays Tier 1 or 2 and is shown with the warning (F: AUC 0.7 also rejects about
+a check-model disagreement. A low-confidence species stays Tier A or B and is shown with the warning (F: AUC 0.7 also rejects about
 40% of good broad-niche species, so it demotes confidence rather than removing the species).
 
-Hard gates (any failure -> Tier 3): fewer than `min_records` thinned records (counted per 0.125 degree cell, about F's 15 km cell);
+Hard gates (any failure -> Tier C): fewer than `min_records` thinned records (counted per 0.125 degree cell, about F's 15 km cell);
 CV AUC below `auc_floor` (0.5: no better than chance; F showed AUC 0.6-0.7 for good broad-niche ranges, so 0.5 to 0.7 is low confidence, not rejection); no range check recorded; range check failed. Novelty is handled per scenario/period: when more than
 `novel_max` of the area is flagged novel climate the shift and area-change numbers are withheld for that scenario (the map and the
 flag are still produced).
@@ -30,14 +34,14 @@ class GateConfig:
     narrow_records: int = 500            # F: narrow-range species need about 500
     narrow_area_km2: float = 67500.0     # F: fewer than ~300 cells of 15 km (225 km2 each)
     auc_ok: float = 0.7                  # F: CV AUC (target-group background) >= 0.7 for standard confidence
-    auc_floor: float = 0.5               # below this (no better than chance) the species is Tier 3; between 0.5 and 0.7 it is kept as low confidence
+    auc_floor: float = 0.5               # below this (no better than chance) the species is Tier C; between 0.5 and 0.7 it is kept as low confidence
     novel_max: float = 0.15              # F: withhold shift numbers above 15% novel area
     omission_max: float = 0.40           # UNCALIBRATED: share of the expert / native range the model calls unsuitable
     commission_max: float = 0.30         # UNCALIBRATED: share of the predicted range outside the expert / native range
     unrecorded_km: float = 500.0         # predicted-suitable area farther than this from any record is reported (warning only)
     unrecorded_warn: float = 0.5
     gam_disagree_pp: float = 25.0        # UNCALIBRATED: |area change main - check| above this percentage points -> low confidence
-    tier1_kinds: tuple = ("bbs", "fia")  # kinds of external evidence that count as 'tested against real change'
+    tierA_kinds: tuple = ("bbs", "fia")  # kinds of independent-survey evidence that count as validated static skill
 
 
 def area(mask: np.ndarray, spec: GridSpec) -> float:
@@ -75,10 +79,11 @@ def range_check(now: np.ndarray, spec: GridSpec, rec_rc: np.ndarray, expert: np.
 
 
 def evaluate(*, n_gate: int, n_used: int, cv_auc: float, area_now: float, novel_shares: dict, check_change: dict, main_change: dict,
-             rng_check: dict, validation: dict = None, cfg: GateConfig = GateConfig()) -> dict:
+             rng_check: dict, validation: dict = None, range_shift_test: dict = None, cv_kind: str = "presence_background", cfg: GateConfig = GateConfig()) -> dict:
     """Apply the gates. novel_shares: {'ssp|period': share of the (present or unlimited-future) area flagged novel};
     check_change / main_change: {'ssp|period': percent area change under the GAM check / the main model}.
-    validation: None or {'kind': 'bbs'|'fia'|..., 'passed': bool, ...} from an external change test."""
+    validation: None or {'kind': 'bbs'|'fia'|..., 'passed': bool, ...}: static skill against an independent survey (W4).
+    range_shift_test: None or {'status': 'pass'|'fail'} or {'passed': bool}: W4's change test; recorded, never changes the tier."""
     hard, soft = [], []
     g = {}
     # 1 records
@@ -123,14 +128,13 @@ def evaluate(*, n_gate: int, n_used: int, cv_auc: float, area_now: float, novel_
         soft.append(f"transparent check model disagrees on area change by up to {worst:.0f} points")
     # tier
     v = validation or {}
-    ev_ok = bool(v.get("passed")) and v.get("kind") in cfg.tier1_kinds
-    g["validation"] = dict(evidence=v or None, tier1_kinds=list(cfg.tier1_kinds), counts_as_tier1=ev_ok)
-    if hard:
-        tier = 3
-    elif ev_ok:
-        tier = 1
-    else:
-        tier = 2
-    return dict(gates=g, tier=tier, confidence="low" if (soft and tier < 3) else "standard", published=tier < 3, hard_failures=hard,
-                soft_flags=soft, withheld=withheld, config=asdict(cfg),
-                wording="climatically suitable area (a model of climate suitability, not a forecast of the range)")
+    ev_ok = bool(v.get("passed")) and v.get("kind") in cfg.tierA_kinds
+    g["validation"] = dict(evidence=v or None, tierA_kinds=list(cfg.tierA_kinds), counts_as_tierA=ev_ok)
+    rs = range_shift_test or {}
+    rs_status = rs.get("status") or ({True: "pass", False: "fail"}.get(rs.get("passed")) if "passed" in rs else "untested")
+    g["range_shifts"] = dict(status=rs_status, evidence=range_shift_test or None)
+    g["cv_kind"] = cv_kind
+    tier = "C" if hard else ("A" if ev_ok else "B")
+    return dict(gates=g, tier=tier, confidence="low" if (soft and tier != "C") else "standard", published=tier != "C", hard_failures=hard,
+                soft_flags=soft, withheld=withheld, config=asdict(cfg), range_shifts_tested=rs_status, cv_kind=cv_kind,
+                wording="projected climate suitability (a model of climate suitability, not a forecast or an expected range)")

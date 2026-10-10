@@ -48,7 +48,7 @@ def lite(v: np.ndarray) -> np.ndarray:
     return cls | (v & 128)
 
 
-def encode(bands: dict, names, kinds: dict = None) -> bytes:
+def encode(bands: dict, names, kinds: dict = None, meta: dict = None) -> bytes:
     """bands: name -> uint8 (H, W) arrays of equal shape. Returns the CTS1 file."""
     kinds = {**KINDS, **(kinds or {})}
     H, W = bands[names[0]].shape
@@ -78,6 +78,8 @@ def encode(bands: dict, names, kinds: dict = None) -> bytes:
         levels.append(dict(f=f, w=w, h=h, bx=bx, by=by))
         payloads.append(entries)
     hdr = dict(v=1, bs=BS, bands=list(names), levels=levels, lon0=-180, lat0=90, dlon=360 / W, dlat=-180 / H)
+    if meta:
+        hdr["meta"] = meta                                         # tier, range_shifts_tested, cv_kind: ignored by readers that do not know it
     nidx = sum(l["bx"] * l["by"] for l in levels)
     hj = json.dumps(hdr, separators=(",", ":")).encode()
     pos = 8 + len(hj) + 8 * nidx
@@ -119,10 +121,10 @@ def decode(data: bytes, level: int = 1) -> dict:
     return {b: a[:lv["h"], :lv["w"]] for b, a in out.items()}
 
 
-def species_files(proj: Projection, sid: str, product: str = "lite") -> dict:
+def species_files(proj: Projection, sid: str, product: str = "lite", meta: dict = None) -> dict:
     """{file name: bytes} for one species. product 'lite' (classes, the prototype's product) or 'full' (7 bit values)."""
     conv = lite if product == "lite" else (lambda v: v)
-    files = {f"{sid}_base.cts": encode({"S0": conv(proj.S0)}, ["S0"])}
+    files = {f"{sid}_base.cts": encode({"S0": conv(proj.S0)}, ["S0"], meta=meta)}
     periods = sorted({p for (_, p) in proj.scen})
     for ssp in sorted({s for (s, _) in proj.scen}):
         ps = [p for p in periods if (ssp, p) in proj.scen]
@@ -132,7 +134,7 @@ def species_files(proj: Projection, sid: str, product: str = "lite") -> dict:
         S = [conv(s.S) | (proj.reach[p].astype(np.uint8) << 7) for s, p in zip(sc, ps[:2])]
         A = ((sc[0].A << 4) | sc[1].A).astype(np.uint8)
         N = (sc[0].N | (sc[1].N << 1)).astype(np.uint8)
-        files[f"{sid}_{SSP_KEY.get(ssp, ssp)}.cts"] = encode({"S1": S[0], "S2": S[1], "A": A, "N": N}, ["S1", "S2", "A", "N"])
+        files[f"{sid}_{SSP_KEY.get(ssp, ssp)}.cts"] = encode({"S1": S[0], "S2": S[1], "A": A, "N": N}, ["S1", "S2", "A", "N"], meta=meta)
     return files
 
 
@@ -141,7 +143,7 @@ def prototype_stats_entry(summary: dict, bbox: list = None) -> dict:
     'place' table is not produced here (it needs the place list); scenario / period combinations that were withheld are omitted."""
     sp = summary["species"]
     info = dict(id=sp["id"], name=sp.get("common_name") or sp["scientific_name"], sci=sp["scientific_name"], group=sp.get("group"),
-                deps=[], by={}, place={}, area_now_km2=summary["area_now_km2"], tier=summary["tier"], confidence=summary["confidence"],
+                deps=[], by={}, place={}, area_now_km2=summary["area_now_km2"], tier=summary["tier"], confidence=summary["confidence"], range_shifts_tested=summary.get("range_shifts_tested"), cv_kind=summary.get("cv_kind"),
                 bbox=bbox or [-180, -60, 180, 80])
     for k, sc in summary["scenarios"].items():
         if sc.get("withheld"):

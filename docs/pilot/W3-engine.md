@@ -68,7 +68,16 @@ Everything numeric below comes from `docs/spikes/F-sdm-engine.md` (virtual speci
    0.125 degree cell (`records.gate_cells`, about 14 km, close to F's 15 km); the narrow-range limit F states as "about 300 cells" is converted to area (300 x 225 km2 = 67,500 km2).
    Both raw and gate counts are in the summary.
 
-## 3. Gates and tiers (`gates.py`, F section 6, roadmap section 14)
+## 3. Gates and tiers (`gates.py`, F section 6)
+
+**Tiers changed on 10 Oct 2026 (owner, after W4's BBS hindcast: static skill good, range-change prediction fails).** Tier A = static skill validated against an independent survey
+(`validation` JSON, kind `bbs` or `fia`, passed); Tier B = spatial-block CV skill only; Tier C = below a hard gate, not shown. Whether range shifts were tested is recorded separately as
+`range_shifts_tested` = pass / fail / untested (`--shift-dir <slug>.json`, `{"status": ...}`; birds: fail) and never changes the tier. The future map is worded "projected climate suitability",
+never an expected range. **CV kind:** presence-vs-background blocked CV is not a usable gate for survey-trained fits (W4), so `fit_species(absences=...)` uses true absences as the negatives and
+runs presence-absence blocked CV; without absences it uses target-group background CV. The summary (`cv_kind`, `skill.cv_kind`), the report table and the CTS header `meta` all say which.
+Tier, `range_shifts_tested`, `cv_kind` and `confidence` are written into the CTS header (`meta`, ignored by readers that do not know it) and into `stats_entry.json`
+[V: tests `test_range_shift_status_is_recorded_separately_and_never_changes_tier`, `test_absences_make_the_cv_presence_absence`, `test_cts_meta_in_header`]. In the table below read
+"Tier 3" as C, "Tier 2" as B, "Tier 1" as A.
 
 | gate | rule | effect |
 |---|---|---|

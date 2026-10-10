@@ -257,7 +257,7 @@ def _batched(fn, X, chunk):
 
 def fit_species(name: str, spec: GridSpec, src: ClimateSource, occ: Occurrences, *, land: np.ndarray = None,
                 native: np.ndarray = None, density: np.ndarray = None, group: str = None, cfg: FitConfig = FitConfig(),
-                log=lambda *a: None) -> Fit:
+                absences: Occurrences = None, log=lambda *a: None) -> Fit:
     """Fit one species. `native` is the native-range mask (bool, global grid, may be coarser), `density` the target-group record
     density for the species' group (float, global grid, may be coarser; None or cfg.bias == 'uniform' gives a uniform background)."""
     rng = np.random.default_rng(cfg.seed)
@@ -282,7 +282,18 @@ def fit_species(name: str, spec: GridSpec, src: ClimateSource, occ: Occurrences,
     wfn = None
     if cfg.bias == "target_group" and density is not None:
         wfn = lambda r, c: grid_at(density, spec, r, c)                      # noqa: E731
-    br, bc = sample_cells(train, wfn, n_bg, rng, cfg.tg_floor if wfn else 0.0)
+    if absences is not None and len(absences.rows):
+        # true absences (survey data): they are the negatives, and the blocked CV is presence-absence CV (W4: presence-vs-background CV is
+        # not a usable gate for survey-trained fits)
+        ac = absences.unique_cells()
+        ac = ac[train[ac[:, 0], ac[:, 1]]]
+        if len(ac) > cfg.n_bg_max:
+            ac = ac[rng.choice(len(ac), cfg.n_bg_max, replace=False)]
+        br, bc = ac[:, 0], ac[:, 1]
+        cv_kind = "presence_absence"
+    else:
+        br, bc = sample_cells(train, wfn, n_bg, rng, cfg.tg_floor if wfn else 0.0)
+        cv_kind = "presence_background"
     er, ec = sample_cells(train, None, cfg.n_eval, rng)                       # uniform reference / evaluation cells
     B_all = src.baseline_points(br, bc, names, cfg.window)
     E_all = src.baseline_points(er, ec, names, cfg.window)
@@ -302,6 +313,7 @@ def fit_species(name: str, spec: GridSpec, src: ClimateSource, occ: Occurrences,
     cv = cross_validate(Xp, Xb, kmp, kmb, Xe, kme, block_km, cfg) if len(Xp) >= 20 else dict(
         metrics={"gbm": dict(auc=np.nan, tss=np.nan, boyce=np.nan, auc_dom=np.nan)}, oof_pos=np.zeros(0), oof_bg=np.zeros(0), folds_used=0,
         folds=cfg.cv_folds, block_km=block_km)
+    cv["kind"] = cv_kind
     X = np.vstack([Xp, Xb])
     y = np.r_[np.ones(len(Xp), int), np.zeros(len(Xb), int)]
     model = sdm.GBM(seed=cfg.seed, n_jobs=cfg.n_jobs).fit(X, y)
