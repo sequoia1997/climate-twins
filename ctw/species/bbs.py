@@ -31,7 +31,7 @@ def grid_rc(lat, lon):
 
 
 def read_routes(src) -> pd.DataFrame:
-    d = pd.read_csv(src, dtype=str)
+    d = pd.read_csv(src, dtype=str, encoding="latin-1")
     d.columns = [c.strip() for c in d.columns]
     for c in d.columns:
         d[c] = d[c].str.strip()
@@ -54,7 +54,7 @@ def read_species(src) -> pd.DataFrame:
 
 def acceptable_runs(src) -> pd.DataFrame:
     """Route-years with an acceptable survey: columns RouteDataID, country, state, route, year."""
-    w = pd.read_csv(src, dtype=str)
+    w = pd.read_csv(src, dtype=str, encoding="latin-1")
     w.columns = [c.strip() for c in w.columns]
     for c in w.columns:
         w[c] = w[c].str.strip()
@@ -87,7 +87,7 @@ def detections(zip_src, runs: pd.DataFrame, w1=W1, w2=W2, chunksize=1_000_000, l
             if not m.lower().endswith(".csv"):
                 continue
             with z.open(m) as fh:
-                head = pd.read_csv(fh, nrows=0).columns
+                head = pd.read_csv(fh, nrows=0, encoding="latin-1").columns
             cols = [c.strip() for c in head]
             use = [c for c in head if c.strip() in ("RouteDataID", "CountryNum", "StateNum", "Route", "Year", "AOU", "SpeciesTotal")]
             stops = [c for c in head if c.strip().startswith("Stop")]
@@ -95,7 +95,7 @@ def detections(zip_src, runs: pd.DataFrame, w1=W1, w2=W2, chunksize=1_000_000, l
                 use += stops
             log("  member", m, "columns", len(cols), "using", len(use))
             with z.open(m) as fh:
-                for ch in pd.read_csv(fh, usecols=use, chunksize=chunksize, skipinitialspace=True):
+                for ch in pd.read_csv(fh, usecols=use, chunksize=chunksize, skipinitialspace=True, encoding="latin-1"):
                     ch.columns = [c.strip() for c in ch.columns]
                     ch = ch[ch.RouteDataID.isin(okid) & (ch.Year.between(w1[0], w1[1]) | ch.Year.between(w2[0], w2[1]))]
                     tot = ch["SpeciesTotal"] if "SpeciesTotal" in ch else ch[[c for c in ch.columns if c.startswith("Stop")]].sum(axis=1)
