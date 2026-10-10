@@ -111,3 +111,32 @@ def test_crops_keep_cultivated_records_and_dataset_counts():
     cc.feed(recs(rows))
     cells, rep = cc.finish()
     assert len(cells) == 2 and rep["establishment_dropped"] == {} and cc.datasets == {"d1": 1, "d2": 1}
+
+
+def test_target_group_sql_is_taxon_only_and_filter_applies_in_python(tmp_path):
+    import io, zipfile
+    sql = tg.sql_for("bird")
+    assert "class = 'Aves'" in sql and "license IN" not in sql and "WHERE class = 'Aves' GROUP BY" in sql
+    tsv = ("r\tc\tp\tu\tlicense\tbasisOfRecord\thasGeospatialIssues\toccurrenceStatus\tn\n"
+           "10\t20\t1\t1\tCC0_1_0\tHUMAN_OBSERVATION\tfalse\tPRESENT\t5\n"
+           "10\t20\t2\t1\tCC_BY_4_0\tHUMAN_OBSERVATION\tfalse\tPRESENT\t7\n"
+           "10\t20\t2\t1\tCC_BY_NC_4_0\tHUMAN_OBSERVATION\tfalse\tPRESENT\t100\n"
+           "10\t20\t2\t0\tCC0_1_0\tHUMAN_OBSERVATION\tfalse\tPRESENT\t100\n"
+           "10\t20\t2\t1\tCC0_1_0\tFOSSIL_SPECIMEN\tfalse\tPRESENT\t100\n"
+           "10\t20\t3\t1\tCC0_1_0\tHUMAN_OBSERVATION\tfalse\tPRESENT\t100\n")
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("x.csv", tsv)
+    g = tg.parse_tsv_zip(buf.getvalue())
+    assert g[1, 10, 20] == 5 and g[2, 10, 20] == 7 and g[0, 10, 20] == 12
+
+
+def test_cultivated_counts_reported_kept_for_crops_dropped_for_wild():
+    rows = [(1, 40.51, -75.51, 1990, "1990", "a", "d", "o1", "CULTIVATED"), (2, 41.51, -75.51, 1990, "1990", "a", "d", "o2", "MANAGED"),
+            (3, 42.51, -75.51, 1990, "1990", "a", "d", "o3", None)]
+    for keep, n_cells in ((True, 3), (False, 1)):
+        cc = W.CellCleaner(keep_cultivated=keep)
+        cc.feed(recs(rows))
+        cells, rep = cc.finish()
+        assert len(cells) == n_cells
+        assert rep["cultivated_managed_records"] == {("kept" if keep else "dropped"): 2}

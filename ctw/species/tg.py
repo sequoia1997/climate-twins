@@ -15,32 +15,60 @@ import numpy as np
 
 NROW, NCOL = 4320, 8640
 BLOCK = 12                       # 12 cells of 1/24 degree = 0.5 degree
-GROUPS = {   # target group -> SQL taxon condition (GBIF backbone keys: Aves 212, Mammalia 359, Insecta 216, Arachnida 367, Tracheophyta 7707728)
-    "bird": "classKey = 212",
-    "mammal": "classKey = 359",
-    "insect_arachnid": "classKey IN (216, 367)",
-    "plant": "phylumKey = 7707728",
+GROUPS = {   # target group -> SQL taxon condition. By NAME: in GBIF's SQL downloads the integer backbone keys (212, 359, ...) match nothing
+    # (first attempt: 0 rows, diagnostic run 38077633418 with speciesKey = 2182727 also 0 rows), so class / phylum names are used.
+    "bird": "class = 'Aves'",
+    "mammal": "class = 'Mammalia'",
+    "insect_arachnid": "class IN ('Insecta', 'Arachnida')",
+    "plant": "phylum = 'Tracheophyta'",
 }
 PILOT_GROUP_TO_TG = {"bird": "bird", "mammal": "mammal", "insect_arachnid": "insect_arachnid", "tree": "plant", "crop": "plant"}
 
 
+BASIS_OK = {"HUMAN_OBSERVATION", "PRESERVED_SPECIMEN", "OBSERVATION", "MACHINE_OBSERVATION"}
+
+
 def sql_for(group: str, year_q: str = '"year"') -> str:
-    return (f"SELECT FLOOR((90 - decimalLatitude) * 24) AS r, FLOOR((decimalLongitude + 180) * 24) AS c, "
-            f"IF({year_q} <= 1999, 1, 2) AS p, COUNT(*) AS n FROM occurrence WHERE {GROUPS[group]} AND hasCoordinate = TRUE "
-            f"AND hasGeospatialIssues = FALSE AND occurrenceStatus = 'PRESENT' AND license IN ('CC0_1_0', 'CC_BY_4_0') "
-            f"AND {year_q} >= 1970 AND {year_q} <= 2020 "
-            f"AND basisOfRecord IN ('HUMAN_OBSERVATION', 'PRESERVED_SPECIMEN', 'OBSERVATION', 'MACHINE_OBSERVATION') "
-            f"AND (coordinateUncertaintyInMeters IS NULL OR coordinateUncertaintyInMeters <= 10000) GROUP BY r, c, p")
+    """Only the taxon is filtered by GBIF's SQL engine; licence, basis, geospatial issue, status, uncertainty and the year range are grouping
+    columns and are applied in `parse_tsv_zip`, so a wrong guess at a value format cannot empty the result again."""
+    ex = ["FLOOR((90 - decimalLatitude) * 24)", "FLOOR((decimalLongitude + 180) * 24)",
+          f"IF({year_q} < 1970, 0, IF({year_q} <= 1999, 1, IF({year_q} <= 2020, 2, 3)))",
+          "IF(coordinateUncertaintyInMeters IS NULL OR coordinateUncertaintyInMeters <= 10000, 1, 0)"]
+    cols = ["license", "basisOfRecord", "hasGeospatialIssues", "occurrenceStatus"]
+    sel = f"{ex[0]} AS r, {ex[1]} AS c, {ex[2]} AS p, {ex[3]} AS u, " + ", ".join(cols) + ", COUNT(*) AS n"
+    return f"SELECT {sel} FROM occurrence WHERE {GROUPS[group]} GROUP BY " + ", ".join(ex + cols)
 
 
-def parse_tsv_zip(data: bytes | str) -> np.ndarray:
-    """Read the SQL download (zip with one TSV: header r, c, p, n) into uint32 (3, NROW, NCOL): [all, 1970-1999, 2000-2020]."""
+def keep_rows(df):
+    """Boolean mask of the rows that pass the pilot filter, and the distinct values seen (for the audit trail)."""
+    import pandas as pd
+    df.columns = [c.lower() for c in df.columns]
+    seen = {c: sorted(map(str, df[c].dropna().unique()))[:30] for c in ("license", "basisofrecord", "hasgeospatialissues", "occurrencestatus") if c in df}
+    ok = df["r"].notna() & df["c"].notna() & df["p"].isin([1, 2])
+    if "u" in df:
+        ok &= df["u"] == 1
+    if "license" in df:
+        lic = df["license"].astype(str).str.upper().str.replace(r"[^A-Z0-9]", "", regex=True)
+        ok &= (lic.str.contains("CC0") | lic.str.contains("CCBY4") | lic.str.contains("CCBY40") | lic.isin(["CCBY"])) & ~lic.str.contains("NC")
+    if "basisofrecord" in df:
+        ok &= df["basisofrecord"].astype(str).str.upper().isin(BASIS_OK)
+    if "hasgeospatialissues" in df:
+        ok &= df["hasgeospatialissues"].astype(str).str.lower().isin(["false", "0"])
+    if "occurrencestatus" in df:
+        ok &= df["occurrencestatus"].astype(str).str.upper() == "PRESENT"
+    return ok, seen
+
+
+def parse_tsv_zip(data: bytes | str, with_seen: bool = False):
+    """Read the SQL download (zip with one TSV: r, c, p, u, license, ..., n) into uint32 (3, NROW, NCOL): [all, 1970-1999, 2000-2020]."""
     import pandas as pd
     z = zipfile.ZipFile(io.BytesIO(data) if isinstance(data, bytes) else data)
     name = [n for n in z.namelist() if not n.endswith("/")][0]
-    df = pd.read_csv(z.open(name), sep="\t")
-    df.columns = [c.lower() for c in df.columns]
-    return grid_from_rows(df["r"].to_numpy(), df["c"].to_numpy(), df["p"].to_numpy(), df["n"].to_numpy())
+    df = pd.read_csv(z.open(name), sep="\t", low_memory=False)
+    ok, seen = keep_rows(df)
+    d = df[ok]
+    g = grid_from_rows(d["r"].to_numpy(), d["c"].to_numpy(), d["p"].to_numpy(), d["n"].to_numpy())
+    return (g, seen, int(len(df))) if with_seen else g
 
 
 def grid_from_rows(r, c, p, n) -> np.ndarray:

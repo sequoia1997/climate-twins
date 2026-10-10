@@ -81,6 +81,7 @@ class CellCleaner:
         self.land, self.ref, self.max_unc_m, self.radius_m = land, ref, max_unc_m, radius_m
         self.keep_cultivated = keep_cultivated
         self.datasets: dict[str, int] = {}
+        self.cultivated_seen = 0          # records with establishmentMeans MANAGED or CULTIVATED (kept for crops, dropped otherwise)
         self.left = dict.fromkeys(STEPS, 0)
         self.est_dropped: dict[str, int] = {}
         self.licences: dict[str, int] = {}
@@ -114,6 +115,7 @@ class CellCleaner:
         if "establishmentmeans" in df and len(df):
             est = df["establishmentmeans"].astype("string").str.upper().fillna("")
             bad = est.isin(DROP_EST) | est.str.startswith("INTRODUCED")
+            self.cultivated_seen += int(est.isin({"MANAGED", "CULTIVATED"}).sum())
             for k, v in est[bad].value_counts().items():
                 self.est_dropped[str(k)] = self.est_dropped.get(str(k), 0) + int(v)
             if not self.keep_cultivated:
@@ -175,7 +177,8 @@ class CellCleaner:
             prev = left
         return {"steps": steps, "establishment_dropped": {} if self.keep_cultivated else self.est_dropped, "licences_in_file": self.licences,
                 "countries_in_file": dict(sorted(self.countries.items(), key=lambda kv: -kv[1])[:15]),
-                "establishment_flagged_" + ("kept" if self.keep_cultivated else "dropped"): self.est_dropped, "keep_cultivated": self.keep_cultivated}
+                "establishment_flagged_" + ("kept" if self.keep_cultivated else "dropped"): self.est_dropped, "keep_cultivated": self.keep_cultivated,
+                "cultivated_managed_records": {"kept" if self.keep_cultivated else "dropped": int(self.cultivated_seen)}}
 
 
 def institutions(cache: Path, tries: int = 6) -> pd.DataFrame:

@@ -225,7 +225,8 @@ def process_tg(group: str, key: str, state: State):
     tmp = Path(tempfile.gettempdir()) / f"w2-tg-{group}"
     shutil.rmtree(tmp, ignore_errors=True)
     z = fetch_zip(s["downloadLink"], tmp)
-    g = tg.parse_tsv_zip(str(z))
+    g, seen, nrows = tg.parse_tsv_zip(str(z), with_seen=True)
+    meta["rows_in_sql_result"], meta["values_seen"] = nrows, seen
     if int(g[0].sum()) == 0:
         state.set(job, **meta, processed=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), total=0)
         raise RuntimeError(f"target group {group}: the SQL download is empty, not stored")
@@ -336,7 +337,7 @@ def diag():
     """Why did the target-group SQL return 0 rows? One taxon-only query that groups by the columns the real filter tests and prints the
     values GBIF's SQL engine uses for them (no credentials printed)."""
     sql = ('SELECT license, hasCoordinate, hasGeospatialIssues, occurrenceStatus, basisOfRecord, '
-           'FLOOR((90 - decimalLatitude) * 24) AS r, IF("year" <= 1999, 1, 2) AS p, COUNT(*) AS n FROM occurrence WHERE speciesKey = 2182727 '
+           'FLOOR((90 - decimalLatitude) * 24) AS r, IF("year" <= 1999, 1, 2) AS p, COUNT(*) AS n FROM occurrence WHERE species = 'Ixodes scapularis' '
            'GROUP BY license, hasCoordinate, hasGeospatialIssues, occurrenceStatus, basisOfRecord, FLOOR((90 - decimalLatitude) * 24), IF("year" <= 1999, 1, 2)')
     t0 = time.time()
     while True:
@@ -435,6 +436,7 @@ def assemble():
             df.insert(0, "species", sci); df.insert(0, "species_key", r["taxon_key"])
             df["group"] = r["group"]; df["tg_group"] = tgname
             df["treatment"] = "crop_cultivated" if is_crop else "wild_native"
+            df["kind"] = "crop" if is_crop else "wild"
             bucket.append(df)
         pooled.setdefault(tgname, np.zeros((3, 1, 1)))      # placeholder: pooled fallback is built below only when the group grid is missing
         report[sci] = rep
@@ -464,7 +466,7 @@ def assemble():
             for k, v in lk.items():
                 df.loc[m, k] = v
             df.loc[m, "tg_source"] = src
-    ordered = ["species_key", "species", "group", "treatment", "tg_group", "row", "col", "lat", "lon", "year_min", "year_max", "n_records", "n_events",
+    ordered = ["species_key", "species", "group", "kind", "treatment", "tg_group", "row", "col", "lat", "lon", "year_min", "year_max", "n_records", "n_events",
                "n_1970_1999", "n_2000_2020", "n_2021_plus", "native_curated", "native_wcvp", "griis_intro", "tg_block_p1", "tg_block_p2", "ws20", "ws100", "tg_source"]
     main, excl = main[ordered], excl[ordered] if len(excl) else excl
     files = {}
@@ -497,7 +499,9 @@ def assemble():
                "target_group_downloads": {g: {k: v for k, v in state.get(f"tg:{g}").items()} for g in tg.GROUPS}}
     p = out / f"w2_report_pilot_{VERSION}.json"; p.write_text(json.dumps(summary, indent=1, default=str)); files[p.name] = p
     manifest = {"version": VERSION, "built": summary["built"], "grid": "TerraClimate native 1/24 degree, 4320 x 8640, row 0 = north, cell centre lat = 90 - (row + 0.5) / 24, lon = -180 + (col + 0.5) / 24",
-                "licence_filter": "CC0 and CC-BY records only", "files": {n: {"bytes": f.stat().st_size, "sha256": sha256(f)} for n, f in files.items()}}
+                "licence_filter": "CC0 and CC-BY records only",
+                "species_kind": {r["scientific_name"]: ("crop" if r["group"] == "crop" else "wild") for r in rows},
+                "kind_note": "crop = modelled where cultivated (CULTIVATED / MANAGED records kept, no native-range mask); wild = CULTIVATED / MANAGED / INTRODUCED records dropped and native-range mask applied", "files": {n: {"bytes": f.stat().st_size, "sha256": sha256(f)} for n, f in files.items()}}
     mp = out / f"manifest_w2_{VERSION}.json"; mp.write_text(json.dumps(manifest, indent=1))
     for n, f in files.items():
         rel_put(f)
