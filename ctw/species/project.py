@@ -170,6 +170,8 @@ def project_species(fit: Fit, src: ClimateSource, ssps, periods, *, group: str =
         if list(src.future_models(*c)) != models:
             raise ValueError("the climate-model list must be the same for every scenario / period")
     M = len(models)
+    if hasattr(src, "prepare") and combos:
+        src.prepare(dom)                       # a source with a per-model cost loads what it needs for the domain once
     # Model-outer loop: a source that has to load a big per-model file (W1's deltas) loads it once per model, not once per band.
     # Only one uint8 (quantised) score per model and domain cell is kept, never a fine-grid float field per model.
     offs = np.cumsum([0] + [int(dom[r0:r1].sum()) for r0, r1 in bands])

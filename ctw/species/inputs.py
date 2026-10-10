@@ -1,0 +1,137 @@
+"""Adapters from the real pilot data (W1 climate stack, W2 occurrences) to the interfaces of ctw/species/grid.py.
+
+W1 (docs/pilot/W1-climate.md, ctw/species/climstack.py): tile files `pred_<product>_<tile>.npz` (baseline and hindcast windows), `basem_<tile>.npz`
+(baseline monthly climatology) and `deltas_<model>.npz` (per climate model change factors) in one directory; futures of one climate model
+come from `climstack.apply_deltas` on demand.
+
+The directory is $W3_CLIM (default work/clim); `fetch_release` downloads the files of the GitHub release tagged `species-pilot-data`.
+"""
+from __future__ import annotations
+import os
+import numpy as np
+
+from . import climstack as CS, climategrid as G
+from .grid import GridSpec, ClimateSource, BASELINE
+
+SSP_NAME = {"SSP2-4.5": "ssp245", "SSP5-8.5": "ssp585"}
+WINDOW_PRODUCT = {"1991-2020": "base_1991-2020", "1966-1985": "hind_1966-1985", "2005-2024": "hind_2005-2024"}
+SPEC = GridSpec(G.NLAT, G.NLON)
+
+
+class W1Source(ClimateSource):
+    """ClimateSource over W1's tile files. Bands are read from the tile files directly (no whole-grid arrays). For futures,
+    `prepare(domain)` builds one BaselineStack of the domain's land cells (monthly baseline, about 340 bytes per cell) and keeps it for
+    the whole projection; one climate model's predictors for a band are then produced by `apply_deltas` on that band's cells."""
+
+    def __init__(self, root: str = None, models=None, names=None):
+        self.root = root or os.environ.get("W3_CLIM", "work/clim")
+        self.spec = SPEC
+        self.names = tuple(names or CS.NAMES)
+        self._lib = CS.DeltaLibrary(self.root)
+        avail = [m for m in self._lib.models() if m != "ensemble_median"]
+        sel = models or (os.environ.get("W3_MODELS", "").split(",") if os.environ.get("W3_MODELS") else None)
+        self._models = [m for m in avail if (not sel or m in sel)]
+        self._tiles = {}            # (product, tile) -> loaded pred dict (small LRU)
+        self._stack = None
+        self._interp = {}
+
+    # ---- baseline / hindcast windows
+    def _pred(self, product, tile):
+        k = (product, tile)
+        if k not in self._tiles:
+            if len(self._tiles) >= 5:
+                self._tiles.pop(next(iter(self._tiles)))
+            self._tiles[k] = CS.load_pred(os.path.join(self.root, f"pred_{product}_{tile}.npz"))
+        return self._tiles[k]
+
+    def baseline_band(self, r0, r1, names=None, window=BASELINE):
+        names = tuple(names or self.names)
+        ix = [CS.NAMES.index(n) for n in names]
+        product = WINDOW_PRODUCT[window]
+        out = np.full((len(ix), r1 - r0, self.spec.W), np.nan, np.float32)
+        for tr in range(r0 // CS.TH, (r1 - 1) // CS.TH + 1):
+            a, b = max(r0, tr * CS.TH), min(r1, (tr + 1) * CS.TH)
+            for tc in range(CS.NTC):
+                tile = f"r{tr}c{tc}"
+                if not os.path.exists(os.path.join(self.root, f"pred_{product}_{tile}.npz")):
+                    continue
+                p = self._pred(product, tile)
+                land = p["land"]
+                start = int(land[:a - tr * CS.TH].sum())
+                sub = land[a - tr * CS.TH:b - tr * CS.TH]
+                n = int(sub.sum())
+                if not n:
+                    continue
+                block = np.full((len(ix), b - a, CS.TW), np.nan, np.float32)
+                block[:, sub] = p["data"][ix][:, start:start + n]
+                out[:, a - r0:b - r0, tc * CS.TW:(tc + 1) * CS.TW] = block
+        return out
+
+    def land_band(self, r0, r1):
+        out = np.zeros((r1 - r0, self.spec.W), bool)
+        for tr in range(r0 // CS.TH, (r1 - 1) // CS.TH + 1):
+            a, b = max(r0, tr * CS.TH), min(r1, (tr + 1) * CS.TH)
+            for tc in range(CS.NTC):
+                f = os.path.join(self.root, f"pred_{WINDOW_PRODUCT[BASELINE]}_r{tr}c{tc}.npz")
+                if os.path.exists(f):
+                    out[a - r0:b - r0, tc * CS.TW:(tc + 1) * CS.TW] = self._pred(WINDOW_PRODUCT[BASELINE], f"r{tr}c{tc}")["land"][a - tr * CS.TH:b - tr * CS.TH]
+        return out
+
+    # ---- futures
+    def future_models(self, ssp, period):
+        return list(self._models)
+
+    def prepare(self, domain: np.ndarray):
+        """Load the baseline monthly stack of the land cells inside `domain` (bool, full grid), sorted by (row, col)."""
+        tiles = []
+        parts = []
+        for tr in range(CS.NTR):
+            for tc in range(CS.NTC):
+                rs, cs = CS.tile_window((tr, tc))
+                if not domain[rs, cs].any():
+                    continue
+                f = os.path.join(self.root, f"basem_r{tr}c{tc}.npz")
+                if not os.path.exists(f):
+                    raise FileNotFoundError(f)
+                land, _, mon = CS.load_basem(f)
+                i, j = CS.land_index(land, (tr, tc))
+                keep = domain[i, j]
+                st = CS.BaselineStack({k: v[:, keep] for k, v in mon.items()}, G.cell_lat(i[keep]).astype("float64"), G.cell_lon(j[keep]).astype("float64"),
+                                      i[keep], j[keep])
+                parts.append(st)
+                del mon
+        order = np.lexsort((np.concatenate([p.col for p in parts]), np.concatenate([p.row for p in parts])))
+        cat = lambda a: np.concatenate(a)[order]                                                       # noqa: E731
+        self._stack = CS.BaselineStack({k: np.concatenate([p.monthly[k] for p in parts], axis=1)[:, order] for k in parts[0].monthly},
+                                       cat([p.lat for p in parts]), cat([p.lon for p in parts]), cat([p.row for p in parts]), cat([p.col for p in parts]))
+        self._interp = {}
+
+    def future_band(self, ssp, period, model, r0, r1, names=None):
+        names = tuple(names or self.names)
+        if self._stack is None:
+            raise RuntimeError("call prepare(domain) before future_band")
+        st = self._stack
+        a, b = np.searchsorted(st.row, [r0, r1])
+        out = np.full((len(names), r1 - r0, self.spec.W), np.nan, np.float32)
+        if b <= a:
+            return out
+        sub = st.subset(slice(a, b))
+        d = self._lib.get_model(model)
+        it = self._interp.get((r0, r1))
+        if it is None:
+            it = self._interp[(r0, r1)] = CS.PointInterp(d.lat, d.lon, sub.lat, sub.lon)
+        res = CS.apply_deltas(sub, d, model, SSP_NAME[ssp], period, interp=it)
+        for k, n in enumerate(names):
+            out[k, sub.row - r0, sub.col] = res[n]
+        return out
+
+
+def climate_source(root: str = None):
+    src = W1Source(root)
+    return src, src.spec
+
+
+def species_inputs(meta: dict, spec: GridSpec):
+    """(Occurrences, native mask or None, target-group density or None, DOIs) for one species from W2's products.
+    Filled in once W2 publishes its outputs (see docs/pilot/W3-engine.md, section 'Waiting on others')."""
+    raise NotImplementedError("W2 occurrence products are not published yet")
