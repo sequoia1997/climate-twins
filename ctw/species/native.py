@@ -228,8 +228,8 @@ def griis_units(rows: list[dict], feats: list) -> set[int]:
         if (r.get("status") or "PRESENT") != "PRESENT":
             continue
         est = (r.get("establishmentMeans") or "").upper()
-        if est and not (est.startswith("INTRODUCED") or est in ("INVASIVE", "NATURALISED", "NATURALIZED")):
-            continue
+        if not (est.startswith("INTRODUCED") or est in ("INVASIVE", "NATURALISED", "NATURALIZED")):
+            continue            # rows without an explicit introduced status are ambiguous (for example Australia for the kookaburra): reported, not applied
         cc, loc = r.get("country"), (r.get("locality") or "").strip().lower()
         by_name = [i for i, f in enumerate(feats) if (f["properties"].get("NAME") or "").lower() == loc and loc]
         in_country = [i for i, f in enumerate(feats) if f["properties"].get("ISO_A2_EH") == cc or f["properties"].get("ISO_A2") == cc]
