@@ -66,3 +66,19 @@ Risk: L low, M medium, H high. "UNVERIFIED" = from memory or a search summary, n
 8. Public-health species (ticks, mosquitoes): label "climate suitability, not disease risk or case counts".
 9. Places: no lookups of private addresses; keep the existing 0.5 degree location behaviour.
 
+
+## 6. Results (run 38057865695, 29 min, fully cached rerun; first full run 36 min)
+
+Files: `data/species/candidates.csv` (735), `shortlist_v1.csv` (381), `excluded_pool.csv` (199 species removed by a flag: threatened VU 28, EN 22, CR 4; DD 19; narrow range 102; domestic or oddity 21; marine 18; no region or no records 3), `build_stats.json`. 1,463 species enriched; Wikipedia pageviews found for 1,323 (90%).
+
+Candidates (735) by assigned region: Asia 170, Europe 129, North America 128, South America 117, Africa 109, Oceania 82. Shortlist (381): Asia 80, Europe 72, North America 69, South America 61, Africa 55, Oceania 44. Target shares were Africa 15, Asia 22, Europe 15, North America 18, South America 17, Oceania 13 percent. Realised shortlist shares: Asia 21, Europe 19, North America 18, South America 16, Africa 14, Oceania 12. Europe is over-represented by 4 points, mostly via insects and arachnids (18 of 48), which exceed the quota (48 vs 30) because named must-includes plus regional picks were kept; trim before use. Birds and trees both contain 91 against 90 (rounding).
+
+Groups in the shortlist: bird 91, tree 91, insect/arachnid 48 (quota 30), crop 40, wild plant 40, mammal 40, herp 20, fish 11. Monarch, honeybee, Aedes aegypti and Ixodes scapularis are included as seeds (check the CSV for bumblebee and other must-includes).
+
+Honest caveats:
+- Region for 175 candidates (100 shortlist) is a curated native or origin continent; for the rest it is the continent with most GBIF records, which follows where recorders live, so tropical regions are probably underweighted and Europe and North America overweighted in the long tail. The balance above is a balance of this assignment, not of true native ranges.
+- Native-range continents are not independently sourced (POWO/IUCN ranges are not used; see licences). `occ_continent_shares` is the evidence.
+- The IUCN filter first failed (GBIF returns full words such as VULNERABLE, not codes); it is fixed and the list was rebuilt. One VU species remains (a must-include override or a rank mismatch; check `flag_threatened`) and 15 NT species are kept deliberately because Near Threatened is not in the exclusion rule. NE (not evaluated, 192) includes all crops and most plants and insects; "not threatened" there is unverified.
+- Narrow-range uses a 300-record sample capped at offset 3,000, so it can misjudge species with few or clustered records; 19 species failed GBIF name matching (taxonomic splits) and were dropped (see `build_stats.json` errors) and can be re-added by hand.
+- Popularity percentiles are within group and mix a global signal (Wikipedia, English only, biased toward the Anglosphere) with observer-biased iNaturalist and GBIF counts.
+- Not done: manual curation pass, subspecies and cultivar handling, a check that crops with domestic oddity flags (e.g. Cannabis) are acceptable.
