@@ -349,7 +349,7 @@ def report(test: str, title: str, results: dict, group: dict, verdicts: dict, th
         o, m = r["obs"], r["mod"]
         d = {True: "agree", False: "WRONG", None: "not detectable"}[r["direction_agree"]]
         cvt = r.get("cv") or {}
-        out.append(f"| {nm(sp)} | {_f(cvt.get('auc'))} / {_f(cvt.get('tss'))} | {r['n_obs1'] / max(r['n_cells'], 1):.2f} / {r['n_obs2'] / max(r['n_cells'], 1):.2f} | {_f(r['auc2'])} | {_f(r['tss2'])} | {_f(r['boyce2'])} | {_f(r['tss2_null_model_t1'])} | {_f(r['tss2_null_persist'])} | "
+        out.append(f"| {nm(sp)} | {_f(cvt.get('auc'))} / {_f(cvt.get('tss'))} (W3 bg: {_f((cvt.get('w3_background_cv') or {}).get('auc'))} / {_f((cvt.get('w3_background_cv') or {}).get('tss'))}) | {r['n_obs1'] / max(r['n_cells'], 1):.2f} / {r['n_obs2'] / max(r['n_cells'], 1):.2f} | {_f(r['auc2'])} | {_f(r['tss2'])} | {_f(r['boyce2'])} | {_f(r['tss2_null_model_t1'])} | {_f(r['tss2_null_persist'])} | "
                    f"{_f(o['km'], 0)} / {_f(o['bearing'], 0)} | {_f(m['km'], 0)} / {_f(m['bearing'], 0)} | {_f(r['shift_ratio'])} | {_f(r['bearing_error'], 0)} | {d} | "
                    f"{_f(r['edge_hi_error_km'], 0)} / {_f(r['edge_lo_error_km'], 0)} | {_f(o['area_change'], 2)} / {_f(m['area_change'], 2)} | {_f(r['cell_change_corr'])} |")
     out += ["", "| species | tier | Tier 1 earned | reasons if not |", "|---|---|---|---|"]

@@ -69,6 +69,36 @@ def cv_of(fit) -> dict:
     return dict(tss=m.get("tss", np.nan), auc=m.get("auc", np.nan), boyce=m.get("boyce", np.nan))
 
 
+def pa_block_cv(fit, spec, src, routes_fit: pd.DataFrame, pres_cells: pd.DataFrame, w1=W1, k=5, block_km=400.0, seed=0) -> dict:
+    """Presence-absence spatial-block CV in window 1 for BBS: every window-1 route cell is a presence (species detected) or a true absence
+    (route surveyed, species not detected). Same predictors and model class as the production fit (LightGBM), blocks of block_km, threshold =
+    5th percentile of out-of-fold presence scores (as production). This is the skill gate for BBS: unlike the pipeline's presence-versus-
+    background CV it measures discrimination against real absences, which is what a widespread species needs to be judged on."""
+    from . import sdm
+    cells = routes_fit[["row", "col"]].drop_duplicates()
+    X = src.baseline_points(cells.row.values, cells.col.values, fit.pred, window=w1).astype(float)
+    ok = np.isfinite(X).all(1)
+    cells, X = cells[ok], X[ok]
+    key = set(zip(pres_cells.row, pres_cells.col))
+    y = np.array([(r, c) in key for r, c in zip(cells.row, cells.col)], int)
+    if y.sum() < 20 or (y == 0).sum() < 20:
+        return dict(tss=np.nan, auc=np.nan)
+    km = spec.km_xy(cells.row.values, cells.col.values)
+    folds = sdm.block_folds(km, block_km, k, y.astype(float), seed)
+    oof = np.full(len(y), np.nan)
+    for f in range(k):
+        te = folds == f
+        if te.sum() == 0 or y[~te].sum() < 10:
+            continue
+        oof[te] = sdm.GBM(seed=seed, n_jobs=1).fit(X[~te], y[~te]).raw(X[te])
+    m = np.isfinite(oof)
+    pos, neg = oof[m & (y == 1)], oof[m & (y == 0)]
+    if len(pos) < 10 or len(neg) < 10:
+        return dict(tss=np.nan, auc=np.nan)
+    thr = sdm.threshold(pos, neg, "p05")
+    return dict(auc=sdm.auc(pos, neg), tss=sdm.tss(pos, neg, thr), boyce=sdm.boyce(pos, oof[m]), n_pres=int(len(pos)), n_abs=int(len(neg)), source="presence-absence block CV")
+
+
 def hindcast_bbs(species: dict, routes_fit: pd.DataFrame, routes_q: pd.DataFrame, pres: pd.DataFrame, spec, src, *, cfg: PL.FitConfig | None = None,
                  block: int = 1, n_boot: int = 300, w1=W1, w2=W2, test="bbs", th=H.TH, native=None, log=print):
     """species: {display name: AOU}. routes_fit: routes with enough window-1 years (columns country, state, route, lat, lon, row, col) used for
@@ -85,9 +115,11 @@ def hindcast_bbs(species: dict, routes_fit: pd.DataFrame, routes_q: pd.DataFrame
         fit = fit_window1(name, spec, src, cells.row.values, cells.col.values, density=density, native=native, cfg=cfg, w1=w1)
         sc = score_cells(fit, src, routes_q.row.values, routes_q.col.values, w1, w2)
         cs = bbs.species_cellset(routes_q, pres, aou, block=block, scores=sc, thr=fit.thr)
-        cellsets[name], cv[name], fits[name] = cs, cv_of(fit), fit
+        cv_pa = pa_block_cv(fit, spec, src, routes_fit, cells, w1)
+        cellsets[name], cv[name], fits[name] = cs, cv_pa, fit
+        cv[name]["w3_background_cv"] = cv_of(fit)
         q = pres[(pres.AOU == aou)].merge(routes_q[["country", "state", "route"]], on=["country", "state", "route"])
         n_el += int(H.eligible(int(q.p1.sum()), int(q.p2.sum()), test, th))
-        log(f"{name}: fit on {len(cells)} cells, cv {cv[name]}, thr {fit.thr:.3f}")
+        log(f"{name}: fit on {len(cells)} cells, PA cv {cv_pa}, W3 cv {cv[name]['w3_background_cv']}, thr {fit.thr:.3f}")
     results, g, verdicts = H.run_test(cellsets, test, cv=cv, th=th, n_eligible=n_el, n_boot=n_boot)
     return results, g, verdicts, cellsets, fits
