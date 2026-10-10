@@ -1,0 +1,146 @@
+AOU,english,sci,routes_w1,routes_w2,pilot,recommended
+4980,Red-winged Blackbird,Agelaius phoeniceus,1039,1019,True,True
+3160,Mourning Dove,Zenaida macroura,1005,1035,True,True
+6130,Barn Swallow,Hirundo rustica,998,999,True,True
+7610,American Robin,Turdus migratorius,955,962,True,True
+5110,Common Grackle,Quiscalus quiscula,902,901,False,True
+4440,Eastern Kingbird,Tyrannus tyrannus,886,829,False,True
+4770,Blue Jay,Cyanocitta cristata,840,856,True,True
+5290,American Goldfinch,Spinus tristis,815,845,True,True
+7040,Gray Catbird,Dumetella carolinensis,786,770,False,True
+4610,Eastern Wood-Pewee,Contopus virens,753,736,False,True
+5980,Indigo Bunting,Passerina cyanea,738,751,False,True
+5810,Song Sparrow,Melospiza melodia,726,756,True,True
+5930,Northern Cardinal,Cardinalis cardinalis,709,778,True,True
+4560,Eastern Phoebe,Sayornis phoebe,670,753,False,True
+7660,Eastern Bluebird,Sialia sialis,617,768,True,True
+6110,Purple Martin,Progne subis,591,473,False,True
+3930,Hairy Woodpecker,Dryobates villosus,588,642,False,True
+4740,Horned Lark,Eremophila alpestris,574,444,False,True
+2890,Northern Bobwhite,Colinus virginianus,554,418,False,True
+5460,Grasshopper Sparrow,Ammodramus savannarum,552,396,False,True
+6190,Cedar Waxwing,Bombycilla cedrorum,483,689,False,True
+5420,Savannah Sparrow,Passerculus sandwichensis,431,412,False,True
+6830,Yellow-breasted Chat,Icteria virens,424,372,False,True
+4280,Ruby-throated Hummingbird,Archilochus colubris,422,597,False,True
+6220,Loggerhead Shrike,Lanius ludovicianus,415,221,False,True
+7180,Carolina Wren,Thryothorus ludovicianus,410,542,True,True
+6280,Yellow-throated Vireo,Vireo flavifrons,409,474,False,True
+7510,Blue-gray Gnatcatcher,Polioptila caerulea,375,550,False,True
+7560,Veery,Catharus fuscescens,326,310,False,True
+6730,Prairie Warbler,Setophaga discolor,284,249,False,True
+6590,Chestnut-sided Warbler,Setophaga pensylvanica,276,285,False,True
+6480,Northern Parula,Setophaga americana,260,433,False,True
+3750,Great Horned Owl,Bubo virginianus,239,201,False,True
+1440,Wood Duck,Aix sponsa,237,368,False,True
+6710,Pine Warbler,Setophaga pinus,231,367,False,True
+4860,Common Raven,Corvus corax,228,455,False,True
+7590,Hermit Thrush,Catharus guttatus,225,254,False,True
+7280,Red-breasted Nuthatch,Sitta canadensis,194,291,False,True
+4020,Yellow-bellied Sapsucker,Sphyrapicus varius,187,268,False,True
+3430,Broad-winged Hawk,Buteo platypterus,180,209,False,True
+4950,Brown-headed Cowbird,Molothrus ater,1025,1004,False,False
+2730,Killdeer,Charadrius vociferus,983,904,False,False
+4880,American Crow,Corvus brachyrhynchos,975,974,False,False
+6810,Common Yellowthroat,Geothlypis trichas,895,904,False,False
+4120,(Yellow-shafted Flicker) Northern Flicker,Colaptes auratus auratus,840,784,False,False
+5600,Chipping Sparrow,Spizella passerina,822,863,False,False
+3940,Downy Woodpecker,Dryobates pubescens,821,862,False,False
+7050,Brown Thrasher,Toxostoma rufum,804,729,False,False
+4230,Chimney Swift,Chaetura pelagica,792,725,False,False
+4520,Great Crested Flycatcher,Myiarchus crinitus,780,768,False,False
+6240,Red-eyed Vireo,Vireo olivaceus,761,792,False,False
+5010,Eastern Meadowlark,Sturnella magna,749,636,False,False
+6520,Yellow Warbler,Setophaga petechia,701,679,False,False
+5630,Field Sparrow,Spizella pusilla,686,612,False,False
+7210,Northern House Wren,Troglodytes aedon,684,731,False,False
+3370,Red-tailed Hawk,Buteo jamaicensis,676,891,False,False
+3870,Yellow-billed Cuckoo,Coccyzus americanus,653,616,False,False
+5070,Baltimore Oriole,Icterus galbula,651,610,False,False
+6170,Northern Rough-winged Swallow,Stelgidopteryx serripennis,649,599,False,False
+3600,American Kestrel,Falco sparverius,645,547,False,False
+3900,Belted Kingfisher,Megaceryle alcyon,641,472,False,False
+7550,Wood Thrush,Hylocichla mustelina,619,617,False,False
+5870,Eastern Towhee,Pipilo erythrophthalmus,598,578,False,False
+2010,Green Heron,Butorides virescens,595,461,False,False
+6270,Warbling Vireo,Vireo gilvus,581,630,False,False
+7030,Northern Mockingbird,Mimus polyglottos,576,595,False,False
+7270,White-breasted Nuthatch,Sitta carolinensis,556,703,False,False
+1940,Great Blue Heron,Ardea herodias,543,814,False,False
+7310,Tufted Titmouse,Baeolophus bicolor,521,606,False,False
+7350,Black-capped Chickadee,Poecile atricapillus,513,522,False,False
+5060,Orchard Oriole,Icterus spurius,476,544,False,False
+6140,Tree Swallow,Tachycineta bicolor,476,712,False,False
+4050,Pileated Woodpecker,Dryocopus pileatus,474,686,False,False
+3250,Turkey Vulture,Cathartes aura,469,849,False,False
+1320,Mallard,Anas platyrhynchos,463,614,False,False
+4090,Red-bellied Woodpecker,Melanerpes carolinus,463,684,False,False
+4060,Red-headed Woodpecker,Melanerpes erythrocephalus,459,409,False,False
+6080,Scarlet Tanager,Piranga olivacea,459,481,False,False
+6120,Cliff Swallow,Petrochelidon pyrrhonota,459,582,False,False
+5400,Vesper Sparrow,Pooecetes gramineus,455,304,False,False
+6740,Ovenbird,Seiurus aurocapilla,450,481,False,False
+3880,Black-billed Cuckoo,Coccyzus erythropthalmus,445,243,False,False
+5950,Rose-breasted Grosbeak,Pheucticus ludovicianus,441,465,False,False
+4940,Bobolink,Dolichonyx oryzivorus,427,391,False,False
+6870,American Redstart,Setophaga ruticilla,410,443,False,False
+5011,Western Meadowlark,Sturnella neglecta,390,290,False,False
+4670,Least Flycatcher,Empidonax minimus,378,331,False,False
+6040,Dickcissel,Spiza americana,373,390,False,False
+5970,Blue Grosbeak,Passerina caerulea,358,430,False,False
+7360,Carolina Chickadee,Poecile carolinensis,352,364,False,False
+6360,Black-and-white Warbler,Mniotilta varia,342,364,False,False
+4200,Common Nighthawk,Chordeiles minor,340,260,False,False
+6160,Bank Swallow,Riparia riparia,335,181,False,False
+6310,White-eyed Vireo,Vireo griseus,329,352,False,False
+6100,Summer Tanager,Piranga rubra,297,312,False,False
+4650,Acadian Flycatcher,Empidonax virescens,290,316,False,False
+4660,Willow Flycatcher,Empidonax traillii,289,364,False,False
+5170,Purple Finch,Haemorhous purpureus,288,262,False,False
+5520,Lark Sparrow,Chondestes grammacus,255,274,False,False
+2300,Wilson's Snipe,Gallinago delicata,244,196,False,False
+5840,Swamp Sparrow,Melospiza georgiana,240,268,False,False
+6770,Kentucky Warbler,Geothlypis formosa,239,194,False,False
+5100,Brewer's Blackbird,Euphagus cyanocephalus,229,214,False,False
+4470,Western Kingbird,Tyrannus verticalis,227,254,False,False
+2630,Spotted Sandpiper,Actitis macularius,226,129,False,False
+3310,Northern Harrier,Circus hudsonius,212,192,False,False
+4661,Alder Flycatcher,Empidonax alnorum,205,253,False,False
+2610,Upland Sandpiper,Bartramia longicauda,203,138,False,False
+5580,White-throated Sparrow,Zonotrichia albicollis,194,166,False,False
+4160,Chuck-will's-widow,Antrostomus carolinensis,193,136,False,False
+6450,Nashville Warbler,Leiothlypis ruficapilla,186,162,False,False
+6670,Black-throated Green Warbler,Setophaga virens,185,222,False,False
+1900,American Bittern,Botaurus lentiginosus,179,115,False,False
+7190,Bewick's Wren,Thryomanes bewickii,171,121,False,False
+3390,Red-shouldered Hawk,Buteo lineatus,169,393,False,False
+1400,Blue-winged Teal,Spatula discors,166,106,False,False
+6760,Louisiana Waterthrush,Parkesia motacilla,160,205,False,False
+6840,Hooded Warbler,Setophaga citrina,156,233,False,False
+6550,(Myrtle Warbler) Yellow-rumped Warbler,Setophaga coronata coronata,150,173,False,False
+6290,Blue-headed Vireo,Vireo solitarius,144,228,False,False
+6620,Blackburnian Warbler,Setophaga fusca,144,174,False,False
+5670,(Slate-colored Junco) Dark-eyed Junco,Junco hyemalis hyemalis,143,146,False,False
+6790,Mourning Warbler,Geothlypis philadelphia,141,149,False,False
+3260,Black Vulture,Coragyps atratus,137,289,False,False
+6570,Magnolia Warbler,Setophaga magnolia,136,161,False,False
+7580,Swainson's Thrush,Catharus ustulatus,136,126,False,False
+4130,(Red-shafted Flicker) Northern Flicker,Colaptes auratus cafer,135,124,False,False
+3420,Swainson's Hawk,Buteo swainsoni,132,141,False,False
+3680,Barred Owl,Strix varia,131,235,False,False
+6370,Prothonotary Warbler,Protonotaria citrea,131,112,False,False
+6410,Blue-winged Warbler,Vermivora cyanoptera,130,155,False,False
+4750,Black-billed Magpie,Pica hudsonia,129,108,False,False
+5080,Bullock's Oriole,Icterus bullockii,129,131,False,False
+4970,Yellow-headed Blackbird,Xanthocephalus xanthocephalus,126,114,False,False
+2001,Western Cattle-Egret,Ardea ibis,124,132,False,False
+6630,Yellow-throated Warbler,Setophaga dominica,124,164,False,False
+7222,Winter Wren,Troglodytes hiemalis,124,160,False,False
+6750,Northern Waterthrush,Parkesia noveboracensis,122,129,False,False
+7240,Sedge Wren,Cistothorus stellaris,122,126,False,False
+4900,Fish Crow,Corvus ossifragus,120,227,False,False
+5610,Clay-colored Sparrow,Spizella pallida,114,134,False,False
+4430,Scissor-tailed Flycatcher,Tyrannus forficatus,111,132,False,False
+4620,Western Wood-Pewee,Contopus sordidulus,111,126,False,False
+6330,Bell's Vireo,Vireo bellii,102,127,False,False
+6540,Black-throated Blue Warbler,Setophaga caerulescens,102,137,False,False
