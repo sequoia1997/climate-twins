@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Species prototype</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+/* Tokens copied from web/index.html (Climate Twins). The species tokens (lost/kept/gained, suitability ramp, hatch colours)
+   are new; lost/gained were checked with the dataviz validator (CVD and normal-vision separation, contrast on the land colour). */
+:root{
+  --ocean:#c7d5de; --land:#e3e6de; --line:#8b949c; --line2:#5d6770;
+  --bg:#f3f5f6; --panel:#ffffff; --ink:#1d2730; --muted:#5b6670; --rule:#d8dde1;
+  --accent:#d6412c; --chip:#eef1f3; --chipOn:#1d2730; --chipOnInk:#fff;
+  --good:#1f7a4d; --warn:#b36b00; --bad:#b3261e;
+  --lost:#b84a00; --kept:#55606b; --gained:#1769c9; --r1:#a6d8c8; --r2:#43a98d; --r3:#0c6a55; --nov:#6b3fa0; --dot:#ffffff;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-head:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ocean:#0e1920; --land:#26313a; --line:#56626c; --line2:#8894a0;
+    --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943;
+    --accent:#ff6b4a; --chip:#22303a; --chipOn:#e7ecef; --chipOnInk:#11181e;
+    --good:#5fcf95; --warn:#f0b04a; --bad:#ff8a80;
+    --lost:#e0692a; --kept:#b9c3cb; --gained:#3d8fe6; --r1:#2f7664; --r2:#52b89c; --r3:#a8ecd6; --nov:#c9a8ff; --dot:#0e1920;
+  }
+}
+:root[data-theme="dark"]{
+  --ocean:#0e1920; --land:#26313a; --line:#56626c; --line2:#8894a0;
+  --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943;
+  --accent:#ff6b4a; --chip:#22303a; --chipOn:#e7ecef; --chipOnInk:#11181e;
+  --good:#5fcf95; --warn:#f0b04a; --bad:#ff8a80;
+  --lost:#e0692a; --kept:#b9c3cb; --gained:#3d8fe6; --r1:#2f7664; --r2:#52b89c; --r3:#a8ecd6; --nov:#c9a8ff; --dot:#0e1920;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.45 var(--font-body)}
+#app{display:flex;height:100%;min-height:0;position:relative}
+#mapwrap{position:relative;flex:1;min-width:0;background:var(--ocean);overflow:hidden}
+#map{position:absolute;inset:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+aside{width:var(--aside-w,420px);max-width:100%;background:var(--panel);border-left:1px solid var(--rule);overflow-y:auto;overflow-x:hidden;padding:20px 22px 40px}
+h1{font:700 1.45rem/1.1 var(--font-head);margin:0 0 6px;letter-spacing:-.01em}
+h2{font:700 1.3rem/1.15 var(--font-head);margin:0 0 4px}
+h3{font:700 1.08rem/1.2 var(--font-head);margin:0 0 6px}
+.small,label.small{font-size:.85rem;color:var(--muted)}
+.muted{color:var(--muted)}
+.note{font-size:.88rem;border-left:3px solid var(--warn);padding:6px 10px;margin:10px 0;background:var(--chip);border-radius:0 8px 8px 0}
+.ctl{margin:12px 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.seg button{font:inherit;font-size:.88rem;border:1px solid var(--rule);background:var(--chip);color:var(--ink);padding:6px 10px;border-radius:999px;cursor:pointer;min-height:34px}
+.seg button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);border-color:var(--chipOn)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[role=option]:focus-visible,.crow:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input[type=search],select{font:inherit;padding:9px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink);width:100%;min-height:42px}
+.opts{display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:.92rem}
+.opts label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;padding:3px 0}
+.opts input{margin-top:.28em;width:18px;height:18px;flex:none}
+hr{border:0;border-top:1px solid var(--rule);margin:18px 0}
+.badge{display:inline-block;font-size:.82rem;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
+.q-good{color:var(--good)} .q-partial{color:var(--warn)} .q-low{color:var(--bad)}
+.syn{color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.chips button{font:inherit;font-size:.78rem;border:1px solid var(--rule);background:var(--chip);color:var(--ink);padding:3px 9px;border-radius:999px;cursor:pointer;min-height:28px}
+.chips button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);border-color:var(--chipOn)}
+#results{list-style:none;margin:8px 0 0;padding:0;max-height:10.6rem;overflow-y:auto;border:1px solid var(--rule);border-radius:10px}
+#results li{display:flex;justify-content:space-between;gap:8px;align-items:baseline;padding:8px 12px;min-height:40px;cursor:pointer;border-bottom:1px solid var(--rule)}
+#results li:last-child{border-bottom:0}
+#results li[aria-selected="true"]{background:var(--chip);font-weight:700}
+#results li:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+#results .g{font-size:.76rem;color:var(--muted);font-weight:400;white-space:nowrap}
+/* figures: Values / Change toggle, as on the site */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0 4px}
+.st{border-top:4px solid var(--c);padding-top:6px;min-width:0}
+.st .k{font-size:.76rem;line-height:1.25;color:var(--muted)}
+.st .v{font:700 1.3rem/1.15 var(--font-head);font-variant-numeric:tabular-nums;margin-top:2px;overflow-wrap:anywhere}
+.st .d{font-size:.76rem;line-height:1.25;color:var(--muted)}
+.s-now{--c:#b4bcc3} :root[data-theme="dark"] .s-now{--c:#5c6975} .s-fut{--c:var(--ink)} .s-mat{--c:var(--accent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .s-now{--c:#5c6975}}
+.figbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:14px 0 6px}
+.figbar h4{font:700 .95rem/1.2 var(--font-body);margin:0}
+.vt{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:2px;background:var(--chip)}
+.vt button{font:inherit;font-size:.76rem;line-height:1;border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer;min-height:28px}
+.vt button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);font-weight:650}
+.fig[data-view="abs"] .v-chg,.fig[data-view="chg"] .v-abs{display:none}
+.crow{display:grid;grid-template-columns:var(--lw,5.2rem) minmax(0,1fr);align-items:center;margin:0 0 6px;border-radius:6px}
+.crow .lab{font-size:.8rem;color:var(--muted);min-width:0}
+.trk{position:relative;height:26px}
+.bar{position:absolute;top:9px;height:8px;border-radius:4px;background:var(--c,var(--kept));min-width:3px}
+.bar b{position:absolute;top:50%;transform:translateY(-50%);left:calc(100% + 6px);font-size:.74rem;font-weight:600;line-height:1;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar.end b{left:auto;right:calc(100% + 6px)}
+.trk .zero{position:absolute;top:2px;bottom:2px;border-left:1px solid var(--line)}
+.facts{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem;margin:12px 0}
+.facts dt{color:var(--muted)} .facts dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.card{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;margin:16px 0}
+.card h3{margin-bottom:4px}
+.shift{display:flex;gap:10px;align-items:center;margin:8px 0}
+.shift svg{flex:none}
+.kicker{font-size:.8rem;color:var(--muted);margin:0}
+.dep{margin:10px 0 0}
+.dep .nm{font-size:.9rem;margin:0 0 4px}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--line);cursor:pointer;text-align:left}
+ul.pl{list-style:none;margin:6px 0;padding:0}
+ul.pl li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:.92rem}
+ul.pl li .w{font-size:.76rem;color:var(--muted);white-space:nowrap}
+ul.pl svg{display:block}
+.answer{font-size:1.02rem;margin:8px 0}
+details{margin:10px 0} summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+details p{font-size:.9rem}
+.disc{font-size:.92rem;font-weight:700;margin:6px 0 2px}
+/* map furniture */
+#legend{position:absolute;z-index:2;left:12px;bottom:12px;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:.78rem;max-width:min(300px,calc(100% - 24px))}
+#legend summary{color:var(--ink);font-weight:700;font-size:.78rem;margin:0}
+#legend .key{display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:center;line-height:1.25;margin-top:6px}
+#legend svg{display:block;overflow:visible}
+#synpill{position:absolute;z-index:2;top:12px;left:50%;transform:translateX(-50%);background:var(--panel);border:1.5px solid var(--warn);color:var(--ink);font-size:.78rem;font-weight:700;border-radius:999px;padding:3px 12px;white-space:nowrap;pointer-events:none}
+#themebtn{position:absolute;left:10px;top:10px;z-index:3;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--rule);background:var(--panel);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+#themebtn svg{width:20px;height:20px}
+#busy{position:absolute;z-index:2;right:56px;top:14px;font-size:.78rem;color:var(--muted);background:var(--panel);border-radius:999px;padding:2px 10px;border:1px solid var(--rule)}
+#busy[hidden]{display:none}
+:root[data-theme="dark"] .maplibregl-ctrl-group{background:var(--panel);box-shadow:0 0 0 1px var(--rule)}
+:root[data-theme="dark"] .maplibregl-ctrl-icon{filter:invert(1) brightness(.92)}
+.maplibregl-ctrl-attrib{display:none}
+.pmark{width:18px;height:18px;border-radius:50%;border:3px solid var(--ink);background:var(--panel);box-shadow:0 0 0 2px var(--panel)}
+#sheethead{display:none}
+#attrib{position:absolute;right:0;bottom:0;z-index:2;font-size:11px;padding:2px 7px;border-top-left-radius:6px;background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--ink)}
+@media (max-width:820px) and (orientation:portrait){
+  #mapwrap{position:fixed;inset:0}
+  html,body{overflow:hidden;overscroll-behavior:none}
+  aside{position:fixed;left:0;right:0;bottom:0;z-index:5;width:100%;height:var(--sheet-h,300px);border:0;border-radius:16px 16px 0 0;
+        box-shadow:0 -4px 22px rgba(0,0,0,.2);padding:0 18px calc(28px + env(safe-area-inset-bottom,0px));
+        overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;transition:height .28s cubic-bezier(.2,.8,.2,1)}
+  aside.dragging{transition:none}
+  #sheethead{display:block;position:sticky;top:0;z-index:6;margin:0 -18px 8px;padding:0 12px 8px 18px;background:var(--panel);border-bottom:1px solid var(--rule);user-select:none;-webkit-user-select:none}
+  #grab{display:block;width:100%;padding:9px 0 7px;border:0;background:transparent;cursor:grab;touch-action:none}
+  #grab::before{content:"";display:block;width:44px;height:5px;border-radius:3px;background:var(--muted);opacity:.55;margin:0 auto}
+  #grab:focus-visible,#sh-tog:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+  .sh-row{display:flex;align-items:center;gap:8px;min-width:0}
+  #sh-title{flex:1;min-width:0;font-weight:700;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #sh-tog{flex:none;width:36px;height:36px;border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);display:grid;place-items:center}
+  aside:not(.collapsed) #sh-tog svg{transform:rotate(180deg)}
+  aside.collapsed{overflow:hidden}
+  aside h1.main{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  #legend{bottom:calc(var(--sheet-h,300px) + 12px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
+  #attrib{bottom:var(--sheet-h,300px)}
+  #busy{top:56px;right:10px}
+  .maplibregl-ctrl-top-right{top:0}
+}
+@media (max-width:820px) and (orientation:landscape){ aside{--aside-w:min(360px,50vw)} }
+@media (prefers-reduced-motion:reduce){aside{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="mapwrap">
+    <div id="map" role="region" aria-label="Map of the selected species' suitable climate"></div>
+    <button id="themebtn" type="button" aria-label="Switch light and dark map" title="Light / dark"></button>
+    <div id="synpill">Synthetic prototype data</div>
+    <div id="busy" role="status" hidden>Updating map...</div>
+    <details id="legend" open><summary>Legend</summary><div id="lg"></div></details>
+    <div id="attrib">Prototype. Not real species data.</div>
+  </div>
+  <aside id="panel" aria-label="Species panel">
+    <div id="sheethead">
+      <button id="grab" type="button" aria-label="Resize the panel"></button>
+      <div class="sh-row"><div id="sh-title">Species</div>
+        <button id="sh-tog" type="button" aria-label="Show or hide the panel" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button></div>
+    </div>
+    <h1 class="main">Climate Twins: species</h1>
+    <p class="note"><strong class="syn">Synthetic prototype.</strong> The 12 species, their ranges and every number here are invented to test the design and the data delivery. Nothing is a real finding.</p>
+
+    <div class="ctl">
+      <label class="small" for="search">Find a species</label>
+      <input id="search" type="search" placeholder="Name or group, for example maple or crops" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="results" aria-autocomplete="list">
+      <ul id="results" role="listbox" aria-label="Species"></ul>
+    </div>
+
+    <hr>
+    <div id="sp-head"></div>
+
+    <div class="ctl"><div class="small" id="l-view">Map shows</div><div class="seg" id="view" role="group" aria-labelledby="l-view"></div></div>
+    <div class="ctl"><div class="small" id="l-ssp">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="l-ssp"></div></div>
+    <div class="ctl"><div class="small" id="l-per">Period</div><div class="seg" id="per" role="group" aria-labelledby="l-per"></div></div>
+    <div class="ctl"><div class="small" id="l-disp">Dispersal (how far the species can spread)</div><div class="seg" id="disp" role="group" aria-labelledby="l-disp"></div>
+      <div class="small" id="disp-d" style="margin-top:4px"></div></div>
+    <div class="opts">
+      <label><input type="checkbox" id="o-agree"><span>Shade where fewer than 6 of 8 climate models agree (dotted)</span></label>
+      <label><input type="checkbox" id="o-novel"><span>Shade climates with no present-day match (diagonal lines)</span></label>
+    </div>
+
+    <div id="summary" class="fig" data-view="abs"></div>
+    <section class="card" id="dep-card" aria-labelledby="dep-h"></section>
+    <section class="card" id="place-card" aria-labelledby="pl-h"></section>
+    <details><summary>Text description of the map</summary><p id="textdesc"></p></details>
+    <p class="small">Climate suitability, not a forecast. It shows where a species' climate niche may fit, not where it will live: land use, soils, other species and chance all matter.</p>
+    <p class="small">Prototype for delivery spike G. Methods and real data come later.</p>
+  </aside>
+</div>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const BS = 256, NX = 8640, NY = 4320, LEVELS = [8, 4, 2, 1];
+const MIN = "−";
+let ST = null, map = null, gl = null, glr = null;
+const S = { sp: "s01", ssp: "ssp245", per: 0, view: "change", disp: "unlimited", agree: false, novel: false, place: 0, group: "All", q: "", figview: "abs", depview: "abs" };
+const SHOWN = { sp: null, ssp: null };           // what the map draws; swapped once the new blocks are in memory
+const DISP_DESC = { unlimited: "Any suitable cell can be reached.", limited: "New range only within about 80 km (2050) or 220 km (2100) of the present range.", none: "No spreading: the species keeps only the part of its range that stays suitable." };
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ------------------------------------------------------------------ data: CTS blocks, fetched by range */
+class CTS {
+  constructor(url) { this.url = url; this.ready = this.init(); }
+  async init() {
+    let r = await fetch(this.url, { headers: { Range: "bytes=0-16383" } });
+    if (!r.ok) throw new Error(this.url + " " + r.status);
+    const b = new Uint8Array(await r.arrayBuffer());
+    this.full = r.status === 200 ? b : null;                       // a server without range support sends the whole file once
+    const dv = new DataView(b.buffer), n = dv.getUint32(4, true);
+    this.H = JSON.parse(new TextDecoder().decode(b.subarray(8, 8 + n)));
+    let pos = 8 + n; this.idx = [];
+    for (const lv of this.H.levels) { const e = []; for (let i = 0; i < lv.bx * lv.by; i++) { e.push([dv.getUint32(pos, true), dv.getUint32(pos + 4, true)]); pos += 8; } this.idx.push(e); }
+  }
+  level(f) { return this.H.levels.findIndex(l => l.f === f); }
+  async block(f, bx, by) {
+    await this.ready;
+    const L = this.level(f), lv = this.H.levels[L];
+    if (bx < 0 || by < 0 || bx >= lv.bx || by >= lv.by) return null;
+    const [off, len] = this.idx[L][by * lv.bx + bx];
+    if (!len) return null;
+    let raw;
+    if (this.full) raw = this.full.subarray(off, off + len);
+    else { const r = await fetch(this.url, { headers: { Range: `bytes=${off}-${off + len - 1}` } }); raw = new Uint8Array(await r.arrayBuffer()); }
+    const inf = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    const nb = this.H.bands.length, out = new Uint8Array(BS * BS * 4);
+    for (let k = 0; k < nb; k++) for (let r = 0; r < BS; r++) { let acc = 0; const o = k * BS * BS + r * BS; for (let q = 0; q < BS; q++) { acc = (acc + inf[o + q]) & 255; out[(r * BS + q) * 4 + k] = acc; } }
+    return out;
+  }
+}
+const files = {};
+const file = name => files[name] || (files[name] = new CTS("data/" + name + ".cts"));
+const sceneFiles = (sp, ssp, novel) => ({ land: file("land"), base: file(sp + "_base"), scen: file(sp + "_" + ssp), novel: novel ? file("novel_" + ssp) : null });
+
+/* ------------------------------------------------------------------ GPU: textures per block, one shader, MapLibre custom layer */
+const cache = new Map();                    // "file|f|bx|by" -> {tex, st: 0 loading | 1 ready}
+let zeroTex = null;
+function hex(c) { c = c.trim(); return [parseInt(c.slice(1, 3), 16) / 255, parseInt(c.slice(3, 5), 16) / 255, parseInt(c.slice(5, 7), 16) / 255]; }
+function entry(f, level, bx, by) {
+  const k = f.url + "|" + level + "|" + bx + "|" + by; let e = cache.get(k);
+  if (e) { cache.delete(k); cache.set(k, e); return e; }          // refresh LRU position
+  e = { st: 0, tex: null }; cache.set(k, e);
+  e.p = f.block(level, bx, by).then(d => { if (d && gl) { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, BS, BS, 0, gl.RGBA, gl.UNSIGNED_BYTE, d); e.tex = t; } e.st = 1; map && map.triggerRepaint(); }).catch(() => { e.st = 1; });
+  if (cache.size > 520) { let n = 0; for (const [kk, v] of cache) { if (n++ > 60) break; if (v.tex) gl.deleteTexture(v.tex); cache.delete(kk); } }
+  return e;
+}
+function levelFor() { const wpx = 512 * Math.pow(2, map.getZoom()); for (const f of LEVELS) if (NX / f >= wpx) return f; return 1; }
+function visible(f) {
+  const b = map.getBounds(), cells = NX / f, rows = NY / f, out = [];
+  const x0 = Math.max(0, Math.floor((b.getWest() + 180) / 360 * cells / BS)), x1 = Math.min(Math.ceil(cells / BS) - 1, Math.floor((Math.min(180, b.getEast()) + 180) / 360 * cells / BS));
+  const y0 = Math.max(0, Math.floor((90 - Math.min(85, b.getNorth())) / 180 * rows / BS)), y1 = Math.min(Math.ceil(rows / BS) - 1, Math.floor((90 - Math.max(-85, b.getSouth())) / 180 * rows / BS));
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) out.push([x, y]);
+  return out;
+}
+const merc = lat => 0.5 - Math.log(Math.tan(Math.PI / 4 + Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 360)) / (2 * Math.PI);
+const VS = `#version 300 es
+in vec2 a; uniform mat4 uM; out vec2 vm; void main(){ vm=a; gl_Position=uM*vec4(a,0.0,1.0); }`;
+const FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uT0,uT1; uniform vec4 uBlk; uniform int uKind,uView,uPer,uDisp,uAgree,uPat; uniform float uDpr;
+uniform vec3 uLand,uLost,uKept,uGain,uR1,uR2,uR3,uNov,uDot;
+in vec2 vm; out vec4 o;
+void main(){
+  float lat=degrees(atan(sinh(3.14159265*(1.0-2.0*vm.y))));
+  vec2 uv=vec2((vm.x-uBlk.x)/(uBlk.y-uBlk.x),(uBlk.z-lat)/uBlk.w);
+  vec2 px=gl_FragCoord.xy/uDpr;
+  ivec4 s=ivec4(floor(texture(uT0,uv)*255.0+0.5));
+  if(uKind==0){ if(s.r>0) o=vec4(uLand,1.0); else o=vec4(0.0); return; }
+  if(uKind==2){ int bit=(s.r>>uPer)&1; if(bit==1){ bool ln=mod(px.x-px.y,7.0)<1.6; o=ln?vec4(uNov*0.8,0.8):vec4(0.0);} else o=vec4(0.0); return; }
+  int b=int(floor(texture(uT1,uv).r*255.0+0.5))&127;
+  int fs=(uPer==0)?s.r:s.g; int cf=fs&127; bool reach=(fs>>7)==1;
+  int ag=(uPer==0)?(s.b>>4):(s.b&15);
+  bool nowB=b>=1, frB=cf>=1;
+  bool fut=(uDisp==0)?frB:((uDisp==1)?(frB&&(nowB||reach)):(frB&&nowB));
+  int fc=fut?max(cf,1):0;
+  vec3 col=vec3(0.0); float al=0.0;
+  bool stripe=mod(px.x+px.y,6.0)<2.4;
+  bool dots=length(mod(px,6.0)-vec2(3.0))<1.5;
+  if(uView==2){
+    if(nowB&&!fut){ col=uLost; al=(uPat==1&&!stripe)?0.4:0.95; }
+    else if(nowB&&fut){ col=uKept; al=0.85; }
+    else if(!nowB&&fut){ col=uGain; al=(uPat==1&&!dots)?0.62:0.95; }
+  } else {
+    int c=(uView==0)?b:fc;
+    if(c>=1){ col=(c==1)?uR1:((c==2)?uR2:uR3); al=0.92; }
+  }
+  if(al>0.0 && uAgree==1 && fut && ag<6){ if(mod(floor(px.x/3.0)+floor(px.y/3.0),2.0)<1.0){ col=mix(col,uDot,0.7); } }
+  o=vec4(col*al,al);
+}`;
+function initGL(g) {
+  gl = g;
+  const mk = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+  const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  glr = { p, buf: gl.createBuffer(), u: {} };
+  for (const n of ["uM", "uT0", "uT1", "uBlk", "uKind", "uView", "uPer", "uDisp", "uAgree", "uPat", "uDpr", "uLand", "uLost", "uKept", "uGain", "uR1", "uR2", "uR3", "uNov", "uDot"]) glr.u[n] = gl.getUniformLocation(p, n);
+  glr.a = gl.getAttribLocation(p, "a");
+  zeroTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, zeroTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+}
+function tex(e) { return e && e.tex ? e.tex : zeroTex; }
+function setTex(unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); }
+function colours() { const cs = getComputedStyle(document.documentElement), g = n => hex(cs.getPropertyValue(n)); return { uLand: g("--land"), uLost: g("--lost"), uKept: g("--kept"), uGain: g("--gained"), uR1: g("--r1"), uR2: g("--r2"), uR3: g("--r3"), uNov: g("--nov"), uDot: g("--dot") }; }
+let COL = null;
+// the leaf blocks to draw for one pass: this level if every needed file has it, else the nearest coarser level that does
+function leaves(fs, f, bx, by, seen, out) {
+  const need = fs.map(x => entry(x, f, bx, by));
+  if (need.every(e => e.st === 1) || f === 8) { const k = f + "|" + bx + "|" + by; if (!seen.has(k)) { seen.add(k); out.push([f, bx, by, need]); } return; }
+  leaves(fs, f * 2, bx >> 1, by >> 1, seen, out);
+}
+function drawPass(kind, fs, f, mat, blocks) {
+  const u = glr.u, seen = new Set(), out = [];
+  for (const [bx, by] of blocks) leaves(fs, f, bx, by, seen, out);
+  for (const [lf, bx, by, es] of out) {
+    if (es.every(e => !e.tex)) continue;
+    const dl = lf * 360 / NX, dla = lf * 180 / NY, lon0 = -180 + bx * BS * dl, latT = 90 - by * BS * dla, span = BS * dla;
+    const x0 = (lon0 + 180) / 360, x1 = x0 + BS * dl / 360, y0 = merc(latT), y1 = merc(latT - span);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x0, y0, x1, y0, x0, y1, x1, y1]), gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(glr.a, 2, gl.FLOAT, false, 0, 0);
+    setTex(0, tex(es[0])); setTex(1, es[1] ? tex(es[1]) : zeroTex);
+    gl.uniform4f(u.uBlk, x0, x1, latT, span); gl.uniform1i(u.uKind, kind);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+}
+function render(g, args) {
+  if (!glr) return;
+  const mat = args.defaultProjectionData.mainMatrix, u = glr.u;
+  gl.useProgram(glr.p); gl.bindBuffer(gl.ARRAY_BUFFER, glr.buf); gl.enableVertexAttribArray(glr.a);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.disable(gl.DEPTH_TEST);
+  gl.uniformMatrix4fv(u.uM, false, mat); gl.uniform1i(u.uT0, 0); gl.uniform1i(u.uT1, 1); gl.uniform1f(u.uDpr, devicePixelRatio);
+  for (const k in COL) gl.uniform3fv(u[k], COL[k]);
+  gl.uniform1i(u.uView, { now: 0, future: 1, change: 2 }[S.view]); gl.uniform1i(u.uPer, S.per); gl.uniform1i(u.uDisp, ["unlimited", "limited", "none"].indexOf(S.disp));
+  gl.uniform1i(u.uAgree, S.agree ? 1 : 0); gl.uniform1i(u.uPat, map.getZoom() >= 3.2 ? 1 : 0);
+  const f = levelFor(), vis = visible(f), sc = sceneFiles(SHOWN.sp || S.sp, SHOWN.ssp || S.ssp, S.novel);
+  drawPass(0, [sc.land], f, mat, vis);
+  if (SHOWN.sp) drawPass(1, [sc.scen, sc.base], f, mat, vis);
+  if (S.novel) drawPass(2, [sc.novel], f, mat, vis);
+  window.__drawn = (window.__drawn || 0) + 1;
+}
+// load what the next scene needs (current level for the viewport + the whole world at the coarsest level), then swap
+let swapToken = 0;
+async function loadScene(sp, ssp) {
+  const tok = ++swapToken; $("busy").hidden = false; map.getContainer().setAttribute("aria-busy", "true");
+  const sc = sceneFiles(sp, ssp, S.novel), f = levelFor(), ps = [];
+  for (const fs of [sc.scen, sc.base]) { await fs.ready; for (const [bx, by] of visible(f)) ps.push(entry(fs, f, bx, by).p); const lv = fs.H.levels[fs.level(8)]; for (let y = 0; y < lv.by; y++) for (let x = 0; x < lv.bx; x++) ps.push(entry(fs, 8, x, y).p); }
+  await Promise.race([Promise.all(ps), new Promise(r => setTimeout(r, 8000))]);
+  if (tok !== swapToken) return;
+  SHOWN.sp = sp; SHOWN.ssp = ssp; $("busy").hidden = true; map.getContainer().removeAttribute("aria-busy"); map.triggerRepaint(); window.__sceneReady = (window.__sceneReady || 0) + 1;
+}
+
+/* ------------------------------------------------------------------ text and numbers */
+const key = (sp = S.sp, d = S.disp, per = S.per, ssp = S.ssp) => `${ssp}|${ST.periods[per]}|${d}`;
+const cur = () => ST.species[S.sp].by[key()];
+const fmtA = k => k >= 1e6 ? (k / 1e6).toFixed(k >= 1e7 ? 0 : 1) + " M km²" : k >= 1e3 ? Math.round(k / 1e3) + " k km²" : Math.round(k) + " km²";
+const pct = (a, b) => b > 0 ? Math.round((a - b) / b * 100) : null;
+const sgn = n => (n > 0 ? "+" : n < 0 ? MIN : "") + Math.abs(n);
+const compass = b => ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"][Math.round(b / 45) % 8];
+const PERLAB = () => ST.periods[S.per];
+const sspLabel = () => ST.ssp_labels[ST.ssps.indexOf(S.ssp)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function reliability(sp) {
+  const v = ST.species[sp].by["ssp245|2050|unlimited"].agree_share, a = ST.species[sp].area_now_km2;
+  if (a < 1e5) return { t: "Low", c: "q-low", sym: "○", why: "small range" };
+  return v >= 0.8 ? { t: "High", c: "q-good", sym: "●●●", why: "models agree" } : v >= 0.6 ? { t: "Moderate", c: "q-partial", sym: "●●○", why: "models partly agree" } : { t: "Low", c: "q-low", sym: "●○○", why: "models disagree" };
+}
+function arrowSvg(b) { return `<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20" fill="none" stroke="var(--rule)" stroke-width="2"/><g transform="rotate(${b} 22 22)"><path d="M22 6v28M22 6l-7 9M22 6l7 9" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`; }
+
+/* ------------------------------------------------------------------ UI */
+function seg(id, items, get, set, lab) {
+  const el = $(id); el.innerHTML = "";
+  items.forEach(([v, t]) => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.setAttribute("aria-pressed", String(get() === v)); b.addEventListener("click", () => { set(v); }); el.appendChild(b); });
+}
+function renderControls() {
+  seg("view", [["now", "Now"], ["future", "Future"], ["change", "Change"]], () => S.view, v => { S.view = v; update(); });
+  seg("ssp", ST.ssps.map((s, i) => [s, ST.ssp_labels[i]]), () => S.ssp, v => { S.ssp = v; update(true); });
+  seg("per", ST.periods.map((p, i) => [i, p]), () => S.per, v => { S.per = v; update(); });
+  seg("disp", [["unlimited", "Unlimited"], ["limited", "Limited"], ["none", "None"]], () => S.disp, v => { S.disp = v; update(); });
+  $("disp-d").textContent = DISP_DESC[S.disp];
+  $("o-agree").checked = S.agree; $("o-novel").checked = S.novel;
+}
+function renderResults() {
+  const q = S.q.trim().toLowerCase(), ul = $("results"); ul.innerHTML = "";
+  const list = Object.values(ST.species).filter(s => !q || (s.name + " " + s.group + " " + s.sci).toLowerCase().includes(q));
+  list.forEach(s => { const li = document.createElement("li"); li.setAttribute("role", "option"); li.id = "opt-" + s.id; li.tabIndex = -1; li.dataset.id = s.id; li.setAttribute("aria-selected", String(s.id === S.sp));
+    li.innerHTML = `<span>${esc(s.name)}</span><span class="g">${esc(s.group)}</span>`; li.addEventListener("click", () => pick(s.id)); ul.appendChild(li); });
+  if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No match. This prototype has 12 invented species.</li>';
+}
+function pick(id) { S.sp = id; renderResults(); update(true, true); }
+function head() {
+  const sp = ST.species[S.sp], r = reliability(S.sp);
+  $("sp-head").innerHTML = `<h2>${esc(sp.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(sp.sci)}</i> (placeholder name) &middot; ${esc(sp.group)} &middot; <span class="syn"><strong>synthetic</strong></span></p>
+  <p style="margin:6px 0"><span class="badge ${r.c}" title="Reliability: ${r.why}"><span aria-hidden="true">${r.sym}</span> Reliability: ${r.t}</span> <span class="small">${r.why}</span></p>
+  <p class="disc">Climate suitability, not a forecast.</p>`;
+  $("sh-title").textContent = sp.name;
+}
+function bars(rows, max, signed) {            // rows: [label, value, cssColor, text]
+  return rows.map(([lab, v, col, txt]) => {
+    const w = max > 0 ? Math.abs(v) / max * (signed ? 48 : 78) : 0;
+    const pos = signed ? (v >= 0 ? `left:50%;width:${w}%` : `right:50%;width:${w}%`) : `left:0;width:${w}%`;
+    const lbl = signed && v < 0 ? "end" : "";
+    return `<div class="crow"><div class="lab">${esc(lab)}</div><div class="trk">${signed ? '<span class="zero" style="left:50%"></span>' : ""}<span class="bar ${lbl}" style="${pos};--c:${col}"><b>${esc(txt)}</b></span></div></div>`;
+  }).join("");
+}
+function summary() {
+  const sp = ST.species[S.sp], c = cur(), ch = pct(c.fut, c.now), per = PERLAB();
+  let shift = "";
+  if (c.fut <= 0) shift = `<p class="answer">No suitable climate remains under this scenario${S.disp === "none" ? "" : ", even with spreading allowed"}.</p>`;
+  else if (c.shift_km == null) shift = "";
+  else if (c.shift_km < 40) shift = `<div class="shift"><div><strong>The centre of the range hardly moves</strong> (${Math.round(c.shift_km)} km).</div></div>`;
+  else shift = `<div class="shift">${arrowSvg(c.bearing)}<div><strong>Centre of the range moves about ${Math.round(c.shift_km / 10) * 10} km ${compass(c.bearing)}.</strong><p class="kicker">From ${c.c0[0].toFixed(1)}°, ${c.c0[1].toFixed(1)}° to ${c.c1[0].toFixed(1)}°, ${c.c1[1].toFixed(1)}° (area-weighted centre, synthetic).</p></div></div>`;
+  const maxA = Math.max(c.now, c.fut, 1), maxC = Math.max(c.lost, c.gained, 1);
+  $("summary").dataset.view = S.figview;
+  $("summary").innerHTML = `<div class="stats">
+      <div class="st s-now"><div class="k">Suitable now</div><div class="v">${fmtA(c.now)}</div><div class="d">1991-2020</div></div>
+      <div class="st s-fut"><div class="k">Suitable by ${per}</div><div class="v">${fmtA(c.fut)}</div><div class="d">${esc(sspLabel())}</div></div>
+      <div class="st s-mat"><div class="k">Change</div><div class="v">${ch == null ? "n/a" : sgn(ch) + "%"}</div><div class="d">${ch == null ? "" : sgn(Math.round((c.fut - c.now) / 1e3)) + " k km²"}</div></div></div>
+    ${shift}
+    <div class="figbar"><h4>Where the range changes</h4><div class="vt" role="group" aria-label="Figure view"><button type="button" data-v="abs" aria-pressed="${S.figview === "abs"}">Values</button><button type="button" data-v="chg" aria-pressed="${S.figview === "chg"}">Change</button></div></div>
+    <div class="v-abs" role="group" aria-label="Suitable area now and by ${per}">${bars([["Now", c.now, "var(--kept)", fmtA(c.now)], [per, c.fut, "var(--ink)", fmtA(c.fut)]], maxA, false)}</div>
+    <div class="v-chg" role="group" aria-label="Area lost and gained by ${per}">${bars([["Lost", -c.lost, "var(--lost)", MIN + fmtA(c.lost)], ["Gained", c.gained, "var(--gained)", "+" + fmtA(c.gained)], ["Net", c.gained - c.lost, "var(--ink)", (c.gained >= c.lost ? "+" : MIN) + fmtA(Math.abs(c.gained - c.lost))]], maxC, true)}</div>
+    <dl class="facts"><dt>Lost (suitable now, not later)</dt><dd>${fmtA(c.lost)}</dd><dt>Kept</dt><dd>${fmtA(c.kept)}</dd><dt>Gained</dt><dd>${fmtA(c.gained)}</dd>
+      <dt>Models agreeing on the future range</dt><dd>${c.agree_share == null ? "n/a" : Math.round(c.agree_share * 100) + "%"}</dd></dl>`;
+  document.querySelectorAll("#summary .vt button").forEach(b => b.addEventListener("click", () => { S.figview = b.dataset.v; summary(); }));
+  const txt = `${sp.name} (synthetic): suitable climate now covers ${fmtA(c.now)}. By ${per} under ${sspLabel()} with ${S.disp} dispersal it covers ${fmtA(c.fut)} (${ch == null ? "n/a" : sgn(ch) + "%"}): ${fmtA(c.lost)} lost, ${fmtA(c.kept)} kept, ${fmtA(c.gained)} gained. ` +
+    (c.shift_km != null && c.fut > 0 ? `The centre moves ${Math.round(c.shift_km)} km ${compass(c.bearing)}. ` : "") + "Climate suitability, not a forecast.";
+  $("textdesc").textContent = txt; $("live").textContent = txt;
+}
+function depCard() {
+  const me = S.sp, out = [], per = PERLAB();
+  const rowHtml = (a, b, who) => {      // a depends on b; show share of a's range that b also covers
+    const v = ST.dep[a + ">" + b][key()], A = ST.species[a].name, B = ST.species[b].name, other = who === "dep" ? b : a;
+    const n = Math.round(v[0] * 100), f = Math.round(v[1] * 100), d = f - n;
+    return `<div class="dep"><p class="nm"><button class="linkbtn" data-sp="${other}">${esc(ST.species[other].name)}</button> <span class="small">${who === "dep" ? `: share of ${esc(A)} range that also has it` : `: share of its range that also has ${esc(B)}`}</span></p>
+      <div class="v-abs">${bars([["Now", v[0], "var(--kept)", n + "%"], [per, v[1], "var(--ink)", f + "%"]], 1, false)}</div>
+      <div class="v-chg">${bars([["Change", d / 100, d >= 0 ? "var(--gained)" : "var(--lost)", (d >= 0 ? "+" : MIN) + Math.abs(d) + " pts"]], 0.5, true)}</div></div>`;
+  };
+  const deps = ST.species[me].deps, by = Object.values(ST.species).filter(s => s.deps.includes(me));
+  const body = (deps.length || by.length) ? `<h4 style="margin:10px 0 0;font:700 .9rem var(--font-body)">${deps.length ? "Depends on" : ""}</h4>${deps.map(d => rowHtml(me, d, "dep")).join("")}
+    ${by.length ? `<h4 style="margin:14px 0 0;font:700 .9rem var(--font-body)">Depended on by</h4>${by.map(s => rowHtml(s.id, me, "by")).join("")}` : ""}` : `<p class="small">No dependency links for this species in the prototype.</p>`;
+  $("dep-card").dataset.view = S.depview; $("dep-card").classList.add("fig");
+  $("dep-card").innerHTML = `<div class="figbar" style="margin-top:0"><h3 id="dep-h">Dependencies</h3><div class="vt" role="group" aria-label="Dependency figure view"><button type="button" data-v="abs" aria-pressed="${S.depview === "abs"}">Values</button><button type="button" data-v="chg" aria-pressed="${S.depview === "chg"}">Change</button></div></div>
+    <p class="small" style="margin:0">Overlap of ranges, now and by ${per} (${esc(sspLabel())}). Invented links.</p>${body}`;
+  $("dep-card").querySelectorAll(".vt button").forEach(b => b.addEventListener("click", () => { S.depview = b.dataset.v; depCard(); }));
+  $("dep-card").querySelectorAll("[data-sp]").forEach(b => b.addEventListener("click", () => pick(b.dataset.sp)));
+}
+const ICON = {
+  lose: `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14L9 16z" fill="var(--lost)"/></svg>`,
+  gain: `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 14h14L9 2z" fill="var(--gained)"/></svg>`,
+  keep: `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="3" width="12" height="12" rx="2" fill="var(--kept)"/></svg>`
+};
+function placeCard() {
+  const P = ST.places[S.place], k = key(), per = PERLAB(), groups = ["All", ...new Set(Object.values(ST.species).map(s => s.group))];
+  const rows = Object.values(ST.species).map(s => ({ s, st: s.place[k][S.place] }));
+  const lose = rows.filter(r => r.st === 1), gain = rows.filter(r => r.st === 3), keep = rows.filter(r => r.st === 2);
+  const shown = r => S.group === "All" || r.s.group === S.group;
+  const li = (r, kind, word) => `<li>${ICON[kind]}<span><button class="linkbtn" data-sp="${r.s.id}">${esc(r.s.name)}</button></span><span class="w">${word}</span></li>`;
+  const list = [...lose.filter(shown).map(r => li(r, "lose", "loses")), ...gain.filter(shown).map(r => li(r, "gain", "gains")), ...keep.filter(shown).map(r => li(r, "keep", "keeps"))];
+  $("place-card").innerHTML = `<h3 id="pl-h">Species where you are</h3>
+    <label class="small" for="place">Place (tap the map to pick the nearest)</label>
+    <select id="place">${ST.places.map((p, i) => `<option value="${i}"${i === S.place ? " selected" : ""}>${esc(p.name)}</option>`).join("")}</select>
+    <p class="answer"><strong>${lose.length}</strong> of ${rows.length} tracked species lose suitable climate at ${esc(P.name)} by ${per}, and <strong>${gain.length}</strong> gain it. <span class="small">${keep.length} keep it. Prototype count, 12 invented species; ${esc(sspLabel())}, ${S.disp} dispersal.</span></p>
+    <div class="chips" role="group" aria-label="Filter by group">${groups.map(g => `<button type="button" aria-pressed="${S.group === g}" data-g="${esc(g)}">${esc(g)}</button>`).join("")}</div>
+    <ul class="pl">${list.join("") || '<li class="muted" style="grid-template-columns:1fr">None in this group.</li>'}</ul>`;
+  $("place").addEventListener("change", e => { S.place = +e.target.value; placeCard(); placeMarker(); });
+  $("place-card").querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => { S.group = b.dataset.g; placeCard(); }));
+  $("place-card").querySelectorAll("[data-sp]").forEach(b => b.addEventListener("click", () => pick(b.dataset.sp)));
+}
+let pm = null;
+function placeMarker() { const P = ST.places[S.place]; if (!pm) { const el = document.createElement("div"); el.className = "pmark"; el.setAttribute("aria-hidden", "true"); pm = new maplibregl.Marker({ element: el }); pm.setLngLat([P.lon, P.lat]).addTo(map); } else pm.setLngLat([P.lon, P.lat]); }
+const SW = {
+  lost: `<svg width="28" height="14" aria-hidden="true"><defs><pattern id="pl" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.4" height="6" fill="var(--lost)"/></pattern></defs><rect width="28" height="14" rx="2" fill="url(#pl)" stroke="var(--lost)"/></svg>`,
+  kept: `<svg width="28" height="14" aria-hidden="true"><rect width="28" height="14" rx="2" fill="var(--kept)"/></svg>`,
+  gain: `<svg width="28" height="14" aria-hidden="true"><defs><pattern id="pg" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.5" fill="var(--gained)"/></pattern></defs><rect width="28" height="14" rx="2" fill="url(#pg)" stroke="var(--gained)"/></svg>`,
+  ramp: `<svg width="28" height="14" aria-hidden="true"><rect width="9.4" height="14" fill="var(--r1)"/><rect x="9.4" width="9.4" height="14" fill="var(--r2)"/><rect x="18.8" width="9.2" height="14" fill="var(--r3)"/></svg>`,
+  agree: `<svg width="28" height="14" aria-hidden="true"><defs><pattern id="pa" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="var(--dot)"/><rect x="3" y="3" width="3" height="3" fill="var(--dot)"/></pattern></defs><rect width="28" height="14" rx="2" fill="var(--kept)"/><rect width="28" height="14" rx="2" fill="url(#pa)" opacity=".7"/></svg>`,
+  nov: `<svg width="28" height="14" aria-hidden="true"><defs><pattern id="pn" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="1.6" height="7" fill="var(--nov)"/></pattern></defs><rect width="28" height="14" rx="2" fill="var(--land)" stroke="var(--line)"/><rect width="28" height="14" rx="2" fill="url(#pn)"/></svg>`,
+  ctr: `<svg width="28" height="14" aria-hidden="true"><circle cx="5" cy="7" r="4" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M10 7h8" stroke="var(--ink)" stroke-width="2"/><circle cx="23" cy="7" r="4" fill="var(--ink)"/></svg>`
+};
+function legend() {
+  const per = PERLAB(), k = [];
+  if (S.view === "change") k.push([SW.lost, `Lost: suitable now, not by ${per}`], [SW.kept, "Kept: suitable now and later"], [SW.gain, `Gained: suitable by ${per} only`]);
+  else k.push([SW.ramp, `${S.view === "now" ? "Now" : "By " + per}: suitability, lower to higher (3 classes)`]);
+  if (S.agree && S.view !== "now") k.push([SW.agree, "Dotted: fewer than 6 of 8 models agree"]);
+  if (S.novel) k.push([SW.nov, `Diagonal lines: climate with no present-day match by ${per}`]);
+  if (S.view !== "now") k.push([SW.ctr, "Centre of range, now to later"]);
+  $("lg").innerHTML = `<div class="key">${k.map(([s, t]) => `${s}<span>${esc(t)}</span>`).join("")}</div><div class="small" style="margin-top:6px">Synthetic data. Climate suitability, not a forecast.</div>`;
+}
+function shiftLayer() {
+  const c = cur(), src = map.getSource("shift"); if (!src) return;
+  const f = [];
+  if (S.view !== "now" && c.c0 && c.c1 && c.fut > 0 && c.shift_km > 40) {
+    f.push({ type: "Feature", properties: { k: "l" }, geometry: { type: "LineString", coordinates: [[c.c0[1], c.c0[0]], [c.c1[1], c.c1[0]]] } },
+      { type: "Feature", properties: { k: "a" }, geometry: { type: "Point", coordinates: [c.c0[1], c.c0[0]] } }, { type: "Feature", properties: { k: "b" }, geometry: { type: "Point", coordinates: [c.c1[1], c.c1[0]] } });
+  }
+  src.setData({ type: "FeatureCollection", features: f });
+}
+function styleShift() {
+  const cs = getComputedStyle(document.documentElement), ink = cs.getPropertyValue("--ink").trim(), pan = cs.getPropertyValue("--panel").trim();
+  map.setPaintProperty("shift-case", "line-color", pan); map.setPaintProperty("shift-line", "line-color", ink);
+  map.setPaintProperty("shift-a", "circle-stroke-color", ink); map.setPaintProperty("shift-a", "circle-color", pan); map.setPaintProperty("shift-b", "circle-color", ink); map.setPaintProperty("shift-b", "circle-stroke-color", pan);
+}
+let firstFit = true;
+function update(reload, refit) {
+  renderControls(); head(); summary(); depCard(); placeCard(); legend(); placeMarker();
+  if (map) {
+    if (reload) {
+      if (refit) { const b = ST.species[S.sp].bbox; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: padFor(), duration: reduced ? 0 : 500, maxZoom: 5 }); }
+      loadScene(S.sp, S.ssp);
+    }
+    shiftLayer(); map.triggerRepaint();
+  }
+}
+const padFor = () => { const m = matchMedia("(max-width:820px) and (orientation:portrait)").matches; return m ? { top: 56, left: 16, right: 16, bottom: Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sheet-h")) || 300) + 24 } : { top: 56, left: 24, right: 24, bottom: 40 }; };
+
+/* ------------------------------------------------------------------ bottom sheet (phone), same pattern as the site */
+const sheet = (() => {
+  const mq = matchMedia("(max-width:820px) and (orientation:portrait)"), as = $("panel"), head = $("sheethead"), root = document.documentElement;
+  const H = () => ({ peek: 64, half: Math.round(innerHeight * .46), full: Math.round(innerHeight * .88) });
+  let st = "half", drag = null;
+  function set(s) { if (!mq.matches) { root.style.removeProperty("--sheet-h"); as.classList.remove("collapsed"); return; } st = s; root.style.setProperty("--sheet-h", H()[s] + "px"); as.classList.toggle("collapsed", s === "peek"); $("sh-tog").setAttribute("aria-expanded", String(s !== "peek")); }
+  $("sh-tog").addEventListener("click", () => set(st === "peek" ? "half" : "peek"));
+  $("grab").addEventListener("click", () => { if (drag && drag.moved) return; set(st === "peek" ? "half" : st === "half" ? "full" : "half"); });
+  $("grab").addEventListener("keydown", e => { if (e.key === "ArrowUp") { set(st === "peek" ? "half" : "full"); e.preventDefault(); } if (e.key === "ArrowDown") { set(st === "full" ? "half" : "peek"); e.preventDefault(); } });
+  head.addEventListener("pointerdown", e => { if (!mq.matches || e.target.closest("#sh-tog")) return; drag = { y: e.clientY, h: as.getBoundingClientRect().height, moved: false }; head.setPointerCapture(e.pointerId); as.classList.add("dragging"); });
+  head.addEventListener("pointermove", e => { if (!drag) return; const dy = drag.y - e.clientY; if (Math.abs(dy) > 4) drag.moved = true; if (drag.moved) root.style.setProperty("--sheet-h", Math.max(64, Math.min(H().full, drag.h + dy)) + "px"); });
+  const end = e => { if (!drag) return; as.classList.remove("dragging"); if (drag.moved) { const h = parseFloat(root.style.getPropertyValue("--sheet-h")), o = H(); set(Object.keys(o).sort((a, b) => Math.abs(o[a] - h) - Math.abs(o[b] - h))[0]); } setTimeout(() => drag = null, 0); };
+  head.addEventListener("pointerup", end); head.addEventListener("pointercancel", end);
+  const on = () => { set(st); map && map.resize(); }; mq.addEventListener("change", on); addEventListener("resize", () => { if (mq.matches) set(st); });
+  set("half");
+  return { set };
+})();
+
+/* ------------------------------------------------------------------ boot */
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+const sysDark = matchMedia("(prefers-color-scheme: dark)");
+const isDark = () => { const t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : sysDark.matches; };
+function applyTheme() { $("themebtn").innerHTML = isDark() ? SUN : MOON; $("themebtn").setAttribute("aria-pressed", String(isDark())); COL = colours(); if (map) { styleShift(); map.setPaintProperty("bg", "background-color", getComputedStyle(document.documentElement).getPropertyValue("--ocean").trim()); map.triggerRepaint(); } legend(); }
+$("themebtn").addEventListener("click", () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("ct-theme", t); } catch (e) { } applyTheme(); });
+sysDark.addEventListener("change", () => { if (!document.documentElement.getAttribute("data-theme")) applyTheme(); });
+$("o-agree").addEventListener("change", e => { S.agree = e.target.checked; update(); });
+$("o-novel").addEventListener("change", e => { S.novel = e.target.checked; update(true && false); if (S.novel) { const sc = sceneFiles(S.sp, S.ssp, true), f = levelFor(); visible(f).forEach(([x, y]) => entry(sc.novel, f, x, y)); } map.triggerRepaint(); });
+$("search").addEventListener("input", e => { S.q = e.target.value; renderResults(); });
+$("search").addEventListener("keydown", e => {
+  const opts = [...$("results").querySelectorAll("[data-id]")]; if (!opts.length) return; let i = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { i = (i + (e.key === "ArrowDown" ? 1 : -1) + opts.length) % opts.length; opts.forEach(o => o.setAttribute("aria-selected", "false")); opts[i].setAttribute("aria-selected", "true"); opts[i].scrollIntoView({ block: "nearest" }); $("search").setAttribute("aria-activedescendant", opts[i].id); e.preventDefault(); }
+  if (e.key === "Enter" && i >= 0) { pick(opts[i].dataset.id); e.preventDefault(); }
+});
+
+async function boot() {
+  ST = await (await fetch("data/stats.json")).json();
+  applyTheme();
+  renderResults(); renderControls();
+  const b0 = ST.species[S.sp].bbox;
+  map = new maplibregl.Map({ container: "map", style: { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": getComputedStyle(document.documentElement).getPropertyValue("--ocean").trim() } }] },
+    bounds: [[b0[0], b0[1]], [b0[2], b0[3]]], fitBoundsOptions: { padding: padFor(), maxZoom: 5 }, renderWorldCopies: false, attributionControl: false, maxZoom: 9, minZoom: 0.3, dragRotate: false, pitchWithRotate: false, touchPitch: false });
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  window.__map = map;
+  map.on("load", () => {
+    map.addLayer({ id: "species", type: "custom", renderingMode: "2d", onAdd: (m, g) => initGL(g), render });
+    map.addSource("shift", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    map.addLayer({ id: "shift-case", type: "line", source: "shift", filter: ["==", "k", "l"], paint: { "line-width": 7, "line-color": "#fff" }, layout: { "line-cap": "round" } });
+    map.addLayer({ id: "shift-line", type: "line", source: "shift", filter: ["==", "k", "l"], paint: { "line-width": 3, "line-color": "#000" }, layout: { "line-cap": "round" } });
+    map.addLayer({ id: "shift-a", type: "circle", source: "shift", filter: ["==", "k", "a"], paint: { "circle-radius": 7, "circle-stroke-width": 3, "circle-color": "#fff", "circle-stroke-color": "#000" } });
+    map.addLayer({ id: "shift-b", type: "circle", source: "shift", filter: ["==", "k", "b"], paint: { "circle-radius": 7, "circle-stroke-width": 2, "circle-color": "#000", "circle-stroke-color": "#fff" } });
+    styleShift(); placeMarker(); update(true);
+    map.on("moveend", () => { const sc = sceneFiles(SHOWN.sp || S.sp, SHOWN.ssp || S.ssp, S.novel), f = levelFor(); for (const x of [sc.land, sc.base, sc.scen, sc.novel]) if (x) visible(f).forEach(([bx, by]) => entry(x, f, bx, by)); });
+    map.on("click", e => {
+      let best = 0, bd = 1e9; ST.places.forEach((p, i) => { const d = Math.hypot((p.lat - e.lngLat.lat), (p.lon - e.lngLat.lng) * Math.cos(p.lat * Math.PI / 180)); if (d < bd) { bd = d; best = i; } });
+      S.place = best; placeCard(); placeMarker();
+    });
+  });
+  window.__S = S;
+}
+boot().catch(e => { document.body.insertAdjacentHTML("afterbegin", `<p style="padding:20px" role="alert">The prototype could not start: ${esc(e.message)}. Serve this folder over http (python -m http.server) after running build_site_data.py.</p>`); console.error(e); });
+</script>
+</body>
+</html>
