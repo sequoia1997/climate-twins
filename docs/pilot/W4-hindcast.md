@@ -9,11 +9,11 @@ local command) or **[U]** (unverified).
 | item | state |
 |---|---|
 | Metrics, nulls, thresholds, minimum-species rule, verdicts, report generator (`ctw/species/hindcast.py`) | done, unit-tested on synthetic data (`tests/test_species_hindcast.py`) |
-| BBS ingest and observed-change metrics (`bbs.py`, `w4_bbs_run.py`, workflow `pilot-w4-bbs.yml`) | code done and tested on a synthetic miniature; first real run: see section 3 |
+| BBS ingest and observed-change metrics (`bbs.py`, `w4_bbs_run.py`, workflow `pilot-w4-bbs.yml`) | done, real run verified (section 3) |
 | FIA ingest and tree change test (`fia.py`, `w4_fia_run.py`, workflow `pilot-w4-fia.yml`) | code done and tested on synthetic data; first real run: see section 4 |
 | Comparison with published tree projections | species presence verified in RDS-2024-0020 (section 5); comparison with our model waits for W3 |
 | GBIF before and after protocol for the two European species | protocol written (section 6); waits for W2's time-split product |
-| Full model hindcast runner (`hindcast_run.py`, `w4_hindcast_run.py`, workflow `pilot-w4-hindcast.yml`) | code done; tested end to end on W3's synthetic climate. Real run **waiting** for W1 tiles r0c1, r1c0, r1c1 (release has only r0c0 and r1c2 at 18:25 UTC) |
+| Full BBS model hindcast (`hindcast_run.py`, `w4_hindcast_run.py`, workflow `pilot-w4-hindcast.yml`) | **done: group test FAILS (change), static skill good, no Tier 1** (section 3b) |
 
 **Key structural finding (important for the pilot exit gate).** The minimum-species rules of C-validation 4.7 (30 species for BBS, 20 for FIA) cannot be
 met by the pilot list: `data/species/pilot_v1.csv` has **10 birds** with a BBS plan and **5 trees** with an FIA plan, and the two European species
@@ -96,6 +96,38 @@ Results (first real run, Actions run 38072944625, all values **[V 38072944625]**
   native-range data) and marks 40 as recommended: the 10 pilot birds plus 30 drawn at random (seed 20261010) from native species with at least 150 route-presences in each window. Random draw, so the choice cannot depend on the
   species' observed shift. 24 of the 40 have a detectable shift. W2 would need GBIF occurrences for the 30 extra species and W3 would fit them (the same pipeline, not published as species pages).
 
+
+## 3b. Full BBS hindcast, first result (Actions run 38076609110; report `docs/pilot/W4-hindcast-report-bbs.md`, numbers `data/species/w4/bbs_hindcast_results.json`)
+
+**Result: the change test FAILS and no species earns Tier 1. This is a conclusive fail, not insufficient data** (40 eligible species against a minimum of 30). **[V 38076609110]**
+
+Set-up: 40 species (the 10 pilot birds and the 30 randomly drawn validation birds, `bbs_validation_species.csv`), fitted on window 1 only (BBS routes with at least 10 acceptable years in 1966-1985, about 1,600 route cells; W1 TerraClimate
+hindcast climate 1966-1985; W3 `fit_species` predictors and LightGBM), scored under 1966-1985 and 2005-2024 climate at the 1,062 comparable route cells. Two variants, both without any window-2 information in the fit:
+- **blocked** (strict): spatial 400 km blocks, every comparable cell scored by a model that never saw that place;
+- **fit_cells**: the pipeline's own fit scored at the comparable cells (most of which it saw in window 1).
+
+| group check | blocked | fit_cells | needed |
+|---|---|---|---|
+| direction of shift (species with a detectable observed shift) | 12 of 25 agree, p = 0.66 | 11 of 25, p = 0.79 | at least 70 percent, p < 0.05 |
+| median modelled / observed shift distance | 0.84 | 0.81 | 0.5 to 2 |
+| median shift error vs no-change error | 103 km vs 75 km | 93 km vs 75 km | model below no-change |
+| area change: sign agreement, median per-cell correlation | 18 of 40, r = -0.01 | 16 of 40, r = 0.12 | majority, r >= 0.3 |
+| beats the no-change model in TSS on window 2 | 12 of 40 | 6 of 40 | at least 60 percent |
+| bearing within 90 degrees (reported, not scored) | 11 of 33 | 11 of 33 | - |
+
+What this says, and what it does not:
+- **Static skill is good.** Median AUC on window 2 is 0.88 to 0.89; 38 to 40 of 40 species keep AUC within 0.1 of the window-1 value; Boyce is at least 0.5 for 37 to 38. The spatial-block presence-absence skill gate (AUC 0.7, TSS 0.4) is passed by 31 of 40 species
+  in the blocked variant. So the model describes where these birds are, in space, and carries that description to a later period.
+- **The model does not predict how ranges changed.** Direction of shift is at chance (12 of 25, binomial p = 0.66); the shift-vector error is larger than assuming nothing moved; the per-cell change correlation is about zero. This is the Rapacciuolo et al. (2012) pattern
+  (good transferability, poor range-change prediction) that C-validation 4.6 told us to expect. For the headline pilot species: American robin has no detectable observed shift, so only static transfer can be judged (AUC 0.97); Carolina wren, northern cardinal
+  and mourning dove are predicted in the right direction; song sparrow and barn swallow in the wrong one.
+- **Why this is hard, not necessarily a model fault.** The real BBS signal is mixed (section 3: half of the detectable shifts are not northward), many shifts follow land-use and population dynamics, and one window difference of about 1 C of warming moves a
+  threshold model by tens of km while the survey has about 1,000 usable cells. The "no-change" model (same fit, window-1 climate) is hard to beat on TSS because most species hardly moved. These are reasons to read a fail cautiously, not to relax the thresholds after the fact.
+- **Consequence under the interpretation rules (C-validation 4.6): "static pass, change fail" - publish current suitability, hide future projections for birds** (or label them "suitable climate, not expected range"), and species fall back to Tier 2 (skill gate passed) or Tier 3
+  (barn swallow, others below the gate). Nothing here tests projections to 2050 or 2100.
+- **The pipeline's own CV is not a usable gate for BBS-trained fits.** `fit_species` scores presence against background drawn in proportion to route density, so for widespread species presence and background overlap and AUC is about 0.5 to 0.6 (W3 background CV in the
+  `fit_cells` columns) even though the same species are discriminated from true absences with AUC 0.93. The blocked variant therefore uses true route absences for the gate. Neither measure is meaningful for species present at more than about 90 percent of routes (prevalence limits TSS).
+- Limitations to carry into any reading of this: route start cell stands for a 40 km route; 1,062 comparable routes; hindcast climate is a window mean, not year by year; model predictors are W3's default priority list; introduced species were excluded; no sensitivity run at 0.5 degree blocks yet (`--block 12`).
 
 ## 4. Test 2: Forest Inventory and Analysis trees (change test with a lag caveat)
 
@@ -185,6 +217,6 @@ Report generator: `hindcast.report(...)` and `observed_table(...)` write markdow
 
 ## 8. Waiting on others (nothing blocks the data side)
 
-- W1 (`docs/pilot/W1-climate.md`): hindcast tiles `pred_hind_1966-1985_<tile>.npz` and `pred_hind_2005-2024_<tile>.npz`. On the release at 18:25 UTC: r0c0 and r1c2 only; BBS needs r0c0, r0c1, r1c0, r1c1. **Waiting for the remaining tiles** (W1 TerraClimate tiles job queued).
+- W1 (`docs/pilot/W1-climate.md`): hindcast tiles `pred_hind_1966-1985_<tile>.npz` and `pred_hind_2005-2024_<tile>.npz`. North American tiles r0c0, r0c1, r1c0, r1c1 were on the release by 18:30 UTC and were used for the BBS hindcast. **Done for NA; not needed for other tests.**
 - W2 (`docs/pilot/W2-occurrences.md`): thinned occurrences, native-range masks, time-split product for the two European species. **Waiting.**
 - W3 pipeline landed (`pipeline.fit_species`, `FitConfig.window`, `inputs.W1Source`). `hindcast_run.py` fits with it on window-1 climate and BBS window-1 route presences (target-group density = route density), scores both windows at the route cells and runs `hindcast.run_test`. **[V: unit test on the synthetic climate, `tests/test_species_hindcast_run.py`]**
