@@ -76,7 +76,9 @@ async def main():
             lit = sum(n for n, (r_, g_, b_) in (im.getcolors(maxcolors=1 << 20) or []) if max(r_, g_, b_) - min(r_, g_, b_) > 60)
             if lit < 300: fails.append(f"{name}: map canvas looks empty ({lit} coloured px)")
             ov = await pg.evaluate("[document.documentElement.scrollWidth, innerWidth, document.getElementById('panel').scrollWidth, document.getElementById('panel').clientWidth]")
-            if ov[0] > ov[1] or ov[2] > ov[3] + 1: fails.append(f"{name}: horizontal overflow {ov}")
+            if ov[0] > ov[1] or ov[2] > ov[3] + 1:
+                wide = await pg.evaluate("[...document.querySelectorAll('#panel *')].filter(e=>e.getBoundingClientRect().right>document.getElementById('panel').getBoundingClientRect().right+0.5).slice(0,4).map(e=>e.tagName+'#'+e.id+'.'+e.className+' '+Math.round(e.getBoundingClientRect().right))")
+                fails.append(f"{name}: horizontal overflow {ov} {wide}")
             unnamed = await pg.evaluate("""[...document.querySelectorAll('button,input,select')].filter(e => !(e.getAttribute('aria-label') || e.textContent.trim() || (e.labels && e.labels.length) || e.title)).map(e => e.outerHTML.slice(0, 80))""")
             if unnamed: fails.append(f"{name}: controls without a name {unnamed}")
             head = await pg.inner_text("#sp-head")
@@ -100,12 +102,14 @@ async def main():
             v1 = await fig()
             if v1[0] != "chg" or v1[1] or not v1[2]: fails.append(f"{name}: toggle to Change failed {v1}")
             # keyboard search: Tab order reaches buttons; type, arrow, Enter selects
+            await pg.click("#pickdet > summary") if not await pg.evaluate("document.getElementById('pickdet').open") else None
             await pg.fill("#search", "robin"); await pg.keyboard.press("ArrowDown"); await pg.keyboard.press("Enter")
             await settle(pg, 3)
             head = await pg.inner_text("#sp-head")
             if "American robin" not in head: fails.append(f"{name}: search did not select the robin")
             for need in ("Tier A", "Range shifts: fail", "breeding-season"):
                 if need.lower() not in head.lower(): fails.append(f"{name}: robin header lacks '{need}'")
+            if not await pg.evaluate("document.getElementById('pickdet').open"): await pg.click("#pickdet > summary")
             await pg.fill("#search", ""); await pg.fill("#search", "kookab"); await pg.keyboard.press("ArrowDown"); await pg.keyboard.press("Enter")
             await settle(pg, 4)
             # kookaburra SSP5-8.5 2081-2100 has withheld numbers
@@ -133,6 +137,7 @@ async def main():
             # top-level toggle + taxonomy drill-down
             if await pg.locator("nav.modes a[aria-current=page]").inner_text() != "Organisms": fails.append(f"{name}: modes toggle missing or wrong current")
             if await pg.locator("nav.modes a[href='./']").count() != 1: fails.append(f"{name}: no link back to climate twins")
+            if not await pg.evaluate("document.getElementById('pickdet').open"): await pg.click("#pickdet > summary")
             n0 = await pg.locator("#results li").count()
             chip = pg.locator("#browse .chips button").first
             if await chip.count():
