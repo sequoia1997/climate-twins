@@ -43,6 +43,24 @@ def _h(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()[:10]
 
 
+# Publication rule ("defensible"): a map is published only if it was checked against an independent survey (Tier A), or it passes the range check
+# and the cross-validated skill is adequate: AUC >= 0.70 with Boyce >= 0.50, or, for very wide-ranging organisms whose records resemble much of the
+# background (which pushes AUC down whatever the model does), AUC >= 0.60 with Boyce >= 0.80. Anything else is left out and the reason is logged.
+def defensible(S: dict) -> tuple[bool, str]:
+    if S.get("tier") == "A":
+        return True, ""
+    sk = S.get("skill") or {}
+    auc, boyce = sk.get("cv_auc"), sk.get("cv_boyce")
+    rc = (S.get("gates", {}).get("range_check") or {}).get("status")
+    if rc not in ("pass", "exempt_crop"):
+        return False, f"range check {rc}"
+    if auc is None or boyce is None:
+        return False, "no cross-validated skill"
+    if (auc >= 0.70 and boyce >= 0.50) or (auc >= 0.60 and boyce >= 0.80):
+        return True, ""
+    return False, f"skill below the publication rule (AUC {auc:.2f}, Boyce {boyce:.2f})"
+
+
 def pick_runs(src: Path) -> tuple[dict, list]:
     """{public id: (summary path, zip path, season)} and a list of (name, reason) for what was left out."""
     runs: dict[str, dict] = {}
@@ -62,6 +80,10 @@ def pick_runs(src: Path) -> tuple[dict, list]:
             S = json.load(open(f))
             if S.get("tier") not in ("A", "B") or not S.get("published", True) or not z.exists():
                 skipped.append((f"{sid} ({k})", f"tier {S.get('tier')}, published {S.get('published')}, cts zip {'present' if z.exists() else 'missing'}"))
+                continue
+            ok, why = defensible(S)
+            if not ok:
+                skipped.append((f"{sid} ({k})", why))
                 continue
             chosen[sid] = (f, z, k)
             break
