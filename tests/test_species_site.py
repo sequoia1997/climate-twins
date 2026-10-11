@@ -61,3 +61,13 @@ def test_crop_wording_is_kept_verbatim():
     S = json.load(open(FIX / "w3_vitis_vinifera_summary.json"))
     info = SS.info_json(S, "all", ["ssp245"], [-10, 30, 40, 60], {})
     assert info["kind"] == "crop" and info["wording"].startswith("climate like where grapevines are recorded") and "not verified as cultivated" in info["wording"]
+
+
+def test_s1_asset_names_and_prefix_stripping(tmp_path):
+    import shutil
+    for f in FIX.glob("w3_acer_saccharum_*"):
+        shutil.copy(f, tmp_path / f.name.replace("w3_", "s1_w3_"))
+    for f in FIX.glob("w3_turdus_migratorius_breeding_*"):
+        shutil.copy(f, tmp_path / f.name.replace("w3_", "w3_"))
+    chosen, _ = SS.pick_runs(tmp_path)
+    assert set(chosen) == {"acer_saccharum", "turdus_migratorius"}

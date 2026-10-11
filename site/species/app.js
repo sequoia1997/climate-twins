@@ -226,12 +226,20 @@ function shiftsText(i) {
   if (i.range_shifts === "pass") return "Models like this one reproduced the range changes observed in our test.";
   return "There was not enough survey data on real range changes for this species, so this check has not been made.";
 }
+function flagText(f) {                          // plain words for the engine's soft flags
+  let m;
+  if ((m = /lower discrimination: CV AUC ([0-9.]+)/.exec(f))) return `the model separates recorded places from background places only weakly in cross-validation (AUC ${m[1]}, below 0.7)`;
+  if ((m = /check model disagrees on area change by up to ([0-9.]+) points/.exec(f))) return `a second, simpler model disagrees on the area change by up to ${Math.round(m[1])} percentage points, so the size of the change is uncertain`;
+  if ((m = /^([0-9.]+)% of the predicted area is more than ([0-9]+) km from any record/.exec(f))) return `${Math.round(m[1])}% of the suitable area lies more than ${m[2]} km from any record`;
+  return f;
+}
 function head() {
   const i = I();
   $("sp-head").innerHTML = `<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
   <p class="badges">${badge(i)}${i.confidence === "low" ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Low confidence</span>' : ""}
     <span class="badge ${i.range_shifts === "pass" ? "q-good" : i.range_shifts === "fail" ? "q-low" : "q-partial"}"><span aria-hidden="true">${i.range_shifts === "pass" ? "✓" : i.range_shifts === "fail" ? "✗" : "?"}</span> Range shifts: ${esc(i.range_shifts)}</span></p>
-  <p class="small tierline">${esc(tierText(i))}${i.confidence === "low" && i.soft_flags.length ? " Low confidence: " + esc(i.soft_flags.join("; ")) + "." : ""}</p>
+  <p class="small tierline">${esc(tierText(i))}${i.confidence === "low" && i.soft_flags.length ? " Low confidence because " + esc(i.soft_flags.map(flagText).join("; and ")) + "." : ""}</p>
+  ${isWithheld() ? `<p class="note withheld"><strong>Numbers withheld for ${esc(PERLAB())} under ${esc(sspLabel())}:</strong> ${esc(i.withheld[S.ssp + "|" + S.per])}.</p>` : ""}
   <p class="disc">${FLAG}</p><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
   $("sh-title").textContent = i.name;
   const dl = i.dois.map(d => `<a href="${esc(d)}" rel="noopener">${esc(d.replace("https://doi.org/", "doi:"))}</a>`).join(", ") || "none recorded";

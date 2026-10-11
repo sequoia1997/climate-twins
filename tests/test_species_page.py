@@ -112,6 +112,7 @@ async def main():
             t = await pg.inner_text("#summary")
             if "withheld" not in t.lower(): fails.append(f"{name}: withheld numbers not shown for the kookaburra: {t[:120]!r}")
             elif "novel climate" not in t.lower(): fails.append(f"{name}: withheld reason missing")
+            if "withheld" not in (await pg.inner_text("#sp-head")).lower(): fails.append(f"{name}: withheld banner missing from the header")
             if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-kookaburra-withheld.png"))
             # place list
             await pg.evaluate("document.getElementById('place-det').open = true")

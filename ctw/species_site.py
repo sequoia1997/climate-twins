@@ -47,7 +47,7 @@ def pick_runs(src: Path) -> tuple[dict, list]:
     """{public id: (summary path, zip path, season)} and a list of (name, reason) for what was left out."""
     runs: dict[str, dict] = {}
     for f in sorted(src.glob("*_summary.json")):
-        m = re.match(r"^(?:[a-z0-9]+)_(.+?)(_breeding)?_summary\.json$", f.name)
+        m = re.match(r"^(?:(?:s\d+|w\d+)_)+(.+?)(_breeding)?_summary\.json$", f.name)
         if not m:
             continue
         z = f.with_name(f.name.replace("_summary.json", "_cts.zip"))
