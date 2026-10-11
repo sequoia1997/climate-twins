@@ -4,56 +4,56 @@ Periods 1970-1999 and 2000-2020, 0.5 degree blocks, well sampled = target group 
 
 ## GBIF split, well-sampled blocks
 
-**Group verdict: INSUFFICIENT DATA** (2 eligible species, minimum 40). Not a test: too few species. Results are illustrative and do not count towards a pass. Bearing within 90 degrees (any direction, reported not scored): 0/0.
+**Group verdict: INSUFFICIENT DATA** (2 eligible species, minimum 40). Not a test: too few species. Results are illustrative and do not count towards a pass. Bearing within 90 degrees (any direction, reported not scored): 2/2.
 
 | group check | value | needed | result |
 |---|---|---|---|
-| direction of shift | 0/0 agree | >= 70% and p < 0.05 | not met |
-| median shift ratio (model / observed) | n/a | 0.5 to 2.0 | not met |
-| shift error below no-change error | n/a | model error < no-change error (median) | not met |
-| area change sign and per-cell correlation | n/a | sign majority and r >= 0.3 | not met |
+| direction of shift | 1/1 agree (p=0.500) | >= 70% and p < 0.05 | not met |
+| median shift ratio (model / observed) | 0.70 | 0.5 to 2.0 | ok |
+| shift error below no-change error | median 245 km vs 234 km | model error < no-change error (median) | not met |
+| area change sign and per-cell correlation | sign 1/2, median r 0.08 | sign majority and r >= 0.3 | not met |
 | beats no-change null in TSS (window 2) | 0/2 | >= 60% of species | not met |
 
 | species | CV AUC / TSS (w1) | prevalence w1 / w2 | AUC w2 | TSS w2 | Boyce w2 | TSS no-change (model, w1 climate) | TSS persistence | obs shift km / bearing | model shift km / bearing | ratio | bearing err | direction | edge err hi / lo km | area change obs / model | cell corr |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| European robin | 0.88 / 0.61 (W3 bg: n/a / n/a) | 0.00 / 0.00 | n/a | n/a | n/a | n/a | n/a | n/a / n/a | n/a / n/a | n/a | n/a | not detectable | n/a / n/a | n/a / n/a | n/a |
-| English oak | 0.93 / 0.72 (W3 bg: n/a / n/a) | 0.00 / 0.00 | n/a | n/a | n/a | n/a | n/a | n/a / n/a | n/a / n/a | n/a | n/a | not detectable | n/a / n/a | n/a / n/a | n/a |
+| European robin | 0.65 / 0.20 (W3 bg: n/a / n/a) | 0.65 / 0.84 | 0.73 | 0.31 | 0.98 | 0.34 | 0.64 | 203 / 90 | 53 / 31 | 0.26 | 59 | not detectable | -56 / 111 | 0.30 / 0.02 | 0.08 |
+| English oak | 0.62 / 0.19 (W3 bg: n/a / n/a) | 0.26 / 0.42 | 0.82 | 0.46 | 0.93 | 0.47 | 0.53 | 265 / 64 | 301 / 358 | 1.14 | 66 | agree | 167 / 167 | 0.64 / -0.07 | 0.09 |
 
 | species | tier | Tier 1 earned | reasons if not |
 |---|---|---|---|
-| European robin | Tier 2 | no | group test has insufficient data; does not beat no-change null |
-| English oak | Tier 2 | no | group test has insufficient data; does not beat no-change null |
+| European robin | Tier 3 | no | group test has insufficient data; below skill gate; does not beat no-change null |
+| English oak | Tier 3 | no | group test has insufficient data; below skill gate; does not beat no-change null |
 
 ## GBIF split, all blocks with target-group records in both periods
 
-**Group verdict: INSUFFICIENT DATA** (2 eligible species, minimum 40). Not a test: too few species. Results are illustrative and do not count towards a pass. Bearing within 90 degrees (any direction, reported not scored): 0/0.
+**Group verdict: INSUFFICIENT DATA** (2 eligible species, minimum 40). Not a test: too few species. Results are illustrative and do not count towards a pass. Bearing within 90 degrees (any direction, reported not scored): 2/2.
 
 | group check | value | needed | result |
 |---|---|---|---|
-| direction of shift | 0/0 agree | >= 70% and p < 0.05 | not met |
-| median shift ratio (model / observed) | n/a | 0.5 to 2.0 | not met |
-| shift error below no-change error | n/a | model error < no-change error (median) | not met |
-| area change sign and per-cell correlation | n/a | sign majority and r >= 0.3 | not met |
+| direction of shift | 1/1 agree (p=0.500) | >= 70% and p < 0.05 | not met |
+| median shift ratio (model / observed) | 0.59 | 0.5 to 2.0 | ok |
+| shift error below no-change error | median 368 km vs 352 km | model error < no-change error (median) | not met |
+| area change sign and per-cell correlation | sign 1/2, median r 0.05 | sign majority and r >= 0.3 | not met |
 | beats no-change null in TSS (window 2) | 0/2 | >= 60% of species | not met |
 
 | species | CV AUC / TSS (w1) | prevalence w1 / w2 | AUC w2 | TSS w2 | Boyce w2 | TSS no-change (model, w1 climate) | TSS persistence | obs shift km / bearing | model shift km / bearing | ratio | bearing err | direction | edge err hi / lo km | area change obs / model | cell corr |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| European robin | 0.88 / 0.61 (W3 bg: n/a / n/a) | 0.00 / 0.00 | n/a | n/a | n/a | n/a | n/a | n/a / n/a | n/a / n/a | n/a | n/a | not detectable | n/a / n/a | n/a / n/a | n/a |
-| English oak | 0.93 / 0.72 (W3 bg: n/a / n/a) | 0.00 / 0.00 | n/a | n/a | n/a | n/a | n/a | n/a / n/a | n/a / n/a | n/a | n/a | not detectable | n/a / n/a | n/a / n/a | n/a |
+| European robin | 0.65 / 0.20 (W3 bg: n/a / n/a) | 0.46 / 0.71 | 0.80 | 0.37 | 0.99 | 0.38 | 0.58 | 377 / 94 | 62 / 35 | 0.17 | 60 | not detectable | 0 / 56 | 0.53 / 0.02 | 0.06 |
+| English oak | 0.62 / 0.19 (W3 bg: n/a / n/a) | 0.18 / 0.33 | 0.81 | 0.42 | 0.93 | 0.44 | 0.48 | 326 / 68 | 329 / 356 | 1.01 | 72 | agree | 111 / 111 | 0.80 / -0.10 | 0.05 |
 
 | species | tier | Tier 1 earned | reasons if not |
 |---|---|---|---|
-| European robin | Tier 2 | no | group test has insufficient data; does not beat no-change null |
-| English oak | Tier 2 | no | group test has insufficient data; does not beat no-change null |
+| European robin | Tier 3 | no | group test has insufficient data; below skill gate; does not beat no-change null |
+| English oak | Tier 3 | no | group test has insufficient data; below skill gate; does not beat no-change null |
 
 ## Effort-bias gap (well-sampled versus all blocks)
 
 | species | presence cells p1 / p2 | blocks well / all | shift km well / all | northward km well / all |
 |---|---|---|---|---|
-| European robin | 24849 / 144096 | 0 / 0 | nan / nan | nan / nan |
-| English oak | 26374 / 56796 | 0 / 0 | nan / nan | nan / nan |
+| European robin | 24849 / 144096 | 3515 / 5006 | 203 / 377 | -0 / -28 |
+| English oak | 26374 / 56796 | 3993 / 5720 | 265 / 326 | 118 / 122 |
 
 ## Diagnostics
 
-- European robin: tg layer sums [0, 0, 0], nonzero cells [0, 0, 0], tg blocks p1>0 0 p2>0 0, accessible 15715, usable blocks 0, score cells 0, finite score cells 0, cellset sizes well/all computed next
-- English oak: tg layer sums [0, 0, 0], nonzero cells [0, 0, 0], tg blocks p1>0 0 p2>0 0, accessible 14122, usable blocks 0, score cells 0, finite score cells 0, cellset sizes well/all computed next
+- European robin: tg layer sums [1149509715, 82503247, 1067006468], nonzero cells [1996661, 601633, 1798550], tg blocks p1>0 44856 p2>0 89581, accessible 15715, usable blocks 6872, score cells 5006, finite score cells 5006, cellset sizes well/all computed next
+- English oak: tg layer sums [226054284, 73909498, 152144786], nonzero cells [1301327, 779458, 949372], tg blocks p1>0 42835 p2>0 40552, accessible 14122, usable blocks 9624, score cells 5720, finite score cells 5720, cellset sizes well/all computed next
