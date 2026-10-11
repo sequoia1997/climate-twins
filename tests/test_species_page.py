@@ -82,7 +82,7 @@ async def main():
             unnamed = await pg.evaluate("""[...document.querySelectorAll('button,input,select')].filter(e => !(e.getAttribute('aria-label') || e.textContent.trim() || (e.labels && e.labels.length) || e.title)).map(e => e.outerHTML.slice(0, 80))""")
             if unnamed: fails.append(f"{name}: controls without a name {unnamed}")
             head = await pg.inner_text("#sp-head")
-            for need in ("Tier B", "Low confidence", "not a forecast", "Range shifts: untested", "Sugar maple"):
+            for need in ("Today's map", "Future map", "not a forecast", "Sugar maple"):
                 if need.lower() not in head.lower(): fails.append(f"{name}: sugar maple header lacks '{need}'")
             if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-maple-change.png"))
             # scenario, period, dispersal, overlays
@@ -107,7 +107,7 @@ async def main():
             await settle(pg, 3)
             head = await pg.inner_text("#sp-head")
             if "American robin" not in head: fails.append(f"{name}: search did not select the robin")
-            for need in ("Tier A", "Range shifts: fail", "breeding-season"):
+            for need in ("Today's map: checked", "Future map: direction unreliable", "breeding-season"):
                 if need.lower() not in head.lower(): fails.append(f"{name}: robin header lacks '{need}'")
             if not await pg.evaluate("document.getElementById('pickdet').open"): await pg.click("#pickdet > summary")
             await pg.fill("#search", ""); await pg.fill("#search", "kookab"); await pg.keyboard.press("ArrowDown"); await pg.keyboard.press("Enter")
@@ -147,7 +147,7 @@ async def main():
             # phone: tier, confidence and withheld status are visible in the half-open sheet without scrolling
             if w < 500:
                 r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")
-                if not (r[0] > 0 and r[1] <= r[2]) or "Tier" not in r[3] or "withheld" not in r[3].lower(): fails.append(f"{name}: sheet badges not visible/complete {r}")
+                if not (r[0] > 0 and r[1] <= r[2]) or "Today" not in r[3] or "withheld" not in r[3].lower(): fails.append(f"{name}: sheet badges not visible/complete {r}")
             # slow file: busy message after ~2 s; centre not meaningful when the file says so (stubbed info)
             pg2 = await ctx.new_page(); e2 = []
             pg2.on("pageerror", lambda e: e2.append(str(e)))

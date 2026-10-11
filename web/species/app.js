@@ -244,23 +244,34 @@ function renderResults() {
   renderBrowse(scope);
   const prev = S.sp;
   list.forEach(s => { const li = document.createElement("li"); li.setAttribute("role", "option"); li.id = "opt-" + s.id; li.tabIndex = -1; li.dataset.id = s.id; li.setAttribute("aria-selected", String(s.id === S.sp));
-    li.innerHTML = `<span class="nm">${esc(s.name)}</span><span class="sci">${esc(s.sci)}</span><span class="tg">${esc(s.family || gname(s.group))}<br>Tier ${esc(s.tier)}</span>`; li.addEventListener("click", () => { pick(s.id); const pd = $("pickdet"); if (pd && s.id !== prev) pd.open = false; }); ul.appendChild(li); });
+    li.innerHTML = `<span class="nm">${esc(s.name)}</span><span class="sci">${esc(s.sci)}</span><span class="tg">${esc(s.family || gname(s.group))}</span>`; li.addEventListener("click", () => { pick(s.id); const pd = $("pickdet"); if (pd && s.id !== prev) pd.open = false; }); ul.appendChild(li); });
   if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No organisms match.</li>';
   const sel = ul.querySelector('[aria-selected="true"]'); if (sel) ul.scrollTop = Math.max(0, sel.offsetTop - ul.offsetTop - 40);     // the selected organism is in view in the list
 }
-function badge(i) {
-  const a = i.tier === "A";
-  return `<span class="badge ${a ? "q-good" : "q-partial"}"><span aria-hidden="true">${a ? "●●" : "●○"}</span> Tier ${i.tier}</span>`;
+const isFut = f => /check model disagrees/.test(f);       // the engine's soft flags: this one is about the size of the future change, the others about today's map
+function todayCheck(i) {
+  const v = i.validation, own = i.soft_flags.filter(f => !isFut(f));
+  if (i.tier === "A") return { cls: "q-good", ic: "\u25CF", short: "Today's map: checked", long: tierText(i) };
+  if (i.confidence === "low" && own.length) return { cls: "q-partial", ic: "\u25D0", short: "Today's map: looser fit", long: `Fits the records only loosely: ${own.map(flagText).join("; and ")}. No independent survey was available to check it against.` };
+  return { cls: "q-ok", ic: "\u25CB", short: "Today's map: fits the records", long: `Fits the recorded locations well in cross-validation${i.skill.auc != null ? ` (AUC ${i.skill.auc.toFixed(2)})` : ""}. No independent survey was available to check it against.` };
 }
+function futureCheck(i) {
+  const fl = i.soft_flags.filter(isFut).map(flagText), extra = fl.length ? ` Also, ${fl.join("; and ")}.` : "";
+  if (isWithheld()) return { cls: "q-partial", ic: "\u25D0", short: "Future map: numbers withheld", long: shiftsText(i) + extra };
+  if (i.range_shifts === "pass") return { cls: "q-good", ic: "\u25CF", short: "Future map: change tested \u2713", long: shiftsText(i) + extra };
+  if (i.range_shifts === "fail") return { cls: "q-partial", ic: "\u25D0", short: "Future map: direction unreliable", long: shiftsText(i) + extra };
+  return { cls: "q-ok", ic: "\u25CB", short: "Future map: change untested", long: shiftsText(i) + extra };
+}
+const chip = c => `<span class="badge ${c.cls}"><span aria-hidden="true">${c.ic}</span> ${esc(c.short)}</span>`;
 function tierText(i) {
   const v = i.validation;
-  if (i.tier === "A") return `Present-day skill checked against an independent survey (${KINDS[v && v.kind] || "an independent survey"}${v && v.auc != null ? `; AUC ${v.auc.toFixed(2)}, TSS ${v.tss == null ? "n/a" : v.tss.toFixed(2)}${v.n_presence ? `, ${v.n_presence} presence and ${v.n_absence} absence sites` : ""}` : ""}).`;
+  if (i.tier === "A") return `Checked against an independent survey (${KINDS[v && v.kind] || "an independent survey"}${v && v.auc != null ? `; AUC ${v.auc.toFixed(2)}, TSS ${v.tss == null ? "n/a" : v.tss.toFixed(2)}${v.n_presence ? `, ${v.n_presence} presence and ${v.n_absence} absence sites` : ""}` : ""}).`;
   return "Skill checked by spatial cross-validation only; no independent survey was available to check it against.";
 }
 function shiftsText(i) {
-  if (i.range_shifts === "fail") return "We tested whether models like this one, fitted to earlier decades, could predict where these organisms actually moved by recent decades. For birds they could not do so reliably. So the future map shows where the climate may suit the organism, not where it will be found.";
-  if (i.range_shifts === "pass") return "Models like this one reproduced the range changes observed in our test.";
-  return "There was not enough survey data on real range changes for this organism, so this check has not been made.";
+  if (i.range_shifts === "fail") return "We tested whether models like this one, fitted to earlier decades, could predict where these organisms actually moved by recent decades, and they could not do so reliably. So read the future map as where the climate may suit the organism, not where it will be found.";
+  if (i.range_shifts === "pass") return "Models like this one reproduced the range changes observed in our test, so the direction of change shown here is better supported.";
+  return "We could not test this against real range changes (not enough survey data), so read the future map as where the climate may suit the organism, not where it will be found.";
 }
 function flagText(f) {                          // plain words for the engine's soft flags
   let m;
@@ -272,17 +283,16 @@ function flagText(f) {                          // plain words for the engine's 
 function head() {
   const i = I();
   const wh = isWithheld();
-  const bd = `${badge(i)}${i.confidence === "low" ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Low confidence</span>' : ""}${wh ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Numbers withheld</span>' : ""}
-    <span class="badge ${i.range_shifts === "pass" ? "q-good" : i.range_shifts === "fail" ? "q-low" : "q-partial"}"><span aria-hidden="true">${i.range_shifts === "pass" ? "\u2713" : i.range_shifts === "fail" ? "\u2717" : "?"}</span> Range shifts: ${esc(i.range_shifts)}</span>`;
+  const T = todayCheck(i), F = futureCheck(i), bd = chip(T) + " " + chip(F);
   $("sh-badges").innerHTML = bd;                                              // always visible in the phone sheet header
   $("sp-head").innerHTML = `<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
   <p class="badges">${bd}</p>
-  <p class="small tierline">${esc(tierText(i))}${i.confidence === "low" && i.soft_flags.length ? " Low confidence because " + esc(i.soft_flags.map(flagText).join("; and ")) + "." : ""}</p>
+  <dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd></dl>
   ${isWithheld() ? `<p class="note withheld"><strong>Numbers withheld for ${esc(PERLAB())} under ${esc(sspLabel())}:</strong> ${esc(i.withheld[S.ssp + "|" + S.per])}.</p>` : ""}
   <p class="disc">${FLAG}</p><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
   $("sh-title").textContent = i.name;
   const dl = i.dois.map(d => `<a href="${esc(d)}" rel="noopener">${esc(d.replace("https://doi.org/", "doi:"))}</a>`).join(", ") || "none recorded";
-  $("about").innerHTML = `<dl class="facts"><dt>Tier</dt><dd>${i.tier}</dd><dt>Confidence</dt><dd>${esc(i.confidence)}</dd><dt>Cross-validation</dt><dd>${esc(CVK[i.cv_kind] || i.cv_kind || "n/a")}</dd>
+  $("about").innerHTML = `<dl class="facts"><dt>Internal grade</dt><dd>Tier ${i.tier}, ${esc(i.confidence)} confidence</dd><dt>Cross-validation</dt><dd>${esc(CVK[i.cv_kind] || i.cv_kind || "n/a")}</dd>
     <dt>Cross-validation AUC</dt><dd>${i.skill.auc == null ? "n/a" : i.skill.auc.toFixed(2)}</dd><dt>Records (grid cells)</dt><dd>${i.records.cells == null ? "n/a" : i.records.cells.toLocaleString("en")}</dd>
     <dt>Climate variables used</dt><dd>${esc(i.predictors.join(", "))}</dd><dt>Climate models</dt><dd>${i.n_models}</dd><dt>Range-shift test</dt><dd>${esc(i.range_shifts)}</dd></dl>
     <p class="small">${esc(shiftsText(i))}</p>
