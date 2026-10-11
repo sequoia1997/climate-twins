@@ -154,7 +154,7 @@ def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) ->
     rs = S.get("range_shift_test") or {}
     gr = S["gates"]
     return {
-        "id": sp["id"].replace("_breeding", ""), "name": sp.get("common_name") or sp["scientific_name"], "sci": sp["scientific_name"], "group": sp["group"],
+        "id": sp["id"].replace("_breeding", ""), "name": display_name(sp.get("common_name") or sp["scientific_name"]), "sci": sp["scientific_name"], "group": sp["group"],
         "kind": S.get("species_kind", sp.get("kind", "wild")), "season": season if season == "breeding" else None,
         "tier": S["tier"], "confidence": S["confidence"], "soft_flags": S.get("soft_flags", []), "wording": S["wording"],
         "range_shifts": S.get("range_shifts_tested", "untested"), "range_shift_checks": rs.get("group_checks", []),
@@ -166,6 +166,20 @@ def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) ->
         "novel_limit": gr.get("novelty", {}).get("threshold", 0.15), "area_now_km2": S["area_now_km2"], "bbox": bbox, "ssps": scen_keys, "withheld": withheld, "by": by,
         "code": S.get("provenance", {}).get("code"), "made": S.get("provenance", {}).get("made"),
     }
+
+
+_PROPER = ("African", "American", "Asian", "Asiatic", "Australian", "Brazilian", "Canadian", "Chinese", "Eurasian", "European", "Indian",
+           "Japanese", "Mediterranean", "Mexican", "North", "South", "Siberian", "Pacific", "Atlantic", "Himalayan", "Amazonian", "Arctic")
+
+
+def display_name(name: str) -> str:
+    """Common names come from GBIF in mixed case ('apple', 'sugar maple'): show them in sentence case, keeping place adjectives capitalised."""
+    n = " ".join((name or "").split())
+    if not n:
+        return n
+    n = n[0].upper() + n[1:]
+    return " ".join(w[0].upper() + w[1:] if w.lower() in {p.lower() for p in _PROPER} else w for w in n.split(" "))
+
 
 
 def build(src: Path, out: Path, log=print) -> dict:
