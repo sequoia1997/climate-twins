@@ -252,6 +252,8 @@ const isFut = f => /check model disagrees/.test(f);       // the engine's soft f
 function todayCheck(i) {
   const v = i.validation, own = i.soft_flags.filter(f => !isFut(f));
   if (i.tier === "A") return { cls: "q-good", ic: "\u25CF", short: "Today's map: checked", long: tierText(i) };
+  const bo = i.skill.boyce, wide = own.length && own.every(f => /lower discrimination/.test(f)) && bo != null && bo >= 0.8;
+  if (wide) return { cls: "q-ok", ic: "\u25CB", short: "Today's map: fits the records", long: `Fits the recorded locations well (Boyce index ${bo.toFixed(2)}). This is a wide-ranging organism: its records resemble much of the background, so the separation score is modest (AUC ${i.skill.auc.toFixed(2)}) however good the model. No independent survey was available to check it against.` };
   if (i.confidence === "low" && own.length) return { cls: "q-partial", ic: "\u25D0", short: "Today's map: looser fit", long: `Fits the records only loosely: ${own.map(flagText).join("; and ")}. No independent survey was available to check it against.` };
   return { cls: "q-ok", ic: "\u25CB", short: "Today's map: fits the records", long: `Fits the recorded locations well in cross-validation${i.skill.auc != null ? ` (AUC ${i.skill.auc.toFixed(2)})` : ""}. No independent survey was available to check it against.` };
 }

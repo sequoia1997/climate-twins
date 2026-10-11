@@ -19,9 +19,10 @@ def make_site(dst: Path):
     species_site.build(FIX, dst / "species" / "data", log=lambda *a: None)
     (dst / "species" / "land.cts").write_bytes((ROOT / "web" / "species" / "land.cts").read_bytes())
     (dst / "species" / "app.js").write_text((ROOT / "web" / "species" / "app.js").read_text())
+    R2 = "https://species.climatetwins.org/"
     for n in ("species.html", "species-methods.html"):
         if (ROOT / "web" / n).exists():
-            (dst / n).write_text((ROOT / "web" / n).read_text().replace("__SITE_URL__", ""))
+            (dst / n).write_text((ROOT / "web" / n).read_text().replace("__SITE_URL__", "").replace(f'content="{R2}"', 'content="species/data/"'))
 
 
 def serve(d):

@@ -105,3 +105,15 @@ def test_taxonomy_fields_in_the_index(built):
     t = taxonomy_of("Acer saccharum")
     assert t["kingdom"] == "Plantae" and t["family"] == "Sapindaceae" and t["order"] == "Sapindales"
     assert taxonomy_of("Not a species") == {"kingdom": "", "cls": "", "order": "", "family": ""}
+
+
+def test_publication_rule():
+    from ctw.species_site import defensible
+    mk = lambda t, auc, bo, rc="pass": {"tier": t, "skill": {"cv_auc": auc, "cv_boyce": bo}, "gates": {"range_check": {"status": rc}}}
+    assert defensible(mk("A", 0.5, 0.1, "fail"))[0]                  # independent survey check always counts
+    assert defensible(mk("B", 0.75, 0.6))[0]
+    assert defensible(mk("B", 0.64, 0.91))[0]                         # wide-ranging organism rule
+    assert defensible(mk("B", 0.64, 0.70)) == (False, "skill below the publication rule (AUC 0.64, Boyce 0.70)")
+    assert not defensible(mk("B", 0.80, 0.9, "fail"))[0]
+    assert defensible(mk("B", 0.8, 0.9, "exempt_crop"))[0]
+    assert not defensible(mk("B", 0.58, 0.95))[0]
