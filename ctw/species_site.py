@@ -192,7 +192,7 @@ def build(src: Path, out: Path, log=print) -> dict:
         places[sid] = _place_codes(cts_mod, base, scen, info["withheld"])
         total += sum(v[1] for v in files.values()) + len(ib)
         index.append({"id": sid, "name": info["name"], "sci": info["sci"], "group": info["group"], "kind": info["kind"], "tier": info["tier"],
-                      "confidence": info["confidence"], "range_shifts": info["range_shifts"], "season": info["season"], "bbox": bbox,
+                      "confidence": info["confidence"], "dois": info["dois"], "range_shifts": info["range_shifts"], "season": info["season"], "bbox": bbox,
                       "info": [f"{sid}/{ifn}", len(ib)], "files": files})
         log(f"{sid:28s} {season:8s} tier {info['tier']} {info['confidence']:8s} {sum(v[1] for v in files.values()) / 1e6:5.2f} MB  bbox {bbox}")
     index.sort(key=lambda r: (GROUP_ORDER.index(r["group"]) if r["group"] in GROUP_ORDER else 99, r["name"]))

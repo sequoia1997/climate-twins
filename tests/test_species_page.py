@@ -126,6 +126,15 @@ async def main():
                 await pg.click("#grab"); await pg.click("#sh-tog"); await pg.wait_for_timeout(300)
                 if await pg.evaluate("document.getElementById('panel').getBoundingClientRect().height") > 120: fails.append(f"{name}: sheet did not collapse")
                 await pg.click("#sh-tog")
+            # methods page: loads, DOI table filled from the index, no overflow
+            await pg.goto(f"http://127.0.0.1:{port}/species-methods.html"); await pg.wait_for_function("document.querySelectorAll('#doirows tr').length>=3", timeout=20000)
+            ov = await pg.evaluate("[document.documentElement.scrollWidth, innerWidth]")
+            if ov[0] > ov[1]: fails.append(f"{name}: methods page overflows {ov}")
+            body = (await pg.inner_text("body")).lower()
+            for need in ("not a forecast", "range shifts: pass, fail, untested", "dispersal", "10.15468/dl.j78pf6", "terraclimate", "nex-gddp", "wcvp", "breeding bird survey", "withheld", "precipitation sensitivity"):
+                if need not in body: fails.append(f"{name}: methods page lacks '{need}'")
+            if SHOTS and name == "desktop-light": await pg.screenshot(path=str(OUT / "methods-desktop-light.png"), full_page=False)
+            await pg.goto(f"http://127.0.0.1:{port}/species.html#acer_saccharum"); await settle(pg)
             # theme toggle keeps working
             await pg.click("#themebtn"); await pg.wait_for_timeout(500)
             if errs: fails.append(f"{name}: JS errors {errs[:3]}")
