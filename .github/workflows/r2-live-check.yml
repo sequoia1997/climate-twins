@@ -26,12 +26,6 @@ jobs:
             curl -s -L -o /tmp/o -w "$u -> %{http_code} final %{url_effective} %{size_download} bytes\n" "$u"
           done
           curl -s -L https://climatetwins.org/species.html | grep -o "<title>[^<]*" | head -1
-          curl -s https://climatetwins.org/species/data/index.json | python3 -c "
-import sys,json,urllib.request
-j=json.load(sys.stdin); s=j['species'][0]; print('first species:', s.get('id') or s.get('name'))
-files=s.get('files') or {}
-print('file keys:', list(files)[:4] if isinstance(files,dict) else str(files)[:80])
-"
       - name: Secret lengths only (no values)
         run: |
           echo "access key id length: ${#AWS_ACCESS_KEY_ID}"; echo "secret key length: ${#AWS_SECRET_ACCESS_KEY}"; echo "account id length: ${#R2_ACCOUNT_ID}"; echo "bucket name set: $([ -n "$R2_BUCKET" ] && echo yes || echo no)"
