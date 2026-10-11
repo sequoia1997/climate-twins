@@ -8,38 +8,38 @@ Species fitted: 36. Tier A = static skill validated against an independent surve
 | Acer saccharum | tree | B | untested | presence_background | low | 2359 | 0.67 | 0.23 | 0.84 | 0.68 | pass | 0 | 3522 | 15.6 | 448 | lower discrimination: CV AUC 0.67 < 0.7 |
 | Adansonia digitata | tree | B | untested | presence_background | standard | 1187 | 0.73 | 0.34 | 0.83 | 0.71 | pass | 8 | 12485 | 27.3 | 233 |  |
 | Agelaius phoeniceus | bird | B | fail | presence_background | standard | 59047 | 0.71 | 0.28 | 0.94 | 0.68 | pass | 2 | 15224 | 20.2 | 235 |  |
-| Agelaius phoeniceus | bird | B | fail | presence_background | standard | 54744 | 0.71 | 0.30 | 0.93 | 0.68 | pass | 1 | 14604 | 21.4 | 213 |  |
+| Agelaius phoeniceus [breeding] | bird | B | fail | presence_background | standard | 54744 | 0.71 | 0.30 | 0.93 | 0.68 | pass | 1 | 14604 | 21.4 | 213 |  |
 | Cardinalis cardinalis | bird | A | fail | presence_background | standard | 32541 | 0.75 | 0.37 | 0.91 | 0.70 | pass | 1 | 6352 | 38.1 | 311 |  |
 | Cyanocitta cristata | bird | A | fail | presence_background | standard | 39382 | 0.75 | 0.39 | 0.93 | 0.71 | pass | 0 | 8662 | 30.0 | 416 |  |
-| Cyanocitta cristata | bird | A | fail | presence_background | standard | 34317 | 0.77 | 0.40 | 0.91 | 0.73 | pass | 0 | 8202 | 31.1 | 423 |  |
+| Cyanocitta cristata [breeding] | bird | A | fail | presence_background | standard | 34317 | 0.77 | 0.40 | 0.91 | 0.73 | pass | 0 | 8202 | 31.1 | 423 |  |
 | Dacelo novaeguineae | bird | B | untested | presence_background | low | 7655 | 0.63 | 0.16 | 0.94 | 0.66 | pass | 0 | 3948 | -35.9 | 358 | lower discrimination: CV AUC 0.63 < 0.7 |
 | Danaus chrysippus | insect_arachnid | B | untested | presence_background | low | 2070 | 0.68 | 0.28 | 0.89 | 0.67 | pass | 6 | 51147 | 6.4 | 96 | lower discrimination: CV AUC 0.68 < 0.7 |
-| Danaus chrysippus | insect_arachnid | B | untested | presence_background | low | 646 | 0.68 | 0.24 | 0.70 | 0.69 | pass | 7 | 53435 | 5.7 | 103 | lower discrimination: CV AUC 0.68 < 0.7 |
+| Danaus chrysippus [breeding] | insect_arachnid | B | untested | presence_background | low | 646 | 0.68 | 0.24 | 0.70 | 0.69 | pass | 7 | 53435 | 5.7 | 103 | lower discrimination: CV AUC 0.68 < 0.7 |
 | Danaus plexippus | insect_arachnid | B | untested | presence_background | standard | 8188 | 0.72 | 0.37 | 0.96 | 0.72 | pass | 1 | 12850 | 24.9 | 428 |  |
-| Danaus plexippus | insect_arachnid | B | untested | presence_background | standard | 3101 | 0.75 | 0.40 | 0.95 | 0.72 | pass | 2 | 13956 | 23.1 | 408 |  |
+| Danaus plexippus [breeding] | insect_arachnid | B | untested | presence_background | standard | 3101 | 0.75 | 0.40 | 0.95 | 0.72 | pass | 2 | 13956 | 23.1 | 408 |  |
 | Erithacus rubecula | bird | C | untested | presence_background | standard | 38758 | 0.63 | 0.14 | 0.81 | 0.58 | fail | 25 | 13820 | withheld | withheld | range check failed (omission 0.2585, commission 0.4354); lower discrimination: CV AUC 0.63 < 0.7 |
-| Erithacus rubecula | bird | B | untested | presence_background | low | 33268 | 0.63 | 0.17 | 0.96 | 0.60 | pass | 6 | 9811 | 11.3 | 408 | lower discrimination: CV AUC 0.63 < 0.7 |
+| Erithacus rubecula [breeding] | bird | B | untested | presence_background | low | 33268 | 0.63 | 0.17 | 0.96 | 0.60 | pass | 6 | 9811 | 11.3 | 408 | lower discrimination: CV AUC 0.63 < 0.7 |
 | Hirundo rustica | bird | B | fail | presence_background | low | 143827 | 0.60 | 0.15 | 0.76 | 0.56 | pass | 4 | 88725 | 7.3 | 378 | lower discrimination: CV AUC 0.60 < 0.7 |
-| Hirundo rustica | bird | B | fail | presence_background | low | 106514 | 0.64 | 0.21 | 0.91 | 0.62 | pass | 0 | 48251 | 6.2 | 369 | lower discrimination: CV AUC 0.64 < 0.7 |
+| Hirundo rustica [breeding] | bird | B | fail | presence_background | low | 106514 | 0.64 | 0.21 | 0.91 | 0.62 | pass | 0 | 48251 | 6.2 | 369 | lower discrimination: CV AUC 0.64 < 0.7 |
 | Ixodes scapularis | insect_arachnid | B | untested | presence_background | low | 995 | 0.70 | 0.26 | 0.70 | 0.69 | pass | 0 | 6374 | 27.6 | 340 | lower discrimination: CV AUC 0.70 < 0.7 |
 | Melospiza melodia | bird | B | fail | presence_background | standard | 53773 | 0.72 | 0.31 | 0.93 | 0.70 | pass | 0 | 13802 | 16.4 | 336 |  |
-| Melospiza melodia | bird | A | fail | presence_background | standard | 41212 | 0.78 | 0.40 | 0.93 | 0.76 | pass | 0 | 12034 | 10.3 | 428 |  |
+| Melospiza melodia [breeding] | bird | A | fail | presence_background | standard | 41212 | 0.78 | 0.40 | 0.93 | 0.76 | pass | 0 | 12034 | 10.3 | 428 |  |
 | Odocoileus virginianus | mammal | B | untested | presence_background | standard | 6359 | 0.85 | 0.55 | 0.90 | 0.82 | pass | 3 | 10331 | 31.0 | 426 |  |
 | Pinus strobus | tree | B | untested | presence_background | standard | 4059 | 0.76 | 0.37 | 0.95 | 0.75 | pass | 0 | 3152 | 31.1 | 549 |  |
 | Populus tremuloides | tree | B | untested | presence_background | standard | 5436 | 0.84 | 0.57 | 0.95 | 0.81 | pass | 0 | 11868 | 5.5 | 327 |  |
 | Quercus alba | tree | B | untested | presence_background | low | 2416 | 0.62 | 0.20 | 0.91 | 0.59 | pass | 0 | 3663 | 11.7 | 270 | lower discrimination: CV AUC 0.62 < 0.7 |
 | Quercus robur | tree | B | untested | presence_background | low | 16726 | 0.58 | 0.14 | 0.91 | 0.56 | pass | 0 | 5845 | 9.6 | 412 | lower discrimination: CV AUC 0.58 < 0.7 |
 | Sialia sialis | bird | A | fail | presence_background | standard | 31913 | 0.76 | 0.39 | 0.96 | 0.71 | pass | 0 | 7070 | 32.8 | 485 |  |
-| Sialia sialis | bird | A | fail | presence_background | standard | 27548 | 0.75 | 0.40 | 0.94 | 0.71 | pass | 0 | 6513 | 33.2 | 476 |  |
+| Sialia sialis [breeding] | bird | A | fail | presence_background | standard | 27548 | 0.75 | 0.40 | 0.94 | 0.71 | pass | 0 | 6513 | 33.2 | 476 |  |
 | Spinus tristis | bird | B | fail | presence_background | standard | 48668 | 0.70 | 0.28 | 0.92 | 0.67 | pass | 0 | 11513 | 21.1 | 373 |  |
-| Spinus tristis | bird | A | fail | presence_background | standard | 39884 | 0.74 | 0.36 | 0.88 | 0.72 | pass | 0 | 10319 | 18.4 | 459 |  |
+| Spinus tristis [breeding] | bird | A | fail | presence_background | standard | 39884 | 0.74 | 0.36 | 0.88 | 0.72 | pass | 0 | 10319 | 18.4 | 459 |  |
 | Thryothorus ludovicianus | bird | A | fail | presence_background | low | 22470 | 0.79 | 0.42 | 0.92 | 0.78 | pass | 0 | 3904 | 26.0 | 225 | transparent check model disagrees on area change by up to 29 points |
 | Turdus migratorius | bird | A | fail | presence_background | standard | 68291 | 0.73 | 0.31 | 0.62 | 0.71 | pass | 0 | 17569 | 9.7 | 228 |  |
-| Turdus migratorius | bird | A | fail | presence_background | standard | 59804 | 0.75 | 0.34 | 0.67 | 0.74 | pass | 0 | 17863 | 3.6 | 291 |  |
+| Turdus migratorius [breeding] | bird | A | fail | presence_background | standard | 59804 | 0.75 | 0.34 | 0.67 | 0.74 | pass | 0 | 17863 | 3.6 | 291 |  |
 | Vitis vinifera | crop | B | untested | presence_background | standard | 7863 | 0.81 | 0.47 | 0.96 | 0.80 | exempt_crop | 1 | 28118 | 11.1 | 683 |  |
 | Vulpes vulpes | mammal | B | untested | presence_background | low | 24369 | 0.64 | 0.16 | 0.94 | 0.60 | pass | 0 | 28513 | 13.5 | 311 | lower discrimination: CV AUC 0.64 < 0.7 |
 | Zenaida macroura | bird | B | fail | presence_background | low | 61235 | 0.69 | 0.25 | 0.88 | 0.66 | pass | 2 | 13583 | 23.7 | 320 | lower discrimination: CV AUC 0.69 < 0.7 |
-| Zenaida macroura | bird | B | fail | presence_background | low | 55478 | 0.70 | 0.28 | 0.93 | 0.67 | pass | 0 | 12144 | 24.1 | 371 | lower discrimination: CV AUC 0.70 < 0.7 |
+| Zenaida macroura [breeding] | bird | B | fail | presence_background | low | 55478 | 0.70 | 0.28 | 0.93 | 0.67 | pass | 0 | 12144 | 24.1 | 371 | lower discrimination: CV AUC 0.70 < 0.7 |
 
 Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard confidence (Tier C below 0.5), novel climate 15%, native-range commission <= 0.30 (uncalibrated; omission is reported, not gated, against a native mask), at least 80% of records inside the predicted range. Dispersal rule and gate limits are listed in each summary.json.
 
@@ -63,10 +63,10 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Agelaius phoeniceus | B | SSP2-4.5 | 2081-2100 | 15224 | 18298 | 20.2 | 235 | 8 | 2.0 | 97 | 20.1 | -0.5 |
 | Agelaius phoeniceus | B | SSP5-8.5 | 2041-2060 | 15224 | 17844 | 17.2 | 182 | 13 | 1.8 | 96 | 17.1 | -0.5 |
 | Agelaius phoeniceus | B | SSP5-8.5 | 2081-2100 | 15224 | 20785 | 36.5 | 353 | 12 | 5.2 | 95 | 35.9 | -0.8 |
-| Agelaius phoeniceus | B | SSP2-4.5 | 2041-2060 | 14604 | 16547 | 13.3 | 124 | 2 | 0.6 | 97 | 13.3 | -0.2 |
-| Agelaius phoeniceus | B | SSP2-4.5 | 2081-2100 | 14604 | 17733 | 21.4 | 213 | 4 | 1.1 | 97 | 21.4 | -0.2 |
-| Agelaius phoeniceus | B | SSP5-8.5 | 2041-2060 | 14604 | 17199 | 17.8 | 174 | 6 | 0.9 | 97 | 17.7 | -0.2 |
-| Agelaius phoeniceus | B | SSP5-8.5 | 2081-2100 | 14604 | 20037 | 37.2 | 324 | 9 | 3.8 | 95 | 36.6 | -0.4 |
+| Agelaius phoeniceus [breeding] | B | SSP2-4.5 | 2041-2060 | 14604 | 16547 | 13.3 | 124 | 2 | 0.6 | 97 | 13.3 | -0.2 |
+| Agelaius phoeniceus [breeding] | B | SSP2-4.5 | 2081-2100 | 14604 | 17733 | 21.4 | 213 | 4 | 1.1 | 97 | 21.4 | -0.2 |
+| Agelaius phoeniceus [breeding] | B | SSP5-8.5 | 2041-2060 | 14604 | 17199 | 17.8 | 174 | 6 | 0.9 | 97 | 17.7 | -0.2 |
+| Agelaius phoeniceus [breeding] | B | SSP5-8.5 | 2081-2100 | 14604 | 20037 | 37.2 | 324 | 9 | 3.8 | 95 | 36.6 | -0.4 |
 | Cardinalis cardinalis | A | SSP2-4.5 | 2041-2060 | 6352 | 7736 | 21.8 | 158 | 345 | 0.1 | 94 | 21.7 | -0.3 |
 | Cardinalis cardinalis | A | SSP2-4.5 | 2081-2100 | 6352 | 8771 | 38.1 | 311 | 342 | 0.7 | 93 | 37.8 | -0.3 |
 | Cardinalis cardinalis | A | SSP5-8.5 | 2041-2060 | 6352 | 8193 | 29.0 | 218 | 343 | 0.4 | 94 | 28.4 | -0.3 |
@@ -75,10 +75,10 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Cyanocitta cristata | A | SSP2-4.5 | 2081-2100 | 8662 | 11257 | 30.0 | 416 | 344 | 0.0 | 95 | 30.0 | -2.6 |
 | Cyanocitta cristata | A | SSP5-8.5 | 2041-2060 | 8662 | 10804 | 24.7 | 343 | 345 | 0.0 | 94 | 24.6 | -2.5 |
 | Cyanocitta cristata | A | SSP5-8.5 | 2081-2100 | 8662 | 13122 | 51.5 | 703 | 346 | 0.0 | 94 | 49.8 | -5.5 |
-| Cyanocitta cristata | A | SSP2-4.5 | 2041-2060 | 8202 | 9822 | 19.7 | 260 | 341 | 0.0 | 95 | 19.7 | -1.7 |
-| Cyanocitta cristata | A | SSP2-4.5 | 2081-2100 | 8202 | 10749 | 31.1 | 423 | 343 | 0.0 | 94 | 31.0 | -2.6 |
-| Cyanocitta cristata | A | SSP5-8.5 | 2041-2060 | 8202 | 10281 | 25.3 | 347 | 344 | 0.0 | 94 | 25.2 | -2.6 |
-| Cyanocitta cristata | A | SSP5-8.5 | 2081-2100 | 8202 | 12395 | 51.1 | 695 | 345 | 0.0 | 93 | 49.9 | -5.2 |
+| Cyanocitta cristata [breeding] | A | SSP2-4.5 | 2041-2060 | 8202 | 9822 | 19.7 | 260 | 341 | 0.0 | 95 | 19.7 | -1.7 |
+| Cyanocitta cristata [breeding] | A | SSP2-4.5 | 2081-2100 | 8202 | 10749 | 31.1 | 423 | 343 | 0.0 | 94 | 31.0 | -2.6 |
+| Cyanocitta cristata [breeding] | A | SSP5-8.5 | 2041-2060 | 8202 | 10281 | 25.3 | 347 | 344 | 0.0 | 94 | 25.2 | -2.6 |
+| Cyanocitta cristata [breeding] | A | SSP5-8.5 | 2081-2100 | 8202 | 12395 | 51.1 | 695 | 345 | 0.0 | 93 | 49.9 | -5.2 |
 | Dacelo novaeguineae | B | SSP2-4.5 | 2041-2060 | 3948 | 2823 | -28.5 | 276 | 135 | 0.0 | 93 | -28.5 | -30.3 |
 | Dacelo novaeguineae | B | SSP2-4.5 | 2081-2100 | 3948 | 2531 | -35.9 | 358 | 133 | 0.0 | 91 | -35.9 | -37.9 |
 | Dacelo novaeguineae | B | SSP5-8.5 | 2041-2060 | 3948 | 2661 | -32.6 | 312 | 134 | 0.0 | 93 | -32.6 | -34.6 |
@@ -87,34 +87,34 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Danaus chrysippus | B | SSP2-4.5 | 2081-2100 | 51147 | 54405 | 6.4 | 96 | 355 | 5.9 | 99 | 6.4 | -0.2 |
 | Danaus chrysippus | B | SSP5-8.5 | 2041-2060 | 51147 | 54031 | 5.6 | 82 | 352 | 4.8 | 99 | 5.6 | -0.2 |
 | Danaus chrysippus | B | SSP5-8.5 | 2081-2100 | 51147 | 56368 | 10.2 | 225 | 4 | 12.3 | 99 | 10.1 | -0.2 |
-| Danaus chrysippus | B | SSP2-4.5 | 2041-2060 | 53435 | 55536 | 3.9 | 61 | 34 | 3.9 | 98 | 3.9 | -0.8 |
-| Danaus chrysippus | B | SSP2-4.5 | 2081-2100 | 53435 | 56465 | 5.7 | 103 | 20 | 6.6 | 98 | 5.7 | -0.8 |
-| Danaus chrysippus | B | SSP5-8.5 | 2041-2060 | 53435 | 56252 | 5.3 | 93 | 22 | 5.4 | 98 | 5.2 | -0.8 |
-| Danaus chrysippus | B | SSP5-8.5 | 2081-2100 | 53435 | 58313 | 9.1 | 238 | 17 | 13.3 | 98 | 9.0 | -0.4 |
+| Danaus chrysippus [breeding] | B | SSP2-4.5 | 2041-2060 | 53435 | 55536 | 3.9 | 61 | 34 | 3.9 | 98 | 3.9 | -0.8 |
+| Danaus chrysippus [breeding] | B | SSP2-4.5 | 2081-2100 | 53435 | 56465 | 5.7 | 103 | 20 | 6.6 | 98 | 5.7 | -0.8 |
+| Danaus chrysippus [breeding] | B | SSP5-8.5 | 2041-2060 | 53435 | 56252 | 5.3 | 93 | 22 | 5.4 | 98 | 5.2 | -0.8 |
+| Danaus chrysippus [breeding] | B | SSP5-8.5 | 2081-2100 | 53435 | 58313 | 9.1 | 238 | 17 | 13.3 | 98 | 9.0 | -0.4 |
 | Danaus plexippus | B | SSP2-4.5 | 2041-2060 | 12850 | 14328 | 11.5 | 233 | 0 | 0.7 | 94 | 10.7 | -2.7 |
 | Danaus plexippus | B | SSP2-4.5 | 2081-2100 | 12850 | 16045 | 24.9 | 428 | 4 | 1.2 | 93 | 24.0 | -3.1 |
 | Danaus plexippus | B | SSP5-8.5 | 2041-2060 | 12850 | 15174 | 18.1 | 324 | 4 | 1.0 | 94 | 15.2 | -2.7 |
 | Danaus plexippus | B | SSP5-8.5 | 2081-2100 | 12850 | 18497 | 43.9 | 776 | 356 | 1.8 | 95 | 39.0 | -5.1 |
-| Danaus plexippus | B | SSP2-4.5 | 2041-2060 | 13956 | 16010 | 14.7 | 248 | 6 | 1.2 | 94 | 13.8 | -2.5 |
-| Danaus plexippus | B | SSP2-4.5 | 2081-2100 | 13956 | 17184 | 23.1 | 408 | 7 | 2.2 | 94 | 23.0 | -3.3 |
-| Danaus plexippus | B | SSP5-8.5 | 2041-2060 | 13956 | 16719 | 19.8 | 330 | 8 | 2.1 | 93 | 17.7 | -3.2 |
-| Danaus plexippus | B | SSP5-8.5 | 2081-2100 | 13956 | 19555 | 40.1 | 716 | 357 | 3.2 | 94 | 37.4 | -5.7 |
+| Danaus plexippus [breeding] | B | SSP2-4.5 | 2041-2060 | 13956 | 16010 | 14.7 | 248 | 6 | 1.2 | 94 | 13.8 | -2.5 |
+| Danaus plexippus [breeding] | B | SSP2-4.5 | 2081-2100 | 13956 | 17184 | 23.1 | 408 | 7 | 2.2 | 94 | 23.0 | -3.3 |
+| Danaus plexippus [breeding] | B | SSP5-8.5 | 2041-2060 | 13956 | 16719 | 19.8 | 330 | 8 | 2.1 | 93 | 17.7 | -3.2 |
+| Danaus plexippus [breeding] | B | SSP5-8.5 | 2081-2100 | 13956 | 19555 | 40.1 | 716 | 357 | 3.2 | 94 | 37.4 | -5.7 |
 | Erithacus rubecula | C | SSP2-4.5 | 2041-2060 | 13820 | withheld | withheld | withheld | withheld | 24.1 |  |  |  |
 | Erithacus rubecula | C | SSP2-4.5 | 2081-2100 | 13820 | withheld | withheld | withheld | withheld | 25.1 |  |  |  |
 | Erithacus rubecula | C | SSP5-8.5 | 2041-2060 | 13820 | withheld | withheld | withheld | withheld | 25.3 |  |  |  |
 | Erithacus rubecula | C | SSP5-8.5 | 2081-2100 | 13820 | withheld | withheld | withheld | withheld | 30.2 |  |  |  |
-| Erithacus rubecula | B | SSP2-4.5 | 2041-2060 | 9811 | 10526 | 7.3 | 258 | 34 | 6.4 | 94 | 7.3 | -5.5 |
-| Erithacus rubecula | B | SSP2-4.5 | 2081-2100 | 9811 | 10921 | 11.3 | 408 | 34 | 6.0 | 94 | 11.3 | -8.5 |
-| Erithacus rubecula | B | SSP5-8.5 | 2041-2060 | 9811 | 10461 | 6.6 | 313 | 29 | 6.3 | 94 | 6.6 | -7.6 |
-| Erithacus rubecula | B | SSP5-8.5 | 2081-2100 | 9811 | 10158 | 3.5 | 695 | 24 | 5.6 | 90 | 3.2 | -21.2 |
+| Erithacus rubecula [breeding] | B | SSP2-4.5 | 2041-2060 | 9811 | 10526 | 7.3 | 258 | 34 | 6.4 | 94 | 7.3 | -5.5 |
+| Erithacus rubecula [breeding] | B | SSP2-4.5 | 2081-2100 | 9811 | 10921 | 11.3 | 408 | 34 | 6.0 | 94 | 11.3 | -8.5 |
+| Erithacus rubecula [breeding] | B | SSP5-8.5 | 2041-2060 | 9811 | 10461 | 6.6 | 313 | 29 | 6.3 | 94 | 6.6 | -7.6 |
+| Erithacus rubecula [breeding] | B | SSP5-8.5 | 2081-2100 | 9811 | 10158 | 3.5 | 695 | 24 | 5.6 | 90 | 3.2 | -21.2 |
 | Hirundo rustica | B | SSP2-4.5 | 2041-2060 | 88725 | 92891 | 4.7 | 232 | 4 | 1.8 | 98 | 4.7 | -2.3 |
 | Hirundo rustica | B | SSP2-4.5 | 2081-2100 | 88725 | 95160 | 7.3 | 378 | 3 | 4.2 | 98 | 7.3 | -3.1 |
 | Hirundo rustica | B | SSP5-8.5 | 2041-2060 | 88725 | 94140 | 6.1 | 313 | 3 | 3.3 | 98 | 6.1 | -2.9 |
 | Hirundo rustica | B | SSP5-8.5 | 2081-2100 | 88725 | 100493 | 13.3 | 680 | 10 | 13.7 | 96 | 13.1 | -5.1 |
-| Hirundo rustica | B | SSP2-4.5 | 2041-2060 | 48251 | 50130 | 3.9 | 253 | 29 | 0.0 | 96 | 3.9 | -6.1 |
-| Hirundo rustica | B | SSP2-4.5 | 2081-2100 | 48251 | 51261 | 6.2 | 369 | 28 | 0.0 | 95 | 6.2 | -8.7 |
-| Hirundo rustica | B | SSP5-8.5 | 2041-2060 | 48251 | 50723 | 5.1 | 315 | 31 | 0.0 | 95 | 5.1 | -7.5 |
-| Hirundo rustica | B | SSP5-8.5 | 2081-2100 | 48251 | 52937 | 9.7 | 636 | 37 | 0.7 | 92 | 9.5 | -16.3 |
+| Hirundo rustica [breeding] | B | SSP2-4.5 | 2041-2060 | 48251 | 50130 | 3.9 | 253 | 29 | 0.0 | 96 | 3.9 | -6.1 |
+| Hirundo rustica [breeding] | B | SSP2-4.5 | 2081-2100 | 48251 | 51261 | 6.2 | 369 | 28 | 0.0 | 95 | 6.2 | -8.7 |
+| Hirundo rustica [breeding] | B | SSP5-8.5 | 2041-2060 | 48251 | 50723 | 5.1 | 315 | 31 | 0.0 | 95 | 5.1 | -7.5 |
+| Hirundo rustica [breeding] | B | SSP5-8.5 | 2081-2100 | 48251 | 52937 | 9.7 | 636 | 37 | 0.7 | 92 | 9.5 | -16.3 |
 | Ixodes scapularis | B | SSP2-4.5 | 2041-2060 | 6374 | 7202 | 13.0 | 184 | 7 | 0.0 | 93 | 12.4 | -3.8 |
 | Ixodes scapularis | B | SSP2-4.5 | 2081-2100 | 6374 | 8132 | 27.6 | 340 | 11 | 0.0 | 91 | 26.6 | -4.9 |
 | Ixodes scapularis | B | SSP5-8.5 | 2041-2060 | 6374 | 7621 | 19.6 | 252 | 13 | 0.0 | 94 | 17.1 | -4.5 |
@@ -123,10 +123,10 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Melospiza melodia | B | SSP2-4.5 | 2081-2100 | 13802 | 16066 | 16.4 | 336 | 357 | 0.0 | 97 | 16.4 | -2.5 |
 | Melospiza melodia | B | SSP5-8.5 | 2041-2060 | 13802 | 15589 | 12.9 | 267 | 356 | 0.0 | 97 | 12.9 | -2.2 |
 | Melospiza melodia | B | SSP5-8.5 | 2081-2100 | 13802 | 16973 | 23.0 | 637 | 353 | 0.0 | 95 | 22.9 | -7.8 |
-| Melospiza melodia | A | SSP2-4.5 | 2041-2060 | 12034 | 12725 | 5.7 | 278 | 348 | 0.1 | 96 | 5.7 | -6.2 |
-| Melospiza melodia | A | SSP2-4.5 | 2081-2100 | 12034 | 13276 | 10.3 | 428 | 353 | 0.1 | 96 | 10.3 | -9.3 |
-| Melospiza melodia | A | SSP5-8.5 | 2041-2060 | 12034 | 12967 | 7.8 | 354 | 352 | 0.1 | 97 | 7.8 | -7.9 |
-| Melospiza melodia | A | SSP5-8.5 | 2081-2100 | 12034 | 13526 | 12.4 | 779 | 351 | 0.1 | 94 | 12.4 | -19.5 |
+| Melospiza melodia [breeding] | A | SSP2-4.5 | 2041-2060 | 12034 | 12725 | 5.7 | 278 | 348 | 0.1 | 96 | 5.7 | -6.2 |
+| Melospiza melodia [breeding] | A | SSP2-4.5 | 2081-2100 | 12034 | 13276 | 10.3 | 428 | 353 | 0.1 | 96 | 10.3 | -9.3 |
+| Melospiza melodia [breeding] | A | SSP5-8.5 | 2041-2060 | 12034 | 12967 | 7.8 | 354 | 352 | 0.1 | 97 | 7.8 | -7.9 |
+| Melospiza melodia [breeding] | A | SSP5-8.5 | 2081-2100 | 12034 | 13526 | 12.4 | 779 | 351 | 0.1 | 94 | 12.4 | -19.5 |
 | Odocoileus virginianus | B | SSP2-4.5 | 2041-2060 | 10331 | 12456 | 20.6 | 279 | 335 | 1.6 | 95 | 19.5 | -0.7 |
 | Odocoileus virginianus | B | SSP2-4.5 | 2081-2100 | 10331 | 13537 | 31.0 | 426 | 340 | 2.7 | 94 | 30.2 | -1.0 |
 | Odocoileus virginianus | B | SSP5-8.5 | 2041-2060 | 10331 | 13132 | 27.1 | 333 | 340 | 2.5 | 94 | 24.0 | -1.0 |
@@ -151,18 +151,18 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Sialia sialis | A | SSP2-4.5 | 2081-2100 | 7070 | 9386 | 32.8 | 485 | 346 | 0.0 | 94 | 32.8 | -3.8 |
 | Sialia sialis | A | SSP5-8.5 | 2041-2060 | 7070 | 8931 | 26.3 | 396 | 346 | 0.0 | 94 | 26.3 | -3.5 |
 | Sialia sialis | A | SSP5-8.5 | 2081-2100 | 7070 | 10954 | 54.9 | 818 | 344 | 0.0 | 92 | 54.6 | -7.2 |
-| Sialia sialis | A | SSP2-4.5 | 2041-2060 | 6513 | 7990 | 22.7 | 316 | 343 | 0.0 | 94 | 22.7 | -2.5 |
-| Sialia sialis | A | SSP2-4.5 | 2081-2100 | 6513 | 8677 | 33.2 | 476 | 347 | 0.0 | 93 | 33.2 | -4.2 |
-| Sialia sialis | A | SSP5-8.5 | 2041-2060 | 6513 | 8261 | 26.8 | 390 | 347 | 0.0 | 93 | 26.8 | -3.9 |
-| Sialia sialis | A | SSP5-8.5 | 2081-2100 | 6513 | 9678 | 48.6 | 814 | 349 | 0.0 | 91 | 48.2 | -11.1 |
+| Sialia sialis [breeding] | A | SSP2-4.5 | 2041-2060 | 6513 | 7990 | 22.7 | 316 | 343 | 0.0 | 94 | 22.7 | -2.5 |
+| Sialia sialis [breeding] | A | SSP2-4.5 | 2081-2100 | 6513 | 8677 | 33.2 | 476 | 347 | 0.0 | 93 | 33.2 | -4.2 |
+| Sialia sialis [breeding] | A | SSP5-8.5 | 2041-2060 | 6513 | 8261 | 26.8 | 390 | 347 | 0.0 | 93 | 26.8 | -3.9 |
+| Sialia sialis [breeding] | A | SSP5-8.5 | 2081-2100 | 6513 | 9678 | 48.6 | 814 | 349 | 0.0 | 91 | 48.2 | -11.1 |
 | Spinus tristis | B | SSP2-4.5 | 2041-2060 | 11513 | 13056 | 13.4 | 229 | 355 | 0.0 | 97 | 13.4 | -1.7 |
 | Spinus tristis | B | SSP2-4.5 | 2081-2100 | 11513 | 13940 | 21.1 | 373 | 355 | 0.0 | 97 | 21.1 | -3.0 |
 | Spinus tristis | B | SSP5-8.5 | 2041-2060 | 11513 | 13585 | 18.0 | 314 | 355 | 0.0 | 97 | 17.9 | -2.4 |
 | Spinus tristis | B | SSP5-8.5 | 2081-2100 | 11513 | 15756 | 36.8 | 743 | 354 | 0.0 | 95 | 35.3 | -8.0 |
-| Spinus tristis | A | SSP2-4.5 | 2041-2060 | 10319 | 11479 | 11.2 | 287 | 351 | 0.0 | 97 | 11.2 | -5.5 |
-| Spinus tristis | A | SSP2-4.5 | 2081-2100 | 10319 | 12214 | 18.4 | 459 | 350 | 0.0 | 96 | 18.4 | -8.5 |
-| Spinus tristis | A | SSP5-8.5 | 2041-2060 | 10319 | 11942 | 15.7 | 385 | 351 | 0.0 | 96 | 15.6 | -7.0 |
-| Spinus tristis | A | SSP5-8.5 | 2081-2100 | 10319 | 13762 | 33.4 | 852 | 350 | 0.0 | 95 | 31.9 | -16.0 |
+| Spinus tristis [breeding] | A | SSP2-4.5 | 2041-2060 | 10319 | 11479 | 11.2 | 287 | 351 | 0.0 | 97 | 11.2 | -5.5 |
+| Spinus tristis [breeding] | A | SSP2-4.5 | 2081-2100 | 10319 | 12214 | 18.4 | 459 | 350 | 0.0 | 96 | 18.4 | -8.5 |
+| Spinus tristis [breeding] | A | SSP5-8.5 | 2041-2060 | 10319 | 11942 | 15.7 | 385 | 351 | 0.0 | 96 | 15.6 | -7.0 |
+| Spinus tristis [breeding] | A | SSP5-8.5 | 2081-2100 | 10319 | 13762 | 33.4 | 852 | 350 | 0.0 | 95 | 31.9 | -16.0 |
 | Thryothorus ludovicianus | A | SSP2-4.5 | 2041-2060 | 3904 | 4500 | 15.3 | 154 | 32 | 0.0 | 95 | 15.3 | -1.5 |
 | Thryothorus ludovicianus | A | SSP2-4.5 | 2081-2100 | 3904 | 4919 | 26.0 | 225 | 26 | 0.5 | 94 | 26.0 | -1.4 |
 | Thryothorus ludovicianus | A | SSP5-8.5 | 2041-2060 | 3904 | 4735 | 21.3 | 179 | 30 | 0.3 | 95 | 21.3 | -1.0 |
@@ -171,10 +171,10 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Turdus migratorius | A | SSP2-4.5 | 2081-2100 | 17569 | 19278 | 9.7 | 228 | 8 | 0.0 | 97 | 9.7 | -1.7 |
 | Turdus migratorius | A | SSP5-8.5 | 2041-2060 | 17569 | 18870 | 7.4 | 168 | 7 | 0.0 | 98 | 7.4 | -1.4 |
 | Turdus migratorius | A | SSP5-8.5 | 2081-2100 | 17569 | 19501 | 11.0 | 423 | 8 | 0.0 | 97 | 11.0 | -5.4 |
-| Turdus migratorius | A | SSP2-4.5 | 2041-2060 | 17863 | 18387 | 2.9 | 199 | 7 | 0.0 | 98 | 2.9 | -3.8 |
-| Turdus migratorius | A | SSP2-4.5 | 2081-2100 | 17863 | 18507 | 3.6 | 291 | 6 | 0.0 | 98 | 3.6 | -5.4 |
-| Turdus migratorius | A | SSP5-8.5 | 2041-2060 | 17863 | 18401 | 3.0 | 243 | 6 | 0.0 | 99 | 3.0 | -4.7 |
-| Turdus migratorius | A | SSP5-8.5 | 2081-2100 | 17863 | 18121 | 1.4 | 447 | 4 | 0.0 | 98 | 1.4 | -9.7 |
+| Turdus migratorius [breeding] | A | SSP2-4.5 | 2041-2060 | 17863 | 18387 | 2.9 | 199 | 7 | 0.0 | 98 | 2.9 | -3.8 |
+| Turdus migratorius [breeding] | A | SSP2-4.5 | 2081-2100 | 17863 | 18507 | 3.6 | 291 | 6 | 0.0 | 98 | 3.6 | -5.4 |
+| Turdus migratorius [breeding] | A | SSP5-8.5 | 2041-2060 | 17863 | 18401 | 3.0 | 243 | 6 | 0.0 | 99 | 3.0 | -4.7 |
+| Turdus migratorius [breeding] | A | SSP5-8.5 | 2081-2100 | 17863 | 18121 | 1.4 | 447 | 4 | 0.0 | 98 | 1.4 | -9.7 |
 | Vitis vinifera | B | SSP2-4.5 | 2041-2060 | 28118 | 30964 | 10.1 | 465 | 13 | 0.5 | 93 | 3.1 | -10.3 |
 | Vitis vinifera | B | SSP2-4.5 | 2081-2100 | 28118 | 31250 | 11.1 | 683 | 7 | 0.9 | 92 | 2.6 | -16.8 |
 | Vitis vinifera | B | SSP5-8.5 | 2041-2060 | 28118 | 31386 | 11.6 | 602 | 12 | 0.8 | 93 | 0.9 | -13.7 |
@@ -187,10 +187,10 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Zenaida macroura | B | SSP2-4.5 | 2081-2100 | 13583 | 16801 | 23.7 | 320 | 359 | 2.1 | 97 | 23.7 | -0.4 |
 | Zenaida macroura | B | SSP5-8.5 | 2041-2060 | 13583 | 16346 | 20.3 | 248 | 2 | 2.0 | 97 | 20.3 | -0.4 |
 | Zenaida macroura | B | SSP5-8.5 | 2081-2100 | 13583 | 19701 | 45.0 | 500 | 7 | 7.0 | 96 | 45.0 | -0.5 |
-| Zenaida macroura | B | SSP2-4.5 | 2041-2060 | 12144 | 14007 | 15.3 | 229 | 359 | 0.0 | 97 | 15.3 | -1.1 |
-| Zenaida macroura | B | SSP2-4.5 | 2081-2100 | 12144 | 15073 | 24.1 | 371 | 356 | 0.1 | 97 | 24.0 | -1.2 |
-| Zenaida macroura | B | SSP5-8.5 | 2041-2060 | 12144 | 14567 | 20.0 | 316 | 356 | 0.1 | 97 | 19.8 | -1.3 |
-| Zenaida macroura | B | SSP5-8.5 | 2081-2100 | 12144 | 17359 | 42.9 | 664 | 355 | 0.5 | 97 | 42.8 | -1.9 |
+| Zenaida macroura [breeding] | B | SSP2-4.5 | 2041-2060 | 12144 | 14007 | 15.3 | 229 | 359 | 0.0 | 97 | 15.3 | -1.1 |
+| Zenaida macroura [breeding] | B | SSP2-4.5 | 2081-2100 | 12144 | 15073 | 24.1 | 371 | 356 | 0.1 | 97 | 24.0 | -1.2 |
+| Zenaida macroura [breeding] | B | SSP5-8.5 | 2041-2060 | 12144 | 14567 | 20.0 | 316 | 356 | 0.1 | 97 | 19.8 | -1.3 |
+| Zenaida macroura [breeding] | B | SSP5-8.5 | 2081-2100 | 12144 | 17359 | 42.9 | 664 | 355 | 0.5 | 97 | 42.8 | -1.9 |
 
 ## Pilot trees against the published USFS projection (RDS-2024-0020, W4 summary `distrib2024_summary.csv`)
 

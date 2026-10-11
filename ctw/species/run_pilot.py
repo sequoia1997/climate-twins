@@ -137,7 +137,7 @@ def report(out: Path, key: str = "SSP2-4.5|2081-2100") -> str:
         rc = g["range_check"]
         why = "; ".join(s["hard_failures"] + s["soft_flags"])
         lines.append("| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(
-            sp["scientific_name"], sp.get("group") or "", s["tier"], s.get("range_shifts_tested"), s.get("cv_kind"), s["confidence"], s["records"]["gate_cells"], _f(sk["cv_auc"]), _f(sk["cv_tss"]),
+            sp["scientific_name"] + (" [breeding]" if sp.get("season") == "breeding" else ""), sp.get("group") or "", s["tier"], s.get("range_shifts_tested"), s.get("cv_kind"), s["confidence"], s["records"]["gate_cells"], _f(sk["cv_auc"]), _f(sk["cv_tss"]),
             _f(sk["cv_boyce"]), _f(gam), rc["status"], "" if sc.get("novel_share") is None else f"{100 * sc['novel_share']:.0f}",
             _f(s["area_now_km2"] / 1000, 0), "withheld" if sc.get("withheld") else _f(m.get("change_pct"), 1),
             "withheld" if sc.get("withheld") else _f(m.get("shift_km"), 0), why))
@@ -175,7 +175,7 @@ def full_report(out: Path, bench: Path = BENCH) -> str:
             w = sc.get("withheld")
             lim, non = sc["modes"].get("limited", {}), sc["modes"].get("none", {})
             L.append("| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(
-                s["species"]["scientific_name"], s["tier"], sc["ssp"], sc["period"], _f(u.get("area_now", 0) / 1000, 0),
+                s["species"]["scientific_name"] + (" [breeding]" if s["species"].get("season") == "breeding" else ""), s["tier"], sc["ssp"], sc["period"], _f(u.get("area_now", 0) / 1000, 0),
                 "withheld" if w else _f(u.get("area_fut", 0) / 1000, 0), "withheld" if w else _f(u.get("change_pct"), 1),
                 "withheld" if w else _f(u.get("shift_km"), 0), "withheld" if w else _f(u.get("bearing"), 0),
                 _f(100 * sc["novel_share"], 1), "" if w or u.get("agree_share") is None else _f(100 * u["agree_share"], 0),
