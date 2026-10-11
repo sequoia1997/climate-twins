@@ -1,0 +1,82 @@
+{
+ "failed": {
+  "tg:fish": "RuntimeError: target group fish: the SQL download is empty, not stored"
+ },
+ "not_stored": [
+  "tg:fish"
+ ],
+ "downloads": {
+  "tg:herp": {
+   "key": "0020249-260928105237408",
+   "doi": "10.15468/dl.db6n6n",
+   "records": 2469334,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T13:21:53Z",
+   "unmatched_records": null
+  },
+  "tg:fish": {
+   "key": "0020250-260928105237408",
+   "doi": "10.15468/dl.48dewk",
+   "records": 0,
+   "status": "SUCCEEDED",
+   "processed": null,
+   "unmatched_records": null
+  },
+  "batch:b1": {
+   "key": "0020251-260928105237408",
+   "doi": "10.15468/dl.xtr4yc",
+   "records": 28914172,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T13:39:05Z",
+   "unmatched_records": 0
+  },
+  "batch:b2": {
+   "key": "0020261-260928105237408",
+   "doi": "10.15468/dl.7nm3e3",
+   "records": 21607638,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T14:01:39Z",
+   "unmatched_records": 1240081
+  },
+  "batch:b3": {
+   "key": "0020262-260928105237408",
+   "doi": "10.15468/dl.gb8dd2",
+   "records": 20303828,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T13:51:49Z",
+   "unmatched_records": 9
+  },
+  "batch:b4": {
+   "key": "0020276-260928105237408",
+   "doi": "10.15468/dl.ywc8mb",
+   "records": 17541122,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T14:08:48Z",
+   "unmatched_records": 11
+  },
+  "batch:b5": {
+   "key": "0020290-260928105237408",
+   "doi": "10.15468/dl.e3hj5z",
+   "records": 20788872,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T14:16:27Z",
+   "unmatched_records": 0
+  },
+  "batch:b6": {
+   "key": "0020295-260928105237408",
+   "doi": "10.15468/dl.uw363s",
+   "records": 17859250,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T14:36:03Z",
+   "unmatched_records": 283
+  },
+  "batch:b7": {
+   "key": "0020300-260928105237408",
+   "doi": "10.15468/dl.22gbpu",
+   "records": 12270994,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-11T15:32:45Z",
+   "unmatched_records": 259
+  }
+ }
+}
