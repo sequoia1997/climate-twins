@@ -32,6 +32,14 @@ jobs:
             --pattern '*_summary.json' --pattern '*_cts.zip' --clobber || echo "no batch 2 release yet"
           python -m ctw.species_site build --src work/species-assets --out work/r2
           du -sh work/r2; find work/r2 -type f | wc -l
+          python - <<'PY'
+          import json, collections as C
+          d = json.load(open("work/r2/index.json"))["species"]
+          print("published:", len(d))
+          print("by group:", dict(C.Counter(r["group"] for r in d)))
+          print("tier:", dict(C.Counter(r["tier"] for r in d)), "confidence:", dict(C.Counter(r["confidence"] for r in d)))
+          print("range shifts:", dict(C.Counter(r["range_shifts"] for r in d)))
+          PY
       - name: Upload (hashed files first, index last)
         run: |
           EP="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
