@@ -1,6 +1,6 @@
 # W3 fit report: gate table
 
-Species fitted: 22. Tier A = static skill validated against an independent survey, Tier B = spatial-block CV skill only, Tier C = below a hard gate (not shown); 'shifts' = range-shift test pass/fail/untested. Change columns are the unlimited-dispersal area change for SSP2-4.5|2081-2100; 'withheld' means more than 15% novel climate.
+Species fitted: 24. Tier A = static skill validated against an independent survey, Tier B = spatial-block CV skill only, Tier C = below a hard gate (not shown); 'shifts' = range-shift test pass/fail/untested. Change columns are the unlimited-dispersal area change for SSP2-4.5|2081-2100; 'withheld' means more than 15% novel climate.
 
 | species | group | tier | shifts | CV kind | conf. | thinned cells | CV AUC | CV TSS | Boyce | check GAM AUC | range check | novel % | area now (1000 km2) | change % | shift km | reasons |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -14,6 +14,7 @@ Species fitted: 22. Tier A = static skill validated against an independent surve
 | Danaus chrysippus | insect_arachnid | B | untested | presence_background | low | 2070 | 0.68 | 0.28 | 0.89 | 0.67 | pass | 6 | 51147 | 6.4 | 96 | lower discrimination: CV AUC 0.68 < 0.7 |
 | Danaus plexippus | insect_arachnid | B | untested | presence_background | standard | 8188 | 0.72 | 0.37 | 0.96 | 0.72 | pass | 1 | 12850 | 24.9 | 428 |  |
 | Erithacus rubecula | bird | C | untested | presence_background | standard | 38758 | 0.63 | 0.14 | 0.81 | 0.58 | fail | 25 | 13820 | withheld | withheld | range check failed (omission 0.2585, commission 0.4354); lower discrimination: CV AUC 0.63 < 0.7 |
+| Hirundo rustica | bird | B | fail | presence_background | low | 143827 | 0.60 | 0.15 | 0.76 | 0.56 | pass | 4 | 88725 | 7.3 | 378 | lower discrimination: CV AUC 0.60 < 0.7 |
 | Ixodes scapularis | insect_arachnid | B | untested | presence_background | low | 995 | 0.70 | 0.26 | 0.70 | 0.69 | pass | 0 | 6374 | 27.6 | 340 | lower discrimination: CV AUC 0.70 < 0.7 |
 | Melospiza melodia | bird | A | fail | presence_background | standard | 53773 | 0.72 | 0.31 | 0.93 | 0.70 | pass | 0 | 13802 | 16.4 | 336 |  |
 | Odocoileus virginianus | mammal | B | untested | presence_background | standard | 6359 | 0.85 | 0.55 | 0.90 | 0.82 | pass | 3 | 10331 | 31.0 | 426 |  |
@@ -25,6 +26,7 @@ Species fitted: 22. Tier A = static skill validated against an independent surve
 | Spinus tristis | bird | A | fail | presence_background | standard | 48668 | 0.70 | 0.28 | 0.92 | 0.67 | pass | 0 | 11513 | 21.1 | 373 |  |
 | Thryothorus ludovicianus | bird | A | fail | presence_background | low | 22470 | 0.79 | 0.42 | 0.92 | 0.78 | pass | 0 | 3904 | 26.0 | 225 | transparent check model disagrees on area change by up to 29 points |
 | Turdus migratorius | bird | A | fail | presence_background | standard | 68291 | 0.73 | 0.31 | 0.62 | 0.71 | pass | 0 | 17569 | 9.7 | 228 |  |
+| Vulpes vulpes | mammal | B | untested | presence_background | low | 24369 | 0.64 | 0.16 | 0.94 | 0.60 | pass | 0 | 28513 | 13.5 | 311 | lower discrimination: CV AUC 0.64 < 0.7 |
 | Zenaida macroura | bird | A | fail | presence_background | low | 61235 | 0.69 | 0.25 | 0.88 | 0.66 | pass | 2 | 13583 | 23.7 | 320 | lower discrimination: CV AUC 0.69 < 0.7 |
 
 Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard confidence (Tier C below 0.5), novel climate 15%, native-range commission <= 0.30 (uncalibrated; omission is reported, not gated, against a native mask), at least 80% of records inside the predicted range. Dispersal rule and gate limits are listed in each summary.json.
@@ -73,6 +75,10 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Erithacus rubecula | C | SSP2-4.5 | 2081-2100 | 13820 | withheld | withheld | withheld | withheld | 25.1 |  |  |  |
 | Erithacus rubecula | C | SSP5-8.5 | 2041-2060 | 13820 | withheld | withheld | withheld | withheld | 25.3 |  |  |  |
 | Erithacus rubecula | C | SSP5-8.5 | 2081-2100 | 13820 | withheld | withheld | withheld | withheld | 30.2 |  |  |  |
+| Hirundo rustica | B | SSP2-4.5 | 2041-2060 | 88725 | 92891 | 4.7 | 232 | 4 | 1.8 | 98 | 4.7 | -2.3 |
+| Hirundo rustica | B | SSP2-4.5 | 2081-2100 | 88725 | 95160 | 7.3 | 378 | 3 | 4.2 | 98 | 7.3 | -3.1 |
+| Hirundo rustica | B | SSP5-8.5 | 2041-2060 | 88725 | 94140 | 6.1 | 313 | 3 | 3.3 | 98 | 6.1 | -2.9 |
+| Hirundo rustica | B | SSP5-8.5 | 2081-2100 | 88725 | 100493 | 13.3 | 680 | 10 | 13.7 | 96 | 13.1 | -5.1 |
 | Ixodes scapularis | B | SSP2-4.5 | 2041-2060 | 6374 | 7202 | 13.0 | 184 | 7 | 0.0 | 93 | 12.4 | -3.8 |
 | Ixodes scapularis | B | SSP2-4.5 | 2081-2100 | 6374 | 8132 | 27.6 | 340 | 11 | 0.0 | 91 | 26.6 | -4.9 |
 | Ixodes scapularis | B | SSP5-8.5 | 2041-2060 | 6374 | 7621 | 19.6 | 252 | 13 | 0.0 | 94 | 17.1 | -4.5 |
@@ -117,6 +123,10 @@ Thresholds: 100 thinned records (per 0.125 degree cell), CV AUC 0.7 for standard
 | Turdus migratorius | A | SSP2-4.5 | 2081-2100 | 17569 | 19278 | 9.7 | 228 | 8 | 0.0 | 97 | 9.7 | -1.7 |
 | Turdus migratorius | A | SSP5-8.5 | 2041-2060 | 17569 | 18870 | 7.4 | 168 | 7 | 0.0 | 98 | 7.4 | -1.4 |
 | Turdus migratorius | A | SSP5-8.5 | 2081-2100 | 17569 | 19501 | 11.0 | 423 | 8 | 0.0 | 97 | 11.0 | -5.4 |
+| Vulpes vulpes | B | SSP2-4.5 | 2041-2060 | 28513 | 30803 | 8.0 | 156 | 336 | 0.0 | 91 | 7.6 | -9.5 |
+| Vulpes vulpes | B | SSP2-4.5 | 2081-2100 | 28513 | 32353 | 13.5 | 311 | 340 | 0.0 | 92 | 13.0 | -12.7 |
+| Vulpes vulpes | B | SSP5-8.5 | 2041-2060 | 28513 | 31657 | 11.0 | 225 | 341 | 0.0 | 91 | 10.0 | -11.4 |
+| Vulpes vulpes | B | SSP5-8.5 | 2081-2100 | 28513 | 35228 | 23.5 | 615 | 12 | 0.0 | 91 | 19.2 | -19.5 |
 | Zenaida macroura | A | SSP2-4.5 | 2041-2060 | 13583 | 15645 | 15.2 | 189 | 3 | 1.2 | 97 | 15.2 | -0.5 |
 | Zenaida macroura | A | SSP2-4.5 | 2081-2100 | 13583 | 16801 | 23.7 | 320 | 359 | 2.1 | 97 | 23.7 | -0.4 |
 | Zenaida macroura | A | SSP5-8.5 | 2041-2060 | 13583 | 16346 | 20.3 | 248 | 2 | 2.0 | 97 | 20.3 | -0.4 |
@@ -152,6 +162,7 @@ The W2 cell table has years but no months, so breeding and non-breeding records 
 - Danaus chrysippus: migratory in parts of its range
 - Danaus plexippus: long-distance migrant: breeding in the north, overwintering in central Mexico and coastal California
 - Erithacus rubecula: partial migrant: northern and eastern birds winter in the south and west of Europe
+- Hirundo rustica: long-distance migrant: breeds in the north, winters in Africa, South America and southern Asia; the curated native list has no South America
 - Melospiza melodia: partial migrant (northern populations)
 - Sialia sialis: partial migrant
 - Spinus tristis: nomadic partial migrant, winter range far south of the breeding range
