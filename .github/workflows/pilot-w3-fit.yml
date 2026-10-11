@@ -102,8 +102,10 @@ jobs:
           echo "tiles: $tiles"
           args=()
           for m in $(python -m ctw.species.run_pilot models); do args+=(-p "deltas_${m}.npz"); done
-          for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "pred_hind_2005-2024_${t}.npz" -p "basem_${t}.npz"); done
+          for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "basem_${t}.npz"); done
           gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
+          # 2005-2024 window tiles are only used by the direct BBS check (North America); tolerate absent ones
+          for t in $tiles; do gh release download species-pilot-data -D work/clim -p "pred_hind_2005-2024_${t}.npz" --clobber 2>/dev/null || true; done
           du -sh work/clim; ls work/clim | head -50
       - name: Download occurrence products (W2)
         if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
