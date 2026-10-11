@@ -340,3 +340,13 @@ Build the global Tier A grid in bands; the occurrence pipeline with native-range
 - **Open:** whether GBIF accepts one DOI for a multi-species batch download in a derived dataset (W2 to verify before scaling).
 
 - **Validation set kept (13 October 2026):** the 30 random BBS birds added by W4 (`data/species/w4/bbs_validation_species.csv`) stay in the exit gate so the bird test is conclusive. Trees are accepted as "insufficient data" for the real-change test (5 trees against a minimum of 20) and carry the badge "range shifts untested"; adult trees lag the climate and no better free test exists.
+
+---
+
+## 17. Staged release plan (14 October 2026)
+
+- **Target:** about 200 species shown eventually; first release is about 60 species (the 25 pilot species plus about 35 best-supported new ones), then batches of about 50. A budget check is reported after every batch before the next starts.
+- **Staffing:** one orchestrating agent for data scale-up (S1) and one for the site integration (S2). Agents sleep through long jobs instead of polling and report once.
+- **Hosting for the first release:** files lazy-loaded from the existing static site (about 30 MB for 60 species) so no Cloudflare R2 setup is needed yet; R2 comes with the larger batches.
+- **Species pages state the tier and the wording:** "projected climate suitability" with unlimited, limited and no-dispersal bounds. Migratory birds use breeding-season fits. Crops use "climate like where X is recorded" unless cultivated records are verified.
+- **Before launch:** aspen disagreement with the USFS benchmark, precipitation-factor sensitivity, methods and licences pages, and a species-list review.
