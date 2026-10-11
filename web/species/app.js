@@ -122,22 +122,24 @@ function initGL(g) {
 const tex = e => e && e.tex ? e.tex : zeroTex;
 function setTex(unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); }
 function colours() { const cs = getComputedStyle(document.documentElement), g = n => hex(cs.getPropertyValue(n)); return { uLand: g("--land"), uLost: g("--lost"), uKept: g("--kept"), uGain: g("--gained"), uR1: g("--r1"), uR2: g("--r2"), uR3: g("--r3"), uNov: g("--nov"), uDot: g("--dot") }; }
-function leaves(fs, f, bx, by, seen, out) {
+function leaves(fs, f, bx, by, o, out) {       // o = the block at the wanted level this draw stands in for: a coarser fallback is clipped to it, so nothing overlaps
   const need = fs.map(x => entry(x, f, bx, by));
-  if (need.every(e => e.st === 1) || f === 8) { const k = f + "|" + bx + "|" + by; if (!seen.has(k)) { seen.add(k); out.push([f, bx, by, need]); } return; }
-  leaves(fs, f * 2, bx >> 1, by >> 1, seen, out);
+  if (need.every(e => e.st === 1) || f === 8) { out.push([f, bx, by, need, o]); return; }
+  leaves(fs, f * 2, bx >> 1, by >> 1, o, out);
 }
 function drawPass(kind, fs, f, blocks) {
-  const u = glr.u, seen = new Set(), out = [];
-  for (const [bx, by] of blocks) leaves(fs, f, bx, by, seen, out);
-  for (const [lf, bx, by, es] of out) {
+  const u = glr.u, out = [];
+  for (const [bx, by] of blocks) leaves(fs, f, bx, by, [bx, by], out);
+  for (const [lf, bx, by, es, o] of out) {
     if (es.every(e => !e.tex)) continue;
     const dl = lf * 360 / NX, dla = lf * 180 / NY, lon0 = -180 + bx * BS * dl, latT = 90 - by * BS * dla, span = BS * dla;
-    const x0 = (lon0 + 180) / 360, x1 = x0 + BS * dl / 360, y0 = merc(latT), y1 = merc(latT - span);
+    const gl0 = f * 360 / NX, gla0 = f * 180 / NY, ox0 = -180 + o[0] * BS * gl0, oT = 90 - o[1] * BS * gla0, osp = BS * gla0;
+    const x0 = (ox0 + 180) / 360, x1 = x0 + BS * gl0 / 360, y0 = merc(oT), y1 = merc(oT - osp);
+    const bx0 = (lon0 + 180) / 360, bx1 = bx0 + BS * dl / 360;
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x0, y0, x1, y0, x0, y1, x1, y1]), gl.DYNAMIC_DRAW);
     gl.vertexAttribPointer(glr.a, 2, gl.FLOAT, false, 0, 0);
     setTex(0, tex(es[0])); setTex(1, es[1] ? tex(es[1]) : zeroTex);
-    gl.uniform4f(u.uBlk, x0, x1, latT, span); gl.uniform1i(u.uKind, kind);
+    gl.uniform4f(u.uBlk, bx0, bx1, latT, span); gl.uniform1i(u.uKind, kind);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }
@@ -240,8 +242,9 @@ function renderResults() {
   const list = (q ? ST.species.filter(s => (s.name + " " + s.sci + " " + gname(s.group) + " " + (s.family || "") + " " + (s.order || "")).toLowerCase().includes(q)) : scope)
     .slice().sort((a, b) => a.name.localeCompare(b.name));
   renderBrowse(scope);
+  const prev = S.sp;
   list.forEach(s => { const li = document.createElement("li"); li.setAttribute("role", "option"); li.id = "opt-" + s.id; li.tabIndex = -1; li.dataset.id = s.id; li.setAttribute("aria-selected", String(s.id === S.sp));
-    li.innerHTML = `<span>${esc(s.name)}</span><span class="g">${esc(s.family || gname(s.group))} · Tier ${esc(s.tier)}</span>`; li.addEventListener("click", () => pick(s.id)); ul.appendChild(li); });
+    li.innerHTML = `<span class="nm">${esc(s.name)}</span><span class="sci">${esc(s.sci)}</span><span class="tg">${esc(s.family || gname(s.group))}<br>Tier ${esc(s.tier)}</span>`; li.addEventListener("click", () => { pick(s.id); const pd = $("pickdet"); if (pd && s.id !== prev) pd.open = false; }); ul.appendChild(li); });
   if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No organisms match.</li>';
   const sel = ul.querySelector('[aria-selected="true"]'); if (sel) ul.scrollTop = Math.max(0, sel.offsetTop - ul.offsetTop - 40);     // the selected organism is in view in the list
 }
@@ -411,10 +414,10 @@ async function loadInfo(id) {
 }
 async function pick(id) {
   if (!ST.byId[id]) return;
-  S.sp = id; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
+  S.sp = id; const pc = $("pick-cur"); if (pc) pc.textContent = rec(id).name; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
   if (!INFO[id]) $("sp-head").innerHTML = `<h2>${esc(rec(id).name)}</h2><p class="small" role="status">Loading\u2026</p>`;
   try { history.replaceState(null, "", "#" + id); } catch (e) { }
-  try { await loadInfo(id); } catch (e) { $("sp-head").innerHTML = '<p role="alert">This species could not be loaded. Check your connection and try again.</p>'; return; }
+  try { await loadInfo(id); } catch (e) { $("sp-head").innerHTML = '<p role="alert">This organism could not be loaded. Check your connection and try again.</p>'; return; }
   $("sp-head").removeAttribute("aria-busy");
   if (!INFO[id].ssps.includes(S.ssp)) S.ssp = INFO[id].ssps[0];
   update(true, true);
@@ -459,7 +462,7 @@ $("retry").addEventListener("click", () => location.reload());
 $("search").addEventListener("keydown", e => {
   const opts = [...$("results").querySelectorAll("[data-id]")]; if (!opts.length) return; let i = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
   if (e.key === "ArrowDown" || e.key === "ArrowUp") { i = (i + (e.key === "ArrowDown" ? 1 : -1) + opts.length) % opts.length; opts.forEach(o => o.setAttribute("aria-selected", "false")); opts[i].setAttribute("aria-selected", "true"); opts[i].scrollIntoView({ block: "nearest" }); $("search").setAttribute("aria-activedescendant", opts[i].id); e.preventDefault(); }
-  if (e.key === "Enter" && i >= 0) { pick(opts[i].dataset.id); e.preventDefault(); }
+  if (e.key === "Enter" && i >= 0) { pick(opts[i].dataset.id); $("pickdet").open = false; e.preventDefault(); }
 });
 function addLayers() {
   if (!map.getSource("shift")) {
