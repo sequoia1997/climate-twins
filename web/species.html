@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Climate Twins: species</title>
+<meta name="description" content="Projected climate suitability for plants and animals under future climate: where each species' climate may be suitable now and by 2050 and 2100. Educational, not a forecast.">
+<link rel="canonical" href="__SITE_URL__/species.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Climate Twins"><meta property="og:title" content="Climate Twins: species and future climate suitability">
+<meta property="og:description" content="Where each species' climate may be suitable now and later in the century. Projected climate suitability, not a forecast.">
+<meta property="og:url" content="__SITE_URL__/species.html">
+<meta name="species-data-base" content="species/data/">
+<meta name="species-land" content="species/land.cts">
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+/* Tokens from web/index.html. Species tokens (lost/kept/gained, suitability ramp): lost and gained pass the dataviz validator for CVD and normal-vision separation and contrast;
+   kept is a deliberate neutral grey (it fails only the chroma floor, by design). No meaning rides on colour alone: lost is hatched, gained is dotted. */
+:root{
+  --ocean:#c7d5de; --land:#e3e6de; --line:#8b949c; --line2:#5d6770;
+  --bg:#f3f5f6; --panel:#ffffff; --ink:#1d2730; --muted:#5b6670; --rule:#d8dde1;
+  --accent:#d6412c; --chip:#eef1f3; --chipOn:#1d2730; --chipOnInk:#fff;
+  --good:#1f7a4d; --warn:#b36b00; --bad:#b3261e;
+  --lost:#b84a00; --kept:#55606b; --gained:#1769c9; --r1:#a6d8c8; --r2:#43a98d; --r3:#0c6a55; --nov:#6b3fa0; --dot:#ffffff;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-head:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ocean:#0e1920; --land:#26313a; --line:#56626c; --line2:#8894a0;
+    --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943;
+    --accent:#ff6b4a; --chip:#22303a; --chipOn:#e7ecef; --chipOnInk:#11181e;
+    --good:#5fcf95; --warn:#f0b04a; --bad:#ff8a80;
+    --lost:#e0692a; --kept:#b9c3cb; --gained:#3d8fe6; --r1:#2f7664; --r2:#52b89c; --r3:#a8ecd6; --nov:#c9a8ff; --dot:#0e1920;
+  }
+}
+:root[data-theme="dark"]{
+  --ocean:#0e1920; --land:#26313a; --line:#56626c; --line2:#8894a0;
+  --bg:#11181e; --panel:#172028; --ink:#e7ecef; --muted:#9aa6b0; --rule:#2c3943;
+  --accent:#ff6b4a; --chip:#22303a; --chipOn:#e7ecef; --chipOnInk:#11181e;
+  --good:#5fcf95; --warn:#f0b04a; --bad:#ff8a80;
+  --lost:#e0692a; --kept:#b9c3cb; --gained:#3d8fe6; --r1:#2f7664; --r2:#52b89c; --r3:#a8ecd6; --nov:#c9a8ff; --dot:#0e1920;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.45 var(--font-body)}
+#app{display:flex;height:100%;min-height:0;position:relative}
+#mapwrap{position:relative;flex:1;min-width:0;background:var(--ocean);overflow:hidden}
+#map{position:absolute;inset:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+aside{width:var(--aside-w,420px);max-width:100%;background:var(--panel);border-left:1px solid var(--rule);overflow-y:auto;overflow-x:hidden;padding:20px 22px 40px}
+h1{font:700 1.45rem/1.1 var(--font-head);margin:0 0 6px;letter-spacing:-.01em}
+h2{font:700 1.3rem/1.15 var(--font-head);margin:0 0 4px}
+h3{font:700 1.08rem/1.2 var(--font-head);margin:0 0 6px}
+.small,label.small{font-size:.85rem;color:var(--muted)}
+.muted{color:var(--muted)}
+.note{font-size:.88rem;border-left:3px solid var(--warn);padding:6px 10px;margin:10px 0;background:var(--chip);border-radius:0 8px 8px 0}
+.ctl{margin:12px 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.seg button{font:inherit;font-size:.88rem;border:1px solid var(--rule);background:var(--chip);color:var(--ink);padding:6px 10px;border-radius:999px;cursor:pointer;min-height:34px}
+.seg button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);border-color:var(--chipOn)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[role=option]:focus-visible,.crow:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input[type=search],select{font:inherit;padding:9px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink);width:100%;min-height:42px}
+.opts{display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:.92rem}
+.opts label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;padding:3px 0}
+.opts input{margin-top:.28em;width:18px;height:18px;flex:none}
+hr{border:0;border-top:1px solid var(--rule);margin:18px 0}
+.badge{display:inline-block;font-size:.82rem;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
+.q-good{color:var(--good)} .q-partial{color:var(--warn)} .q-low{color:var(--bad)}
+.syn{color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.chips button{font:inherit;font-size:.78rem;border:1px solid var(--rule);background:var(--chip);color:var(--ink);padding:3px 9px;border-radius:999px;cursor:pointer;min-height:28px}
+.chips button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);border-color:var(--chipOn)}
+#results{list-style:none;margin:8px 0 0;padding:0;max-height:10.6rem;overflow-y:auto;border:1px solid var(--rule);border-radius:10px}
+#results li{display:flex;justify-content:space-between;gap:8px;align-items:baseline;padding:8px 12px;min-height:40px;cursor:pointer;border-bottom:1px solid var(--rule)}
+#results li:last-child{border-bottom:0}
+#results li[aria-selected="true"]{background:var(--chip);font-weight:700}
+#results li:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+#results .g{font-size:.76rem;color:var(--muted);font-weight:400;white-space:nowrap}
+/* figures: Values / Change toggle, as on the site */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0 4px}
+.st{border-top:4px solid var(--c);padding-top:6px;min-width:0}
+.st .k{font-size:.76rem;line-height:1.25;color:var(--muted)}
+.st .v{font:700 1.3rem/1.15 var(--font-head);font-variant-numeric:tabular-nums;margin-top:2px;overflow-wrap:anywhere}
+.st .d{font-size:.76rem;line-height:1.25;color:var(--muted)}
+.s-now{--c:#b4bcc3} :root[data-theme="dark"] .s-now{--c:#5c6975} .s-fut{--c:var(--ink)} .s-mat{--c:var(--accent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .s-now{--c:#5c6975}}
+.figbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:14px 0 6px}
+.figbar h4{font:700 .95rem/1.2 var(--font-body);margin:0}
+.vt{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:2px;background:var(--chip)}
+.vt button{font:inherit;font-size:.76rem;line-height:1;border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer;min-height:28px}
+.vt button[aria-pressed="true"]{background:var(--chipOn);color:var(--chipOnInk);font-weight:650}
+.fig[data-view="abs"] .v-chg,.fig[data-view="chg"] .v-abs{display:none}
+.crow{display:grid;grid-template-columns:var(--lw,5.2rem) minmax(0,1fr);align-items:center;margin:0 0 6px;border-radius:6px}
+.crow .lab{font-size:.8rem;color:var(--muted);min-width:0}
+.trk{position:relative;height:26px}
+.bar{position:absolute;top:9px;height:8px;border-radius:4px;background:var(--c,var(--kept));min-width:3px}
+.bar b{position:absolute;top:50%;transform:translateY(-50%);left:calc(100% + 6px);font-size:.74rem;font-weight:600;line-height:1;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar.end b{left:auto;right:calc(100% + 6px)}
+.trk .zero{position:absolute;top:2px;bottom:2px;border-left:1px solid var(--line)}
+.facts{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem;margin:12px 0}
+.facts dt{color:var(--muted)} .facts dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.card{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;margin:16px 0}
+.card h3{margin-bottom:4px}
+.shift{display:flex;gap:10px;align-items:center;margin:8px 0}
+.shift svg{flex:none}
+.kicker{font-size:.8rem;color:var(--muted);margin:0}
+.dep{margin:10px 0 0}
+.dep .nm{font-size:.9rem;margin:0 0 4px}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--line);cursor:pointer;text-align:left}
+ul.pl{list-style:none;margin:6px 0;padding:0}
+ul.pl li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:.92rem}
+ul.pl li .w{font-size:.76rem;color:var(--muted);white-space:nowrap}
+ul.pl svg{display:block}
+.answer{font-size:1.02rem;margin:8px 0}
+details{margin:10px 0} summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+details p{font-size:.9rem}
+.disc{font-size:.92rem;font-weight:700;margin:6px 0 2px}
+/* map furniture */
+#legend{position:absolute;z-index:2;left:12px;bottom:12px;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:.78rem;max-width:min(300px,calc(100% - 24px))}
+#legend summary{color:var(--ink);font-weight:700;font-size:.78rem;margin:0}
+#legend .key{display:grid;grid-template-columns:28px 1fr;gap:4px 8px;align-items:center;line-height:1.25;margin-top:6px}
+#legend svg{display:block;overflow:visible}
+#synpill{position:absolute;z-index:2;top:12px;left:50%;transform:translateX(-50%);background:var(--panel);border:1.5px solid var(--warn);color:var(--ink);font-size:.78rem;font-weight:700;border-radius:999px;padding:3px 12px;white-space:nowrap;pointer-events:none}
+#themebtn{position:absolute;left:10px;top:10px;z-index:3;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--rule);background:var(--panel);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+#themebtn svg{width:20px;height:20px}
+#busy{position:absolute;z-index:2;right:56px;top:14px;font-size:.78rem;color:var(--muted);background:var(--panel);border-radius:999px;padding:2px 10px;border:1px solid var(--rule)}
+#busy[hidden]{display:none}
+:root[data-theme="dark"] .maplibregl-ctrl-group{background:var(--panel);box-shadow:0 0 0 1px var(--rule)}
+:root[data-theme="dark"] .maplibregl-ctrl-icon{filter:invert(1) brightness(.92)}
+.maplibregl-ctrl-attrib{display:none}
+.pmark{width:18px;height:18px;border-radius:50%;border:3px solid var(--ink);background:var(--panel);box-shadow:0 0 0 2px var(--panel)}
+#sheethead{display:none}
+#attrib{position:absolute;right:0;bottom:0;z-index:2;font-size:11px;padding:2px 7px;border-top-left-radius:6px;background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--ink)}
+@media (max-width:820px) and (orientation:portrait){
+  #mapwrap{position:fixed;inset:0}
+  html,body{overflow:hidden;overscroll-behavior:none}
+  aside{position:fixed;left:0;right:0;bottom:0;z-index:5;width:100%;height:var(--sheet-h,300px);border:0;border-radius:16px 16px 0 0;
+        box-shadow:0 -4px 22px rgba(0,0,0,.2);padding:0 18px calc(28px + env(safe-area-inset-bottom,0px));
+        overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;transition:height .28s cubic-bezier(.2,.8,.2,1)}
+  aside.dragging{transition:none}
+  #sheethead{display:block;position:sticky;top:0;z-index:6;margin:0 -18px 8px;padding:0 12px 8px 18px;background:var(--panel);border-bottom:1px solid var(--rule);user-select:none;-webkit-user-select:none}
+  #grab{display:block;width:100%;padding:9px 0 7px;border:0;background:transparent;cursor:grab;touch-action:none}
+  #grab::before{content:"";display:block;width:44px;height:5px;border-radius:3px;background:var(--muted);opacity:.55;margin:0 auto}
+  #grab:focus-visible,#sh-tog:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+  .sh-row{display:flex;align-items:center;gap:8px;min-width:0}
+  #sh-title{flex:1;min-width:0;font-weight:700;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #sh-tog{flex:none;width:36px;height:36px;border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);display:grid;place-items:center}
+  aside:not(.collapsed) #sh-tog svg{transform:rotate(180deg)}
+  aside.collapsed{overflow:hidden}
+  aside h1.main{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  #legend{bottom:calc(var(--sheet-h,300px) + 12px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
+  #attrib{bottom:var(--sheet-h,300px)}
+  #busy{top:56px;right:10px}
+  .maplibregl-ctrl-top-right{top:0}
+}
+@media (max-width:820px) and (orientation:landscape){ aside{--aside-w:min(360px,50vw)} }
+@media (prefers-reduced-motion:reduce){aside{transition:none!important}}
+/* species page additions */
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0 4px;font-size:.88rem;flex-wrap:wrap}
+.top a{color:var(--ink)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.tierline{margin:4px 0}
+.note.withheld{border-left-color:var(--bad)}
+.q-low{color:var(--bad)}
+.err{border:1px solid var(--bad);border-radius:10px;padding:8px 12px;margin:10px 0;font-size:.9rem}
+.err button{font:inherit;margin-left:6px}
+#fatal{position:absolute;z-index:9;left:12px;right:12px;top:60px;background:var(--panel);border:1px solid var(--bad);border-radius:10px;padding:12px}
+#fatal[hidden],.err[hidden]{display:none}
+#place-det>summary{color:var(--ink);font-weight:700;font-size:1.02rem;font-family:var(--font-head)}
+a{color:inherit;text-decoration-color:var(--line)}
+#legend{max-width:min(300px,calc(100% - 24px))}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="mapwrap">
+    <div id="map" role="region" aria-label="Map of the selected species' projected climate suitability"></div>
+    <button id="themebtn" type="button" aria-label="Switch light and dark map" title="Light / dark"></button>
+    <div id="busy" role="status" hidden>Updating map...</div>
+    <div id="fatal" role="alert" hidden><strong>The species data could not be loaded.</strong> <span id="fatal-msg"></span> <button id="retry" type="button">Try again</button></div>
+    <details id="legend"><summary>Legend</summary><div id="lg"></div></details>
+  </div>
+  <aside id="panel" aria-label="Species panel">
+    <div id="sheethead">
+      <button id="grab" type="button" aria-label="Resize the panel"></button>
+      <div class="sh-row"><div id="sh-title">Species</div>
+        <button id="sh-tog" type="button" aria-label="Show or hide the panel" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button></div>
+    </div>
+    <div class="top"><a href="./">Climate twins map</a><a href="species-methods.html">Methods, tiers and credits</a></div>
+    <h1 class="main">Species and future climate</h1>
+    <p class="note"><strong>Educational use.</strong> This shows <em>projected climate suitability</em> for <span id="count">&nbsp;</span> species, not where they will live. Land use, soils, other species and chance matter too. Not for planting, farming or land decisions.</p>
+
+    <div class="ctl">
+      <label class="small" for="search">Find a species</label>
+      <input id="search" type="search" placeholder="Name or group, for example maple or birds" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="results" aria-autocomplete="list">
+      <div class="chips" id="chips" role="group" aria-label="Filter by group"></div>
+      <ul id="results" role="listbox" aria-label="Species"></ul>
+    </div>
+
+    <hr>
+    <div id="sp-head" aria-live="off"></div>
+    <p class="err" id="sp-err" hidden role="alert">The map files for this species could not be loaded. Check your connection and pick the species again.</p>
+
+    <div class="ctl"><div class="small" id="l-view">Map shows</div><div class="seg" id="view" role="group" aria-labelledby="l-view"></div></div>
+    <div class="ctl"><div class="small" id="l-ssp">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="l-ssp"></div></div>
+    <div class="ctl"><div class="small" id="l-per">Period</div><div class="seg" id="per" role="group" aria-labelledby="l-per"></div></div>
+    <div class="ctl"><div class="small" id="l-disp">Dispersal (how far the species can spread)</div><div class="seg" id="disp" role="group" aria-labelledby="l-disp"></div>
+      <div class="small" id="disp-d" style="margin-top:4px"></div></div>
+    <div class="opts">
+      <label><input type="checkbox" id="o-agree"><span>Shade where fewer than 3 in 4 climate models agree (dotted)</span></label>
+      <label><input type="checkbox" id="o-novel"><span>Shade climates with no present-day match (diagonal lines)</span></label>
+    </div>
+
+    <div id="summary" class="fig" data-view="abs"></div>
+    <details class="card" id="place-det"><summary>Which species lose or gain climate where you are</summary><div id="place-body"></div></details>
+    <details class="card" id="about-det"><summary>About this model: tier, skill, records and DOIs</summary><div id="about"></div></details>
+    <details><summary>Text description of the map</summary><p id="textdesc"></p></details>
+    <p class="small">Climate suitability, not a forecast. It shows where a species' climate niche may fit, not where it will live. <a href="species-methods.html">Methods, limitations and credits</a>.</p>
+  </aside>
+</div>
+<div class="sr" id="live" aria-live="polite"></div>
+<script src="species/app.js"></script>
+</body>
+</html>
