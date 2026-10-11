@@ -1,0 +1,35 @@
+# Moves finished batch 2 fits from a run's artifacts into the release species-fits-batch2 (the old release hit GitHub's 1000-asset limit).
+# Trigger: push to .github/run/s2-recover (content: the run id to recover from), or from the Actions tab. Safe to repeat.
+name: s2-recover
+on:
+  push:
+    paths: [".github/run/s2-recover"]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+env:
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - name: Make sure the release exists
+        run: gh release view species-fits-batch2 >/dev/null 2>&1 || gh release create species-fits-batch2 --title "Batch 2 fits" --notes "Species fit outputs (s2_w3_*) from Actions; the pilot release is full."
+      - name: Download the artifacts and upload to the release
+        run: |
+          RUN=$(tr -dc '0-9' < .github/run/s2-recover)
+          mkdir -p work/art out
+          gh run download "$RUN" -p 's2w3-*' -D work/art
+          n=0
+          for d in work/art/s2w3-*; do
+            key=${d#work/art/s2w3-}
+            test -f "$d/summary.json" || { echo "skip $key (no summary)"; continue; }
+            cp "$d/summary.json" "out/s2_w3_${key}_summary.json"
+            if [ -d "$d/cts" ]; then (cd "$d/cts" && zip -qr "../../../../out/s2_w3_${key}_cts.zip" .); fi
+            n=$((n+1))
+          done
+          echo "$n fits recovered"; ls out | wc -l
+          cd out && ls | xargs -n 20 gh release upload species-fits-batch2 --clobber
