@@ -27,7 +27,7 @@ Not touched: `deploy.yml`, `wrangler.jsonc`, `ctw/analogs.py` (unmodified, check
 - **Summary:** area now / future / change, centre shift with arrow, lost / kept / gained, agreement, novel share. One chart view at a time with a Values / Change toggle; taps on rows do nothing (tested).
 - **Trust cues on every species:** tier badge (A / B, symbol plus word), "Low confidence" with the reason, range-shift badge (pass / fail / untested, with plain-words explanation), cross-validation kind, records, DOIs, the exact `wording` field of the summary (crops get their own), "Climate suitability, not a forecast.", breeding-season note for migratory birds, link to methods.
 - **Withheld numbers:** when a scenario and period is flagged (novel climate above 15%) the summary shows "Withheld" plus the reason from the summary; the map is drawn and the novelty overlay is forced on and its checkbox disabled. The place list shows those species as "not shown", never as a number.
-- **Place list** ("which species lose or gain climate where you are", closed by default, loaded only when opened): 49 cities, read from the map cells around each city centre at build time for every scenario, period and dispersal bound. **Cheap, so included.** It is a list of cities, not an arbitrary click on the map.
+- **Place list** ("which species lose or gain climate where you are", closed by default, loaded only when opened): 52 cities, read from the map cells around each city centre at build time for every scenario, period and dispersal bound. **Cheap, so included.** It is a list of cities, not an arbitrary click on the map.
 - **Dependency card:** skipped, as instructed (no curated pairs exist).
 - **Layout and access:** bottom sheet on phones (same pattern as the main page), side panel on desktop; light and dark (system, plus a button, shared `ct-theme` key); keyboard: combobox search with arrows and Enter, all controls are buttons, inputs or selects with visible focus; legend uses hatch / dots / lines, so no colour-only encoding; live region and a text description of the map; reduced motion respected.
 - **Base map:** the same OpenFreeMap styles as the main page, species colours inserted below the label layer; if the style cannot load, a plain background plus `land.cts` is used (this is what the offline test sees).
@@ -99,7 +99,7 @@ jobs:
 | Widest species (barn swallow): base + one scenario | 3.0 MB | scene 184 ms (localhost) |
 | Scenario switch | one file (0.37 MB for sugar maple, up to 2.7 MB) | one fetch |
 | Period, dispersal, view, overlays | 0 | one frame |
-| Place table (opened on demand) | 25 kB for 25 species x 49 cities | |
+| Place table (opened on demand) | 25 kB for 25 species x 52 cities | |
 
 Real network, real phones, Safari and Firefox were **not** tested [U]. The first-draw time on a slow link scales with the scenario file: a 2.7 MB file at 1.6 Mbit/s is about 13 s for the widest species; the world view cannot draw before the whole file is in. If that matters, ranges can be fetched (the CTS index supports it; the prototype did so) once the host's Range support is verified [U].
 
@@ -116,6 +116,6 @@ Real network, real phones, Safari and Firefox were **not** tested [U]. The first
 - The 25 pilot species are all there is until S1's `s1_*` assets exist; the builder will take them unchanged if they follow the `<prefix>_<slug>_summary.json` / `_cts.zip` naming. **If S1 uses different names or adds scenarios, tell me or adjust `pick_runs`.**
 - DOIs for TerraClimate (10.1038/sdata.2017.191) and the NEX-GDDP-CMIP6 paper (10.1038/s41597-022-01393-4) on the methods page are from memory [U]; the GBIF, BBS, WCVP and USFS DOIs come from the project's own notes (`W2-occurrences.md`, `C-validation.md`).
 - Methods statements about the birds' range-shift test describe the result as "direction of change no better than chance" (roadmap section 16); the early test period is not named on the page.
-- The 49-city list in `ctw/species_site.py` (`PLACES`) is a table: replace or extend it freely.
+- The 52-city list in `ctw/species_site.py` (`PLACES`) is a table: replace or extend it freely.
 - Species with tier C or `published: false` are left out, e.g. the all-year European robin; its breeding fit (tier B, low confidence) is shown.
 - The page default (sugar maple) is a placeholder choice.
