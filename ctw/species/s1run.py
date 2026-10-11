@@ -98,11 +98,22 @@ def route_and_clean(folder, rows: list[dict], land=None, ref=None):
     unchanged). Returns ({taxon key: cleaner}, number of rows that belong to none of the species)."""
     cleaners = {int(r["gbif_taxon_key"]): w2cells.CellCleaner(land=land, ref=ref, keep_cultivated=(r["group"] == "crop")) for r in rows}
     unmatched = 0
-    for d in w2cells.read_batches(folder, extra=("specieskey",)):
-        sk = pd.to_numeric(d["specieskey"], errors="coerce").to_numpy() if "specieskey" in d else np.full(len(d), -1.0)
+    names = {int(r["gbif_taxon_key"]): r.get("scientific_name") for r in rows}
+    first = True
+    for d in w2cells.read_batches(folder, extra=("specieskey", "species", "taxonkey")):
+        if first:
+            log("download columns used for routing:", [c for c in ("specieskey", "species", "taxonkey") if c in d])
+            first = False
         hit = np.zeros(len(d), bool)
         for k, cc in cleaners.items():
-            m = sk == k
+            m = np.zeros(len(d), bool)
+            if "specieskey" in d:
+                m |= pd.to_numeric(d["specieskey"], errors="coerce").to_numpy() == k
+            if "species" in d and names.get(k):
+                m |= d["species"].astype("string").fillna("").to_numpy() == names[k]
+            if "taxonkey" in d:
+                m |= pd.to_numeric(d["taxonkey"], errors="coerce").to_numpy() == k
+            m &= ~hit
             if m.any():
                 cc.feed(d[m])
                 hit |= m
@@ -150,7 +161,7 @@ def process_batch(bid: str, key: str, rows: list[dict], state: State) -> bool:
 def acquire(hours: float) -> int:
     W.ensure_release()
     state = State()
-    have = W.rel_assets()
+    have = {} if os.environ.get("S1_REDO") == "1" else W.rel_assets()      # S1_REDO=1: reprocess the stored downloads (no new GBIF request)
     bs = batches(read_batch())
     todo = {b: rs for b, rs in bs.items() if not stored(rs, have)}
     log(f"{len(bs) - len(todo)} of {len(bs)} download batches already stored, {len(todo)} to do")

@@ -66,7 +66,7 @@ def test_split_download_equals_separate_cleaning(tmp_path):
     noise = _fake(40, 99, 3, 50.0)                                                # a record that belongs to none of the species
     both = pd.concat([a, noise, b], ignore_index=True).sample(frac=1, random_state=0)
     both.to_parquet(tmp_path / "x.parquet")
-    rows = [{"gbif_taxon_key": "11", "group": "bird"}, {"gbif_taxon_key": "22", "group": "crop"}]
+    rows = [{"gbif_taxon_key": "11", "group": "bird", "scientific_name": "A a"}, {"gbif_taxon_key": "22", "group": "crop", "scientific_name": "B b"}]
     cl, unmatched = s1run.route_and_clean(tmp_path, rows)
     assert unmatched == 40
     for k, solo in ((11, a), (22, b)):
@@ -76,6 +76,15 @@ def test_split_download_equals_separate_cleaning(tmp_path):
         c2, r2 = ref.finish()
         pd.testing.assert_frame_equal(c1, c2)
         assert r1["steps"] == r2["steps"]
+
+
+def test_split_falls_back_to_the_species_name_column(tmp_path):
+    a, b = _fake(100, 11, 1, 40.0), _fake(120, 22, 2, 45.0)
+    a["species"], b["species"] = "A a", "B b"
+    pd.concat([a, b]).drop(columns=["specieskey"]).to_parquet(tmp_path / "x.parquet")
+    rows = [{"gbif_taxon_key": "11", "group": "bird", "scientific_name": "A a"}, {"gbif_taxon_key": "22", "group": "bird", "scientific_name": "B b"}]
+    cl, unmatched = s1run.route_and_clean(tmp_path, rows)
+    assert unmatched == 0 and cl[11].finish()[1]["n_cells"] > 0 and cl[22].finish()[1]["n_cells"] > 0
 
 
 def test_species_inputs_reads_the_s1_product(tmp_path, monkeypatch):

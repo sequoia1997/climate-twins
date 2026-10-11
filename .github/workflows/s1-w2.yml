@@ -34,7 +34,9 @@ jobs:
           GBIF_USER: ${{ secrets.GBIF_USER }}
           GBIF_PWD: ${{ secrets.GBIF_PWD }}
           GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
-        run: python -m ctw.species.s1run acquire --hours 5.6
+        run: |
+          if grep -qw redo .github/run/s1-w2; then export S1_REDO=1; fi
+          python -m ctw.species.s1run acquire --hours 5.6
       - name: State (keys and DOIs, no secrets)
         if: always()
         run: |
