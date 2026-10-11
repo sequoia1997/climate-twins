@@ -559,7 +559,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
 <script>
 "use strict";
 // ---- release details: edit these when publishing a new version
-const AUTHOR={family:"Schweitzer",given:"Forest Meyer",initials:"F. M."};
+const AUTHOR={name:"Climate Twins"};
 const TITLE="Climate Twins: present-day climate analogs for projected 2050 and 2100 climates";
 const RELEASE="{{RELEASE}}", DATA_VERSION="{{DATA_VERSION}}", YEAR="2026";
 const MODELS=[["ACCESS-CM2","r1i1p1f1",2.10],["AWI-CM-1-1-MR","r1i1p1f1",2.06],["BCC-CSM2-MR","r1i1p1f1",1.72],["CNRM-CM6-1-HR","r1i1p1f2",2.48],
@@ -569,7 +569,7 @@ const MODELS=[["ACCESS-CM2","r1i1p1f1",2.10],["AWI-CM-1-1-MR","r1i1p1f1",2.06],[
   ["IPSL-CM6A-LR","r1i1p1f1",2.32],["KACE-1-0-G","r1i1p1f1",2.04],["MIROC-ES2L","r4i1p1f2",1.55],["MIROC6","r1i1p1f1",1.55],
   ["MPI-ESM1-2-HR","r1i1p1f1",1.66],["MPI-ESM1-2-LR","r1i1p1f1",1.84],["MRI-ESM2-0","r1i1p1f1",1.64],["UKESM1-0-LL","r1i1p1f2",2.79]];
 
-document.getElementById("m-author").textContent=`${AUTHOR.given} ${AUTHOR.family}`;
+document.getElementById("m-author").textContent=AUTHOR.name;
 document.querySelectorAll(".v-rel").forEach(e=>e.textContent=RELEASE);
 document.querySelectorAll(".v-data").forEach(e=>e.textContent=DATA_VERSION);
 document.getElementById("modeltable").innerHTML=MODELS.map(([m,r,t])=>{
@@ -580,10 +580,10 @@ document.getElementById("modeltable").innerHTML=MODELS.map(([m,r,t])=>{
 const mapURL=new URL("./",location.href).href.replace(/\/methods(\.html)?\/?$/,"/");
 const today=new Date(),months=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const acc=`${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`,iso=today.toISOString().slice(0,10);
-const apa=`${AUTHOR.family}, ${AUTHOR.initials} (${YEAR}). ${TITLE} (Version ${RELEASE}, data version ${DATA_VERSION}) [Interactive web map]. Retrieved ${acc}, from ${mapURL}`;
-document.getElementById("c-apa").innerHTML=`${AUTHOR.family}, ${AUTHOR.initials} (${YEAR}). <em>${TITLE}</em> (Version ${RELEASE}, data version ${DATA_VERSION}) [Interactive web map]. Retrieved ${acc}, from <a href="${mapURL}">${mapURL}</a>`;
+const apa=`${AUTHOR.name} (${YEAR}). ${TITLE} (Version ${RELEASE}, data version ${DATA_VERSION}) [Interactive web map]. Retrieved ${acc}, from ${mapURL}`;
+document.getElementById("c-apa").innerHTML=`${AUTHOR.name} (${YEAR}). <em>${TITLE}</em> (Version ${RELEASE}, data version ${DATA_VERSION}) [Interactive web map]. Retrieved ${acc}, from <a href="${mapURL}">${mapURL}</a>`;
 document.getElementById("c-bib").textContent=`@misc{climatetwins${YEAR},
-  author       = {${AUTHOR.family}, ${AUTHOR.given}},
+  author       = {{${AUTHOR.name}}},
   title        = {{${TITLE}}},
   year         = {${YEAR}},
   version      = {${RELEASE}},

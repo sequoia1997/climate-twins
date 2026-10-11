@@ -3,9 +3,9 @@
 
 [release]
 title = "Climate Twins: present-day climate analogs for projected 2050 and 2100 climates"
-author_family = "Schweitzer"
-author_given = "Forest Meyer"
-author_initials = "F. M."
+author_family = "Climate Twins"
+author_given = ""
+author_initials = ""
 # Bump the method version when the method changes. The data version is the build date.
 method_version = "10.0"           # bump to 11.0 (and add a CHANGELOG entry) in the same change that sets [matching] extra
 # Public address of this repository, shown on the methods page (e.g. "https://github.com/yourname/climate-twins").
