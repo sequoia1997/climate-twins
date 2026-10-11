@@ -202,6 +202,13 @@ if __name__ == "__main__":
     with open(ROOT / "data/species/native/curated_native_v2.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(native[0])); w.writeheader(); w.writerows(native)
     sel = [r for r in rows if r["status"] == "selected"]
+    import json
+    d = ROOT / "data/species/batch2_evidence/shift"; d.mkdir(parents=True, exist_ok=True)
+    tmpl = json.loads((ROOT / "data/species/batch1_evidence/shift/pica_pica.json").read_text())
+    tmpl["note"] = "S3: the W4 group verdict for birds (range-change hindcast failed) applied to a species W4 did not test; it is a group statement, not a test of this species"
+    for r in sel:
+        if r["group"] == "bird":
+            (d / f"{r['id']}.json").write_text(json.dumps(tmpl, indent=1))
     from collections import Counter
     print(len(sel), Counter(r["group"] for r in sel))
     bt = {}
