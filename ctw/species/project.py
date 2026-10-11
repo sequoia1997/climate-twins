@@ -28,7 +28,7 @@ MODES = ("unlimited", "limited", "none")
 # Trait-based dispersal rule: potential range-expansion rate in km per decade by group. UNCALIBRATED: these are order-of-magnitude
 # values (post-glacial tree migration 10-50 km per decade, birds and mammals can move much faster than they colonise), about 10x
 # uncertain, to be calibrated by the hindcast. Species-specific values can be given in the species table and override these.
-DISPERSAL_KM_PER_DECADE = {"tree": 15.0, "plant": 15.0, "crop": 10.0, "bird": 100.0, "mammal": 50.0,
+DISPERSAL_KM_PER_DECADE = {"tree": 15.0, "plant": 15.0, "wild_plant": 15.0, "crop": 10.0, "bird": 100.0, "mammal": 50.0,
                            "insect_arachnid": 40.0, "reptile": 10.0, "amphibian": 5.0, "fish": 50.0}
 DISPERSAL_DEFAULT = 20.0
 

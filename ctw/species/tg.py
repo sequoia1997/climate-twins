@@ -22,7 +22,7 @@ GROUPS = {   # target group -> SQL taxon condition. By NAME: in GBIF's SQL downl
     "insect_arachnid": "class IN ('Insecta', 'Arachnida')",
     "plant": "phylum = 'Tracheophyta'",
 }
-PILOT_GROUP_TO_TG = {"bird": "bird", "mammal": "mammal", "insect_arachnid": "insect_arachnid", "tree": "plant", "crop": "plant"}
+PILOT_GROUP_TO_TG = {"bird": "bird", "mammal": "mammal", "insect_arachnid": "insect_arachnid", "tree": "plant", "wild_plant": "plant", "crop": "plant"}
 
 
 BASIS_OK = {"HUMAN_OBSERVATION", "PRESERVED_SPECIMEN", "OBSERVATION", "MACHINE_OBSERVATION"}

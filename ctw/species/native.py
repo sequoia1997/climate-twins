@@ -124,6 +124,8 @@ def unit_matches(props: dict, token: tuple[str, str]) -> tuple[bool, bool]:
         return props.get("SUBREGION") == "Northern Africa", False
     if cont == "OCEANIA" and q == "N":
         return True, True
+    if cont == "OCEANIA" and q == "AU":          # S1 (batch 1): Australia only (all subunits whose sovereign is AUS, Tasmania included; New Zealand and New Guinea excluded)
+        return props.get("ADM0_A3") == "AUS", False
     raise ValueError(f"unsupported qualifier {cont}({q})")
 
 

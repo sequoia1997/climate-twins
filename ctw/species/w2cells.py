@@ -55,7 +55,7 @@ def parquet_files(folder: Path) -> list[str]:
     return out
 
 
-def read_batches(folder: Path, batch_size: int = 1_000_000):
+def read_batches(folder: Path, batch_size: int = 1_000_000, extra: tuple = ()):
     """Yield pandas DataFrames with the columns of COLS that exist; recordedby (a list column in SIMPLE_PARQUET) is joined into one string."""
     import pyarrow as pa
     import pyarrow.compute as pc
@@ -63,7 +63,7 @@ def read_batches(folder: Path, batch_size: int = 1_000_000):
     for f in parquet_files(folder):
         pf = pq.ParquetFile(f)
         have = {n.lower(): n for n in pf.schema_arrow.names}
-        want = [have[c] for c in COLS if c in have]
+        want = [have[c] for c in list(COLS) + list(extra) if c in have]
         for b in pf.iter_batches(batch_size=batch_size, columns=want):
             t = pa.Table.from_batches([b])
             t = t.rename_columns([n.lower() for n in t.column_names])

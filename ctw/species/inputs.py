@@ -294,8 +294,9 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     root = root or os.environ.get("W3_OCC", "work/occ")
     tag = meta["scientific_name"].replace(" ", "_")
     kind = (meta.get("kind") or ("crop" if meta.get("group") == "crop" else "wild")).lower()
-    f_crop = os.path.join(root, "occ_cells_crops_cultivated_pilot_v1.parquet")
-    f_wild = os.path.join(root, "occ_cells_pilot_v1.parquet")                      # W2 final: native cells only, 24 wild species
+    s1 = os.environ.get("W3_PRODUCT", "pilot") == "s1"                              # S1 batch 1 assets (names s1_*), same layout as the pilot's
+    f_crop = os.path.join(root, "s1_occ_cells_crops_v1.parquet" if s1 else "occ_cells_crops_cultivated_pilot_v1.parquet")
+    f_wild = os.path.join(root, "s1_occ_cells_v1.parquet" if s1 else "occ_cells_pilot_v1.parquet")                      # W2 final: native cells only, 24 wild species
     one = os.path.join(root, f"w2-cells-{tag}.parquet")                           # interim per-species file (fallback)
     src_file = f_crop if (kind == "crop" and os.path.exists(f_crop)) else (f_wild if os.path.exists(f_wild) else one)
     df = pd.read_parquet(src_file)
@@ -318,7 +319,7 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
         raise ValueError(f"no occurrence cells for {meta['scientific_name']} in {src_file}")
     occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
     native = density = None
-    nm = os.path.join(root, "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
+    nm = os.path.join(root, "s1_native_masks_v1.npz" if s1 else "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
     if os.path.exists(nm):
         z = np.load(nm)
         if f"{tag}__final" in z.files:
@@ -340,7 +341,7 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     if seasonal_native is not None:
         native = seasonal_native
     dois = []
-    rp = os.path.join(root, "w2_report_pilot_v1.json")
+    rp = os.path.join(root, "s1_w2_report_v1.json" if s1 else "w2_report_pilot_v1.json")
     if os.path.exists(rp):
         r = json.load(open(rp))["species"].get(meta["scientific_name"], {})
     else:
