@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 import numpy as np
 
-from . import grid, pipeline as PL, project as PR, summary as SM, cts, gates as G
+from . import grid, inputs, pipeline as PL, project as PR, summary as SM, cts, gates as G
 from .grid import SSPS, PERIODS
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -69,7 +69,8 @@ def load_fit(d: Path) -> PL.Fit:
 
 def run_species(meta: dict, src, spec, occ, native, density, outdir: Path, *, land=None, ssps=SSPS, periods=PERIODS, cfg: PL.FitConfig = None,
                 pcfg: PR.ProjConfig = None, gate_cfg: G.GateConfig = None, validation: dict = None, expert_kind: str = "native_range",
-                dois: list = None, range_shift_test: dict = None, force: bool = False, product: str = "lite", log=print) -> dict:
+                dois: list = None, range_shift_test: dict = None, force: bool = False, product: str = "lite", bbs_dir: str = None, aou: int = None,
+                redo_summary: bool = False, log=print) -> dict:
     """Fit, project, summarise and write one species. Returns the summary dict."""
     cfg = cfg or PL.FitConfig()
     pcfg = pcfg or PR.ProjConfig()
@@ -78,7 +79,7 @@ def run_species(meta: dict, src, spec, occ, native, density, outdir: Path, *, la
     d = Path(outdir) / sid
     d.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    if (d / "DONE").exists() and not force:
+    if (d / "DONE").exists() and not force and not redo_summary:
         log(f"{sid}: already done")
         return json.loads((d / "summary.json").read_text())
     if (d / "fit.pkl").exists() and not force:
@@ -89,6 +90,12 @@ def run_species(meta: dict, src, spec, occ, native, density, outdir: Path, *, la
                              cfg=cfg, log=log)
         save_fit(fit, d)
     t1 = time.time()
+    if bbs_dir and aou:
+        direct = inputs.bbs_direct(fit, src, aou, bbs_dir)
+        meta["bbs_direct"] = direct
+        if direct.get("available"):
+            # the direct check of THIS fit replaces W4's pipeline-level evidence for the Tier A decision; W4's numbers stay in the record
+            validation = dict(kind="bbs", passed=direct["passed"], direct=direct, w4_pipeline_evidence=validation)
     proj = PR.project_species(fit, src, ssps, periods, group=meta.get("group"), cfg=pcfg, log=log)
     t2 = time.time()
     summ = SM.build_summary(fit, proj, meta, expert=native, expert_kind=expert_kind, validation=validation, range_shift_test=range_shift_test, gate_cfg=gate_cfg, dois=dois)
@@ -276,6 +283,9 @@ def main(argv=None):
     b.add_argument("--force", action="store_true")
     b.add_argument("--jobs", type=int, default=int(os.environ.get("W3_JOBS", os.cpu_count() or 1)))
     b.add_argument("--product", default="lite", choices=["lite", "full"])
+    b.add_argument("--season", default=None, choices=["breeding"], help="use breeding-season cells only (W2 seasonal product); output id gets a _breeding suffix")
+    b.add_argument("--bbs-dir", default=None, help="directory with W4's bbs_route_cells.csv and bbs_presence_long.csv.gz: direct BBS check of the fit")
+    b.add_argument("--redo-summary", action="store_true", help="reuse fit.pkl but project and summarise again")
     b.add_argument("--shift-dir", default=None, help="directory of <slug>.json range-shift test results (W4)")
     b.add_argument("--validation-dir", default=None, help="directory of <slug>.json external change-test evidence (e.g. BBS hindcast)")
     c = sub.add_parser("report")
@@ -333,9 +343,18 @@ def main(argv=None):
         p = Path(args.shift_dir) / f"{meta['id']}.json"
         shift = json.loads(p.read_text()) if p.exists() else None
     src, spec = inputs.climate_source()
-    occ, native, density, dois = inputs.species_inputs(meta, spec)
+    base_id = meta["id"]
+    meta = dict(meta)
+    occ, native, density, dois = inputs.species_inputs(meta, spec, season=args.season)
+    aou = None
+    if args.bbs_dir:
+        import csv as _csv
+        aou = next((int(r["AOU"]) for r in _csv.DictReader(open(ROOT / "data" / "species" / "w4" / "bbs_validation_species.csv")) if r["sci"] == meta["scientific_name"]), None)
+    if args.season:
+        meta["id"] = f"{base_id}_{args.season}"
+        meta["season"] = args.season
     run_species(meta, src, spec, occ, native, density, out, cfg=cfg, pcfg=pcfg, validation=validation, range_shift_test=shift, dois=dois, force=args.force,
-                product=args.product)
+                product=args.product, bbs_dir=args.bbs_dir, aou=aou, redo_summary=args.redo_summary)
     return 0
 
 

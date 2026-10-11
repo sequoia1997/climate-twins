@@ -88,7 +88,7 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
                                         f"(limit {gate_cfg.novel_max:.0%}): shift numbers withheld")
     summ = dict(
         schema=SCHEMA,
-        species=dict(kind=kind, cultivated_verified=bool(meta.get("cultivated_verified")), id=meta.get("id") or _slug(meta.get("scientific_name", fit.species)), scientific_name=meta.get("scientific_name", fit.species),
+        species=dict(season=meta.get("season", "all_year"), season_report=meta.get("season_report"), kind=kind, cultivated_verified=bool(meta.get("cultivated_verified")), id=meta.get("id") or _slug(meta.get("scientific_name", fit.species)), scientific_name=meta.get("scientific_name", fit.species),
                      common_name=meta.get("common_name"), group=meta.get("group"), gbif_taxon_key=meta.get("gbif_taxon_key"),
                      validation_plan=meta.get("validation_plan")),
         tier=ev["tier"], range_shifts_tested=ev["range_shifts_tested"], cv_kind=ev["cv_kind"], confidence=ev["confidence"], published=ev["published"], hard_failures=ev["hard_failures"], soft_flags=ev["soft_flags"],
@@ -109,7 +109,7 @@ def build_summary(fit: Fit, proj: Projection, meta: dict, *, expert: np.ndarray 
         audit_withheld=audit,
         gates=ev["gates"],
         gate_config=ev["config"],
-        validation=validation, range_shift_test=range_shift_test,
+        validation=validation, range_shift_test=range_shift_test, bbs_direct=meta.get("bbs_direct"),
         model=dict(main="LightGBM", check="penalised-spline GAM (logistic)", background=fit.cfg.bias, seed=fit.cfg.seed),
         data_dois=dois or [],
     )

@@ -474,3 +474,25 @@ def test_native_omission_reported_not_gated_but_commission_gates(world):
     assert r["omission"] > G.GateConfig().omission_max and r["status"] == "pass" and r["omission_gates"] is False
     r2 = G.range_check(d["truth"], SPEC, rc, nat, kind="expert_range")     # the same numbers against a true expert range fail
     assert r2["status"] == "fail" and r2["omission_gates"] is True
+
+
+def test_bbs_direct_check_scores_fit_at_survey_routes(world, fitted, tmp_path):
+    import pandas as pd
+    from ctw.species import inputs as IN
+    src, v, d = world
+    fit, _ = fitted
+    rng = np.random.default_rng(0)
+    r, c = np.nonzero(d["land"])
+    tr_r, tr_c = np.nonzero(d["truth"])
+    pick = np.r_[rng.choice(len(r), 300, replace=False)]
+    r, c = np.r_[r[pick], tr_r[:60]], np.r_[c[pick], tr_c[:60]]
+    pick = np.arange(len(r))
+    q = pd.DataFrame(dict(country=840, state=1, route=np.arange(len(r)), row=r[pick], col=c[pick], qualifies=True))
+    q.to_csv(tmp_path / "bbs_route_cells.csv", index=False)
+    present = d["truth"][r[pick], c[pick]]                                   # survey sees the species where the truth range is
+    det = pd.DataFrame(dict(country=840, state=1, route=np.nonzero(present)[0], AOU=1234, p2=True))
+    det.to_csv(tmp_path / "bbs_presence_long.csv.gz", index=False)
+    res = IN.bbs_direct(fit, src, 1234, str(tmp_path))
+    assert res["available"] and res["auc"] > 0.85 and res["passed"] is True and res["n_presence"] + res["n_absence"] == len(r)
+    none = IN.bbs_direct(fit, src, 999, str(tmp_path))
+    assert none["available"] is False

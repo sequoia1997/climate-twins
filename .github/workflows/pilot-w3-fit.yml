@@ -39,13 +39,33 @@ jobs:
           words = re.split(r"[\s,]+", sys.argv[1].strip())
           synthetic = "synthetic" in words
           force = "force" in words
+          items = []
           if synthetic:
-              ids = ["broad", "moderate", "cold_limited", "narrow", "region_excluded"]
+              items = [dict(id=i, mode="plain", key=i) for i in ["broad", "moderate", "cold_limited", "narrow", "region_excluded"]]
           else:
               allids = [re.sub(r"[^a-z0-9]+", "_", r["scientific_name"].lower()).strip("_") for r in csv.DictReader(open("data/species/pilot_v1.csv", encoding="utf-8"))]
-              pick = [w for w in words if w in allids]
-              ids = allids if ("all" in words or not pick) else pick
-          print("species=" + json.dumps(ids))
+              MIGR = ["hirundo_rustica", "turdus_migratorius", "agelaius_phoeniceus", "zenaida_macroura", "spinus_tristis", "sialia_sialis", "cyanocitta_cristata",
+                      "melospiza_melodia", "erithacus_rubecula", "danaus_plexippus", "danaus_chrysippus"]
+              BIRDS_BBS = ["turdus_migratorius", "cardinalis_cardinalis", "zenaida_macroura", "cyanocitta_cristata", "agelaius_phoeniceus", "hirundo_rustica",
+                           "melospiza_melodia", "thryothorus_ludovicianus", "sialia_sialis", "spinus_tristis"]
+              if "all" in words:
+                  items += [dict(id=i, mode="plain", key=i) for i in allids]
+              if "seasonal" in words:
+                  items += [dict(id=i, mode="breeding", key=i + "_breeding") for i in MIGR]
+              if "redo-bbs" in words:
+                  items += [dict(id=i, mode="redo", key=i) for i in BIRDS_BBS]
+              for w in words:
+                  base, _, mode = w.partition(":")
+                  if base in allids:
+                      items.append(dict(id=base, mode=mode or "plain", key=base + ("_breeding" if mode == "breeding" else "")))
+              if not items:
+                  items = [dict(id=i, mode="plain", key=i) for i in allids]
+              seen, uniq = set(), []
+              for it in items:
+                  if (it["key"], it["mode"]) not in seen:
+                      seen.add((it["key"], it["mode"])); uniq.append(it)
+              items = uniq
+          print("species=" + json.dumps(items))
           print("synthetic=" + ("true" if synthetic else "false"))
           print("force=" + ("true" if force else "false"))
           PY
@@ -57,7 +77,7 @@ jobs:
       fail-fast: false
       max-parallel: 25
       matrix:
-        species: ${{ fromJson(needs.plan.outputs.species) }}
+        item: ${{ fromJson(needs.plan.outputs.species) }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -67,29 +87,31 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: work/w3
-          key: w3-${{ matrix.species }}-none
-          restore-keys: w3-${{ matrix.species }}-
+          key: w3-${{ matrix.item.key }}-none
+          restore-keys: w3-${{ matrix.item.key }}-
       - name: Skip if the release already has this species
         id: skip
-        if: needs.plan.outputs.force != 'true' && needs.plan.outputs.synthetic != 'true'
+        if: needs.plan.outputs.force != 'true' && needs.plan.outputs.synthetic != 'true' && matrix.item.mode != 'redo'
         run: |
-          if gh release view species-pilot-data --json assets -q '.assets[].name' | grep -qx "w3_${{ matrix.species }}_summary.json"; then echo "done=true" >> "$GITHUB_OUTPUT"; else echo "done=false" >> "$GITHUB_OUTPUT"; fi
+          if gh release view species-pilot-data --json assets -q '.assets[].name' | grep -qx "w3_${{ matrix.item.key }}_summary.json"; then echo "done=true" >> "$GITHUB_OUTPUT"; else echo "done=false" >> "$GITHUB_OUTPUT"; fi
       - name: Download climate stack (W1) for this species' continents
         if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
         run: |
           mkdir -p work/clim
-          tiles="$(python -m ctw.species.run_pilot tiles --species ${{ matrix.species }})"
+          tiles="$(python -m ctw.species.run_pilot tiles --species ${{ matrix.item.id }})"
           echo "tiles: $tiles"
           args=()
           for m in $(python -m ctw.species.run_pilot models); do args+=(-p "deltas_${m}.npz"); done
-          for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "basem_${t}.npz"); done
+          for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "pred_hind_2005-2024_${t}.npz" -p "basem_${t}.npz"); done
           gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
           du -sh work/clim; ls work/clim | head -50
       - name: Download occurrence products (W2)
         if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
         run: |
           mkdir -p work/occ
-          gh release download species-pilot-data -D work/occ -p "occ_cells_pilot_v1.parquet" -p "occ_cells_crops_cultivated_pilot_v1.parquet" -p "native_masks_pilot_v1.npz" -p "tg_density_*_v1.npz" -p "w2_report_pilot_v1.json" --clobber || echo "no W2 assets yet"
+          gh release download species-pilot-data -D work/occ -p "occ_cells_pilot_v1.parquet" -p "occ_cells_crops_cultivated_pilot_v1.parquet" -p "native_masks_pilot_v1.npz" -p "tg_density_*_v1.npz" -p "w2_report_pilot_v1.json" -p "occ_cells_pilot_v1_seasonal.parquet" -p "w2_seasonal_report_v1.json" --clobber || echo "no W2 assets yet"
+          mkdir -p work/bbs
+          gh release download species-pilot-data -D work/bbs -p "bbs_route_cells.csv" -p "bbs_presence_long.csv.gz" --clobber || echo "no BBS files"
           ls -la work/occ | head -40
       - name: Fit, project and write
         if: steps.skip.outputs.done != 'true'
@@ -100,30 +122,34 @@ jobs:
           flags=""
           if [ "${{ needs.plan.outputs.synthetic }}" = "true" ]; then flags="--synthetic"; fi
           if [ "${{ needs.plan.outputs.force }}" = "true" ]; then flags="$flags --force"; fi
-          python -u -m ctw.species.run_pilot fit --species "${{ matrix.species }}" --out work/w3 $flags --jobs 4 --validation-dir data/species/w3/evidence/validation --shift-dir data/species/w3/evidence/shift
+          case "${{ matrix.item.mode }}" in
+            breeding) flags="$flags --season breeding" ;;
+            redo) flags="$flags --redo-summary" ;;
+          esac
+          python -u -m ctw.species.run_pilot fit --species "${{ matrix.item.id }}" --out work/w3 $flags --jobs 4 --bbs-dir work/bbs --validation-dir data/species/w3/evidence/validation --shift-dir data/species/w3/evidence/shift
       - name: Save working directory for resume
         if: always() && steps.skip.outputs.done != 'true'
         uses: actions/cache/save@v4
         with:
           path: work/w3
-          key: w3-${{ matrix.species }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: w3-${{ matrix.item.key }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Upload to the release
         if: steps.skip.outputs.done != 'true' && needs.plan.outputs.synthetic != 'true'
         run: |
-          d=work/w3/${{ matrix.species }}
+          d=work/w3/${{ matrix.item.key }}
           test -f $d/summary.json || exit 0
-          cp $d/summary.json w3_${{ matrix.species }}_summary.json
-          files=(w3_${{ matrix.species }}_summary.json)
-          if [ -d $d/cts ]; then (cd $d/cts && zip -qr ../../../../w3_${{ matrix.species }}_cts.zip .); files+=(w3_${{ matrix.species }}_cts.zip); fi
+          cp $d/summary.json w3_${{ matrix.item.key }}_summary.json
+          files=(w3_${{ matrix.item.key }}_summary.json)
+          if [ -d $d/cts ]; then (cd $d/cts && zip -qr ../../../../w3_${{ matrix.item.key }}_cts.zip .); files+=(w3_${{ matrix.item.key }}_cts.zip); fi
           gh release upload species-pilot-data "${files[@]}" --clobber
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: w3-${{ matrix.species }}
+          name: w3-${{ matrix.item.key }}
           path: |
-            work/w3/${{ matrix.species }}/summary.json
-            work/w3/${{ matrix.species }}/cts
-            work/w3/${{ matrix.species }}/DONE
+            work/w3/${{ matrix.item.key }}/summary.json
+            work/w3/${{ matrix.item.key }}/cts
+            work/w3/${{ matrix.item.key }}/DONE
           if-no-files-found: ignore
   report:
     needs: [plan, fit]
@@ -144,7 +170,7 @@ jobs:
           mkdir -p work/w3
           for d in collected/w3-*; do s="${d#collected/w3-}"; mkdir -p "work/w3/$s"; cp -r "$d"/. "work/w3/$s"/ 2>/dev/null || true; done
           # species finished in earlier runs: summaries from the release
-          for s in $(echo '${{ needs.plan.outputs.species }}' | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)))"); do
+          for s in $(echo '${{ needs.plan.outputs.species }}' | python3 -c "import json,sys; print(' '.join(i['key'] for i in json.load(sys.stdin)))"); do
             if [ ! -f work/w3/$s/summary.json ]; then gh release download species-pilot-data -p "w3_${s}_summary.json" -O /tmp/s.json --clobber 2>/dev/null && mkdir -p work/w3/$s && cp /tmp/s.json work/w3/$s/summary.json || true; fi
           done
           python -m ctw.species.run_pilot report --out work/w3 --md work/w3/REPORT.md --full

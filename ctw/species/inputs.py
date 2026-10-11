@@ -7,6 +7,7 @@ come from `climstack.apply_deltas` on demand.
 The directory is $W3_CLIM (default work/clim); `fetch_release` downloads the files of the GitHub release tagged `species-pilot-data`.
 """
 from __future__ import annotations
+import json
 import os
 import numpy as np
 
@@ -237,7 +238,50 @@ def _load_grid(path, key=None):
     return z[z.files[0]]
 
 
-def species_inputs(meta: dict, spec: GridSpec, root: str = None):
+def seasonal_mask(spec_str: str, root: str) -> np.ndarray:
+    """Boolean native mask from a curated continent spec (W2's native.curated_mask on Natural Earth subunits), cached next to the inputs."""
+    import hashlib
+    from pathlib import Path
+    from . import native as N
+    cache = Path(root) / "nat"
+    cache.mkdir(parents=True, exist_ok=True)
+    f = cache / ("mask_" + hashlib.md5(spec_str.encode()).hexdigest()[:10] + ".npy")
+    if f.exists():
+        return np.load(f)
+    feats = N.subunits(cache)
+    m = N.curated_mask(spec_str, feats, N.label_raster(feats))
+    np.save(f, m)
+    return m
+
+
+def bbs_direct(fit, src, aou: int, bbs_dir: str, window: str = "2005-2024") -> dict:
+    """Independent check of a GBIF-trained fit against the Breeding Bird Survey (presence-absence): the fit is scored at the 1,062 route cells
+    that qualify in W4's design, presence = species detected in at least 3 acceptable years of window 2 (W4's rule, column p2), absence = qualifying
+    route without that. No BBS data enters the fit, so no blocking is needed. AUC, best-threshold TSS, TSS at the fit's own threshold, Boyce."""
+    import pandas as pd
+    from . import sdm
+    q = pd.read_csv(os.path.join(bbs_dir, "bbs_route_cells.csv"))
+    q = q[q["qualifies"]]
+    det = pd.read_csv(os.path.join(bbs_dir, "bbs_presence_long.csv.gz"))
+    d = det[(det["AOU"] == aou) & det["p2"]][["country", "state", "route"]].drop_duplicates()
+    d["pres"] = True
+    q = q.merge(d, on=["country", "state", "route"], how="left").fillna({"pres": False})
+    sc = fit.score_cells(src, q["row"].to_numpy(int), q["col"].to_numpy(int), window)
+    ok = np.isfinite(sc)
+    pres, y = sc[ok & q["pres"].to_numpy(bool)], sc[ok & ~q["pres"].to_numpy(bool)]
+    if len(pres) < 20 or len(y) < 20:
+        return dict(available=False, n_presence=int(len(pres)), n_absence=int(len(y)))
+    auc = sdm.auc(pres, y)
+    t = sdm.best_threshold(pres, y)
+    ref = np.sort(sc[ok])
+    pct = lambda x: np.searchsorted(ref, x, "right") / len(ref)      # noqa: E731
+    return dict(available=True, window=window, n_presence=int(len(pres)), n_absence=int(len(y)), auc=float(auc), tss_best=float(sdm.tss(pres, y, t)),
+                tss_at_fit_threshold=float(sdm.tss(pres, y, fit.thr)), boyce=float(sdm.boyce(pct(pres), pct(sc[ok]))),
+                passed=bool(auc >= 0.7 and sdm.tss(pres, y, t) >= 0.4), rule="AUC >= 0.7 and best-threshold TSS >= 0.4 (W4's skill gate)",
+                source="GBIF-trained fit scored at BBS qualifying route cells, presence-absence, no BBS data in the fit")
+
+
+def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = None):
     """(Occurrences, native mask or None, target-group density or None, DOIs) for one species from W2's release assets in $W3_OCC:
       w2-cells-<Genus_species>.parquet   one row per occupied cell: row, col, year_min, year_max, n_records, n_events, n_1970_1999, n_2000_2020, n_2021_plus
       w2-report-<Genus_species>.json     cleaning report with the GBIF download `doi`
@@ -245,7 +289,6 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None):
       w2-tg-<group>.(npy|npz)            target-group record density grid [same caveat]
     A missing native mask leaves the mandatory range check 'missing' (Tier 3) rather than silently skipping it."""
     import glob
-    import json
     import pandas as pd
     from .grid import Occurrences
     root = root or os.environ.get("W3_OCC", "work/occ")
@@ -258,6 +301,19 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None):
     df = pd.read_parquet(src_file)
     if "species" in df.columns:
         df = df[df["species"] == meta["scientific_name"]]
+    seasonal_native = None
+    if season == "breeding":
+        # W2 seasonal product: breeding cell = in the seasonal breeding mask and with breeding-month records (May-Jul north, Nov-Jan south).
+        # Records without a month (m00) count for nothing here; a cell whose records all lack a month is not a breeding cell.
+        sf = os.path.join(root, "occ_cells_pilot_v1_seasonal.parquet")
+        sd = pd.read_parquet(sf)
+        sd = sd[(sd["species"] == meta["scientific_name"]) & sd["breeding_cell"]]
+        if not len(sd):
+            raise ValueError(f"no breeding cells for {meta['scientific_name']}")
+        df = sd.merge(df[["row", "col", "year_max"]], on=["row", "col"], how="left").fillna({"year_max": 0})
+        rep = json.load(open(os.path.join(root, "w2_seasonal_report_v1.json")))[meta["scientific_name"]]
+        meta["season_report"] = {k: rep[k] for k in ("season_scheme", "breeding_native_spec", "cells_all", "breeding_cells", "records_breeding_months", "records_without_month")}
+        seasonal_native = seasonal_mask(rep["breeding_native_spec"], root)
     if not len(df):
         raise ValueError(f"no occurrence cells for {meta['scientific_name']} in {src_file}")
     occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
@@ -281,6 +337,8 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None):
             if g.sum() > 0:
                 density = g
                 break
+    if seasonal_native is not None:
+        native = seasonal_native
     dois = []
     rp = os.path.join(root, "w2_report_pilot_v1.json")
     if os.path.exists(rp):
