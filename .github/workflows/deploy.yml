@@ -32,7 +32,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # species files are not kept in git: fetch the published fits and build them into site/species/data
-          pip install --retries 10 --timeout 60 numpy
+          pip install --retries 10 --timeout 60 -r requirements-site.txt
           gh release download species-pilot-data --dir work/species-assets --pattern 'w3_*_summary.json' --pattern 'w3_*_cts.zip' --pattern 's1_*_summary.json' --pattern 's1_*_cts.zip'
           python -m ctw.species_site build --src work/species-assets --out site/species/data
           du -sh site/species/data; find site/species/data -type f | wc -l

@@ -14,7 +14,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          pip install --retries 10 --timeout 60 numpy
+          pip install --retries 10 --timeout 60 -r requirements-site.txt
           time gh release download species-pilot-data --dir work/species-assets --pattern 'w3_*_summary.json' --pattern 'w3_*_cts.zip' --pattern 's1_*_summary.json' --pattern 's1_*_cts.zip'
           ls work/species-assets | wc -l; du -sh work/species-assets
           time python -m ctw.species_site build --src work/species-assets --out site/species/data
