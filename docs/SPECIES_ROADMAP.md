@@ -350,3 +350,11 @@ Build the global Tier A grid in bands; the occurrence pipeline with native-range
 - **Hosting for the first release:** files lazy-loaded from the existing static site (about 30 MB for 60 species) so no Cloudflare R2 setup is needed yet; R2 comes with the larger batches.
 - **Species pages state the tier and the wording:** "projected climate suitability" with unlimited, limited and no-dispersal bounds. Migratory birds use breeding-season fits. Crops use "climate like where X is recorded" unless cultivated records are verified.
 - **Before launch:** aspen disagreement with the USFS benchmark, precipitation-factor sensitivity, methods and licences pages, and a species-list review.
+
+---
+
+## 18. Balance rule (owner request, 11 October 2026)
+
+The first release (56 species) is bird-heavy: 21 birds (38%), 12 trees, 7 mammals, 7 insects and ticks, 5 wild plants, 4 crops, no reptiles, amphibians or fish. Reasons: the pilot deliberately used 12 birds because the bird survey is the only real-change test; the popularity ranking favours birds (huge observation counts); and batch 1 took 9 birds of 35.
+
+Rule from here on: **no group above about 20% of species shown.** Batch 2 (already requested from GBIF) contains 28 birds of about 123 selected; it is kept as is. After batch 2 (if all pass the gates) birds would be about 49 of about 179 (27%). Batch 3 therefore contains **no birds**: it fills mammals, insects and ticks, crops, wild plants, trees, reptiles, amphibians and fish from the shortlist remainder (roughly 160 species available). Target for a final list of about 250: birds about 49 (20%), trees about 45, mammals about 40, insects about 40, crops about 30, wild plants about 30, reptiles, amphibians and fish about 20. Species are never removed to balance the list; only future selection is capped.

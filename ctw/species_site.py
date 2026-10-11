@@ -154,7 +154,7 @@ def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) ->
     rs = S.get("range_shift_test") or {}
     gr = S["gates"]
     return {
-        "id": sp["id"].replace("_breeding", ""), "name": display_name(sp.get("common_name") or sp["scientific_name"]), "sci": sp["scientific_name"], "group": sp["group"],
+        "id": sp["id"].replace("_breeding", ""), "name": display_name(sp.get("common_name") or sp["scientific_name"]), "sci": sp["scientific_name"], "group": sp["group"], **taxonomy_of(sp["scientific_name"]),
         "kind": S.get("species_kind", sp.get("kind", "wild")), "season": season if season == "breeding" else None,
         "tier": S["tier"], "confidence": S["confidence"], "soft_flags": S.get("soft_flags", []), "wording": S["wording"],
         "range_shifts": S.get("range_shifts_tested", "untested"), "range_shift_checks": rs.get("group_checks", []),
@@ -170,6 +170,21 @@ def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) ->
 
 _PROPER = ("African", "American", "Asian", "Asiatic", "Australian", "Brazilian", "Canadian", "Chinese", "Eurasian", "European", "Indian",
            "Japanese", "Mediterranean", "Mexican", "North", "South", "Siberian", "Pacific", "Atlantic", "Himalayan", "Amazonian", "Arctic")
+
+
+_TAX = None
+
+
+def taxonomy_of(sci: str) -> dict:
+    """kingdom, class, order, family for the browse-by-taxonomy view, from data/species/taxonomy.csv (built by ctw.species.taxonomy); empty when unknown."""
+    global _TAX
+    if _TAX is None:
+        import csv
+        f = Path(__file__).resolve().parent.parent / "data" / "species" / "taxonomy.csv"
+        _TAX = {r["scientific_name"]: r for r in csv.DictReader(open(f, encoding="utf-8"))} if f.exists() else {}
+    r = _TAX.get(sci, {})
+    return {"kingdom": r.get("kingdom", ""), "cls": r.get("class", ""), "order": r.get("order", ""), "family": r.get("family", "")}
+
 
 
 def display_name(name: str) -> str:

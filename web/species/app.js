@@ -15,7 +15,7 @@ const gname = g => GROUPS[g] || (g ? g[0].toUpperCase() + g.slice(1).replace(/_/
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const phone = () => matchMedia("(max-width:820px) and (orientation:portrait)").matches;
 let ST = null, INFO = {}, PL = null, map = null, gl = null, glr = null, useLand = false, COL = null;
-const S = { sp: null, ssp: "ssp245", per: "2050", view: "change", disp: "unlimited", agree: false, novel: false, group: "All", q: "", figview: "abs", place: 0 };
+const S = { sp: null, ssp: "ssp245", per: "2050", view: "change", disp: "unlimited", agree: false, novel: false, path: [], q: "", figview: "abs", place: 0 };
 const SHOWN = { sp: null, ssp: null };
 const T = {};                                   // timings for tests and the page-load report
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -174,7 +174,7 @@ async function loadScene(sp, ssp) {
   try {
     for (const fs of [sc.scen, sc.base]) { await fs.ready; for (const [bx, by] of visible(f)) ps.push(entry(fs, f, bx, by).p); const lv = fs.H.levels[fs.level(8)]; for (let y = 0; y < lv.by; y++) for (let x = 0; x < lv.bx; x++) ps.push(entry(fs, 8, x, y).p); }
     await Promise.race([Promise.all(ps), new Promise(r => setTimeout(r, 8000))]);
-  } catch (e) { clearInterval(timer); if (tok === swapToken) { $("busy").hidden = true; $("live").textContent = "The map files for this species could not be loaded."; $("sp-err").hidden = false; } return; }
+  } catch (e) { clearInterval(timer); if (tok === swapToken) { $("busy").hidden = true; $("live").textContent = "The map files for this organism could not be loaded."; $("sp-err").hidden = false; } return; }
   clearInterval(timer);
   if (tok !== swapToken) return;
   $("sp-err").hidden = true;
@@ -217,15 +217,33 @@ function renderControls() {
   $("disp-d").textContent = i ? dispText() : "";
   $("o-agree").checked = S.agree; $("o-novel").checked = S.novel;
 }
+const TLEVELS = ["kingdom", "group", "order", "family"], TNAME = { kingdom: "kingdom", group: "group", order: "order", family: "family" };
+const KING = { Plantae: "Plants", Animalia: "Animals", Fungi: "Fungi" };
+const tget = (s, lv) => lv === "group" ? gname(s.group) : (s[lv] || "");
+const tlab = (lv, v) => !v ? "Other" : lv === "kingdom" ? (KING[v] || v) : v;
+const inScope = () => ST.species.filter(s => S.path.every(p => tget(s, p.lv) === p.v));
+function nextLevel(list) { for (const lv of TLEVELS) { if (S.path.some(p => p.lv === lv)) continue; if (new Set(list.map(s => tget(s, lv))).size > 1) return lv; } return null; }
+function renderBrowse(scope) {                  // drill down by taxonomy: kingdom, group, order, family
+  const br = $("browse"); if (S.q.trim()) { br.innerHTML = ""; return; }
+  const crumbs = [`<button type="button" class="crumb" data-i="-1">All organisms</button>`, ...S.path.map((p, i) => `<span aria-hidden="true">›</span><button type="button" class="crumb" data-i="${i}">${esc(tlab(p.lv, p.v))}</button>`)].join("");
+  const nl = nextLevel(scope); let kids = "";
+  if (nl) { const m = new Map(); scope.forEach(s => { const v = tget(s, nl); m.set(v, (m.get(v) || 0) + 1); });
+    const items = [...m].sort((a, b) => (a[0] === "") - (b[0] === "") || b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+    kids = `<div class="small">Browse by ${TNAME[nl]}</div><div class="chips">` + items.map(([v, n]) => `<button type="button" data-lv="${nl}" data-v="${esc(v)}">${esc(tlab(nl, v))}<span class="n">${n}</span></button>`).join("") + "</div>"; }
+  br.innerHTML = `<div class="crumbs" aria-label="Where you are in the tree of life">${crumbs}</div>${kids}`;
+  br.querySelectorAll(".crumb").forEach(b => b.addEventListener("click", () => { S.path = S.path.slice(0, +b.dataset.i + 1); renderResults(); }));
+  br.querySelectorAll("[data-lv]").forEach(b => b.addEventListener("click", () => { S.path = [...S.path, { lv: b.dataset.lv, v: b.dataset.v }]; renderResults(); }));
+}
 function renderResults() {
   const q = S.q.trim().toLowerCase(), ul = $("results"); ul.innerHTML = "";
-  const list = ST.species.filter(s => (S.group === "All" || s.group === S.group) && (!q || (s.name + " " + s.sci + " " + gname(s.group)).toLowerCase().includes(q)));
+  const scope = inScope();
+  const list = (q ? ST.species.filter(s => (s.name + " " + s.sci + " " + gname(s.group) + " " + (s.family || "") + " " + (s.order || "")).toLowerCase().includes(q)) : scope)
+    .slice().sort((a, b) => a.name.localeCompare(b.name));
+  renderBrowse(scope);
   list.forEach(s => { const li = document.createElement("li"); li.setAttribute("role", "option"); li.id = "opt-" + s.id; li.tabIndex = -1; li.dataset.id = s.id; li.setAttribute("aria-selected", String(s.id === S.sp));
-    li.innerHTML = `<span>${esc(s.name)}</span><span class="g">${esc(gname(s.group))} · Tier ${esc(s.tier)}</span>`; li.addEventListener("click", () => pick(s.id)); ul.appendChild(li); });
-  if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No species match.</li>';
-  const sel = ul.querySelector('[aria-selected="true"]'); if (sel) ul.scrollTop = Math.max(0, sel.offsetTop - ul.offsetTop - 40);     // the selected species is in view in the list
-  $("chips").innerHTML = ["All", ...new Set(ST.species.map(s => s.group))].map(g => `<button type="button" aria-pressed="${S.group === g}" data-g="${esc(g)}">${esc(g === "All" ? "All groups" : gname(g))}</button>`).join("");
-  $("chips").querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => { S.group = b.dataset.g; renderResults(); }));
+    li.innerHTML = `<span>${esc(s.name)}</span><span class="g">${esc(s.family || gname(s.group))} · Tier ${esc(s.tier)}</span>`; li.addEventListener("click", () => pick(s.id)); ul.appendChild(li); });
+  if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No organisms match.</li>';
+  const sel = ul.querySelector('[aria-selected="true"]'); if (sel) ul.scrollTop = Math.max(0, sel.offsetTop - ul.offsetTop - 40);     // the selected organism is in view in the list
 }
 function badge(i) {
   const a = i.tier === "A";
@@ -237,9 +255,9 @@ function tierText(i) {
   return "Skill checked by spatial cross-validation only; no independent survey was available to check it against.";
 }
 function shiftsText(i) {
-  if (i.range_shifts === "fail") return "We tested whether models like this one, fitted to earlier decades, could predict where these species actually moved by recent decades. For birds they could not do so reliably. So the future map shows where the climate may suit the species, not where it will be found.";
+  if (i.range_shifts === "fail") return "We tested whether models like this one, fitted to earlier decades, could predict where these organisms actually moved by recent decades. For birds they could not do so reliably. So the future map shows where the climate may suit the organism, not where it will be found.";
   if (i.range_shifts === "pass") return "Models like this one reproduced the range changes observed in our test.";
-  return "There was not enough survey data on real range changes for this species, so this check has not been made.";
+  return "There was not enough survey data on real range changes for this organism, so this check has not been made.";
 }
 function flagText(f) {                          // plain words for the engine's soft flags
   let m;
@@ -265,7 +283,7 @@ function head() {
     <dt>Cross-validation AUC</dt><dd>${i.skill.auc == null ? "n/a" : i.skill.auc.toFixed(2)}</dd><dt>Records (grid cells)</dt><dd>${i.records.cells == null ? "n/a" : i.records.cells.toLocaleString("en")}</dd>
     <dt>Climate variables used</dt><dd>${esc(i.predictors.join(", "))}</dd><dt>Climate models</dt><dd>${i.n_models}</dd><dt>Range-shift test</dt><dd>${esc(i.range_shifts)}</dd></dl>
     <p class="small">${esc(shiftsText(i))}</p>
-    <p class="small">Records: GBIF occurrence download ${dl} (CC0 and CC-BY records only).${i.season ? " Only records from the breeding months (May to July) are used, because the species migrates." : ""}
+    <p class="small">Records: GBIF occurrence download ${dl} (CC0 and CC-BY records only).${i.season ? " Only records from the breeding months (May to July) are used, because the organism migrates." : ""}
     <a href="species-methods.html#tiers">What the tiers mean</a>, <a href="species-methods.html#limits">limitations</a> and <a href="species-methods.html#credits">credits</a>.</p>`;
 }
 function bars(rows, max, signed) {
@@ -290,7 +308,7 @@ function summary() {
   const ch = pct(c.fut, c.now);
   let shift = "";
   if (c.fut <= 0) shift = `<p class="answer">No suitable climate remains under this scenario${S.disp === "none" ? "" : ", even with spreading allowed"}.</p>`;
-  else if (c.cok === false) shift = `<p class="answer"><strong>Centre of the range: not meaningful</strong> for a range spread over several regions (the average position falls outside the area where the species has suitable climate).</p>`;
+  else if (c.cok === false) shift = `<p class="answer"><strong>Centre of the range: not meaningful</strong> for a range spread over several regions (the average position falls outside the area where the organism has suitable climate).</p>`;
   else if (c.shift_km < 40) shift = `<div class="shift"><div><strong>The centre of the range hardly moves</strong> (${Math.round(c.shift_km)} km).</div></div>`;
   else shift = `<div class="shift">${arrowSvg(c.bearing)}<div><strong>Centre of the range moves about ${Math.round(c.shift_km / 10) * 10} km ${compass(c.bearing)}.</strong><p class="kicker">From ${c.c0[0].toFixed(1)}°, ${c.c0[1].toFixed(1)}° to ${c.c1[0].toFixed(1)}°, ${c.c1[1].toFixed(1)}° (area-weighted centre of the suitable climate).</p></div></div>`;
   const maxA = Math.max(c.now, c.fut, 1), maxC = Math.max(c.lost, c.gained, 1);
@@ -325,8 +343,8 @@ async function placeCard() {
   const li = (r, kind, word) => `<li>${ICON[kind]}<span><button class="linkbtn" data-sp="${r.s.id}">${esc(r.s.name)}</button> <span class="w">Tier ${r.s.tier}</span></span><span class="w">${word}</span></li>`;
   const list = [...lose.map(r => li(r, "lose", "loses")), ...gain.map(r => li(r, "gain", "gains")), ...keep.map(r => li(r, "keep", "keeps"))];
   box.innerHTML = `<label class="small" for="place">City</label><select id="place">${PL.places.map((p, i) => `<option value="${i}"${i === S.place ? " selected" : ""}>${esc(p[0])}</option>`).join("")}</select>
-    <p class="answer"><strong>${lose.length}</strong> of ${rows.length} modelled species are projected to lose suitable climate at ${esc(P[0])} by ${per}, and <strong>${gain.length}</strong> to gain it. <span class="small">${keep.length} keep it${wh.length ? `; ${wh.length} not shown because their numbers are withheld for this scenario` : ""}. ${esc(sspLabel())}, ${S.disp} dispersal. Read from the map cell at the city centre (and its neighbours); this is climate suitability, not a forecast.</span></p>
-    <ul class="pl">${list.join("") || '<li class="muted" style="grid-template-columns:1fr">No modelled species has suitable climate here now or later.</li>'}</ul>`;
+    <p class="answer"><strong>${lose.length}</strong> of ${rows.length} modelled organisms are projected to lose suitable climate at ${esc(P[0])} by ${per}, and <strong>${gain.length}</strong> to gain it. <span class="small">${keep.length} keep it${wh.length ? `; ${wh.length} not shown because their numbers are withheld for this scenario` : ""}. ${esc(sspLabel())}, ${S.disp} dispersal. Read from the map cell at the city centre (and its neighbours); this is climate suitability, not a forecast.</span></p>
+    <ul class="pl">${list.join("") || '<li class="muted" style="grid-template-columns:1fr">No modelled organism has suitable climate here now or later.</li>'}</ul>`;
   $("place").addEventListener("change", e => { S.place = +e.target.value; placeCard(); placeMarker(); });
   box.querySelectorAll("[data-sp]").forEach(b => b.addEventListener("click", () => pick(b.dataset.sp)));
 }
