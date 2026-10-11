@@ -117,7 +117,7 @@ async def main():
             # place list
             await pg.evaluate("document.getElementById('place-det').open = true")
             await pg.wait_for_function("document.querySelectorAll('#place-body ul.pl li').length>0 || document.querySelector('#place-body .answer')", timeout=20000)
-            if "of 3 modelled species" not in await pg.inner_text("#place-body"): fails.append(f"{name}: place list text missing")
+            if "of 3 modelled organisms" not in await pg.inner_text("#place-body"): fails.append(f"{name}: place list text missing")
             if SHOTS and w > 500:
                 await pg.evaluate("document.getElementById('panel').scrollTop=1e5"); await pg.wait_for_timeout(300)
                 await pg.screenshot(path=str(OUT / f"{name}-panel-bottom.png"))
@@ -127,9 +127,18 @@ async def main():
                 await pg.click("#grab"); await pg.click("#sh-tog"); await pg.wait_for_timeout(300)
                 if await pg.evaluate("document.getElementById('panel').getBoundingClientRect().height") > 120: fails.append(f"{name}: sheet did not collapse")
                 await pg.click("#sh-tog")
-            # group chips use human labels
-            chips = await pg.inner_text("#chips")
+            # browse chips use human labels
+            chips = await pg.inner_text("#browse")
             if "_" in chips: fails.append(f"{name}: raw group label in chips {chips!r}")
+            # top-level toggle + taxonomy drill-down
+            if await pg.locator("nav.modes a[aria-current=page]").inner_text() != "Organisms": fails.append(f"{name}: modes toggle missing or wrong current")
+            if await pg.locator("nav.modes a[href='./']").count() != 1: fails.append(f"{name}: no link back to climate twins")
+            n0 = await pg.locator("#results li").count()
+            chip = pg.locator("#browse .chips button").first
+            if await chip.count():
+                await chip.click(); await pg.wait_for_timeout(200)
+                if await pg.locator("#results li").count() > n0: fails.append(f"{name}: drill-down grew the list")
+                if not await pg.locator("#browse .crumb").count(): fails.append(f"{name}: no breadcrumb after drilling down")
             # phone: tier, confidence and withheld status are visible in the half-open sheet without scrolling
             if w < 500:
                 r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")
