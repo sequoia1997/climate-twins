@@ -9,18 +9,18 @@ Fit: first complete inventory cycle per state (median measurement year about 198
 | group check | value | needed | result |
 |---|---|---|---|
 | direction of shift | 1/2 agree (p=0.750) | >= 70% and p < 0.05 | not met |
-| median shift ratio (model / observed) | 3.00 | 0.5 to 2.0 | not met |
-| shift error below no-change error | median 105 km vs 26 km | model error < no-change error (median) | not met |
+| median shift ratio (model / observed) | 3.71 | 0.5 to 2.0 | not met |
+| shift error below no-change error | median 120 km vs 26 km | model error < no-change error (median) | not met |
 | area change sign and per-cell correlation | sign 3/5, median r -0.02 | sign majority and r >= 0.3 | not met |
 | beats no-change null in TSS (window 2) | 0/5 | >= 60% of species | not met |
 
 | species | CV AUC / TSS (w1) | prevalence w1 / w2 | AUC w2 | TSS w2 | Boyce w2 | TSS no-change (model, w1 climate) | TSS persistence | obs shift km / bearing | model shift km / bearing | ratio | bearing err | direction | edge err hi / lo km | area change obs / model | cell corr |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Acer saccharum | 0.86 / 0.59 (W3 bg: 0.75 / 0.40) | 0.37 / 0.35 | 0.95 | 0.63 | 0.89 | 0.80 | 0.86 | 42 / 36 | 160 / 34 | 3.85 | 2 | agree | 6 / 162 | -0.03 / -0.28 | -0.10 |
-| Acer rubrum | 0.83 / 0.44 (W3 bg: 0.69 / 0.28) | 0.54 / 0.55 | 0.98 | 0.78 | 0.96 | 0.80 | 0.90 | 17 / 266 | 24 / 91 | 1.42 | 175 | not detectable | -17 / -1 | 0.03 / -0.03 | 0.06 |
-| Pinus strobus | 0.88 / 0.65 (W3 bg: 0.76 / 0.39) | 0.23 / 0.27 | 0.95 | 0.67 | 0.95 | 0.79 | 0.75 | 55 / 224 | 127 / 16 | 2.33 | 152 | WRONG | 1 / 282 | 0.15 / -0.19 | -0.08 |
-| Populus tremuloides | 0.93 / 0.74 (W3 bg: 0.74 / 0.33) | 0.31 / 0.31 | 0.94 | 0.51 | 0.95 | 0.68 | 0.80 | 26 / 242 | 79 / 44 | 3.00 | 162 | not detectable | -2 / 110 | -0.02 / -0.30 | -0.01 |
-| Quercus alba | 0.83 / 0.49 (W3 bg: 0.69 / 0.29) | 0.48 / 0.45 | 0.92 | 0.69 | 0.98 | 0.73 | 0.87 | 12 / 118 | 92 / 41 | 7.83 | 77 | not detectable | 0 / 163 | -0.06 / -0.05 | -0.02 |
+| Acer saccharum | 0.87 / 0.59 (W3 bg: 0.75 / 0.40) | 0.37 / 0.35 | 0.95 | 0.63 | 0.89 | 0.79 | 0.86 | 42 / 36 | 162 / 36 | 3.89 | 0 | agree | -1 / 164 | -0.03 / -0.28 | -0.10 |
+| Acer rubrum | 0.83 / 0.45 (W3 bg: 0.69 / 0.28) | 0.54 / 0.55 | 0.98 | 0.79 | 0.97 | 0.80 | 0.90 | 17 / 266 | 22 / 110 | 1.30 | 156 | not detectable | -19 / -3 | 0.03 / -0.02 | 0.06 |
+| Pinus strobus | 0.88 / 0.64 (W3 bg: 0.76 / 0.39) | 0.23 / 0.27 | 0.95 | 0.67 | 0.97 | 0.79 | 0.75 | 55 / 224 | 139 / 23 | 2.55 | 159 | WRONG | 0 / 327 | 0.15 / -0.21 | -0.08 |
+| Populus tremuloides | 0.93 / 0.74 (W3 bg: 0.74 / 0.33) | 0.31 / 0.31 | 0.94 | 0.51 | 0.95 | 0.68 | 0.80 | 26 / 242 | 98 / 57 | 3.71 | 175 | not detectable | -2 / 107 | -0.02 / -0.33 | -0.01 |
+| Quercus alba | 0.83 / 0.49 (W3 bg: 0.69 / 0.29) | 0.48 / 0.45 | 0.92 | 0.69 | 0.98 | 0.74 | 0.87 | 12 / 118 | 92 / 43 | 7.82 | 75 | not detectable | 0 / 163 | -0.06 / -0.05 | -0.02 |
 
 | species | tier | Tier 1 earned | reasons if not |
 |---|---|---|---|
