@@ -1,0 +1,43 @@
+# Builds the organism data from the release assets and uploads it to the R2 bucket (served at species.climatetwins.org).
+# Run it by pushing a change to .github/run/species-publish, or from the Actions tab.
+name: Publish organisms to R2
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/run/species-publish"]
+permissions:
+  contents: read
+concurrency: species-publish
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install --retries 10 --timeout 60 -r requirements-site.txt
+      - name: Fetch fits and build
+        run: |
+          gh release download species-pilot-data --dir work/species-assets \
+            --pattern '*_summary.json' --pattern '*_cts.zip' --clobber
+          python -m ctw.species_site build --src work/species-assets --out work/r2
+          du -sh work/r2; find work/r2 -type f | wc -l
+      - name: Upload (hashed files first, index last)
+        run: |
+          EP="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          aws s3 sync work/r2 "s3://${R2_BUCKET}" --endpoint-url "$EP" --exclude index.json \
+            --cache-control "public, max-age=31536000, immutable" --no-progress | tail -3
+          aws s3 cp work/r2/index.json "s3://${R2_BUCKET}/index.json" --endpoint-url "$EP" \
+            --content-type application/json --cache-control "public, max-age=300"
+      - name: Check the public domain
+        run: |
+          curl -sSf -H "Origin: https://climatetwins.org" -D - -o /tmp/i.json https://species.climatetwins.org/index.json | head -12
+          python -c "import json;d=json.load(open('/tmp/i.json'));print(len(d['species']),'organisms public')"
