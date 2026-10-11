@@ -71,3 +71,19 @@ def test_s1_asset_names_and_prefix_stripping(tmp_path):
         shutil.copy(f, tmp_path / f.name.replace("w3_", "w3_"))
     chosen, _ = SS.pick_runs(tmp_path)
     assert set(chosen) == {"acer_saccharum", "turdus_migratorius"}
+
+
+def test_centre_inside_the_range():
+    import numpy as np
+    m = np.zeros((4320, 8640), bool)
+    m[1000:1100, 1000:1100] = True; m[1000:1100, 3000:3100] = True                # two separate regions
+    lon = lambda j: -180 + j * 360 / 8640; lat = lambda i: 90 - i * 180 / 4320
+    assert SS.centre_inside(m, lat(1050), lon(1050))
+    assert not SS.centre_inside(m, lat(1050), lon(2050))                          # the midpoint between the regions is outside both
+
+
+def test_real_centres_flagged(built):
+    out, idx = built
+    info = json.load(open(out / next(s for s in idx["species"] if s["id"] == "acer_saccharum")["info"][0]))
+    flags = [v["cok"] for v in info["by"].values() if "cok" in v]
+    assert flags and all(isinstance(f, bool) for f in flags) and info["by"]["ssp245|2050|unlimited"]["cok"] is True   # a compact range: centre inside it

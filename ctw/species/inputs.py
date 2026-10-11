@@ -294,9 +294,11 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     root = root or os.environ.get("W3_OCC", "work/occ")
     tag = meta["scientific_name"].replace(" ", "_")
     kind = (meta.get("kind") or ("crop" if meta.get("group") == "crop" else "wild")).lower()
-    s1 = os.environ.get("W3_PRODUCT", "pilot") == "s1"                              # S1 batch 1 assets (names s1_*), same layout as the pilot's
-    f_crop = os.path.join(root, "s1_occ_cells_crops_v1.parquet" if s1 else "occ_cells_crops_cultivated_pilot_v1.parquet")
-    f_wild = os.path.join(root, "s1_occ_cells_v1.parquet" if s1 else "occ_cells_pilot_v1.parquet")                      # W2 final: native cells only, 24 wild species
+    prod = os.environ.get("W3_PRODUCT", "pilot")
+    s1 = prod in ("s1", "s2")                                                       # S1 / S3 assets (names s1_* / s2_*), same layout as the pilot's
+    pre = prod + "_" if s1 else ""
+    f_crop = os.path.join(root, pre + "occ_cells_crops_v1.parquet" if s1 else "occ_cells_crops_cultivated_pilot_v1.parquet")
+    f_wild = os.path.join(root, pre + "occ_cells_v1.parquet" if s1 else "occ_cells_pilot_v1.parquet")                      # W2 final: native cells only, 24 wild species
     one = os.path.join(root, f"w2-cells-{tag}.parquet")                           # interim per-species file (fallback)
     src_file = f_crop if (kind == "crop" and os.path.exists(f_crop)) else (f_wild if os.path.exists(f_wild) else one)
     df = pd.read_parquet(src_file)
@@ -306,20 +308,20 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     if season == "breeding":
         # W2 seasonal product: breeding cell = in the seasonal breeding mask and with breeding-month records (May-Jul north, Nov-Jan south).
         # Records without a month (m00) count for nothing here; a cell whose records all lack a month is not a breeding cell.
-        sf = os.path.join(root, "occ_cells_pilot_v1_seasonal.parquet")
+        sf = os.path.join(root, (pre + "occ_cells_seasonal_v1.parquet") if prod == "s2" else "occ_cells_pilot_v1_seasonal.parquet")
         sd = pd.read_parquet(sf)
         sd = sd[(sd["species"] == meta["scientific_name"]) & sd["breeding_cell"]]
         if not len(sd):
             raise ValueError(f"no breeding cells for {meta['scientific_name']}")
         df = sd.merge(df[["row", "col", "year_max"]], on=["row", "col"], how="left").fillna({"year_max": 0})
-        rep = json.load(open(os.path.join(root, "w2_seasonal_report_v1.json")))[meta["scientific_name"]]
+        rep = json.load(open(os.path.join(root, (pre + "w2_seasonal_report_v1.json") if prod == "s2" else "w2_seasonal_report_v1.json")))[meta["scientific_name"]]
         meta["season_report"] = {k: rep[k] for k in ("season_scheme", "breeding_native_spec", "cells_all", "breeding_cells", "records_breeding_months", "records_without_month")}
         seasonal_native = seasonal_mask(rep["breeding_native_spec"], root)
     if not len(df):
         raise ValueError(f"no occurrence cells for {meta['scientific_name']} in {src_file}")
     occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
     native = density = None
-    nm = os.path.join(root, "s1_native_masks_v1.npz" if s1 else "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
+    nm = os.path.join(root, pre + "native_masks_v1.npz" if s1 else "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
     if os.path.exists(nm):
         z = np.load(nm)
         if f"{tag}__final" in z.files:
@@ -331,7 +333,7 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     tg = {"tree": "plant", "crop": "plant"}.get(meta.get("group"), meta.get("group"))
     if len(df) and "tg_group" in df.columns:
         tg = df["tg_group"].iloc[0]
-    for pat in (f"tg_density_{tg}_v1.npz", f"w2-tg-{tg}.npz", f"tg_density_{meta.get('group')}_v1.npz", f"tg_density_{meta.get('tg_group', '')}_v1.npz", f"w2-tg-{meta.get('group')}.npz"):
+    for pat in ((f"s2_tg_density_{tg}_v1.npz",) if prod == "s2" else ()) + (f"tg_density_{tg}_v1.npz", f"w2-tg-{tg}.npz", f"tg_density_{meta.get('group')}_v1.npz", f"tg_density_{meta.get('tg_group', '')}_v1.npz", f"w2-tg-{meta.get('group')}.npz"):
         f = os.path.join(root, pat)
         if os.path.exists(f):
             g = _load_grid(f, "all").astype(np.float32)
@@ -341,7 +343,7 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     if seasonal_native is not None:
         native = seasonal_native
     dois = []
-    rp = os.path.join(root, "s1_w2_report_v1.json" if s1 else "w2_report_pilot_v1.json")
+    rp = os.path.join(root, pre + "w2_report_v1.json" if s1 else "w2_report_pilot_v1.json")
     if os.path.exists(rp):
         r = json.load(open(rp))["species"].get(meta["scientific_name"], {})
     else:

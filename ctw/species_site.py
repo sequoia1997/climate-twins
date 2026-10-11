@@ -36,7 +36,7 @@ PLACES = [
     ("Seoul, South Korea", 37.57, 126.98), ("Bangkok, Thailand", 13.76, 100.50), ("Singapore", 1.35, 103.82), ("Jakarta, Indonesia", -6.21, 106.85),
     ("Sydney, Australia", -33.87, 151.21), ("Perth, Australia", -31.95, 115.86), ("Brisbane, Australia", -27.47, 153.03), ("Auckland, New Zealand", -36.85, 174.76),
 ]
-GROUP_ORDER = ["tree", "bird", "mammal", "insect_arachnid", "crop", "reptile"]
+GROUP_ORDER = ["tree", "wild_plant", "bird", "mammal", "insect_arachnid", "reptile", "amphibian", "reptile_amphibian", "fish", "crop"]
 
 
 def _h(b: bytes) -> str:
@@ -88,7 +88,16 @@ def _bbox(cts_mod, base: bytes, scen: dict) -> list:
     return [round(float(max(-180, west - pad)), 2), round(float(max(-85, south - pad)), 2), round(float(min(180, east + pad)), 2), round(float(min(85, north + pad)), 2)]
 
 
-def _place_codes(cts_mod, base: bytes, scen: dict, withheld: dict) -> dict:
+def centre_inside(mask: np.ndarray, lat: float, lon: float, r: int = 6) -> bool:
+    """True when the area-weighted centre (lat, lon) lies in the species' own suitable area (any suitable cell within +-6 cells, about 28 km, so a centre over a lake or a narrow gap still counts).
+    A centre of a range split over several regions often falls where the species is not; the page then does not show it."""
+    H, W = mask.shape
+    i = min(H - 1, max(0, int((90 - lat) / 180 * H)))
+    j = min(W - 1, max(0, int((lon + 180) / 360 * W)))
+    return bool(mask[max(0, i - r):i + r + 1, max(0, j - r):j + r + 1].any())
+
+
+def _place_codes(cts_mod, base: bytes, scen: dict, withheld: dict, by: dict = None) -> dict:
     """{"ssp|period|mode": string, one char per PLACES entry}: 0 not suitable, 1 loses, 2 keeps, 3 gains, 9 numbers withheld."""
     d0 = cts_mod.decode(base, 1)["S0"]
     H, W = d0.shape
@@ -108,6 +117,8 @@ def _place_codes(cts_mod, base: bytes, scen: dict, withheld: dict) -> dict:
             for mode in MODES:
                 fut = fut_u if mode == "unlimited" else (fut_u & ((d0 > 0) | reach) if mode == "limited" else fut_u & (d0 > 0))
                 key = f"{ssp}|{pi}|{mode}"
+                if by and by.get(key) and not by[key].get("withheld") and by[key].get("c0"):         # is the centre of the range inside the range, now and later?
+                    by[key]["cok"] = centre_inside(d0 > 0, *by[key]["c0"]) and centre_inside(fut, *by[key]["c1"])
                 if withheld.get(f"{ssp}|{pi}"):
                     out[key] = "9" * len(PLACES)
                     continue
@@ -186,10 +197,10 @@ def build(src: Path, out: Path, log=print) -> dict:
             files[k] = [f"{sid}/{fn}", len(b)]
         info = info_json(S, season, list(scen), bbox, files)
         info["id"] = sid
+        places[sid] = _place_codes(cts_mod, base, scen, info["withheld"], info["by"])
         ib = json.dumps(info, separators=(",", ":"), ensure_ascii=False).encode()
         ifn = f"info.{_h(ib)}.json"
         (d / ifn).write_bytes(ib)
-        places[sid] = _place_codes(cts_mod, base, scen, info["withheld"])
         total += sum(v[1] for v in files.values()) + len(ib)
         index.append({"id": sid, "name": info["name"], "sci": info["sci"], "group": info["group"], "kind": info["kind"], "tier": info["tier"],
                       "confidence": info["confidence"], "dois": info["dois"], "range_shifts": info["range_shifts"], "season": info["season"], "bbox": bbox,

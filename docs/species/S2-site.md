@@ -119,3 +119,10 @@ Real network, real phones, Safari and Firefox were **not** tested [U]. The first
 - The 52-city list in `ctw/species_site.py` (`PLACES`) is a table: replace or extend it freely.
 - Species with tier C or `published: false` are left out, e.g. the all-year European robin; its breeding fit (tier B, low confidence) is shown.
 - The page default (sugar maple) is a placeholder choice.
+
+## 7. Review fixes (11 Oct, after the 56-species review)
+- Group labels are human words everywhere (Wild plants, Reptiles and amphibians, Fish ...; unknown groups are title-cased without underscores).
+- Phone sheet header carries the badges (tier, low confidence, numbers withheld, range shifts) so they are visible in the half-open sheet on every species; the withheld banner also sits in the header.
+- Centre of range: the builder flags (`cok`) whether the area-weighted centre lies within about 28 km of the species' own suitable area, now and later, per scenario, period and bound. If not, the page says "not meaningful for a range spread over several regions" and draws no arrow or km/bearing. 20 of 56 species have some or all combinations flagged (e.g. wine grape, barn swallow, red fox, maize, common raven, kookaburra).
+- Loading: a visible pill "Loading map data, N MB" and, after about 2 s, "Still loading ...: N MB (x%) ... please wait" (announced once to screen readers). No Range requests yet.
+- The URL hash is set on first load and on every pick, `hashchange` selects the species, and the list scrolls the selected species into view.

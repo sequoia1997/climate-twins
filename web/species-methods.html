@@ -109,8 +109,8 @@ table{border-collapse:collapse;width:100%;font-size:.9rem;background:var(--panel
 </div>
 <script>
 (async()=>{const m=document.querySelector('meta[name="species-data-base"]');const base=new URL(m.content,location.href).href.replace(/\/?$/,"/");const tb=document.getElementById("doirows");
-const G={tree:"Trees",bird:"Birds",mammal:"Mammals",insect_arachnid:"Insects and ticks",crop:"Crops",reptile:"Reptiles"},esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-try{const ix=await (await fetch(base+"index.json")).json();tb.innerHTML=ix.species.map(s=>`<tr><td>${esc(s.name)} <i>(${esc(s.sci)})</i></td><td>${esc(G[s.group]||s.group)}</td><td>${s.tier}</td><td>${s.season?"breeding season":"all year"}</td><td>${(s.dois||[]).map(d=>`<a href="${esc(d)}">${esc(d.replace("https://doi.org/","doi:"))}</a>`).join(", ")||"n/a"}</td></tr>`).join("");}
+const G={tree:"Trees",bird:"Birds",mammal:"Mammals",insect_arachnid:"Insects and ticks",wild_plant:"Wild plants",crop:"Crops",reptile:"Reptiles and amphibians",amphibian:"Reptiles and amphibians",fish:"Fish"},esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+try{const ix=await (await fetch(base+"index.json")).json();tb.innerHTML=ix.species.map(s=>`<tr><td>${esc(s.name)} <i>(${esc(s.sci)})</i></td><td>${esc(G[s.group]||(s.group[0].toUpperCase()+s.group.slice(1).replace(/_/g," ")))}</td><td>${s.tier}</td><td>${s.season?"breeding season":"all year"}</td><td>${(s.dois||[]).map(d=>`<a href="${esc(d)}">${esc(d.replace("https://doi.org/","doi:"))}</a>`).join(", ")||"n/a"}</td></tr>`).join("");}
 catch(e){tb.innerHTML='<tr><td colspan="5">The species list could not be loaded.</td></tr>';}})();
 </script>
 </body>

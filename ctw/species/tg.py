@@ -23,6 +23,12 @@ GROUPS = {   # target group -> SQL taxon condition. By NAME: in GBIF's SQL downl
     "plant": "phylum = 'Tracheophyta'",
 }
 PILOT_GROUP_TO_TG = {"bird": "bird", "mammal": "mammal", "insect_arachnid": "insect_arachnid", "tree": "plant", "wild_plant": "plant", "crop": "plant"}
+# S3 batch 2: two further target groups (own SQL downloads, assets s2_tg_density_<group>_v1.npz). Kept apart from GROUPS so the pilot's acquire stage is unchanged.
+EXTRA_GROUPS = {
+    "herp": "class IN ('Reptilia', 'Amphibia')",           # reptiles and amphibians share one sampling grid (herpetological recorders)
+    "fish": "class = 'Actinopterygii'",                    # ray-finned fishes, marine records included (only land-grid cells matter for the freshwater species)
+}
+S2_GROUP_TO_TG = {**PILOT_GROUP_TO_TG, "reptile": "herp", "amphibian": "herp", "fish": "fish"}
 
 
 BASIS_OK = {"HUMAN_OBSERVATION", "PRESERVED_SPECIMEN", "OBSERVATION", "MACHINE_OBSERVATION"}
@@ -36,7 +42,7 @@ def sql_for(group: str, year_q: str = '"year"') -> str:
           "IF(coordinateUncertaintyInMeters IS NULL OR coordinateUncertaintyInMeters <= 10000, 1, 0)"]
     cols = ["license", "basisOfRecord", "hasGeospatialIssues", "occurrenceStatus"]
     sel = f"{ex[0]} AS r, {ex[1]} AS c, {ex[2]} AS p, {ex[3]} AS u, " + ", ".join(cols) + ", COUNT(*) AS n"
-    return f"SELECT {sel} FROM occurrence WHERE {GROUPS[group]} GROUP BY " + ", ".join(ex + cols)
+    return f"SELECT {sel} FROM occurrence WHERE {({**GROUPS, **EXTRA_GROUPS})[group]} GROUP BY " + ", ".join(ex + cols)
 
 
 def keep_rows(df):

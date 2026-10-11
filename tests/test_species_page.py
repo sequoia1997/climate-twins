@@ -127,6 +127,34 @@ async def main():
                 await pg.click("#grab"); await pg.click("#sh-tog"); await pg.wait_for_timeout(300)
                 if await pg.evaluate("document.getElementById('panel').getBoundingClientRect().height") > 120: fails.append(f"{name}: sheet did not collapse")
                 await pg.click("#sh-tog")
+            # group chips use human labels
+            chips = await pg.inner_text("#chips")
+            if "_" in chips: fails.append(f"{name}: raw group label in chips {chips!r}")
+            # phone: tier, confidence and withheld status are visible in the half-open sheet without scrolling
+            if w < 500:
+                r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")
+                if not (r[0] > 0 and r[1] <= r[2]) or "Tier" not in r[3] or "withheld" not in r[3].lower(): fails.append(f"{name}: sheet badges not visible/complete {r}")
+            # slow file: busy message after ~2 s; centre not meaningful when the file says so (stubbed info)
+            pg2 = await ctx.new_page(); e2 = []
+            pg2.on("pageerror", lambda e: e2.append(str(e)))
+            async def info(r):
+                resp = await r.fetch(); j = await resp.json()
+                for v in j["by"].values():
+                    if "cok" in v: v["cok"] = False
+                await r.fulfill(response=resp, json=j)
+            async def slow(r):
+                await asyncio.sleep(2.8); await r.continue_()
+            await pg2.route("**/acer_saccharum/info.*.json", info); await pg2.route("**/acer_saccharum/ssp245.*.cts", slow)
+            await pg2.goto(f"http://127.0.0.1:{port}/species.html#acer_saccharum")
+            await pg2.wait_for_function("document.getElementById('busy').innerText.includes('Still loading')", timeout=20000)
+            await settle(pg2)
+            if await pg2.is_visible("#busy"): fails.append(f"{name}: busy indicator stays after loading")
+            st = await pg2.inner_text("#summary")
+            if "not meaningful" not in st: fails.append(f"{name}: no 'not meaningful' centre text {st[:100]!r}")
+            if "moves about" in st: fails.append(f"{name}: centre arrow shown for a centre outside the range")
+            if (await pg2.evaluate("location.hash")) != "#acer_saccharum": fails.append(f"{name}: hash not kept")
+            if e2: fails.append(f"{name}: JS errors (stub page) {e2[:2]}")
+            await pg2.close()
             # methods page: loads, DOI table filled from the index, no overflow
             await pg.goto(f"http://127.0.0.1:{port}/species-methods.html"); await pg.wait_for_function("document.querySelectorAll('#doirows tr').length>=3", timeout=20000)
             ov = await pg.evaluate("[document.documentElement.scrollWidth, innerWidth]")

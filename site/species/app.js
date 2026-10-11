@@ -10,8 +10,8 @@ const DATA = new URL(meta("species-data-base") || "species/data/", location.href
 const LAND_URL = new URL(meta("species-land") || "species/land.cts", location.href).href;
 const STYLES = { light: "https://tiles.openfreemap.org/styles/positron", dark: "https://tiles.openfreemap.org/styles/dark" };
 const BLANK = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#c7d5de" } }] };
-const GROUPS = { tree: "Trees", bird: "Birds", mammal: "Mammals", insect_arachnid: "Insects and ticks", crop: "Crops", reptile: "Reptiles" };
-const gname = g => GROUPS[g] || (g ? g[0].toUpperCase() + g.slice(1) : "");
+const GROUPS = { tree: "Trees", wild_plant: "Wild plants", bird: "Birds", mammal: "Mammals", insect_arachnid: "Insects and ticks", crop: "Crops", reptile: "Reptiles and amphibians", amphibian: "Reptiles and amphibians", reptile_amphibian: "Reptiles and amphibians", fish: "Fish" };
+const gname = g => GROUPS[g] || (g ? g[0].toUpperCase() + g.slice(1).replace(/_/g, " ") : "");
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const phone = () => matchMedia("(max-width:820px) and (orientation:portrait)").matches;
 let ST = null, INFO = {}, PL = null, map = null, gl = null, glr = null, useLand = false, COL = null;
@@ -22,11 +22,14 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&am
 
 /* ------------------------------------------------------------ CTS files, fetched whole */
 class CTS {
-  constructor(url) { this.url = url; this.ready = this.init(); }
+  constructor(url, size) { this.url = url; this.size = size || 0; this.loaded = 0; this.ready = this.init(); }
   async init() {
     const r = await fetch(this.url);
     if (!r.ok) throw new Error(this.url + " " + r.status);
-    this.buf = new Uint8Array(await r.arrayBuffer()); this.bytes = this.buf.length;
+    const rd = r.body && r.body.getReader ? r.body.getReader() : null, parts = [];       // read in chunks so the page can show progress
+    if (rd) { for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); this.loaded += value.length; } this.buf = new Uint8Array(this.loaded); let o = 0; for (const c of parts) { this.buf.set(c, o); o += c.length; } }
+    else this.buf = new Uint8Array(await r.arrayBuffer());
+    this.bytes = this.buf.length;
     const dv = new DataView(this.buf.buffer), n = dv.getUint32(4, true);
     this.H = JSON.parse(new TextDecoder().decode(this.buf.subarray(8, 8 + n)));
     let pos = 8 + n; this.idx = [];
@@ -46,9 +49,9 @@ class CTS {
   }
 }
 const files = {};
-const file = url => files[url] || (files[url] = new CTS(url));
+const file = (url, size) => files[url] || (files[url] = new CTS(url, size));
 const rec = id => ST.byId[id];
-const sceneFiles = (sp, ssp) => ({ land: useLand ? file(LAND_URL) : null, base: file(DATA + rec(sp).files.base[0]), scen: file(DATA + rec(sp).files[ssp][0]) });
+const sceneFiles = (sp, ssp) => ({ land: useLand ? file(LAND_URL) : null, base: file(DATA + rec(sp).files.base[0], rec(sp).files.base[1]), scen: file(DATA + rec(sp).files[ssp][0], rec(sp).files[ssp][1]) });
 
 /* ------------------------------------------------------------ GPU */
 const cache = new Map();
@@ -157,11 +160,22 @@ function render(g, args) {
 let swapToken = 0;
 async function loadScene(sp, ssp) {
   const tok = ++swapToken; $("busy").hidden = false; map.getContainer().setAttribute("aria-busy", "true");
-  const t0 = performance.now(), sc = sceneFiles(sp, ssp), f = levelFor(), ps = [];
+  const t0 = performance.now(), sc = sceneFiles(sp, ssp), f = levelFor(), ps = [], fl = [sc.scen, sc.base], tot = fl.reduce((a, x) => a + (x.size || 0), 0);
+  const mb = n => (n / 1e6).toFixed(1) + " MB";
+  let last = "", told = false;
+  const tick = () => {                                                      // visible while loading; the slow-link message appears after about 2 s
+    const got = fl.reduce((a, x) => a + (x.loaded || 0), 0), pc = tot ? Math.min(99, Math.floor(got / tot * 10) * 10) : 0, slow = performance.now() - t0 > 2000;
+    const msg = slow ? `Still loading ${esc(rec(sp).name)}: ${mb(tot)} of map data${tot ? ` (${Math.min(99, Math.round(got / tot * 100))}%)` : ""}. This is a large file or a slow connection; please wait.` : `Loading map data${tot ? `, ${mb(tot)}` : ""}\u2026`;
+    const k = slow ? msg.replace(/\(\d+%\)/, "(" + pc + "%)") : msg;
+    if (k !== last) { last = k; $("busy").innerHTML = msg; }
+    if (slow && !told) { told = true; $("live").textContent = `Loading the map data for ${rec(sp).name} is taking a while: ${mb(tot)}.`; }
+  };
+  tick(); const timer = setInterval(tick, 400);
   try {
     for (const fs of [sc.scen, sc.base]) { await fs.ready; for (const [bx, by] of visible(f)) ps.push(entry(fs, f, bx, by).p); const lv = fs.H.levels[fs.level(8)]; for (let y = 0; y < lv.by; y++) for (let x = 0; x < lv.bx; x++) ps.push(entry(fs, 8, x, y).p); }
     await Promise.race([Promise.all(ps), new Promise(r => setTimeout(r, 8000))]);
-  } catch (e) { if (tok === swapToken) { $("busy").hidden = true; $("live").textContent = "The map files for this species could not be loaded."; $("sp-err").hidden = false; } return; }
+  } catch (e) { clearInterval(timer); if (tok === swapToken) { $("busy").hidden = true; $("live").textContent = "The map files for this species could not be loaded."; $("sp-err").hidden = false; } return; }
+  clearInterval(timer);
   if (tok !== swapToken) return;
   $("sp-err").hidden = true;
   SHOWN.sp = sp; SHOWN.ssp = ssp; $("busy").hidden = true; map.getContainer().removeAttribute("aria-busy"); map.triggerRepaint();
@@ -209,6 +223,7 @@ function renderResults() {
   list.forEach(s => { const li = document.createElement("li"); li.setAttribute("role", "option"); li.id = "opt-" + s.id; li.tabIndex = -1; li.dataset.id = s.id; li.setAttribute("aria-selected", String(s.id === S.sp));
     li.innerHTML = `<span>${esc(s.name)}</span><span class="g">${esc(gname(s.group))} · Tier ${esc(s.tier)}</span>`; li.addEventListener("click", () => pick(s.id)); ul.appendChild(li); });
   if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No species match.</li>';
+  const sel = ul.querySelector('[aria-selected="true"]'); if (sel) ul.scrollTop = Math.max(0, sel.offsetTop - ul.offsetTop - 40);     // the selected species is in view in the list
   $("chips").innerHTML = ["All", ...new Set(ST.species.map(s => s.group))].map(g => `<button type="button" aria-pressed="${S.group === g}" data-g="${esc(g)}">${esc(g === "All" ? "All groups" : gname(g))}</button>`).join("");
   $("chips").querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => { S.group = b.dataset.g; renderResults(); }));
 }
@@ -235,9 +250,12 @@ function flagText(f) {                          // plain words for the engine's 
 }
 function head() {
   const i = I();
+  const wh = isWithheld();
+  const bd = `${badge(i)}${i.confidence === "low" ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Low confidence</span>' : ""}${wh ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Numbers withheld</span>' : ""}
+    <span class="badge ${i.range_shifts === "pass" ? "q-good" : i.range_shifts === "fail" ? "q-low" : "q-partial"}"><span aria-hidden="true">${i.range_shifts === "pass" ? "\u2713" : i.range_shifts === "fail" ? "\u2717" : "?"}</span> Range shifts: ${esc(i.range_shifts)}</span>`;
+  $("sh-badges").innerHTML = bd;                                              // always visible in the phone sheet header
   $("sp-head").innerHTML = `<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
-  <p class="badges">${badge(i)}${i.confidence === "low" ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Low confidence</span>' : ""}
-    <span class="badge ${i.range_shifts === "pass" ? "q-good" : i.range_shifts === "fail" ? "q-low" : "q-partial"}"><span aria-hidden="true">${i.range_shifts === "pass" ? "✓" : i.range_shifts === "fail" ? "✗" : "?"}</span> Range shifts: ${esc(i.range_shifts)}</span></p>
+  <p class="badges">${bd}</p>
   <p class="small tierline">${esc(tierText(i))}${i.confidence === "low" && i.soft_flags.length ? " Low confidence because " + esc(i.soft_flags.map(flagText).join("; and ")) + "." : ""}</p>
   ${isWithheld() ? `<p class="note withheld"><strong>Numbers withheld for ${esc(PERLAB())} under ${esc(sspLabel())}:</strong> ${esc(i.withheld[S.ssp + "|" + S.per])}.</p>` : ""}
   <p class="disc">${FLAG}</p><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
@@ -272,6 +290,7 @@ function summary() {
   const ch = pct(c.fut, c.now);
   let shift = "";
   if (c.fut <= 0) shift = `<p class="answer">No suitable climate remains under this scenario${S.disp === "none" ? "" : ", even with spreading allowed"}.</p>`;
+  else if (c.cok === false) shift = `<p class="answer"><strong>Centre of the range: not meaningful</strong> for a range spread over several regions (the average position falls outside the area where the species has suitable climate).</p>`;
   else if (c.shift_km < 40) shift = `<div class="shift"><div><strong>The centre of the range hardly moves</strong> (${Math.round(c.shift_km)} km).</div></div>`;
   else shift = `<div class="shift">${arrowSvg(c.bearing)}<div><strong>Centre of the range moves about ${Math.round(c.shift_km / 10) * 10} km ${compass(c.bearing)}.</strong><p class="kicker">From ${c.c0[0].toFixed(1)}°, ${c.c0[1].toFixed(1)}° to ${c.c1[0].toFixed(1)}°, ${c.c1[1].toFixed(1)}° (area-weighted centre of the suitable climate).</p></div></div>`;
   const maxA = Math.max(c.now, c.fut, 1), maxC = Math.max(c.lost, c.gained, 1);
@@ -287,7 +306,7 @@ function summary() {
       <dt>Climate models agreeing on the future area</dt><dd>${c.agree == null ? "n/a" : Math.round(c.agree * 100) + "%"}</dd><dt>Area with novel climate</dt><dd>${c.novel == null ? "n/a" : (c.novel * 100 < 1 ? "<1" : Math.round(c.novel * 100)) + "%"}</dd></dl>`;
   el.querySelectorAll(".vt button").forEach(b => b.addEventListener("click", () => { S.figview = b.dataset.v; summary(); }));
   const txt = `${i.name}: suitable climate now covers ${fmtA(c.now)}. By ${per} under ${sspLabel()} with ${S.disp} dispersal it covers ${fmtA(c.fut)} (${ch == null ? "n/a" : sgn(ch) + "%"}): ${fmtA(c.lost)} lost, ${fmtA(c.kept)} kept, ${fmtA(c.gained)} gained. ` +
-    (c.fut > 0 ? `The centre moves ${Math.round(c.shift_km)} km ${compass(c.bearing)}. ` : "") + FLAG;
+    (c.fut > 0 ? (c.cok === false ? "The centre of the range is not meaningful for a range spread over several regions. " : `The centre moves ${Math.round(c.shift_km)} km ${compass(c.bearing)}. `) : "") + FLAG;
   $("textdesc").textContent = txt; $("live").textContent = txt;
 }
 /* place list */
@@ -339,7 +358,7 @@ function legend() {
 function shiftLayer() {
   const src = map && map.getSource("shift"); if (!src || !S.sp || !INFO[S.sp]) return;
   const c = cur(), f = [];
-  if (c && !c.withheld && S.view !== "now" && c.fut > 0 && c.shift_km > 40) {
+  if (c && !c.withheld && c.cok !== false && S.view !== "now" && c.fut > 0 && c.shift_km > 40) {
     f.push({ type: "Feature", properties: { k: "l" }, geometry: { type: "LineString", coordinates: [[c.c0[1], c.c0[0]], [c.c1[1], c.c1[0]]] } },
       { type: "Feature", properties: { k: "a" }, geometry: { type: "Point", coordinates: [c.c0[1], c.c0[0]] } }, { type: "Feature", properties: { k: "b" }, geometry: { type: "Point", coordinates: [c.c1[1], c.c1[0]] } });
   }
@@ -375,6 +394,8 @@ async function loadInfo(id) {
 async function pick(id) {
   if (!ST.byId[id]) return;
   S.sp = id; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
+  if (!INFO[id]) $("sp-head").innerHTML = `<h2>${esc(rec(id).name)}</h2><p class="small" role="status">Loading\u2026</p>`;
+  try { history.replaceState(null, "", "#" + id); } catch (e) { }
   try { await loadInfo(id); } catch (e) { $("sp-head").innerHTML = '<p role="alert">This species could not be loaded. Check your connection and try again.</p>'; return; }
   $("sp-head").removeAttribute("aria-busy");
   if (!INFO[id].ssps.includes(S.ssp)) S.ssp = INFO[id].ssps[0];
@@ -415,6 +436,7 @@ $("o-agree").addEventListener("change", e => { S.agree = e.target.checked; updat
 $("o-novel").addEventListener("change", e => { S.novel = e.target.checked; legend(); map && map.triggerRepaint(); });
 $("place-det").addEventListener("toggle", () => { placeCard(); placeMarker(); });
 $("search").addEventListener("input", e => { S.q = e.target.value; renderResults(); });
+addEventListener("hashchange", () => { const h = decodeURIComponent(location.hash.slice(1)); if (ST && ST.byId[h] && h !== S.sp) pick(h); });
 $("retry").addEventListener("click", () => location.reload());
 $("search").addEventListener("keydown", e => {
   const opts = [...$("results").querySelectorAll("[data-id]")]; if (!opts.length) return; let i = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
