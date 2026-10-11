@@ -244,3 +244,21 @@ Problem: the v1 cell tables have years but no months, so breeding and wintering 
 **Seasonal native masks** (`data/species/native/curated_seasonal_v1.csv`, curated by us, one note per species): the barn swallow breeding mask is NORTH_AMERICA;EUROPE;ASIA;AFRICA(N) (v1 had all of Africa), the winter mask adds SOUTH_AMERICA, sub-Saharan Africa and northern Oceania. **Decision on the barn swallow:** the model target is the BREEDING range (breeding-season records inside the breeding mask); the v1 mask removed 17,148 cells mostly in South America, which are wintering records and now live in the winter set instead of being lost. European robin gets ASIA(W) (Caucasus, Anatolia) and N Africa added, which v1 cut. The other nine keep the v1 continents for both seasons (their winter ranges stay inside it). The winter masks are continent-level and coarse [U: not checked against range maps, which we cannot use].
 
 **Limitation found while testing:** most monarch records have no month (372,341 of 418,855: Monarch Watch tags carry a year only), so the monarch breeding and winter sets rest on the other 46 k records, mostly iNaturalist / Journey North; `records_without_month` is in the report for every species.
+
+**Result [V: run 38096880803, assets on the release: `occ_cells_pilot_v1_seasonal.parquet` 27 MB, `w2_seasonal_report_v1.json`, `manifest_w2_seasonal_v1.json`].** The cell set of every species equals v1 (`same_cells` true, record counts equal). A cell can be in both seasons.
+
+| Species | cells | breeding cells | winter cells | both | records May-Jul | records Dec-Feb | other months | no month | same cells as v1 |
+|---|---|---|---|---|---|---|---|---|---|
+| Hirundo rustica | 519,754 | 371,192 | 63,470 | 11,324 | 7,410,605 | 751,729 | 6,471,379 | 421,741 | True |
+| Turdus migratorius | 303,566 | 241,317 | 119,374 | 87,758 | 11,627,385 | 4,213,968 | 13,112,772 | 21,494 | True |
+| Agelaius phoeniceus | 263,441 | 220,873 | 91,046 | 73,798 | 8,924,334 | 2,481,719 | 9,414,543 | 336 | True |
+| Zenaida macroura | 291,602 | 236,545 | 133,393 | 112,320 | 8,818,545 | 5,478,552 | 12,750,749 | 20 | True |
+| Spinus tristis | 209,982 | 158,516 | 109,062 | 78,432 | 7,070,310 | 3,839,571 | 9,196,836 | 28 | True |
+| Sialia sialis | 149,386 | 108,594 | 79,475 | 58,730 | 2,308,918 | 1,811,456 | 3,818,293 | 20 | True |
+| Cyanocitta cristata | 200,805 | 152,708 | 123,241 | 98,629 | 6,539,386 | 5,105,344 | 12,246,365 | 23 | True |
+| Melospiza melodia | 221,108 | 163,704 | 92,907 | 57,769 | 7,955,693 | 3,893,175 | 10,316,046 | 1,659 | True |
+| Erithacus rubecula | 191,791 | 129,836 | 99,173 | 69,646 | 1,553,063 | 1,718,169 | 4,013,488 | 615,358 | True |
+| Danaus plexippus | 15,076 | 4,653 | 843 | 264 | 13,269 | 3,956 | 29,289 | 372,341 | True |
+| Danaus chrysippus | 3,537 | 779 | 823 | 128 | 1,883 | 1,695 | 4,709 | 36 | True |
+
+Note the European robin: 615 k of its records have no month, and for the barn swallow the breeding set (371 k cells) is three times larger than the strictly winter-only cells, because May-Jul records in the winter-range continents (oversummering and misdated records) are excluded only by the breeding mask, not by month alone. The queue cost was zero GBIF requests; the whole job (11 species, two threads) finished within about 30 minutes of runner time [V: run 38096880803 started and completed within the polling window].
