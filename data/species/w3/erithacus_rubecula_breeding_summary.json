@@ -1,0 +1,541 @@
+{
+ "schema": "ctw-species-summary/1",
+ "species": {
+  "season": "breeding",
+  "season_report": {
+   "season_scheme": "N",
+   "breeding_native_spec": "EUROPE;ASIA(W)",
+   "cells_all": 191791,
+   "breeding_cells": 129836,
+   "records_breeding_months": 1553063,
+   "records_without_month": 615358
+  },
+  "kind": "wild",
+  "cultivated_verified": false,
+  "id": "erithacus_rubecula_breeding",
+  "scientific_name": "Erithacus rubecula",
+  "common_name": "European robin",
+  "group": "bird",
+  "gbif_taxon_key": "2492462",
+  "validation_plan": "GBIF before/after in well-sampled cells"
+ },
+ "tier": "B",
+ "range_shifts_tested": "untested",
+ "cv_kind": "presence_background",
+ "confidence": "low",
+ "published": true,
+ "hard_failures": [],
+ "soft_flags": [
+  "lower discrimination: CV AUC 0.63 < 0.7"
+ ],
+ "wording": "projected climate suitability (a model of climate suitability, not a forecast or an expected range)",
+ "species_kind": "wild",
+ "record_recall": 0.9396,
+ "area_now_km2": 9811231.266528454,
+ "records": {
+  "raw": 129836,
+  "flagged_excluded": 0,
+  "thinned_cells": 129836,
+  "gate_cells": 33268,
+  "used_in_fit": 20000,
+  "background": 50000,
+  "no_climate": 0
+ },
+ "skill": {
+  "cv_kind": "presence_background",
+  "cv_auc": 0.6327669219171794,
+  "cv_tss": 0.16736150544819065,
+  "cv_boyce": 0.9586551767350813,
+  "cv_auc_domain": 0.7648107450684096,
+  "check_model": {
+   "auc": 0.5962748544054746,
+   "tss": 0.1323501500078812,
+   "boyce": 0.8005353754708329,
+   "auc_dom": 0.6924241950664436
+  },
+  "folds_used": 5,
+  "folds": 5,
+  "block_km": 400.0,
+  "threshold": 0.34255108837861836,
+  "threshold_method": "p05",
+  "threshold_source": "out-of-fold",
+  "thresholds_all": {
+   "maxtss": 0.6015171374842078,
+   "p10": 0.41656635615751714,
+   "p05": 0.34255108837861836,
+   "minpres": 0.02360757721649752
+  },
+  "note": "AUC is against a target-group background and rewards niche specificity; Boyce is reported, not gated"
+ },
+ "predictors": {
+  "kept": [
+   "bio1",
+   "bio12",
+   "bio15",
+   "bio4"
+  ],
+  "dropped": {
+   "bio6": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.944
+   },
+   "bio5": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.893
+   },
+   "cwd": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.908
+   },
+   "bio17": {
+    "reason": "correlated",
+    "with_": "bio12",
+    "rho": 0.867
+   },
+   "aet": {
+    "reason": "correlated",
+    "with_": "bio12",
+    "rho": 0.816
+   },
+   "gdd": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.977
+   }
+  },
+  "considered": [
+   "bio1",
+   "bio4",
+   "bio5",
+   "bio6",
+   "bio12",
+   "bio15",
+   "bio17",
+   "gdd",
+   "cwd",
+   "aet"
+  ]
+ },
+ "domain": {
+  "train_km2": 19169819.077916246,
+  "projection_km2": 30253946.85267307,
+  "native_range_used": true,
+  "train_buffer_km": 300.0,
+  "proj_buffer_km": 1000.0
+ },
+ "dispersal": {
+  "km_per_decade": 100.0,
+  "note": "group rule for 'bird'; uncalibrated, about 10x uncertain until calibrated by the hindcast",
+  "calibrated": false,
+  "reach_km": {
+   "2041-2060": 450.0,
+   "2081-2100": 850.0
+  }
+ },
+ "scenarios": {
+  "SSP2-4.5|2041-2060": {
+   "ssp": "SSP2-4.5",
+   "period": "2041-2060",
+   "n_models": 14,
+   "novel_share": 0.06383568608458562,
+   "mahalanobis_beyond_share": 0.03844343149332404,
+   "reach_km": 450.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10526360.880314201,
+     "change_pct": 7.288887544883904,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      56.23707335124188,
+      24.650093950033423
+     ],
+     "shift_km": 257.700237111938,
+     "bearing": 33.55633000833939,
+     "gain": 1257371.625274868,
+     "loss": 542242.0114891198,
+     "stable": 9268989.255039334,
+     "agree_share": 0.9439681401906789,
+     "novel_share": 0.06488101098706202
+    },
+    "limited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10526360.880314201,
+     "change_pct": 7.288887544883904,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      56.23707335124188,
+      24.650093950033423
+     ],
+     "shift_km": 257.700237111938,
+     "bearing": 33.55633000833939,
+     "gain": 1257371.625274868,
+     "loss": 542242.0114891198,
+     "stable": 9268989.255039334,
+     "agree_share": 0.9439681401906789,
+     "novel_share": 0.06488101098706202
+    },
+    "none": {
+     "area_now": 9811231.266528454,
+     "area_fut": 9268989.255039334,
+     "change_pct": -5.526747833770951,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      54.96316812721621,
+      22.143162684969248
+     ],
+     "shift_km": 71.93671628155298,
+     "bearing": 349.67833909076904,
+     "gain": 0.0,
+     "loss": 542242.0114891198,
+     "stable": 9268989.255039334,
+     "agree_share": 0.9707784376547579,
+     "novel_share": 0.06695534798604787
+    }
+   }
+  },
+  "SSP2-4.5|2081-2100": {
+   "ssp": "SSP2-4.5",
+   "period": "2081-2100",
+   "n_models": 14,
+   "novel_share": 0.059780617910154356,
+   "mahalanobis_beyond_share": 0.03705070919830237,
+   "reach_km": 850.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10921159.766756458,
+     "change_pct": 11.312835974161416,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      57.327958936753745,
+      26.105040728274517
+     ],
+     "shift_km": 407.9220512918038,
+     "bearing": 33.59146211335661,
+     "gain": 1945496.1435671337,
+     "loss": 835567.6433391283,
+     "stable": 8975663.623189323,
+     "agree_share": 0.9365849643332134,
+     "novel_share": 0.061519076658982624
+    },
+    "limited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10921159.766756458,
+     "change_pct": 11.312835974161416,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      57.327958936753745,
+      26.105040728274517
+     ],
+     "shift_km": 407.9220512918038,
+     "bearing": 33.59146211335661,
+     "gain": 1945496.1435671337,
+     "loss": 835567.6433391283,
+     "stable": 8975663.623189323,
+     "agree_share": 0.9365849643332134,
+     "novel_share": 0.061519076658982624
+    },
+    "none": {
+     "area_now": 9811231.266528454,
+     "area_fut": 8975663.623189323,
+     "change_pct": -8.516440196346354,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      55.37911936632588,
+      21.757644686164785
+     ],
+     "shift_km": 122.89833193820627,
+     "bearing": 342.4239260697665,
+     "gain": 0.0,
+     "loss": 835567.6433391283,
+     "stable": 8975663.623189323,
+     "agree_share": 0.9682003855279725,
+     "novel_share": 0.064209418863404
+    }
+   }
+  },
+  "SSP5-8.5|2041-2060": {
+   "ssp": "SSP5-8.5",
+   "period": "2041-2060",
+   "n_models": 14,
+   "novel_share": 0.06266398236115328,
+   "mahalanobis_beyond_share": 0.03977546264413586,
+   "reach_km": 450.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10460634.681262312,
+     "change_pct": 6.6189797905318315,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      56.7686400414162,
+      24.82500842046347
+     ],
+     "shift_km": 313.0915808394418,
+     "bearing": 28.86298918199043,
+     "gain": 1395830.059835638,
+     "loss": 746426.6451017775,
+     "stable": 9064804.621426675,
+     "agree_share": 0.9374870692479189,
+     "novel_share": 0.06525928055444136
+    },
+    "limited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10457921.74694221,
+     "change_pct": 6.591328476987135,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      56.7643796164345,
+      24.813817047153687
+     ],
+     "shift_km": 312.3350063261334,
+     "bearing": 28.8002494734381,
+     "gain": 1393117.1255155348,
+     "loss": 746426.6451017775,
+     "stable": 9064804.621426675,
+     "agree_share": 0.937579896607196,
+     "novel_share": 0.06501679545658497
+    },
+    "none": {
+     "area_now": 9811231.266528454,
+     "area_fut": 9064804.621426675,
+     "change_pct": -7.607879427409414,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      55.266635091042836,
+      21.895379271443726
+     ],
+     "shift_km": 108.40036977033489,
+     "bearing": 344.7620742063327,
+     "gain": 0.0,
+     "loss": 746426.6451017775,
+     "stable": 9064804.621426675,
+     "agree_share": 0.9664004559205878,
+     "novel_share": 0.06677970706040108
+    }
+   }
+  },
+  "SSP5-8.5|2081-2100": {
+   "ssp": "SSP5-8.5",
+   "period": "2081-2100",
+   "n_models": 14,
+   "novel_share": 0.05559544100751616,
+   "mahalanobis_beyond_share": 0.040992106881048436,
+   "reach_km": 850.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10158032.255290546,
+     "change_pct": 3.5347346254615664,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      59.93722222562834,
+      27.456842842303114
+     ],
+     "shift_km": 695.4653525509679,
+     "bearing": 24.18573919761809,
+     "gain": 2428739.4004417965,
+     "loss": 2081938.4116797028,
+     "stable": 7729292.854848749,
+     "agree_share": 0.9049576446443762,
+     "novel_share": 0.06366089501355467
+    },
+    "limited": {
+     "area_now": 9811231.266528454,
+     "area_fut": 10125817.838114433,
+     "change_pct": 3.2063923786936677,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      59.881933726981686,
+      27.32663773336244
+     ],
+     "shift_km": 686.6118763068882,
+     "bearing": 23.896724560762323,
+     "gain": 2396524.9832656845,
+     "loss": 2081938.4116797028,
+     "stable": 7729292.854848749,
+     "agree_share": 0.9058727459297388,
+     "novel_share": 0.06082140804656542
+    },
+    "none": {
+     "area_now": 9811231.266528454,
+     "area_fut": 7729292.854848749,
+     "change_pct": -21.21995043356434,
+     "centroid_now": [
+      54.326862156603944,
+      22.34506549092057
+     ],
+     "centroid_fut": [
+      57.300181052243346,
+      20.6013226571642
+     ],
+     "shift_km": 348.0768974156215,
+     "bearing": 342.47981751829144,
+     "gain": 0.0,
+     "loss": 2081938.4116797028,
+     "stable": 7729292.854848749,
+     "agree_share": 0.9538486699010079,
+     "novel_share": 0.058486806918189735
+    }
+   }
+  }
+ },
+ "audit_withheld": {},
+ "gates": {
+  "records": {
+   "value": 33268,
+   "used": 20000,
+   "threshold": 100,
+   "passed": true,
+   "narrow_range": false,
+   "narrow_threshold": 500
+  },
+  "skill": {
+   "cv_auc": 0.6328,
+   "threshold": 0.7,
+   "floor": 0.5,
+   "passed": false
+  },
+  "novelty": {
+   "threshold": 0.15,
+   "shares": {
+    "SSP2-4.5|2041-2060": 0.0638,
+    "SSP2-4.5|2081-2100": 0.0598,
+    "SSP5-8.5|2041-2060": 0.0627,
+    "SSP5-8.5|2081-2100": 0.0556
+   },
+   "withheld": {
+    "SSP2-4.5|2041-2060": false,
+    "SSP2-4.5|2081-2100": false,
+    "SSP5-8.5|2041-2060": false,
+    "SSP5-8.5|2081-2100": false
+   }
+  },
+  "range_check": {
+   "kind": "native_range",
+   "status": "pass",
+   "species_kind": "wild",
+   "unrecorded_share": 0.1107,
+   "omission": 0.4947,
+   "commission": 0.1303,
+   "expert_area_km2": 16886053.28662107,
+   "omission_gates": false,
+   "limits": {
+    "omission_max": 0.4,
+    "commission_max": 0.3,
+    "uncalibrated": true
+   }
+  },
+  "record_recall": {
+   "value": 0.9396,
+   "min": 0.8
+  },
+  "check_model": {
+   "area_change_gap_pp": 18.1,
+   "limit_pp": 25.0,
+   "passed": true,
+   "uncalibrated": true
+  },
+  "validation": {
+   "evidence": null,
+   "tierA_kinds": [
+    "bbs",
+    "fia"
+   ],
+   "counts_as_tierA": false
+  },
+  "range_shifts": {
+   "status": "untested",
+   "evidence": null
+  },
+  "cv_kind": "presence_background"
+ },
+ "gate_config": {
+  "min_records": 100,
+  "low_conf_records": 300,
+  "narrow_records": 500,
+  "narrow_area_km2": 67500.0,
+  "auc_ok": 0.7,
+  "auc_floor": 0.5,
+  "novel_max": 0.15,
+  "omission_max": 0.4,
+  "commission_max": 0.3,
+  "recall_min": 0.8,
+  "unrecorded_km": 500.0,
+  "unrecorded_warn": 0.5,
+  "gam_disagree_pp": 25.0,
+  "tierA_kinds": [
+   "bbs",
+   "fia"
+  ]
+ },
+ "validation": null,
+ "range_shift_test": null,
+ "bbs_direct": null,
+ "model": {
+  "main": "LightGBM",
+  "check": "penalised-spline GAM (logistic)",
+  "background": "target_group",
+  "seed": 0
+ },
+ "data_dois": [
+  "https://doi.org/10.15468/dl.ta47bg"
+ ],
+ "provenance": {
+  "code": "1f32daf",
+  "python": "3.12.15",
+  "seconds": {
+   "fit": 11.2,
+   "project": 686.0
+  },
+  "made": "2026-10-11T00:35:08Z",
+  "grid": [
+   4320,
+   8640
+  ],
+  "product": "lite",
+  "climate_models": {
+   "SSP2-4.5|2041-2060": 14,
+   "SSP2-4.5|2081-2100": 14,
+   "SSP5-8.5|2041-2060": 14,
+   "SSP5-8.5|2081-2100": 14
+  }
+ }
+}
