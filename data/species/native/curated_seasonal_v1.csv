@@ -1,0 +1,12 @@
+scientific_name,season_scheme,breeding_native_spec,winter_native_spec,note
+Hirundo rustica,N,NORTH_AMERICA;EUROPE;ASIA;AFRICA(N),NORTH_AMERICA;SOUTH_AMERICA;AFRICA;ASIA;OCEANIA(N),"Breeds across the northern hemisphere (N Africa included); winters in Central and South America, sub-Saharan Africa, southern Asia and northern Australia. Continent-level, so the winter mask is coarse. Breeding set = May-Jul records in the breeding mask."
+Turdus migratorius,N,NORTH_AMERICA,NORTH_AMERICA,"Partial migrant; wintering reaches Mexico and Central America, all inside NORTH_AMERICA."
+Agelaius phoeniceus,N,NORTH_AMERICA,NORTH_AMERICA,Partial migrant within North and Central America.
+Zenaida macroura,N,NORTH_AMERICA,NORTH_AMERICA,Partial migrant within North and Central America.
+Spinus tristis,N,NORTH_AMERICA,NORTH_AMERICA,Nomadic partial migrant within North America.
+Sialia sialis,N,NORTH_AMERICA,NORTH_AMERICA,Partial migrant within North America.
+Cyanocitta cristata,N,NORTH_AMERICA,NORTH_AMERICA,Partial migrant within North America.
+Melospiza melodia,N,NORTH_AMERICA,NORTH_AMERICA,Partial migrant within North America.
+Erithacus rubecula,N,EUROPE;ASIA(W),EUROPE;ASIA(W);AFRICA(N),"Breeds in Europe, the Caucasus and Anatolia and north-west Africa; northern populations winter in the Mediterranean and North Africa. The v1 mask (EUROPE only) cut Asian and African cells."
+Danaus plexippus,N,NORTH_AMERICA,NORTH_AMERICA,"Summer breeding in North America; the migratory generation overwinters in central Mexico and coastal California (inside NORTH_AMERICA). South American, Oceanian and European populations are outside the mask as in v1."
+Danaus chrysippus,N,ASIA;AFRICA;OCEANIA(N),ASIA;AFRICA;OCEANIA(N),"Tropical resident with local movements; seasons are not a range statement, month counts are provided only."

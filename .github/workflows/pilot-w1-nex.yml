@@ -1,0 +1,75 @@
+# Species pilot W1: NEX-GDDP-CMIP6 coarse monthly change factors, one job per climate model (baseline 1991-2020 plus SSP2-4.5 and
+# SSP5-8.5 for 2041-2060 and 2081-2100), then the ensemble-median delta file. Marker line in .github/run/pilot-w1: "nex".
+# Resumable: finished parts are kept as nexclim_<model>__<part>.npz release assets; a finished model has meta_nex_<model>.json.
+name: Pilot W1 NEX deltas
+on:
+  push:
+    paths: [".github/run/pilot-w1"]
+  workflow_dispatch:
+    inputs:
+      sel:
+        description: "nex (all models) | nex:MIROC6 (one model) | ens (ensemble median only)"
+        default: "nex"
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.p.outputs.run }}
+      models: ${{ steps.p.outputs.models }}
+      ens: ${{ steps.p.outputs.ens }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - id: p
+        env:
+          INPUT: ${{ inputs.sel }}
+        run: |
+          sel="$INPUT"
+          if [ -z "$sel" ]; then sel="$(tr '\n' ' ' < .github/run/pilot-w1)"; fi
+          echo "selection: $sel"
+          ens=false; run=false; models='[]'
+          if echo "$sel" | grep -qE "(^| )(nex|ens)( |$)|nex:"; then ens=true; fi
+          if echo "$sel" | grep -qE "(^| )nex( |$)"; then run=true; models="$(python -m ctw.species.climstack_run nex-plan | tail -1)"; fi
+          one="$(echo "$sel" | grep -oE 'nex:[A-Za-z0-9._-]+' | head -1 | cut -d: -f2 || true)"
+          if [ -n "$one" ]; then run=true; models="[\"$one\"]"; fi
+          echo "models=$models"
+          { echo "run=$run"; echo "models=$models"; echo "ens=$ens"; } >> "$GITHUB_OUTPUT"
+      - name: Ensure the release exists
+        run: |
+          gh release view species-pilot-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create species-pilot-data --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Species pilot data" --notes "Climate predictor stack and data products for the species pilot (W1). Inventory: manifest.json. See docs/pilot/W1-climate.md." --prerelease || true
+  model:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        model: ${{ fromJson(needs.plan.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -u -m ctw.species.climstack_run nex --model "${{ matrix.model }}" --out pilot-out --procs 3 --upload
+      - run: df -h . | tail -1; ls -l pilot-out
+        if: always()
+  ens:
+    needs: [plan, model]
+    if: ${{ !cancelled() && needs.plan.outputs.ens == 'true' && needs.plan.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -u -m ctw.species.climstack_run ens --out pilot-out --upload

@@ -1,0 +1,357 @@
+{
+ "Acer saccharum": {
+  "key": "0019170-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.26u9mg",
+  "records": 54907,
+  "licences_in_file": {
+   "CC0_1_0": 25173,
+   "CC_BY_4_0": 4747,
+   "CC_BY_NC_4_0": 24987
+  },
+  "cleaning_all": [
+   {
+    "step": "input",
+    "left": 54907,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 54904,
+    "removed": 3
+   },
+   {
+    "step": "uncertainty",
+    "left": 54904,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 54862,
+    "removed": 42
+   },
+   {
+    "step": "land",
+    "left": 54861,
+    "removed": 1
+   },
+   {
+    "step": "establishment",
+    "left": 54860,
+    "removed": 1
+   },
+   {
+    "step": "duplicates",
+    "left": 49977,
+    "removed": 4883
+   },
+   {
+    "step": "thin",
+    "left": 11611,
+    "removed": 38366
+   }
+  ],
+  "cleaning_ccby": [
+   {
+    "step": "input",
+    "left": 29920,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 29917,
+    "removed": 3
+   },
+   {
+    "step": "uncertainty",
+    "left": 29917,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 29907,
+    "removed": 10
+   },
+   {
+    "step": "land",
+    "left": 29907,
+    "removed": 0
+   },
+   {
+    "step": "establishment",
+    "left": 29906,
+    "removed": 1
+   },
+   {
+    "step": "duplicates",
+    "left": 25162,
+    "removed": 4744
+   },
+   {
+    "step": "thin",
+    "left": 3749,
+    "removed": 21413
+   }
+  ],
+  "cells_all": 11611,
+  "cells_ccby": 3749,
+  "cells_only_nc": 7862,
+  "cells_lost_pct": 67.7,
+  "continents_all": {
+   "North America": 11497,
+   "Europe": 100,
+   "Asia": 11,
+   "Oceania": 3
+  },
+  "continents_ccby": {
+   "North America": 3685,
+   "Europe": 56,
+   "Asia": 5,
+   "Oceania": 3
+  },
+  "continents_only_nc": {
+   "North America": 7812,
+   "Europe": 44,
+   "Asia": 6
+  }
+ },
+ "Danaus plexippus": {
+  "key": "0019171-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.bwmrn5",
+  "records": 763891,
+  "licences_in_file": {
+   "CC0_1_0": 389026,
+   "CC_BY_4_0": 32370,
+   "CC_BY_NC_4_0": 342495
+  },
+  "cleaning_all": [
+   {
+    "step": "input",
+    "left": 763891,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 763849,
+    "removed": 42
+   },
+   {
+    "step": "uncertainty",
+    "left": 763849,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 761212,
+    "removed": 2637
+   },
+   {
+    "step": "land",
+    "left": 756218,
+    "removed": 4994
+   },
+   {
+    "step": "establishment",
+    "left": 756218,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 383407,
+    "removed": 372811
+   },
+   {
+    "step": "thin",
+    "left": 56132,
+    "removed": 327275
+   }
+  ],
+  "cleaning_ccby": [
+   {
+    "step": "input",
+    "left": 421396,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 421387,
+    "removed": 9
+   },
+   {
+    "step": "uncertainty",
+    "left": 421387,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 420718,
+    "removed": 669
+   },
+   {
+    "step": "land",
+    "left": 419305,
+    "removed": 1413
+   },
+   {
+    "step": "establishment",
+    "left": 419305,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 52195,
+    "removed": 367110
+   },
+   {
+    "step": "thin",
+    "left": 15201,
+    "removed": 36994
+   }
+  ],
+  "cells_all": 56132,
+  "cells_ccby": 15201,
+  "cells_only_nc": 40931,
+  "cells_lost_pct": 72.9,
+  "continents_all": {
+   "North America": 50786,
+   "Oceania": 3271,
+   "Europe": 1110,
+   "South America": 829,
+   "Unknown": 82,
+   "Africa": 32,
+   "Asia": 22
+  },
+  "continents_ccby": {
+   "North America": 13637,
+   "Oceania": 1017,
+   "Europe": 264,
+   "South America": 192,
+   "Unknown": 65,
+   "Asia": 18,
+   "Africa": 8
+  },
+  "continents_only_nc": {
+   "North America": 37149,
+   "Oceania": 2254,
+   "Europe": 846,
+   "South America": 637,
+   "Africa": 24,
+   "Unknown": 17,
+   "Asia": 4
+  }
+ },
+ "Ixodes scapularis": {
+  "key": "0019172-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.9y2662",
+  "records": 16837,
+  "licences_in_file": {
+   "CC0_1_0": 774,
+   "CC_BY_4_0": 7639,
+   "CC_BY_NC_4_0": 8424
+  },
+  "cleaning_all": [
+   {
+    "step": "input",
+    "left": 16837,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 16837,
+    "removed": 0
+   },
+   {
+    "step": "uncertainty",
+    "left": 16837,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 16793,
+    "removed": 44
+   },
+   {
+    "step": "land",
+    "left": 16793,
+    "removed": 0
+   },
+   {
+    "step": "establishment",
+    "left": 16793,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 12995,
+    "removed": 3798
+   },
+   {
+    "step": "thin",
+    "left": 5669,
+    "removed": 7326
+   }
+  ],
+  "cleaning_ccby": [
+   {
+    "step": "input",
+    "left": 8413,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 8413,
+    "removed": 0
+   },
+   {
+    "step": "uncertainty",
+    "left": 8413,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 8383,
+    "removed": 30
+   },
+   {
+    "step": "land",
+    "left": 8383,
+    "removed": 0
+   },
+   {
+    "step": "establishment",
+    "left": 8383,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 4606,
+    "removed": 3777
+   },
+   {
+    "step": "thin",
+    "left": 1276,
+    "removed": 3330
+   }
+  ],
+  "cells_all": 5669,
+  "cells_ccby": 1276,
+  "cells_only_nc": 4393,
+  "cells_lost_pct": 77.5,
+  "continents_all": {
+   "North America": 5664,
+   "Europe": 3,
+   "Asia": 2
+  },
+  "continents_ccby": {
+   "North America": 1272,
+   "Europe": 3,
+   "Asia": 1
+  },
+  "continents_only_nc": {
+   "North America": 4392,
+   "Asia": 1
+  }
+ }
+}

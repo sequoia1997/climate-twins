@@ -1,0 +1,25 @@
+name: Pilot W4 DISTRIB summary
+on:
+  push:
+    paths: [".github/run/pilot-w4-distrib"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  distrib:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env: { PYTHONUNBUFFERED: "1", GH_TOKEN: "${{ github.token }}" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install numpy pandas scipy requests rasterio pyproj
+      - run: python -u -m ctw.species.w4_distrib_run
+      - name: Commit the summary
+        run: |
+          mkdir -p data/species/w4 && cp w4-out/distrib2024_summary.csv data/species/w4/
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add data/species/w4/distrib2024_summary.csv
+          git commit -m "W4: DISTRIB (RDS-2024-0020) summary (Actions)" || exit 0
+          for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done

@@ -1,0 +1,21 @@
+{
+ "kind": "bbs",
+ "passed": true,
+ "source": "presence-absence spatial-block CV",
+ "cv_auc": 0.929302666932033,
+ "cv_tss": 0.4303164493979501,
+ "cv_boyce": 0.6098336765419057,
+ "n_presence_routes": 1546,
+ "n_absence_routes": 52,
+ "window2_auc": 0.8520468771416823,
+ "window2_tss": 0.2515648558505048,
+ "window2_boyce": 0.4144026203588435,
+ "w3_background_cv": {
+  "tss": 0.03301911307037479,
+  "auc": 0.5243864387227793,
+  "boyce": 0.9518389396979241
+ },
+ "cv_gate": true,
+ "transfer_ok": true,
+ "from_file": "data/species/w4/bbs_hindcast_results.json"
+}

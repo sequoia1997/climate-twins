@@ -1,0 +1,704 @@
+{
+ "schema": "ctw-species-summary/1",
+ "species": {
+  "season": "all_year",
+  "season_report": null,
+  "kind": "wild",
+  "cultivated_verified": false,
+  "id": "hirundo_rustica",
+  "scientific_name": "Hirundo rustica",
+  "common_name": "Barn swallow",
+  "group": "bird",
+  "gbif_taxon_key": "",
+  "validation_plan": "BBS hindcast (NA breeding population)"
+ },
+ "tier": "B",
+ "range_shifts_tested": "fail",
+ "cv_kind": "presence_background",
+ "confidence": "low",
+ "published": true,
+ "hard_failures": [],
+ "soft_flags": [
+  "lower discrimination: CV AUC 0.60 < 0.7"
+ ],
+ "wording": "projected climate suitability (a model of climate suitability, not a forecast or an expected range)",
+ "species_kind": "wild",
+ "record_recall": 0.94865,
+ "area_now_km2": 88725416.19193012,
+ "records": {
+  "raw": 502606,
+  "flagged_excluded": 0,
+  "thinned_cells": 502606,
+  "gate_cells": 143827,
+  "used_in_fit": 20000,
+  "background": 50000,
+  "no_climate": 0
+ },
+ "skill": {
+  "cv_kind": "presence_background",
+  "cv_auc": 0.5984686831551231,
+  "cv_tss": 0.14590671235091207,
+  "cv_boyce": 0.7571529625458672,
+  "cv_auc_domain": 0.6566973919428151,
+  "check_model": {
+   "auc": 0.5636881814810486,
+   "tss": 0.10223470400374457,
+   "boyce": 0.31729961921327876,
+   "auc_dom": 0.5648217140126693
+  },
+  "folds_used": 5,
+  "folds": 5,
+  "block_km": 400.0,
+  "threshold": 0.363312639969528,
+  "threshold_method": "p05",
+  "threshold_source": "out-of-fold",
+  "thresholds_all": {
+   "maxtss": 0.522778078565249,
+   "p10": 0.4037821075926427,
+   "p05": 0.363312639969528,
+   "minpres": 0.03895232529545182
+  },
+  "note": "AUC is against a target-group background and rewards niche specificity; Boyce is reported, not gated"
+ },
+ "predictors": {
+  "kept": [
+   "bio1",
+   "bio12",
+   "bio17"
+  ],
+  "dropped": {
+   "bio6": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.964
+   },
+   "bio5": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.914
+   },
+   "cwd": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.79
+   },
+   "bio15": {
+    "reason": "correlated",
+    "with_": "bio17",
+    "rho": 0.845
+   },
+   "bio4": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.792
+   },
+   "aet": {
+    "reason": "correlated",
+    "with_": "bio12",
+    "rho": 0.844
+   },
+   "gdd": {
+    "reason": "correlated",
+    "with_": "bio1",
+    "rho": 0.978
+   }
+  },
+  "considered": [
+   "bio1",
+   "bio4",
+   "bio5",
+   "bio6",
+   "bio12",
+   "bio15",
+   "bio17",
+   "gdd",
+   "cwd",
+   "aet"
+  ]
+ },
+ "domain": {
+  "train_km2": 110650731.87138316,
+  "projection_km2": 114166213.65223412,
+  "native_range_used": true,
+  "train_buffer_km": 300.0,
+  "proj_buffer_km": 1000.0
+ },
+ "dispersal": {
+  "km_per_decade": 100.0,
+  "note": "group rule for 'bird'; uncalibrated, about 10x uncertain until calibrated by the hindcast",
+  "calibrated": false,
+  "reach_km": {
+   "2041-2060": 450.0,
+   "2081-2100": 850.0
+  }
+ },
+ "scenarios": {
+  "SSP2-4.5|2041-2060": {
+   "ssp": "SSP2-4.5",
+   "period": "2041-2060",
+   "n_models": 14,
+   "novel_share": 0.018435780323875304,
+   "mahalanobis_beyond_share": 0.002099649911569987,
+   "reach_km": 450.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 92890510.16415009,
+     "change_pct": 4.6943639725623765,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      47.99913410024025,
+      36.551125723094884
+     ],
+     "shift_km": 231.85568317277472,
+     "bearing": 3.826327174352855,
+     "gain": 6222381.049989739,
+     "loss": 2057287.0777697472,
+     "stable": 86668129.11416036,
+     "agree_share": 0.981489102382507,
+     "novel_share": 0.018002260645346387
+    },
+    "limited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 92890467.0297826,
+     "change_pct": 4.694315356991607,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      47.99911140784227,
+      36.551092124471566
+     ],
+     "shift_km": 231.8529925412033,
+     "bearing": 3.8257540158109578,
+     "gain": 6222337.915622247,
+     "loss": 2057287.0777697472,
+     "stable": 86668129.11416036,
+     "agree_share": 0.9814895581441475,
+     "novel_share": 0.018002269004827733
+    },
+    "none": {
+     "area_now": 88725416.1919301,
+     "area_fut": 86668129.11416036,
+     "change_pct": -2.318712231588116,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      46.03343425470708,
+      35.80222385928735
+     ],
+     "shift_km": 43.705022526010914,
+     "bearing": 287.14525789782186,
+     "gain": 0.0,
+     "loss": 2057287.0777697472,
+     "stable": 86668129.11416036,
+     "agree_share": 0.991253360797629,
+     "novel_share": 0.01877841950437647
+    }
+   }
+  },
+  "SSP2-4.5|2081-2100": {
+   "ssp": "SSP2-4.5",
+   "period": "2081-2100",
+   "n_models": 14,
+   "novel_share": 0.04196640811104385,
+   "mahalanobis_beyond_share": 0.0023394096434109653,
+   "reach_km": 850.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 95159989.61926246,
+     "change_pct": 7.252232453227547,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      49.31154213112626,
+      36.6572952269352
+     ],
+     "shift_km": 377.98461819239657,
+     "bearing": 3.455317441356442,
+     "gain": 9215622.953816982,
+     "loss": 2781049.5264846254,
+     "stable": 85944366.66544548,
+     "agree_share": 0.9786934755080587,
+     "novel_share": 0.041842248404632736
+    },
+    "limited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 95159989.61926246,
+     "change_pct": 7.252232453227547,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      49.31154213112626,
+      36.6572952269352
+     ],
+     "shift_km": 377.98461819239657,
+     "bearing": 3.455317441356442,
+     "gain": 9215622.953816982,
+     "loss": 2781049.5264846254,
+     "stable": 85944366.66544548,
+     "agree_share": 0.9786934755080587,
+     "novel_share": 0.041842248404632736
+    },
+    "none": {
+     "area_now": 88725416.1919301,
+     "area_fut": 85944366.66544548,
+     "change_pct": -3.134445174614542,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      45.94500662225512,
+      35.46541980052456
+     ],
+     "shift_km": 67.94931571280324,
+     "bearing": 272.76945195168014,
+     "gain": 0.0,
+     "loss": 2781049.5264846254,
+     "stable": 85944366.66544548,
+     "agree_share": 0.9883411152440966,
+     "novel_share": 0.04535126680652339
+    }
+   }
+  },
+  "SSP5-8.5|2041-2060": {
+   "ssp": "SSP5-8.5",
+   "period": "2041-2060",
+   "n_models": 14,
+   "novel_share": 0.033173476408331744,
+   "mahalanobis_beyond_share": 0.002132225567350259,
+   "reach_km": 450.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 94139802.36418688,
+     "change_pct": 6.10240718459345,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      48.725623355491045,
+      36.59721589412851
+     ],
+     "shift_km": 312.68659625234636,
+     "bearing": 3.417205776118635,
+     "gain": 8025278.234368959,
+     "loss": 2610892.0621121773,
+     "stable": 86114524.12981793,
+     "agree_share": 0.9797892218896244,
+     "novel_share": 0.03206474818884077
+    },
+    "limited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 94137584.20682958,
+     "change_pct": 6.099907159851381,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      48.72432042393652,
+      36.59587674763577
+     ],
+     "shift_km": 312.5358418912522,
+     "bearing": 3.4008961563757225,
+     "gain": 8023060.077011641,
+     "loss": 2610892.0621121773,
+     "stable": 86114524.12981793,
+     "agree_share": 0.979797713630654,
+     "novel_share": 0.032065503728274936
+    },
+    "none": {
+     "area_now": 88725416.1919301,
+     "area_fut": 86114524.12981793,
+     "change_pct": -2.9426653310527295,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      46.04434239467959,
+      35.684389212492114
+     ],
+     "shift_km": 52.78508174306449,
+     "bearing": 285.5666926288019,
+     "gain": 0.0,
+     "loss": 2610892.0621121773,
+     "stable": 86114524.12981793,
+     "agree_share": 0.9894942189880863,
+     "novel_share": 0.034021586673057276
+    }
+   }
+  },
+  "SSP5-8.5|2081-2100": {
+   "ssp": "SSP5-8.5",
+   "period": "2081-2100",
+   "n_models": 14,
+   "novel_share": 0.13679063522017768,
+   "mahalanobis_beyond_share": 0.003120135895322107,
+   "reach_km": 850.0,
+   "modes": {
+    "unlimited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 100492738.21984228,
+     "change_pct": 13.26262815432413,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      51.93037410261183,
+      38.05292358777852
+     ],
+     "shift_km": 679.9712495924864,
+     "bearing": 9.94482157501443,
+     "gain": 16263630.110055782,
+     "loss": 4496308.082143603,
+     "stable": 84229108.1097865,
+     "agree_share": 0.9620793048421351,
+     "novel_share": 0.13537161582997528
+    },
+    "limited": {
+     "area_now": 88725416.1919301,
+     "area_fut": 100323839.3123093,
+     "change_pct": 13.072266795897104,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      51.845931007336475,
+      37.93354161790251
+     ],
+     "shift_km": 669.1990368802556,
+     "bearing": 9.411677045915155,
+     "gain": 16094731.20252278,
+     "loss": 4496308.082143603,
+     "stable": 84229108.1097865,
+     "agree_share": 0.962811748745986,
+     "novel_share": 0.13559951897025962
+    },
+    "none": {
+     "area_now": 88725416.1919301,
+     "area_fut": 84229108.1097865,
+     "change_pct": -5.067666374669044,
+     "centroid_now": [
+      45.91884013150297,
+      36.34322515208791
+     ],
+     "centroid_fut": [
+      45.67378932188814,
+      34.69834312424334
+     ],
+     "shift_km": 130.39796415441768,
+     "bearing": 258.5290269249018,
+     "gain": 0.0,
+     "loss": 4496308.082143603,
+     "stable": 84229108.1097865,
+     "agree_share": 0.975384276144185,
+     "novel_share": 0.15608772494203899
+    }
+   }
+  }
+ },
+ "audit_withheld": {},
+ "gates": {
+  "records": {
+   "value": 143827,
+   "used": 20000,
+   "threshold": 100,
+   "passed": true,
+   "narrow_range": false,
+   "narrow_threshold": 500
+  },
+  "skill": {
+   "cv_auc": 0.5985,
+   "threshold": 0.7,
+   "floor": 0.5,
+   "passed": false
+  },
+  "novelty": {
+   "threshold": 0.15,
+   "shares": {
+    "SSP2-4.5|2041-2060": 0.0184,
+    "SSP2-4.5|2081-2100": 0.042,
+    "SSP5-8.5|2041-2060": 0.0332,
+    "SSP5-8.5|2081-2100": 0.1368
+   },
+   "withheld": {
+    "SSP2-4.5|2041-2060": false,
+    "SSP2-4.5|2081-2100": false,
+    "SSP5-8.5|2041-2060": false,
+    "SSP5-8.5|2081-2100": false
+   }
+  },
+  "range_check": {
+   "kind": "native_range",
+   "status": "pass",
+   "species_kind": "wild",
+   "unrecorded_share": 0.116,
+   "omission": 0.2515,
+   "commission": 0.0476,
+   "expert_area_km2": 112892731.8487574,
+   "omission_gates": false,
+   "limits": {
+    "omission_max": 0.4,
+    "commission_max": 0.3,
+    "uncalibrated": true
+   }
+  },
+  "record_recall": {
+   "value": 0.9486,
+   "min": 0.8
+  },
+  "check_model": {
+   "area_change_gap_pp": 0.7,
+   "limit_pp": 25.0,
+   "passed": true,
+   "uncalibrated": true
+  },
+  "validation": {
+   "evidence": {
+    "kind": "bbs",
+    "passed": false,
+    "direct": {
+     "available": true,
+     "window": "2005-2024",
+     "n_presence": 999,
+     "n_absence": 63,
+     "auc": 0.41157031059265137,
+     "tss_best": 0.08866008866008857,
+     "tss_at_fit_threshold": 0.07264407264407269,
+     "boyce": -0.7646128171453443,
+     "passed": false,
+     "rule": "AUC >= 0.7 and best-threshold TSS >= 0.4 (W4's skill gate)",
+     "source": "GBIF-trained fit scored at BBS qualifying route cells, presence-absence, no BBS data in the fit"
+    },
+    "w4_pipeline_evidence": {
+     "kind": "bbs",
+     "passed": false,
+     "source": "presence-absence spatial-block CV",
+     "cv_auc": 0.9038210619392685,
+     "cv_tss": 0.26718857832988263,
+     "cv_boyce": 0.8898123541392137,
+     "n_presence_routes": 1472,
+     "n_absence_routes": 126,
+     "window2_auc": 0.7890383942488151,
+     "window2_tss": 0.19970098928014757,
+     "window2_boyce": 0.45315529392275256,
+     "w3_background_cv": {
+      "tss": 0.05108670250162679,
+      "auc": 0.5352945929510018,
+      "boyce": 0.9554893344221258
+     },
+     "cv_gate": false,
+     "transfer_ok": false,
+     "from_file": "data/species/w4/bbs_hindcast_results.json"
+    }
+   },
+   "tierA_kinds": [
+    "bbs",
+    "fia"
+   ],
+   "counts_as_tierA": false
+  },
+  "range_shifts": {
+   "status": "fail",
+   "evidence": {
+    "status": "fail",
+    "group_status": "fail",
+    "group_checks": [
+     {
+      "name": "direction of shift",
+      "value": "12/25 agree (p=0.655)",
+      "need": ">= 70% and p < 0.05",
+      "ok": false
+     },
+     {
+      "name": "median shift ratio (model / observed)",
+      "value": "0.84",
+      "need": "0.5 to 2.0",
+      "ok": true
+     },
+     {
+      "name": "shift error below no-change error",
+      "value": "median 103 km vs 75 km",
+      "need": "model error < no-change error (median)",
+      "ok": false
+     },
+     {
+      "name": "area change sign and per-cell correlation",
+      "value": "sign 18/40, median r -0.01",
+      "need": "sign majority and r >= 0.3",
+      "ok": false
+     },
+     {
+      "name": "beats no-change null in TSS (window 2)",
+      "value": "12/40",
+      "need": ">= 60% of species",
+      "ok": false
+     }
+    ],
+    "species_direction_agree": false,
+    "species_shift_error_km": 74.56864606136429,
+    "species_nochange_error_km": 53.07003267218559,
+    "interpretation": "Change test fails: publish current suitability only, hide future projections for this group, or label as suitable climate not expected range.",
+    "from_file": "data/species/w4/bbs_hindcast_results.json"
+   }
+  },
+  "cv_kind": "presence_background"
+ },
+ "gate_config": {
+  "min_records": 100,
+  "low_conf_records": 300,
+  "narrow_records": 500,
+  "narrow_area_km2": 67500.0,
+  "auc_ok": 0.7,
+  "auc_floor": 0.5,
+  "novel_max": 0.15,
+  "omission_max": 0.4,
+  "commission_max": 0.3,
+  "recall_min": 0.8,
+  "unrecorded_km": 500.0,
+  "unrecorded_warn": 0.5,
+  "gam_disagree_pp": 25.0,
+  "tierA_kinds": [
+   "bbs",
+   "fia"
+  ]
+ },
+ "validation": {
+  "kind": "bbs",
+  "passed": false,
+  "direct": {
+   "available": true,
+   "window": "2005-2024",
+   "n_presence": 999,
+   "n_absence": 63,
+   "auc": 0.41157031059265137,
+   "tss_best": 0.08866008866008857,
+   "tss_at_fit_threshold": 0.07264407264407269,
+   "boyce": -0.7646128171453443,
+   "passed": false,
+   "rule": "AUC >= 0.7 and best-threshold TSS >= 0.4 (W4's skill gate)",
+   "source": "GBIF-trained fit scored at BBS qualifying route cells, presence-absence, no BBS data in the fit"
+  },
+  "w4_pipeline_evidence": {
+   "kind": "bbs",
+   "passed": false,
+   "source": "presence-absence spatial-block CV",
+   "cv_auc": 0.9038210619392685,
+   "cv_tss": 0.26718857832988263,
+   "cv_boyce": 0.8898123541392137,
+   "n_presence_routes": 1472,
+   "n_absence_routes": 126,
+   "window2_auc": 0.7890383942488151,
+   "window2_tss": 0.19970098928014757,
+   "window2_boyce": 0.45315529392275256,
+   "w3_background_cv": {
+    "tss": 0.05108670250162679,
+    "auc": 0.5352945929510018,
+    "boyce": 0.9554893344221258
+   },
+   "cv_gate": false,
+   "transfer_ok": false,
+   "from_file": "data/species/w4/bbs_hindcast_results.json"
+  }
+ },
+ "range_shift_test": {
+  "status": "fail",
+  "group_status": "fail",
+  "group_checks": [
+   {
+    "name": "direction of shift",
+    "value": "12/25 agree (p=0.655)",
+    "need": ">= 70% and p < 0.05",
+    "ok": false
+   },
+   {
+    "name": "median shift ratio (model / observed)",
+    "value": "0.84",
+    "need": "0.5 to 2.0",
+    "ok": true
+   },
+   {
+    "name": "shift error below no-change error",
+    "value": "median 103 km vs 75 km",
+    "need": "model error < no-change error (median)",
+    "ok": false
+   },
+   {
+    "name": "area change sign and per-cell correlation",
+    "value": "sign 18/40, median r -0.01",
+    "need": "sign majority and r >= 0.3",
+    "ok": false
+   },
+   {
+    "name": "beats no-change null in TSS (window 2)",
+    "value": "12/40",
+    "need": ">= 60% of species",
+    "ok": false
+   }
+  ],
+  "species_direction_agree": false,
+  "species_shift_error_km": 74.56864606136429,
+  "species_nochange_error_km": 53.07003267218559,
+  "interpretation": "Change test fails: publish current suitability only, hide future projections for this group, or label as suitable climate not expected range.",
+  "from_file": "data/species/w4/bbs_hindcast_results.json"
+ },
+ "bbs_direct": {
+  "available": true,
+  "window": "2005-2024",
+  "n_presence": 999,
+  "n_absence": 63,
+  "auc": 0.41157031059265137,
+  "tss_best": 0.08866008866008857,
+  "tss_at_fit_threshold": 0.07264407264407269,
+  "boyce": -0.7646128171453443,
+  "passed": false,
+  "rule": "AUC >= 0.7 and best-threshold TSS >= 0.4 (W4's skill gate)",
+  "source": "GBIF-trained fit scored at BBS qualifying route cells, presence-absence, no BBS data in the fit"
+ },
+ "model": {
+  "main": "LightGBM",
+  "check": "penalised-spline GAM (logistic)",
+  "background": "target_group",
+  "seed": 0
+ },
+ "data_dois": [
+  "https://doi.org/10.15468/dl.e29w6w"
+ ],
+ "provenance": {
+  "code": "1f32daf",
+  "python": "3.12.15",
+  "seconds": {
+   "fit": 1.9,
+   "project": 2474.1
+  },
+  "made": "2026-10-11T01:04:59Z",
+  "grid": [
+   4320,
+   8640
+  ],
+  "product": "lite",
+  "climate_models": {
+   "SSP2-4.5|2041-2060": 14,
+   "SSP2-4.5|2081-2100": 14,
+   "SSP5-8.5|2041-2060": 14,
+   "SSP5-8.5|2081-2100": 14
+  }
+ }
+}

@@ -1,0 +1,54 @@
+# W4 pilot: FIA, one job per state (isolated failures, visible progress), then one aggregate job. Same analysis as pilot-w4-fia.yml.
+name: Pilot W4 FIA by state
+on:
+  push:
+    paths: [".github/run/pilot-w4-fia2"]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  state:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 14
+      matrix:
+        st: [AL, AZ, AR, CA, CO, CT, DE, FL, GA, ID, IL, IN, IA, KS, KY, LA, ME, MD, MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI, WY]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install numpy pandas scipy requests
+      - run: python -u -m ctw.species.w4_fia_run --states ${{ matrix.st }} --plots-only --out out --work work
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fia-${{ matrix.st }}
+          path: out/
+  aggregate:
+    needs: state
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install numpy pandas scipy requests
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fia-*
+          path: parts
+      - run: ls parts | head -60; python -u -m ctw.species.w4_fia_run --agg parts --out w4-out --work work
+      - name: Upload and commit
+        run: |
+          gh release view species-pilot-data >/dev/null 2>&1 || gh release create species-pilot-data --title "Species pilot data" --notes "Inputs and outputs of the species pilot workstreams" || true
+          gh release upload species-pilot-data w4-out/fia_plots.csv.gz w4-out/fia_cycles.csv w4-out/fia_observed_change.csv --clobber
+          mkdir -p data/species/w4 && cp w4-out/fia_cycles.csv w4-out/fia_observed_change.csv data/species/w4/
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add data/species/w4/fia_cycles.csv data/species/w4/fia_observed_change.csv
+          git commit -m "W4: FIA observed change tables (Actions, by state)" || exit 0
+          for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done

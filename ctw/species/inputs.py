@@ -1,0 +1,358 @@
+"""Adapters from the real pilot data (W1 climate stack, W2 occurrences) to the interfaces of ctw/species/grid.py.
+
+W1 (docs/pilot/W1-climate.md, ctw/species/climstack.py): tile files `pred_<product>_<tile>.npz` (baseline and hindcast windows), `basem_<tile>.npz`
+(baseline monthly climatology) and `deltas_<model>.npz` (per climate model change factors) in one directory; futures of one climate model
+come from `climstack.apply_deltas` on demand.
+
+The directory is $W3_CLIM (default work/clim); `fetch_release` downloads the files of the GitHub release tagged `species-pilot-data`.
+"""
+from __future__ import annotations
+import json
+import os
+import numpy as np
+
+from . import climstack as CS, climategrid as G
+from .grid import GridSpec, ClimateSource, BASELINE
+
+SSP_NAME = {"SSP2-4.5": "ssp245", "SSP5-8.5": "ssp585"}
+WINDOW_PRODUCT = {"1991-2020": "base_1991-2020", "1966-1985": "hind_1966-1985", "2005-2024": "hind_2005-2024"}
+SPEC = GridSpec(G.NLAT, G.NLON)
+
+
+def tcr_likely_models() -> list:
+    """Models of the site's default ensemble (config.toml [models]: TCR within tcr_likely)."""
+    import tomllib
+    from pathlib import Path
+    c = tomllib.load(open(Path(__file__).resolve().parents[2] / "config.toml", "rb"))
+    lo, hi = c["models"]["tcr_likely"]
+    return [m["name"] for m in c["models"]["list"] if lo <= m["tcr"] <= hi]
+
+
+class W1Source(ClimateSource):
+    """ClimateSource over W1's tile files. Bands are read from the tile files directly (no whole-grid arrays). For futures,
+    `prepare(domain)` builds one BaselineStack of the domain's land cells (monthly baseline, about 340 bytes per cell) and keeps it for
+    the whole projection; one climate model's predictors for a band are then produced by `apply_deltas` on that band's cells."""
+
+    def __init__(self, root: str = None, models=None, names=None):
+        self.root = root or os.environ.get("W3_CLIM", "work/clim")
+        self.spec = SPEC
+        self.names = tuple(names or CS.NAMES)
+        self._lib = CS.DeltaLibrary(self.root)
+        avail = [m for m in self._lib.models() if m != "ensemble_median"]
+        env = os.environ.get("W3_MODELS", "")
+        if models:
+            sel = list(models)
+        elif env and env != "all":
+            sel = env.split(",")
+        elif env == "all":
+            sel = None
+        else:
+            sel = tcr_likely_models()            # the site's default ensemble: models with TCR in config.toml [models] tcr_likely
+        self._models = [m for m in avail if (not sel or m in sel)] or avail
+        self.ppt_mode = os.environ.get("W3_PPT", "")     # "none": precipitation change factors forced to 1 (sensitivity run)
+        self._tiles = {}            # (product, tile) -> loaded pred dict (small LRU)
+        self._stack = None
+        self._interp = {}
+        self._plan = {}
+        self.decimate = int(os.environ.get("W3_DECIMATE", "4"))
+
+    # ---- baseline / hindcast windows
+    def _pred(self, product, tile):
+        k = (product, tile)
+        if k not in self._tiles:
+            if len(self._tiles) >= 5:
+                self._tiles.pop(next(iter(self._tiles)))
+            self._tiles[k] = CS.load_pred(os.path.join(self.root, f"pred_{product}_{tile}.npz"))
+        return self._tiles[k]
+
+    def baseline_band(self, r0, r1, names=None, window=BASELINE):
+        names = tuple(names or self.names)
+        ix = [CS.NAMES.index(n) for n in names]
+        product = WINDOW_PRODUCT[window]
+        out = np.full((len(ix), r1 - r0, self.spec.W), np.nan, np.float32)
+        for tr in range(r0 // CS.TH, (r1 - 1) // CS.TH + 1):
+            a, b = max(r0, tr * CS.TH), min(r1, (tr + 1) * CS.TH)
+            for tc in range(CS.NTC):
+                tile = f"r{tr}c{tc}"
+                if not os.path.exists(os.path.join(self.root, f"pred_{product}_{tile}.npz")):
+                    continue
+                p = self._pred(product, tile)
+                land = p["land"]
+                start = int(land[:a - tr * CS.TH].sum())
+                sub = land[a - tr * CS.TH:b - tr * CS.TH]
+                n = int(sub.sum())
+                if not n:
+                    continue
+                block = np.full((len(ix), b - a, CS.TW), np.nan, np.float32)
+                block[:, sub] = p["data"][ix][:, start:start + n]
+                out[:, a - r0:b - r0, tc * CS.TW:(tc + 1) * CS.TW] = block
+        return out
+
+    def land_band(self, r0, r1):
+        out = np.zeros((r1 - r0, self.spec.W), bool)
+        for tr in range(r0 // CS.TH, (r1 - 1) // CS.TH + 1):
+            a, b = max(r0, tr * CS.TH), min(r1, (tr + 1) * CS.TH)
+            for tc in range(CS.NTC):
+                f = os.path.join(self.root, f"pred_{WINDOW_PRODUCT[BASELINE]}_r{tr}c{tc}.npz")
+                if os.path.exists(f):
+                    out[a - r0:b - r0, tc * CS.TW:(tc + 1) * CS.TW] = self._pred(WINDOW_PRODUCT[BASELINE], f"r{tr}c{tc}")["land"][a - tr * CS.TH:b - tr * CS.TH]
+        return out
+
+    # ---- futures
+    def future_models(self, ssp, period):
+        return list(self._models)
+
+    def prepare(self, domain: np.ndarray):
+        """Load the baseline monthly stack of the land cells inside `domain` (bool, full grid), sorted by (row, col)."""
+        tiles = []
+        parts = []
+        for tr in range(CS.NTR):
+            for tc in range(CS.NTC):
+                rs, cs = CS.tile_window((tr, tc))
+                if not domain[rs, cs].any():
+                    continue
+                f = os.path.join(self.root, f"basem_r{tr}c{tc}.npz")
+                if not os.path.exists(f):
+                    raise FileNotFoundError(f"{f}: the projection domain reaches tile r{tr}c{tc}, which was not downloaded (see run_pilot tiles)")
+                land, _, mon = CS.load_basem(f)
+                i, j = CS.land_index(land, (tr, tc))
+                keep = domain[i, j]
+                st = CS.BaselineStack({k: v[:, keep] for k, v in mon.items()}, G.cell_lat(i[keep]).astype("float64"), G.cell_lon(j[keep]).astype("float64"),
+                                      i[keep], j[keep])
+                parts.append(st)
+                del mon
+        order = np.lexsort((np.concatenate([p.col for p in parts]), np.concatenate([p.row for p in parts])))
+        cat = lambda a: np.concatenate(a)[order]                                                       # noqa: E731
+        self._stack = CS.BaselineStack({k: np.concatenate([p.monthly[k] for p in parts], axis=1)[:, order] for k in parts[0].monthly},
+                                       cat([p.lat for p in parts]), cat([p.lon for p in parts]), cat([p.row for p in parts]), cat([p.col for p in parts]))
+        self._interp = {}
+        self._plan = {}
+
+    def _band_plan(self, r0, r1, a, b):
+        """Representative cells of a band and, for every cell, its nearest representative (cached per band). Representatives are the cells on
+        a regular lattice of spacing `decimate` plus any cell farther than 2 x spacing from one (islands, coast). The change signal of the
+        deltas is smooth (0.25 degree source), so it is computed on representatives only and added to every cell's own fine baseline;
+        this cuts the cost of apply_deltas (about 140 microseconds per cell, measured) by decimate**2."""
+        key = (r0, r1)
+        if key in self._plan:
+            return self._plan[key]
+        from scipy.spatial import cKDTree
+        st = self._stack
+        row, col = st.row[a:b], st.col[a:b]
+        f = self.decimate
+        if f <= 1:
+            idx = np.arange(b - a)
+            near = idx
+        else:
+            idx = np.nonzero((row % f == 0) & (col % f == 0))[0]
+            if len(idx) == 0:
+                idx = np.array([0])
+            xy = np.stack([row, col], 1).astype(float)
+            d, _ = cKDTree(xy[idx]).query(xy)
+            extra = np.nonzero(d > 2 * f)[0]
+            if len(extra):
+                idx = np.union1d(idx, extra)
+            _, near = cKDTree(xy[idx]).query(xy)
+        sub = st.subset(slice(a, b)).subset(idx)
+        base = CS.predict({k: sub.monthly[k] for k in CS.PRED_VARS})                  # baseline predictors from the same monthly data
+        self._plan[key] = (idx, near, sub, base)
+        return self._plan[key]
+
+    def future_band(self, ssp, period, model, r0, r1, names=None):
+        names = tuple(names or self.names)
+        if self._stack is None:
+            raise RuntimeError("call prepare(domain) before future_band")
+        st = self._stack
+        a, b = np.searchsorted(st.row, [r0, r1])
+        out = np.full((len(names), r1 - r0, self.spec.W), np.nan, np.float32)
+        if b <= a:
+            return out
+        idx, near, sub, base = self._band_plan(r0, r1, a, b)
+        d = self._lib.get_model(model)
+        it = self._interp.get((r0, r1))
+        if it is None:
+            it = self._interp[(r0, r1)] = CS.PointInterp(d.lat, d.lon, sub.lat, sub.lon)
+        kw = dict(ppt_ratio=(1.0, 1.0)) if self.ppt_mode == "none" else {}
+        res = CS.apply_deltas(sub, d, model, SSP_NAME[ssp], period, interp=it, **kw)
+        full = st.subset(slice(a, b))
+        pb = self._base_full(r0, r1, a, b, names)
+        for k, n in enumerate(names):
+            j = CS.NAMES.index(n)
+            delta = (res[n] - base[j])[near]
+            v = pb[k] + delta
+            if n in NONNEG:
+                v = np.maximum(v, 0)
+            out[k, full.row - r0, full.col] = v
+        return out
+
+    def _base_full(self, r0, r1, a, b, names):
+        """The fine baseline predictors (from W1's pred files) at the band's stack cells, (len(names), n)."""
+        k = ("pb", r0, r1, names)
+        if k not in self._plan:
+            st = self._stack
+            row, col = st.row[a:b], st.col[a:b]
+            self._plan[k] = self.baseline_band(r0, r1, names)[:, row - r0, col]
+        return self._plan[k]
+
+
+NONNEG = {"bio12", "bio15", "bio17", "gdd", "cwd", "aet", "bio4"}
+
+
+# Tiles (rows from 90N in steps of 45 degrees, columns from 180W in steps of 90 degrees) that cover a continent plus a margin for the
+# projection buffer. A tile that is missing from the climate directory silently truncates the domain, so over-include rather than under-include.
+CONTINENT_TILES = {
+    "NORTH_AMERICA": ("r0c0", "r0c1", "r1c0", "r1c1"),
+    "SOUTH_AMERICA": ("r1c1", "r2c0", "r2c1", "r3c0", "r3c1"),
+    "EUROPE": ("r0c1", "r0c2", "r1c1", "r1c2"),
+    "AFRICA": ("r1c1", "r1c2", "r2c1", "r2c2", "r3c2"),
+    "ASIA": ("r0c2", "r0c3", "r1c2", "r1c3", "r2c2", "r2c3"),
+    "OCEANIA": ("r1c3", "r2c3", "r3c3"),
+}
+
+
+def tiles_for(native_continents: str) -> list:
+    """Tile names to download for a pilot-table row's native_continents_curated ('NORTH_AMERICA;EUROPE;ASIA(W)')."""
+    out = []
+    for c in (native_continents or "").split(";"):
+        c = c.split("(")[0].strip().upper()
+        for t in CONTINENT_TILES.get(c, ()):
+            if t not in out:
+                out.append(t)
+    return out or sorted(CS.ALL_TILES)
+
+
+def climate_source(root: str = None):
+    src = W1Source(root)
+    return src, src.spec
+
+
+def _load_grid(path, key=None):
+    """A grid from .npy or .npz. Keys tried: `key`, mask / native / density / data / grid (a 3-layer grid uses layer 0 = all years)."""
+    if path.endswith(".npy"):
+        return np.load(path)
+    z = np.load(path)
+    for k in ((key,) if key else ()) + ("mask", "native", "density", "data", "grid", "all"):
+        if k in z.files:
+            g = z[k]
+            return g[0] if g.ndim == 3 else g
+    return z[z.files[0]]
+
+
+def seasonal_mask(spec_str: str, root: str) -> np.ndarray:
+    """Boolean native mask from a curated continent spec (W2's native.curated_mask on Natural Earth subunits), cached next to the inputs."""
+    import hashlib
+    from pathlib import Path
+    from . import native as N
+    cache = Path(root) / "nat"
+    cache.mkdir(parents=True, exist_ok=True)
+    f = cache / ("mask_" + hashlib.md5(spec_str.encode()).hexdigest()[:10] + ".npy")
+    if f.exists():
+        return np.load(f)
+    feats = N.subunits(cache)
+    m = N.curated_mask(spec_str, feats, N.label_raster(feats))
+    np.save(f, m)
+    return m
+
+
+def bbs_direct(fit, src, aou: int, bbs_dir: str, window: str = "2005-2024") -> dict:
+    """Independent check of a GBIF-trained fit against the Breeding Bird Survey (presence-absence): the fit is scored at the 1,062 route cells
+    that qualify in W4's design, presence = species detected in at least 3 acceptable years of window 2 (W4's rule, column p2), absence = qualifying
+    route without that. No BBS data enters the fit, so no blocking is needed. AUC, best-threshold TSS, TSS at the fit's own threshold, Boyce."""
+    import pandas as pd
+    from . import sdm
+    q = pd.read_csv(os.path.join(bbs_dir, "bbs_route_cells.csv"))
+    q = q[q["qualifies"]]
+    det = pd.read_csv(os.path.join(bbs_dir, "bbs_presence_long.csv.gz"))
+    d = det[(det["AOU"] == aou) & det["p2"]][["country", "state", "route"]].drop_duplicates()
+    d["pres"] = True
+    q = q.merge(d, on=["country", "state", "route"], how="left").fillna({"pres": False})
+    sc = fit.score_cells(src, q["row"].to_numpy(int), q["col"].to_numpy(int), window)
+    ok = np.isfinite(sc)
+    pres, y = sc[ok & q["pres"].to_numpy(bool)], sc[ok & ~q["pres"].to_numpy(bool)]
+    if len(pres) < 20 or len(y) < 20:
+        return dict(available=False, n_presence=int(len(pres)), n_absence=int(len(y)))
+    auc = sdm.auc(pres, y)
+    t = sdm.best_threshold(pres, y)
+    ref = np.sort(sc[ok])
+    pct = lambda x: np.searchsorted(ref, x, "right") / len(ref)      # noqa: E731
+    return dict(available=True, window=window, n_presence=int(len(pres)), n_absence=int(len(y)), auc=float(auc), tss_best=float(sdm.tss(pres, y, t)),
+                tss_at_fit_threshold=float(sdm.tss(pres, y, fit.thr)), boyce=float(sdm.boyce(pct(pres), pct(sc[ok]))),
+                passed=bool(auc >= 0.7 and sdm.tss(pres, y, t) >= 0.4), rule="AUC >= 0.7 and best-threshold TSS >= 0.4 (W4's skill gate)",
+                source="GBIF-trained fit scored at BBS qualifying route cells, presence-absence, no BBS data in the fit")
+
+
+def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = None):
+    """(Occurrences, native mask or None, target-group density or None, DOIs) for one species from W2's release assets in $W3_OCC:
+      w2-cells-<Genus_species>.parquet   one row per occupied cell: row, col, year_min, year_max, n_records, n_events, n_1970_1999, n_2000_2020, n_2021_plus
+      w2-report-<Genus_species>.json     cleaning report with the GBIF download `doi`
+      w2-native-<Genus_species>.(npy|npz)  native-range mask   [file name is a GUESS until W2 documents it; None when absent]
+      w2-tg-<group>.(npy|npz)            target-group record density grid [same caveat]
+    A missing native mask leaves the mandatory range check 'missing' (Tier 3) rather than silently skipping it."""
+    import glob
+    import pandas as pd
+    from .grid import Occurrences
+    root = root or os.environ.get("W3_OCC", "work/occ")
+    tag = meta["scientific_name"].replace(" ", "_")
+    kind = (meta.get("kind") or ("crop" if meta.get("group") == "crop" else "wild")).lower()
+    prod = os.environ.get("W3_PRODUCT", "pilot")
+    s1 = prod in ("s1", "s2")                                                       # S1 / S3 assets (names s1_* / s2_*), same layout as the pilot's
+    pre = prod + "_" if s1 else ""
+    f_crop = os.path.join(root, pre + "occ_cells_crops_v1.parquet" if s1 else "occ_cells_crops_cultivated_pilot_v1.parquet")
+    f_wild = os.path.join(root, pre + "occ_cells_v1.parquet" if s1 else "occ_cells_pilot_v1.parquet")                      # W2 final: native cells only, 24 wild species
+    one = os.path.join(root, f"w2-cells-{tag}.parquet")                           # interim per-species file (fallback)
+    src_file = f_crop if (kind == "crop" and os.path.exists(f_crop)) else (f_wild if os.path.exists(f_wild) else one)
+    df = pd.read_parquet(src_file)
+    if "species" in df.columns:
+        df = df[df["species"] == meta["scientific_name"]]
+    seasonal_native = None
+    if season == "breeding":
+        # W2 seasonal product: breeding cell = in the seasonal breeding mask and with breeding-month records (May-Jul north, Nov-Jan south).
+        # Records without a month (m00) count for nothing here; a cell whose records all lack a month is not a breeding cell.
+        sf = os.path.join(root, (pre + "occ_cells_seasonal_v1.parquet") if prod == "s2" else "occ_cells_pilot_v1_seasonal.parquet")
+        sd = pd.read_parquet(sf)
+        sd = sd[(sd["species"] == meta["scientific_name"]) & sd["breeding_cell"]]
+        if not len(sd):
+            raise ValueError(f"no breeding cells for {meta['scientific_name']}")
+        df = sd.merge(df[["row", "col", "year_max"]], on=["row", "col"], how="left").fillna({"year_max": 0})
+        rep = json.load(open(os.path.join(root, (pre + "w2_seasonal_report_v1.json") if prod == "s2" else "w2_seasonal_report_v1.json")))[meta["scientific_name"]]
+        meta["season_report"] = {k: rep[k] for k in ("season_scheme", "breeding_native_spec", "cells_all", "breeding_cells", "records_breeding_months", "records_without_month")}
+        seasonal_native = seasonal_mask(rep["breeding_native_spec"], root)
+    if not len(df):
+        raise ValueError(f"no occurrence cells for {meta['scientific_name']} in {src_file}")
+    occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
+    native = density = None
+    nm = os.path.join(root, pre + "native_masks_v1.npz" if s1 else "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
+    if os.path.exists(nm):
+        z = np.load(nm)
+        if f"{tag}__final" in z.files:
+            native = np.unpackbits(z[f"{tag}__final"], axis=1)[:, :spec.W].astype(bool)
+    for pat in (f"w2-native-{tag}.*",):
+        f = sorted(glob.glob(os.path.join(root, pat)))
+        if f and native is None:
+            native = _load_grid(f[0]).astype(bool)
+    tg = {"tree": "plant", "crop": "plant"}.get(meta.get("group"), meta.get("group"))
+    if len(df) and "tg_group" in df.columns:
+        tg = df["tg_group"].iloc[0]
+    for pat in ((f"s2_tg_density_{tg}_v1.npz",) if prod == "s2" else ()) + (f"tg_density_{tg}_v1.npz", f"w2-tg-{tg}.npz", f"tg_density_{meta.get('group')}_v1.npz", f"tg_density_{meta.get('tg_group', '')}_v1.npz", f"w2-tg-{meta.get('group')}.npz"):
+        f = os.path.join(root, pat)
+        if os.path.exists(f):
+            g = _load_grid(f, "all").astype(np.float32)
+            if g.sum() > 0:
+                density = g
+                break
+    if seasonal_native is not None:
+        native = seasonal_native
+    dois = []
+    rp = os.path.join(root, pre + "w2_report_v1.json" if s1 else "w2_report_pilot_v1.json")
+    if os.path.exists(rp):
+        r = json.load(open(rp))["species"].get(meta["scientific_name"], {})
+    else:
+        rp = os.path.join(root, f"w2-report-{tag}.json")
+        r = json.load(open(rp)) if os.path.exists(rp) else {}
+    cm = r.get("cultivated_managed_records") or {}
+    meta["cultivated_verified"] = bool(kind == "crop" and cm.get("kept", 0) > 0)       # records flagged cultivated / managed by the source, kept for the crop
+    if r.get("doi"):
+        dois.append("https://doi.org/" + r["doi"])
+    for d_ in (r.get("target_group_dois") or []):
+        dois.append(d_)
+    return occ, native, density, dois

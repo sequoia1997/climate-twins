@@ -1,0 +1,60 @@
+# Species pilot W1: ensemble-median future predictors on the fine grid, per tile (needs the TerraClimate tile and deltas_ensemble_median.npz
+# on the release). Marker line in .github/run/pilot-w1: "fut:priority", "fut:rest", "fut:all" or "fut:r1c1".
+name: Pilot W1 futures
+on:
+  push:
+    paths: [".github/run/pilot-w1"]
+  workflow_dispatch:
+    inputs:
+      sel:
+        description: "fut:priority | fut:rest | fut:all | fut:r1c1"
+        default: "fut:priority"
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.p.outputs.run }}
+      tiles: ${{ steps.p.outputs.tiles }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: p
+        env:
+          INPUT: ${{ inputs.sel }}
+        run: |
+          sel="$INPUT"
+          if [ -z "$sel" ]; then sel="$(tr '\n' ' ' < .github/run/pilot-w1)"; fi
+          echo "selection: $sel"
+          python3 - "$sel" >> "$GITHUB_OUTPUT" <<'PY'
+          import sys, json, re
+          P = ["r0c0", "r0c1", "r0c2", "r1c0", "r1c1", "r1c2"]
+          A = [f"r{r}c{c}" for r in range(4) for c in range(4)]
+          tiles = []
+          for m in re.findall(r"fut:(\w+)", sys.argv[1]):
+              tiles += P if m == "priority" else [t for t in A if t not in P] if m == "rest" else A if m == "all" else [m]
+          tiles = list(dict.fromkeys(tiles))
+          print("run=" + ("true" if tiles else "false"))
+          print("tiles=" + json.dumps(tiles))
+          PY
+  tile:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        tile: ${{ fromJson(needs.plan.outputs.tiles) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -u -m ctw.species.climstack_run fut --tile "${{ matrix.tile }}" --out pilot-out --upload
+      - run: df -h . | tail -1; ls -l pilot-out
+        if: always()

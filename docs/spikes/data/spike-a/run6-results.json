@@ -1,0 +1,518 @@
+{
+ "Acer saccharum": {
+  "key": "0013294-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.wfs6tc",
+  "records": 29892,
+  "size_bytes": 8039553,
+  "created": "2026-10-06T20:15:41.869+00:00",
+  "modified": "2026-10-06T20:33:20.040+00:00",
+  "format": "SIMPLE_PARQUET",
+  "licence": "http://creativecommons.org/licenses/by/4.0/legalcode",
+  "wall_s_since_submit": 45,
+  "citation": "GBIF.org (6 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.wfs6tc",
+  "licences_in_file": {
+   "CC0_1_0": 25176,
+   "CC_BY_4_0": 4716
+  },
+  "basis_in_file": {
+   "PRESERVED_SPECIMEN": 1296,
+   "HUMAN_OBSERVATION": 28596
+  },
+  "cleaning": [
+   {
+    "step": "input",
+    "left": 29892,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 29889,
+    "removed": 3
+   },
+   {
+    "step": "uncertainty",
+    "left": 29889,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 29879,
+    "removed": 10
+   },
+   {
+    "step": "land",
+    "left": 29879,
+    "removed": 0
+   },
+   {
+    "step": "establishment",
+    "left": 29878,
+    "removed": 1
+   },
+   {
+    "step": "duplicates",
+    "left": 25135,
+    "removed": 4743
+   },
+   {
+    "step": "thin",
+    "left": 3739,
+    "removed": 21396
+   }
+  ],
+  "continents_after": {
+   "North America": 3675,
+   "Europe": 56,
+   "Asia": 5,
+   "Oceania": 3
+  },
+  "countries_after": 17,
+  "fetch_and_clean_s": 21
+ },
+ "Danaus plexippus": {
+  "key": "0013296-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.j58smz",
+  "records": 421120,
+  "size_bytes": 19274558,
+  "created": "2026-10-06T20:15:45.098+00:00",
+  "modified": "2026-10-06T20:37:23.154+00:00",
+  "format": "SIMPLE_PARQUET",
+  "licence": "http://creativecommons.org/licenses/by/4.0/legalcode",
+  "wall_s_since_submit": 100,
+  "citation": "GBIF.org (6 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.j58smz",
+  "licences_in_file": {
+   "CC_BY_4_0": 32216,
+   "CC0_1_0": 388904
+  },
+  "basis_in_file": {
+   "HUMAN_OBSERVATION": 414467,
+   "PRESERVED_SPECIMEN": 6306,
+   "OBSERVATION": 105,
+   "MACHINE_OBSERVATION": 242
+  },
+  "cleaning": [
+   {
+    "step": "input",
+    "left": 421120,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 421111,
+    "removed": 9
+   },
+   {
+    "step": "uncertainty",
+    "left": 421111,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 420444,
+    "removed": 667
+   },
+   {
+    "step": "land",
+    "left": 419032,
+    "removed": 1412
+   },
+   {
+    "step": "establishment",
+    "left": 419032,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 51923,
+    "removed": 367109
+   },
+   {
+    "step": "thin",
+    "left": 15157,
+    "removed": 36766
+   }
+  ],
+  "continents_after": {
+   "North America": 13594,
+   "Oceania": 1017,
+   "Europe": 263,
+   "South America": 192,
+   "Unknown": 65,
+   "Asia": 18,
+   "Africa": 8
+  },
+  "countries_after": 60,
+  "fetch_and_clean_s": 30
+ },
+ "Quercus robur": {
+  "key": "0013295-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.nkfygt",
+  "records": 1024406,
+  "size_bytes": 85210859,
+  "created": "2026-10-06T20:15:43.474+00:00",
+  "modified": "2026-10-06T20:37:41.286+00:00",
+  "format": "SIMPLE_PARQUET",
+  "licence": "http://creativecommons.org/licenses/by/4.0/legalcode",
+  "wall_s_since_submit": 164,
+  "citation": "GBIF.org (6 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.nkfygt",
+  "licences_in_file": {
+   "CC_BY_4_0": 722161,
+   "CC0_1_0": 302245
+  },
+  "basis_in_file": {
+   "HUMAN_OBSERVATION": 992166,
+   "PRESERVED_SPECIMEN": 2773,
+   "MACHINE_OBSERVATION": 90,
+   "OBSERVATION": 29377
+  },
+  "cleaning": [
+   {
+    "step": "input",
+    "left": 1024406,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 1024398,
+    "removed": 8
+   },
+   {
+    "step": "uncertainty",
+    "left": 1024398,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 1023842,
+    "removed": 556
+   },
+   {
+    "step": "land",
+    "left": 1023546,
+    "removed": 296
+   },
+   {
+    "step": "establishment",
+    "left": 1021347,
+    "removed": 2199
+   },
+   {
+    "step": "duplicates",
+    "left": 822504,
+    "removed": 198843
+   },
+   {
+    "step": "thin",
+    "left": 71796,
+    "removed": 750708
+   }
+  ],
+  "continents_after": {
+   "Europe": 70891,
+   "North America": 397,
+   "Oceania": 350,
+   "Africa": 65,
+   "Asia": 53,
+   "South America": 27,
+   "Unknown": 13
+  },
+  "countries_after": 61,
+  "fetch_and_clean_s": 78
+ },
+ "Turdus migratorius": {
+  "key": "0013336-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.j78pf6",
+  "records": 29022774,
+  "size_bytes": 2107011521,
+  "created": "2026-10-06T20:37:37.529+00:00",
+  "modified": "2026-10-06T21:09:31.773+00:00",
+  "format": "SIMPLE_PARQUET",
+  "licence": "http://creativecommons.org/licenses/by/4.0/legalcode",
+  "wall_s_since_submit": 2038,
+  "citation": "GBIF.org (6 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.j78pf6",
+  "licences_in_file": {
+   "CC0_1_0": 220637,
+   "CC_BY_4_0": 28802137
+  },
+  "basis_in_file": {
+   "HUMAN_OBSERVATION": 28842049,
+   "PRESERVED_SPECIMEN": 4397,
+   "OBSERVATION": 176016,
+   "MACHINE_OBSERVATION": 312
+  },
+  "cleaning": [
+   {
+    "step": "input",
+    "left": 29022774,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 29022532,
+    "removed": 242
+   },
+   {
+    "step": "uncertainty",
+    "left": 29022532,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 28988811,
+    "removed": 33721
+   },
+   {
+    "step": "land",
+    "left": 28975617,
+    "removed": 13194
+   },
+   {
+    "step": "establishment",
+    "left": 28975617,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 27887455,
+    "removed": 1088162
+   },
+   {
+    "step": "thin",
+    "left": 303558,
+    "removed": 27583897
+   }
+  ],
+  "continents_after": {
+   "North America": 303502,
+   "Europe": 55,
+   "Asia": 1
+  },
+  "countries_after": 19,
+  "fetch_and_clean_s": 670
+ },
+ "Erithacus rubecula": {
+  "key": "0013337-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.ta47bg",
+  "records": 7967704,
+  "size_bytes": 562106223,
+  "created": "2026-10-06T20:38:41.534+00:00",
+  "modified": "2026-10-06T21:11:39.075+00:00",
+  "format": "SIMPLE_PARQUET",
+  "licence": "http://creativecommons.org/licenses/by/4.0/legalcode",
+  "wall_s_since_submit": 2709,
+  "citation": "GBIF.org (6 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.ta47bg",
+  "licences_in_file": {
+   "CC_BY_4_0": 5887229,
+   "CC0_1_0": 2080475
+  },
+  "basis_in_file": {
+   "HUMAN_OBSERVATION": 7957061,
+   "PRESERVED_SPECIMEN": 1357,
+   "OBSERVATION": 269,
+   "MACHINE_OBSERVATION": 9017
+  },
+  "cleaning": [
+   {
+    "step": "input",
+    "left": 7967704,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 7967591,
+    "removed": 113
+   },
+   {
+    "step": "uncertainty",
+    "left": 7967591,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 7931179,
+    "removed": 36412
+   },
+   {
+    "step": "land",
+    "left": 7899952,
+    "removed": 31227
+   },
+   {
+    "step": "establishment",
+    "left": 7899952,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 6079032,
+    "removed": 1820920
+   },
+   {
+    "step": "thin",
+    "left": 191789,
+    "removed": 5887243
+   }
+  ],
+  "continents_after": {
+   "Europe": 184694,
+   "Asia": 6156,
+   "Africa": 925,
+   "Unknown": 7,
+   "North America": 6,
+   "South America": 1
+  },
+  "countries_after": 89,
+  "fetch_and_clean_s": 253
+ },
+ "Ixodes scapularis": {
+  "key": "0013342-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.6jg2d3",
+  "records": 8412,
+  "size_bytes": 4452422,
+  "created": "2026-10-06T20:40:33.569+00:00",
+  "modified": "2026-10-06T21:10:11.338+00:00",
+  "format": "SIMPLE_PARQUET",
+  "licence": "http://creativecommons.org/licenses/by/4.0/legalcode",
+  "wall_s_since_submit": 2963,
+  "citation": "GBIF.org (6 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.6jg2d3",
+  "licences_in_file": {
+   "CC_BY_4_0": 7634,
+   "CC0_1_0": 778
+  },
+  "basis_in_file": {
+   "PRESERVED_SPECIMEN": 6725,
+   "HUMAN_OBSERVATION": 1687
+  },
+  "cleaning": [
+   {
+    "step": "input",
+    "left": 8412,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 8412,
+    "removed": 0
+   },
+   {
+    "step": "uncertainty",
+    "left": 8412,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 8382,
+    "removed": 30
+   },
+   {
+    "step": "land",
+    "left": 8382,
+    "removed": 0
+   },
+   {
+    "step": "establishment",
+    "left": 8382,
+    "removed": 0
+   },
+   {
+    "step": "duplicates",
+    "left": 4605,
+    "removed": 3777
+   },
+   {
+    "step": "thin",
+    "left": 1275,
+    "removed": 3330
+   }
+  ],
+  "continents_after": {
+   "North America": 1271,
+   "Europe": 3,
+   "Asia": 1
+  },
+  "countries_after": 6,
+  "fetch_and_clean_s": 15
+ },
+ "Vitis vinifera": {
+  "key": "0013410-260928105237408",
+  "status": "SUCCEEDED",
+  "doi": "10.15468/dl.wk7m62",
+  "records": 88968,
+  "size_bytes": 14393293,
+  "created": "2026-10-06T21:25:38.523+00:00",
+  "modified": "2026-10-06T21:42:02.420+00:00",
+  "format": "SIMPLE_PARQUET",
+  "licence": "http://creativecommons.org/licenses/by/4.0/legalcode",
+  "wall_s_since_submit": 3987,
+  "citation": "GBIF.org (6 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.wk7m62",
+  "licences_in_file": {
+   "CC_BY_4_0": 87538,
+   "CC0_1_0": 1430
+  },
+  "basis_in_file": {
+   "HUMAN_OBSERVATION": 87513,
+   "PRESERVED_SPECIMEN": 702,
+   "OBSERVATION": 735,
+   "MACHINE_OBSERVATION": 18
+  },
+  "cleaning": [
+   {
+    "step": "input",
+    "left": 88968,
+    "removed": 0
+   },
+   {
+    "step": "coords",
+    "left": 88968,
+    "removed": 0
+   },
+   {
+    "step": "uncertainty",
+    "left": 88968,
+    "removed": 0
+   },
+   {
+    "step": "centroids",
+    "left": 88895,
+    "removed": 73
+   },
+   {
+    "step": "land",
+    "left": 88835,
+    "removed": 60
+   },
+   {
+    "step": "establishment",
+    "left": 87718,
+    "removed": 1117
+   },
+   {
+    "step": "duplicates",
+    "left": 57785,
+    "removed": 29933
+   },
+   {
+    "step": "thin",
+    "left": 14997,
+    "removed": 42788
+   }
+  ],
+  "continents_after": {
+   "Europe": 14171,
+   "Asia": 271,
+   "North America": 248,
+   "Oceania": 106,
+   "Africa": 100,
+   "South America": 97,
+   "Unknown": 4
+  },
+  "countries_after": 90,
+  "fetch_and_clean_s": 31
+ }
+}

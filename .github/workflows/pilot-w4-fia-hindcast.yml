@@ -1,0 +1,35 @@
+name: Pilot W4 FIA hindcast
+on:
+  push:
+    paths: [".github/run/pilot-w4-fia-hindcast"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  hindcast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env: { PYTHONUNBUFFERED: "1", GH_TOKEN: "${{ github.token }}" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
+      - name: Download inputs
+        run: |
+          mkdir -p work/clim work/fia
+          args=()
+          for t in r0c0 r0c1 r1c0 r1c1; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "pred_hind_1966-1985_${t}.npz" -p "pred_hind_2005-2024_${t}.npz"); done
+          gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
+          gh release download species-pilot-data -D work/fia -p "fia_plots.csv.gz" --clobber
+          ls -la work/clim work/fia
+      - run: python -u -m ctw.species.w4_fia_hindcast_run --clim work/clim --plots work/fia/fia_plots.csv.gz --out w4-out
+      - name: Upload and commit
+        run: |
+          gh release upload species-pilot-data w4-out/fia_hindcast_results.json w4-out/fia_hindcast_report.md --clobber
+          cp w4-out/fia_hindcast_report.md docs/pilot/W4-hindcast-report-fia.md
+          cp w4-out/fia_hindcast_results.json data/species/w4/
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add docs/pilot/W4-hindcast-report-fia.md data/species/w4/fia_hindcast_results.json
+          git commit -m "W4: FIA hindcast report (Actions)" || exit 0
+          for i in 1 2 3; do git pull --rebase --autostash origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done

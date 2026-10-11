@@ -1,0 +1,505 @@
+[
+ {
+  "name": "Acer saccharum",
+  "common": "sugar maple",
+  "kind": "tree",
+  "taxonKey": 3189859,
+  "matchType": "EXACT",
+  "status": "ACCEPTED",
+  "rank": "SPECIES",
+  "acceptedKey": null,
+  "all_records": 68779,
+  "licence_all": {
+   "total": 56565,
+   "values": {
+    "CC_BY_NC_4_0": 26035,
+    "CC0_1_0": 25475,
+    "CC_BY_4_0": 5055
+   }
+  },
+  "licence_by_basis": {
+   "CC0_1_0": {
+    "total": 25475,
+    "values": {
+     "HUMAN_OBSERVATION": 24509,
+     "PRESERVED_SPECIMEN": 741,
+     "LIVING_SPECIMEN": 222,
+     "MATERIAL_SAMPLE": 3
+    }
+   },
+   "CC_BY_4_0": {
+    "total": 5055,
+    "values": {
+     "HUMAN_OBSERVATION": 4346,
+     "PRESERVED_SPECIMEN": 583,
+     "OCCURRENCE": 99,
+     "MATERIAL_SAMPLE": 17,
+     "LIVING_SPECIMEN": 7,
+     "MATERIAL_CITATION": 3
+    }
+   },
+   "CC_BY_NC_4_0": {
+    "total": 26035,
+    "values": {
+     "HUMAN_OBSERVATION": 25271,
+     "PRESERVED_SPECIMEN": 763,
+     "LIVING_SPECIMEN": 1
+    }
+   }
+  },
+  "basis_all_licences": {
+   "total": 56565,
+   "values": {
+    "HUMAN_OBSERVATION": 54126,
+    "PRESERVED_SPECIMEN": 2087,
+    "LIVING_SPECIMEN": 230,
+    "OCCURRENCE": 99,
+    "MATERIAL_SAMPLE": 20,
+    "MATERIAL_CITATION": 3
+   }
+  },
+  "establishment": {
+   "total": 30530,
+   "values": {
+    "introduced": 5,
+    "native": 5
+   }
+  }
+ },
+ {
+  "name": "Quercus robur",
+  "common": "English oak",
+  "kind": "tree",
+  "taxonKey": 2878688,
+  "matchType": "EXACT",
+  "status": "ACCEPTED",
+  "rank": "SPECIES",
+  "acceptedKey": null,
+  "all_records": 1728647,
+  "licence_all": {
+   "total": 1470194,
+   "values": {
+    "CC_BY_4_0": 731721,
+    "CC0_1_0": 406703,
+    "CC_BY_NC_4_0": 331770
+   }
+  },
+  "licence_by_basis": {
+   "CC0_1_0": {
+    "total": 406703,
+    "values": {
+     "HUMAN_OBSERVATION": 301889,
+     "LIVING_SPECIMEN": 104153,
+     "PRESERVED_SPECIMEN": 535,
+     "MATERIAL_CITATION": 110,
+     "OCCURRENCE": 16
+    }
+   },
+   "CC_BY_4_0": {
+    "total": 731721,
+    "values": {
+     "HUMAN_OBSERVATION": 695210,
+     "OBSERVATION": 29377,
+     "OCCURRENCE": 3369,
+     "PRESERVED_SPECIMEN": 2316,
+     "MATERIAL_CITATION": 1176,
+     "LIVING_SPECIMEN": 104,
+     "MACHINE_OBSERVATION": 91,
+     "MATERIAL_SAMPLE": 76,
+     "FOSSIL_SPECIMEN": 2
+    }
+   },
+   "CC_BY_NC_4_0": {
+    "total": 331770,
+    "values": {
+     "HUMAN_OBSERVATION": 308506,
+     "MATERIAL_CITATION": 21375,
+     "PRESERVED_SPECIMEN": 1679,
+     "OCCURRENCE": 178,
+     "LIVING_SPECIMEN": 21,
+     "MATERIAL_SAMPLE": 10,
+     "OBSERVATION": 1
+    }
+   }
+  },
+  "basis_all_licences": {
+   "total": 1470194,
+   "values": {
+    "HUMAN_OBSERVATION": 1305605,
+    "LIVING_SPECIMEN": 104278,
+    "OBSERVATION": 29378,
+    "MATERIAL_CITATION": 22661,
+    "PRESERVED_SPECIMEN": 4530,
+    "OCCURRENCE": 3563,
+    "MACHINE_OBSERVATION": 91,
+    "MATERIAL_SAMPLE": 86,
+    "FOSSIL_SPECIMEN": 2
+   }
+  },
+  "establishment": {
+   "total": 1138424,
+   "values": {
+    "native": 18892,
+    "introduced": 2217,
+    "introducedAssistedColonisation": 35,
+    "nativeReintroduced": 14
+   }
+  }
+ },
+ {
+  "name": "Danaus plexippus",
+  "common": "monarch",
+  "kind": "animal",
+  "taxonKey": 5133088,
+  "matchType": "EXACT",
+  "status": "ACCEPTED",
+  "rank": "SPECIES",
+  "acceptedKey": null,
+  "all_records": 826765,
+  "licence_all": {
+   "total": 814783,
+   "values": {
+    "CC0_1_0": 391452,
+    "CC_BY_NC_4_0": 386025,
+    "CC_BY_4_0": 37306
+   }
+  },
+  "licence_by_basis": {
+   "CC0_1_0": {
+    "total": 391452,
+    "values": {
+     "HUMAN_OBSERVATION": 387098,
+     "PRESERVED_SPECIMEN": 3380,
+     "OCCURRENCE": 899,
+     "OBSERVATION": 75
+    }
+   },
+   "CC_BY_4_0": {
+    "total": 37306,
+    "values": {
+     "HUMAN_OBSERVATION": 32215,
+     "PRESERVED_SPECIMEN": 3130,
+     "OCCURRENCE": 1548,
+     "MACHINE_OBSERVATION": 242,
+     "MATERIAL_SAMPLE": 141,
+     "OBSERVATION": 30
+    }
+   },
+   "CC_BY_NC_4_0": {
+    "total": 386025,
+    "values": {
+     "HUMAN_OBSERVATION": 384814,
+     "PRESERVED_SPECIMEN": 559,
+     "OCCURRENCE": 475,
+     "MATERIAL_SAMPLE": 72,
+     "MATERIAL_CITATION": 65,
+     "LIVING_SPECIMEN": 33,
+     "MACHINE_OBSERVATION": 4,
+     "OBSERVATION": 3
+    }
+   }
+  },
+  "basis_all_licences": {
+   "total": 814783,
+   "values": {
+    "HUMAN_OBSERVATION": 804127,
+    "PRESERVED_SPECIMEN": 7069,
+    "OCCURRENCE": 2922,
+    "MACHINE_OBSERVATION": 246,
+    "MATERIAL_SAMPLE": 213,
+    "OBSERVATION": 108,
+    "MATERIAL_CITATION": 65,
+    "LIVING_SPECIMEN": 33
+   }
+  },
+  "establishment": {
+   "total": 428758,
+   "values": {
+    "introduced": 178,
+    "native": 3
+   }
+  }
+ },
+ {
+  "name": "Turdus migratorius",
+  "common": "American robin",
+  "kind": "animal",
+  "taxonKey": 9510564,
+  "matchType": "EXACT",
+  "status": "ACCEPTED",
+  "rank": "SPECIES",
+  "acceptedKey": null,
+  "all_records": 29419115,
+  "licence_all": {
+   "total": 29328446,
+   "values": {
+    "CC_BY_4_0": 28806170,
+    "CC_BY_NC_4_0": 299889,
+    "CC0_1_0": 222387
+   }
+  },
+  "licence_by_basis": {
+   "CC0_1_0": {
+    "total": 222387,
+    "values": {
+     "OBSERVATION": 176016,
+     "HUMAN_OBSERVATION": 42358,
+     "PRESERVED_SPECIMEN": 3677,
+     "MACHINE_OBSERVATION": 308,
+     "MATERIAL_SAMPLE": 28
+    }
+   },
+   "CC_BY_4_0": {
+    "total": 28806170,
+    "values": {
+     "HUMAN_OBSERVATION": 28804723,
+     "PRESERVED_SPECIMEN": 1237,
+     "OCCURRENCE": 138,
+     "MATERIAL_SAMPLE": 61,
+     "MATERIAL_CITATION": 7,
+     "MACHINE_OBSERVATION": 4
+    }
+   },
+   "CC_BY_NC_4_0": {
+    "total": 299889,
+    "values": {
+     "HUMAN_OBSERVATION": 293879,
+     "OBSERVATION": 4269,
+     "PRESERVED_SPECIMEN": 1607,
+     "OCCURRENCE": 131,
+     "MACHINE_OBSERVATION": 3
+    }
+   }
+  },
+  "basis_all_licences": {
+   "total": 29328446,
+   "values": {
+    "HUMAN_OBSERVATION": 29140960,
+    "OBSERVATION": 180285,
+    "PRESERVED_SPECIMEN": 6521,
+    "MACHINE_OBSERVATION": 315,
+    "OCCURRENCE": 269,
+    "MATERIAL_SAMPLE": 89,
+    "MATERIAL_CITATION": 7
+   }
+  },
+  "establishment": {
+   "total": 29028557,
+   "values": {
+    "native": 1188
+   }
+  }
+ },
+ {
+  "name": "Erithacus rubecula",
+  "common": "European robin",
+  "kind": "animal",
+  "taxonKey": 2492462,
+  "matchType": "EXACT",
+  "status": "ACCEPTED",
+  "rank": "SPECIES",
+  "acceptedKey": null,
+  "all_records": 10993895,
+  "licence_all": {
+   "total": 10821277,
+   "values": {
+    "CC_BY_4_0": 5944061,
+    "CC_BY_NC_4_0": 2770405,
+    "CC0_1_0": 2106811
+   }
+  },
+  "licence_by_basis": {
+   "CC0_1_0": {
+    "total": 2106811,
+    "values": {
+     "HUMAN_OBSERVATION": 2103909,
+     "MACHINE_OBSERVATION": 2331,
+     "PRESERVED_SPECIMEN": 421,
+     "MATERIAL_SAMPLE": 80,
+     "OCCURRENCE": 68,
+     "MATERIAL_CITATION": 2
+    }
+   },
+   "CC_BY_4_0": {
+    "total": 5944061,
+    "values": {
+     "HUMAN_OBSERVATION": 5934396,
+     "MACHINE_OBSERVATION": 6687,
+     "PRESERVED_SPECIMEN": 1156,
+     "OCCURRENCE": 827,
+     "MATERIAL_SAMPLE": 489,
+     "OBSERVATION": 269,
+     "MATERIAL_CITATION": 163,
+     "LIVING_SPECIMEN": 74
+    }
+   },
+   "CC_BY_NC_4_0": {
+    "total": 2770405,
+    "values": {
+     "HUMAN_OBSERVATION": 2758808,
+     "MACHINE_OBSERVATION": 4516,
+     "LIVING_SPECIMEN": 3639,
+     "MATERIAL_SAMPLE": 2044,
+     "OBSERVATION": 683,
+     "PRESERVED_SPECIMEN": 349,
+     "MATERIAL_CITATION": 151,
+     "OCCURRENCE": 146,
+     "FOSSIL_SPECIMEN": 69
+    }
+   }
+  },
+  "basis_all_licences": {
+   "total": 10821277,
+   "values": {
+    "HUMAN_OBSERVATION": 10797113,
+    "MACHINE_OBSERVATION": 13534,
+    "LIVING_SPECIMEN": 3713,
+    "MATERIAL_SAMPLE": 2613,
+    "PRESERVED_SPECIMEN": 1926,
+    "OCCURRENCE": 1041,
+    "OBSERVATION": 952,
+    "MATERIAL_CITATION": 316,
+    "FOSSIL_SPECIMEN": 69
+   }
+  },
+  "establishment": {
+   "total": 8050872,
+   "values": {
+    "native": 1227,
+    "introduced": 4
+   }
+  }
+ },
+ {
+  "name": "Ixodes scapularis",
+  "common": "blacklegged tick",
+  "kind": "animal",
+  "taxonKey": 2182727,
+  "matchType": "EXACT",
+  "status": "ACCEPTED",
+  "rank": "SPECIES",
+  "acceptedKey": null,
+  "all_records": 20223,
+  "licence_all": {
+   "total": 18212,
+   "values": {
+    "CC_BY_NC_4_0": 9534,
+    "CC_BY_4_0": 7852,
+    "CC0_1_0": 826
+   }
+  },
+  "licence_by_basis": {
+   "CC0_1_0": {
+    "total": 826,
+    "values": {
+     "HUMAN_OBSERVATION": 588,
+     "PRESERVED_SPECIMEN": 238
+    }
+   },
+   "CC_BY_4_0": {
+    "total": 7852,
+    "values": {
+     "PRESERVED_SPECIMEN": 6489,
+     "HUMAN_OBSERVATION": 1276,
+     "MATERIAL_SAMPLE": 87
+    }
+   },
+   "CC_BY_NC_4_0": {
+    "total": 9534,
+    "values": {
+     "HUMAN_OBSERVATION": 9328,
+     "MATERIAL_SAMPLE": 189,
+     "PRESERVED_SPECIMEN": 17
+    }
+   }
+  },
+  "basis_all_licences": {
+   "total": 18212,
+   "values": {
+    "HUMAN_OBSERVATION": 11192,
+    "PRESERVED_SPECIMEN": 6744,
+    "MATERIAL_SAMPLE": 276
+   }
+  },
+  "establishment": {
+   "total": 8678,
+   "values": {}
+  }
+ },
+ {
+  "name": "Vitis vinifera",
+  "common": "wine grape",
+  "kind": "crop",
+  "taxonKey": 5372392,
+  "matchType": "EXACT",
+  "status": "ACCEPTED",
+  "rank": "SPECIES",
+  "acceptedKey": null,
+  "all_records": 163477,
+  "licence_all": {
+   "total": 95930,
+   "values": {
+    "CC_BY_4_0": 88483,
+    "CC_BY_NC_4_0": 5917,
+    "CC0_1_0": 1530
+   }
+  },
+  "licence_by_basis": {
+   "CC0_1_0": {
+    "total": 1530,
+    "values": {
+     "HUMAN_OBSERVATION": 1261,
+     "PRESERVED_SPECIMEN": 173,
+     "MATERIAL_CITATION": 81,
+     "MATERIAL_SAMPLE": 14,
+     "OCCURRENCE": 1
+    }
+   },
+   "CC_BY_4_0": {
+    "total": 88483,
+    "values": {
+     "HUMAN_OBSERVATION": 86428,
+     "OBSERVATION": 735,
+     "OCCURRENCE": 652,
+     "PRESERVED_SPECIMEN": 545,
+     "MATERIAL_CITATION": 40,
+     "LIVING_SPECIMEN": 39,
+     "MATERIAL_SAMPLE": 26,
+     "MACHINE_OBSERVATION": 18
+    }
+   },
+   "CC_BY_NC_4_0": {
+    "total": 5917,
+    "values": {
+     "HUMAN_OBSERVATION": 4195,
+     "PRESERVED_SPECIMEN": 713,
+     "LIVING_SPECIMEN": 627,
+     "OCCURRENCE": 251,
+     "MATERIAL_CITATION": 129,
+     "OBSERVATION": 2
+    }
+   }
+  },
+  "basis_all_licences": {
+   "total": 95930,
+   "values": {
+    "HUMAN_OBSERVATION": 91884,
+    "PRESERVED_SPECIMEN": 1431,
+    "OCCURRENCE": 904,
+    "OBSERVATION": 737,
+    "LIVING_SPECIMEN": 666,
+    "MATERIAL_CITATION": 250,
+    "MATERIAL_SAMPLE": 40,
+    "MACHINE_OBSERVATION": 18
+   }
+  },
+  "establishment": {
+   "total": 90013,
+   "values": {
+    "introduced": 1166,
+    "native": 207,
+    "introducedAssistedColonisation": 11
+   }
+  }
+ }
+]

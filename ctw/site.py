@@ -178,6 +178,20 @@ def place_counts(S) -> dict:
             "N_CA": n((na.country == "CA").sum()), "N_MX": n((na.country == "MX").sum())}
 
 
+def species_pages(web, url: str) -> None:
+    """Species feature (web/species.html, web/species-methods.html, web/species/*): pages and static assets only.
+    The species data (site/species/data/) is built separately by ctw.species_site and is never touched here."""
+    import shutil
+    for n in ("species.html", "species-methods.html"):
+        if (web / n).exists():
+            (C.SITE / n).write_text((web / n).read_text().replace("__SITE_URL__", url))
+    d = C.SITE / "species"
+    d.mkdir(exist_ok=True)
+    for f in (web / "species").glob("*"):
+        if f.is_file():
+            shutil.copy2(f, d / f.name)
+
+
 def run(cfg=None):
     cfg = cfg or C.config()
     S = json.load(open(C.SITE / "data" / "summary.json"))
@@ -216,6 +230,7 @@ def run(cfg=None):
     md = changelog.PATH.read_text() if changelog.PATH.exists() else "# What's new\n\nNo entries yet.\n"
     page = (web / "changelog.html").read_text().replace("{{INTRO}}", changelog.intro(md)).replace("{{CHANGELOG}}", changelog.render(md))
     (C.SITE / "changelog.html").write_text(page.replace("__SITE_URL__", url))
+    species_pages(web, url)                                        # species feature pages (no-op when web/species.html is absent)
     manifest = {"data_version": S["data_version"], "method_version": S["method_version"], "recent_years": S["recent_years"]}
     old = C.SITE / "data" / "manifest.json"
     if old.exists():                                               # a page-only rebuild keeps the recorded versions
