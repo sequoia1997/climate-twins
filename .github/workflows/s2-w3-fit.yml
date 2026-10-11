@@ -1,0 +1,178 @@
+# S3 batch 2, model stage: fit, validate, project and summarise one species per matrix job (the pilot's engine, ctw.species.run_pilot, with the batch table
+# data/species/batch2.csv and the s2_* occurrence assets); then one report job writes the results table and the CTS manifest.
+# Trigger: push to .github/run/s2-w3 (content: "all" or species ids separated by spaces/commas; add "force" to refit). Resumable: the working directory is restored
+# from the Actions cache (finished stages are skipped) and a species whose summary is already on the release is skipped. Outputs go to the release
+# species-pilot-data as s2_w3_<id>_summary.json and s2_w3_<id>_cts.zip (pilot assets are never replaced).
+name: s2-w3-fit
+on:
+  push:
+    paths: [".github/run/s2-w3"]
+  workflow_dispatch:
+    inputs:
+      sel:
+        description: "all | species ids separated by spaces (add 'force' to refit)"
+        default: "all"
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      species: ${{ steps.p.outputs.species }}
+      force: ${{ steps.p.outputs.force }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: p
+        env:
+          INPUT: ${{ inputs.sel }}
+        run: |
+          sel="$INPUT"
+          if [ -z "$sel" ]; then sel="$(tr '\n,' '  ' < .github/run/s2-w3)"; fi
+          echo "selection: $sel"
+          python3 - "$sel" >> "$GITHUB_OUTPUT" <<'PY'
+          import csv, json, re, sys
+          words = re.split(r"[\s,]+", sys.argv[1].strip())
+          force = "force" in words
+          rows = [r for r in csv.DictReader(open("data/species/batch2.csv", encoding="utf-8")) if r["status"] == "selected"]
+          # only species whose cell tables passed the assemble check (data/species/batch2_w2_summary.csv, ok = True): an empty table never reaches the fit
+          import os
+          okset = None
+          if os.path.exists("data/species/batch2_w2_summary.csv"):
+              okset = {r["id"] for r in csv.DictReader(open("data/species/batch2_w2_summary.csv")) if r["ok"] == "True"}
+          else:
+              raise SystemExit("data/species/batch2_w2_summary.csv is missing: run the assemble stage first")
+          ids = [r["id"] for r in rows if r["id"] in okset]
+          seas = {r["id"]: r["season"] for r in rows}
+          pick = ids if "all" in words else [w for w in words if w in ids]
+          # migrants run the breeding-season fit only (W2 section 11): id and release asset names carry the _breeding suffix
+          print("species=" + json.dumps([dict(id=i, key=(i + "_breeding") if seas[i] else i, season=seas[i]) for i in pick]))
+          print("force=" + ("true" if force else "false"))
+          PY
+  fit:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        item: ${{ fromJson(needs.plan.outputs.species) }}
+    env:
+      W3_PRODUCT: s2
+      W3_CLIM: work/clim
+      W3_OCC: work/occ
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
+      - name: Restore previous attempt
+        uses: actions/cache/restore@v4
+        with:
+          path: work/w3
+          key: s2w3-${{ matrix.item.key }}-none
+          restore-keys: s2w3-${{ matrix.item.key }}-
+      - name: Skip if the release already has this species
+        id: skip
+        if: needs.plan.outputs.force != 'true'
+        run: |
+          if gh release view species-pilot-data --json assets -q '.assets[].name' | grep -qx "s2_w3_${{ matrix.item.key }}_summary.json"; then echo "done=true" >> "$GITHUB_OUTPUT"; else echo "done=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Download climate stack (W1) for this species' continents
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          mkdir -p work/clim
+          tiles="$(python -m ctw.species.run_pilot tiles --species ${{ matrix.item.id }} --table data/species/batch2.csv)"
+          echo "tiles: $tiles"
+          args=()
+          for m in $(python -m ctw.species.run_pilot models); do args+=(-p "deltas_${m}.npz"); done
+          for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "basem_${t}.npz"); done
+          gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
+          for t in $tiles; do gh release download species-pilot-data -D work/clim -p "pred_hind_2005-2024_${t}.npz" --clobber 2>/dev/null || true; done
+          du -sh work/clim
+      - name: Download occurrence products (S3 batch 2) and the pilot target-group grids
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          mkdir -p work/occ work/bbs
+          gh release download species-pilot-data -D work/occ -p "s2_occ_cells_v1.parquet" -p "s2_occ_cells_crops_v1.parquet" -p "s2_native_masks_v1.npz" -p "s2_w2_report_v1.json" -p "s2_occ_cells_seasonal_v1.parquet" -p "s2_w2_seasonal_report_v1.json" -p "tg_density_*_v1.npz" -p "s2_tg_density_*_v1.npz" --clobber
+          gh release download species-pilot-data -D work/bbs -p "bbs_route_cells.csv" -p "bbs_presence_long.csv.gz" --clobber || echo "no BBS files"
+          ls -la work/occ
+      - name: Fit, project and write
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          flags=""
+          if [ "${{ needs.plan.outputs.force }}" = "true" ]; then flags="--force"; fi
+          if [ -n "${{ matrix.item.season }}" ]; then flags="$flags --season breeding"; fi
+          python -u -m ctw.species.run_pilot fit --species "${{ matrix.item.id }}" --table data/species/batch2.csv --out work/w3 $flags --jobs 4 --bbs-dir work/bbs --shift-dir data/species/batch2_evidence/shift
+      - name: Save working directory for resume
+        if: always() && steps.skip.outputs.done != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: work/w3
+          key: s2w3-${{ matrix.item.key }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload to the release
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          d=work/w3/${{ matrix.item.key }}
+          test -f $d/summary.json || exit 0
+          cp $d/summary.json s2_w3_${{ matrix.item.key }}_summary.json
+          files=(s2_w3_${{ matrix.item.key }}_summary.json)
+          if [ -d $d/cts ]; then (cd $d/cts && zip -qr ../../../../s2_w3_${{ matrix.item.key }}_cts.zip .); files+=(s2_w3_${{ matrix.item.key }}_cts.zip); fi
+          gh release upload species-pilot-data "${files[@]}" --clobber
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s2w3-${{ matrix.item.key }}
+          path: |
+            work/w3/${{ matrix.item.key }}/summary.json
+            work/w3/${{ matrix.item.key }}/cts
+            work/w3/${{ matrix.item.key }}/DONE
+          if-no-files-found: ignore
+  report:
+    needs: [plan, fit]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt lightgbm scikit-learn
+      - name: Collect every batch-2 summary from the release (this run and earlier runs)
+        run: |
+          mkdir -p work/w3
+          for s in $(python3 -c "import csv; print(' '.join(r['id']+('_breeding' if r['season'] else '') for r in csv.DictReader(open('data/species/batch2.csv')) if r['status']=='selected'))"); do
+            gh release download species-pilot-data -p "s2_w3_${s}_summary.json" -O /tmp/s.json --clobber 2>/dev/null && mkdir -p work/w3/$s && cp /tmp/s.json work/w3/$s/summary.json || true
+            gh release download species-pilot-data -p "s2_w3_${s}_cts.zip" -O /tmp/c.zip --clobber 2>/dev/null && mkdir -p work/w3/$s/cts && unzip -qo /tmp/c.zip -d work/w3/$s/cts || true
+          done
+          ls work/w3 | wc -l
+      - name: Results table and CTS manifest
+        run: |
+          python -m ctw.species.s1report --summaries work/w3 --csv work/batch2_results.csv --md work/S3-fit-report.md
+          cat work/S3-fit-report.md >> "$GITHUB_STEP_SUMMARY"
+          python3 - <<'PY'
+          import hashlib, json, os, glob
+          man = {"version": "v1", "batch": "S3 batch 2", "species": {}}
+          for d in sorted(glob.glob("work/w3/*/cts")):
+              s = d.split("/")[2]
+              files = {os.path.basename(f): {"bytes": os.path.getsize(f), "sha256": hashlib.sha256(open(f, "rb").read()).hexdigest()} for f in sorted(glob.glob(d + "/*.cts"))}
+              se = os.path.join(d, "stats_entry.json")
+              man["species"][s] = {"files": files, "stats_entry": json.load(open(se)) if os.path.exists(se) else None}
+          json.dump(man, open("s2_manifest_cts_v1.json", "w"), separators=(",", ":"))
+          print(len(man["species"]), "species with CTS files")
+          PY
+          gh release upload species-pilot-data s2_manifest_cts_v1.json work/batch2_results.csv --clobber
+      - uses: actions/upload-artifact@v4
+        with: { name: s2-report, path: "work/batch2_results.csv\nwork/S3-fit-report.md" }
+      - name: Commit the results table
+        run: |
+          mkdir -p docs/species
+          cp work/batch2_results.csv data/species/batch2_results.csv
+          cp work/S3-fit-report.md docs/species/S3-fit-report.md
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/species/batch2_results.csv docs/species/S3-fit-report.md
+          git diff --cached --quiet && exit 0
+          git commit -m "S3: batch 2 results table (Actions run ${{ github.run_id }})"
+          for i in 1 2 3; do git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done

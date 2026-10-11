@@ -87,3 +87,14 @@ def test_real_centres_flagged(built):
     info = json.load(open(out / next(s for s in idx["species"] if s["id"] == "acer_saccharum")["info"][0]))
     flags = [v["cok"] for v in info["by"].values() if "cok" in v]
     assert flags and all(isinstance(f, bool) for f in flags) and info["by"]["ssp245|2050|unlimited"]["cok"] is True   # a compact range: centre inside it
+
+
+def test_display_names_are_sentence_case():
+    from ctw.species_site import display_name
+    assert display_name("apple") == "Apple"
+    assert display_name("tomato") == "Tomato"
+    assert display_name("sugar maple") == "Sugar maple"
+    assert display_name("european beech") == "European beech"
+    assert display_name("American robin") == "American robin"
+    assert display_name("Acer saccharum") == "Acer saccharum"
+    assert display_name("") == ""
