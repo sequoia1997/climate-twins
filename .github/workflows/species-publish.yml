@@ -28,6 +28,8 @@ jobs:
         run: |
           gh release download species-pilot-data --dir work/species-assets \
             --pattern '*_summary.json' --pattern '*_cts.zip' --clobber
+          gh release download species-fits-batch2 --dir work/species-assets \
+            --pattern '*_summary.json' --pattern '*_cts.zip' --clobber || echo "no batch 2 release yet"
           python -m ctw.species_site build --src work/species-assets --out work/r2
           du -sh work/r2; find work/r2 -type f | wc -l
       - name: Upload (hashed files first, index last)

@@ -120,7 +120,7 @@ jobs:
           cp $d/summary.json s2_w3_${{ matrix.item.key }}_summary.json
           files=(s2_w3_${{ matrix.item.key }}_summary.json)
           if [ -d $d/cts ]; then (cd $d/cts && zip -qr ../../../../s2_w3_${{ matrix.item.key }}_cts.zip .); files+=(s2_w3_${{ matrix.item.key }}_cts.zip); fi
-          gh release upload species-pilot-data "${files[@]}" --clobber
+          gh release upload species-fits-batch2 "${files[@]}" --clobber
       - uses: actions/upload-artifact@v4
         if: always()
         with:
