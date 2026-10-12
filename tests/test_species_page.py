@@ -17,6 +17,7 @@ SHOTS = os.environ.get("SHOTS", "1") != "0"
 def make_site(dst: Path):
     from ctw import species_site
     species_site.build(FIX, dst / "species" / "data", log=lambda *a: None)
+    (dst / "species" / "basemap.js").write_bytes((ROOT / "web" / "species" / "basemap.js").read_bytes())
     (dst / "species" / "land.cts").write_bytes((ROOT / "web" / "species" / "land.cts").read_bytes())
     (dst / "species" / "app.js").write_text((ROOT / "web" / "species" / "app.js").read_text())
     R2 = "https://species.climatetwins.org/"
@@ -119,6 +120,14 @@ async def main():
             elif "novel climate" not in t.lower(): fails.append(f"{name}: withheld reason missing")
             if "withheld" not in (await pg.inner_text("#sp-head")).lower(): fails.append(f"{name}: withheld banner missing from the header")
             if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-kookaburra-withheld.png"))
+            # picking an organism frames its range; the map repeats the world (no wall at the date line) and draws the data in every copy
+            bb = await pg.evaluate("(() => { const m = window.__map, b = m.getBounds(), c = m.getCenter(); return [b.getWest(), b.getEast(), c.lng, m.getMaxBounds() === null || m.getMaxBounds() === undefined]; })()")
+            if not (111 < bb[2] < 157 or -50 < bb[2] < 0 or 112 - 360 < bb[2]): fails.append(f"{name}: pick did not frame the organism {bb}")
+            if not bb[3]: fails.append(f"{name}: map has max bounds (a wall)")
+            await pg.evaluate("window.__map.jumpTo({center: [-226, -25], zoom: 3.2})"); await settle(pg, 2)
+            im2 = Image.open(io.BytesIO(await pg.screenshot(clip=dict(x=box[0], y=box[1], width=min(box[2], w), height=min(box[3], h * 0.5))))).convert("RGB")
+            lit2 = sum(n for n, (r_, g_, b_) in (im2.getcolors(maxcolors=1 << 20) or []) if max(r_, g_, b_) - min(r_, g_, b_) > 60)
+            if lit2 < 300: fails.append(f"{name}: no data drawn on the repeated world west of the date line ({lit2} coloured px)")
             # place list
             await pg.evaluate("document.getElementById('place-det').open = true")
             await pg.wait_for_function("document.querySelectorAll('#place-body ul.pl li').length>0 || document.querySelector('#place-body .answer')", timeout=20000)

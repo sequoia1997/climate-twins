@@ -66,16 +66,26 @@ function entry(f, level, bx, by) {
   return e;
 }
 function levelFor() { const wpx = 512 * Math.pow(2, map.getZoom()); for (const f of LEVELS) if (NX / f >= wpx) return f; return 1; }
-function visible(f) {
-  const b = map.getBounds(), cells = NX / f, rows = NY / f, out = [];
-  const x0 = Math.max(0, Math.floor((b.getWest() + 180) / 360 * cells / BS)), x1 = Math.min(Math.ceil(cells / BS) - 1, Math.floor((Math.min(180, b.getEast()) + 180) / 360 * cells / BS));
+function visible(f, wl, el) {          // blocks inside the view; wl/el: west and east longitude (default: the map's own, which can run past +-180 on a repeated world)
+  const b = map.getBounds(), cells = NX / f, rows = NY / f, out = [], W = wl == null ? b.getWest() : wl, E = el == null ? b.getEast() : el;
+  const x0 = Math.max(0, Math.floor((W + 180) / 360 * cells / BS)), x1 = Math.min(Math.ceil(cells / BS) - 1, Math.floor((Math.min(180, E) + 180) / 360 * cells / BS));
   const y0 = Math.max(0, Math.floor((90 - Math.min(85, b.getNorth())) / 180 * rows / BS)), y1 = Math.min(Math.ceil(rows / BS) - 1, Math.floor((90 - Math.max(-85, b.getSouth())) / 180 * rows / BS));
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) out.push([x, y]);
   return out;
 }
+function worldCopies() {              // the repeated worlds in view: [k, west, east] with the longitudes shifted into world 0
+  const b = map.getBounds(), W = b.getWest(), E = b.getEast(), out = [];
+  for (let k = Math.floor((W + 180) / 360); k <= Math.floor((E + 180) / 360); k++) out.push([k, W - 360 * k, E - 360 * k]);
+  return out;
+}
+function visibleAll(f) {
+  const seen = new Set(), out = [];
+  for (const [, w, e] of worldCopies()) for (const [x, y] of visible(f, w, e)) { const q = x + "," + y; if (!seen.has(q)) { seen.add(q); out.push([x, y]); } }
+  return out;
+}
 const merc = lat => 0.5 - Math.log(Math.tan(Math.PI / 4 + Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 360)) / (2 * Math.PI);
 const VS = `#version 300 es
-in vec2 a; uniform mat4 uM; out vec2 vm; void main(){ vm=a; gl_Position=uM*vec4(a,0.0,1.0); }`;
+in vec2 a; uniform mat4 uM; uniform float uOff; out vec2 vm; void main(){ vm=a; gl_Position=uM*vec4(a.x+uOff,a.y,0.0,1.0); }`;
 /* kinds: 0 land mask, 1 species (T0 = scenario file: S1 r, S2 g, agreement b, novel a; T1 = base file: now r), 2 novel-climate lines (T0 = scenario file) */
 const FS = `#version 300 es
 precision highp float; precision highp int;
@@ -115,7 +125,7 @@ function initGL(g) {
   const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(p);
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
   glr = { p, buf: gl.createBuffer(), u: {} };
-  for (const n of ["uM", "uT0", "uT1", "uBlk", "uKind", "uView", "uPer", "uDisp", "uAgree", "uPat", "uDpr", "uLand", "uLost", "uKept", "uGain", "uR1", "uR2", "uR3", "uNov", "uDot"]) glr.u[n] = gl.getUniformLocation(p, n);
+  for (const n of ["uM", "uOff", "uT0", "uT1", "uBlk", "uKind", "uView", "uPer", "uDisp", "uAgree", "uPat", "uDpr", "uLand", "uLost", "uKept", "uGain", "uR1", "uR2", "uR3", "uNov", "uDot"]) glr.u[n] = gl.getUniformLocation(p, n);
   glr.a = gl.getAttribLocation(p, "a");
   zeroTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, zeroTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
 }
@@ -154,9 +164,12 @@ function render(g, args) {
   gl.uniform1i(u.uView, { now: 0, future: 1, change: 2 }[S.view]); gl.uniform1i(u.uPer, S.per === "2050" ? 0 : 1); gl.uniform1i(u.uDisp, MODES.indexOf(S.disp));
   gl.uniform1i(u.uAgree, S.agree ? 1 : 0); gl.uniform1i(u.uPat, map.getZoom() >= 3.2 ? 1 : 0);
   if (!SHOWN.sp && !useLand) return;
-  const f = levelFor(), vis = visible(f), sc = sceneFiles(SHOWN.sp || S.sp, SHOWN.ssp || S.ssp);
-  if (useLand) drawPass(0, [sc.land], f, vis);
-  if (SHOWN.sp) { drawPass(1, [sc.scen, sc.base], f, vis); if (showNovel()) drawPass(2, [sc.scen], f, vis); }
+  const f = levelFor(), sc = sceneFiles(SHOWN.sp || S.sp, SHOWN.ssp || S.ssp);
+  for (const [k, w, e] of worldCopies()) {
+    gl.uniform1f(u.uOff, k); const vis = visible(f, w, e);
+    if (useLand) drawPass(0, [sc.land], f, vis);
+    if (SHOWN.sp) { drawPass(1, [sc.scen, sc.base], f, vis); if (showNovel()) drawPass(2, [sc.scen], f, vis); }
+  }
   window.__drawn = (window.__drawn || 0) + 1;
 }
 let swapToken = 0;
@@ -174,7 +187,7 @@ async function loadScene(sp, ssp) {
   };
   tick(); const timer = setInterval(tick, 400);
   try {
-    for (const fs of [sc.scen, sc.base]) { await fs.ready; for (const [bx, by] of visible(f)) ps.push(entry(fs, f, bx, by).p); const lv = fs.H.levels[fs.level(8)]; for (let y = 0; y < lv.by; y++) for (let x = 0; x < lv.bx; x++) ps.push(entry(fs, 8, x, y).p); }
+    for (const fs of [sc.scen, sc.base]) { await fs.ready; for (const [bx, by] of visibleAll(f)) ps.push(entry(fs, f, bx, by).p); const lv = fs.H.levels[fs.level(8)]; for (let y = 0; y < lv.by; y++) for (let x = 0; x < lv.bx; x++) ps.push(entry(fs, 8, x, y).p); }
     await Promise.race([Promise.all(ps), new Promise(r => setTimeout(r, 8000))]);
   } catch (e) { clearInterval(timer); if (tok === swapToken) { $("busy").hidden = true; $("live").textContent = "The map files for this organism could not be loaded."; $("sp-err").hidden = false; } return; }
   clearInterval(timer);
@@ -355,13 +368,28 @@ async function placeCard() {
   const k = key(), per = PERLAB(), P = PL.places[S.place];
   const rows = ST.species.map(s => ({ s, c: (PL.sp[s.id][k] || "")[S.place] || "0" }));
   const lose = rows.filter(r => r.c === "1"), gain = rows.filter(r => r.c === "3"), keep = rows.filter(r => r.c === "2"), wh = rows.filter(r => r.c === "9");
-  const li = (r, kind, word) => `<li>${ICON[kind]}<span><button class="linkbtn" data-sp="${r.s.id}">${esc(r.s.name)}</button> <span class="w">Tier ${r.s.tier}</span></span><span class="w">${word}</span></li>`;
+  const li = (r, kind, word) => `<li>${ICON[kind]}<span><button class="linkbtn" data-sp="${r.s.id}">${esc(r.s.name)}</button> </span><span class="w">${word}</span></li>`;
   const list = [...lose.map(r => li(r, "lose", "loses")), ...gain.map(r => li(r, "gain", "gains")), ...keep.map(r => li(r, "keep", "keeps"))];
   box.innerHTML = `<label class="small" for="place">City</label><select id="place">${PL.places.map((p, i) => `<option value="${i}"${i === S.place ? " selected" : ""}>${esc(p[0])}</option>`).join("")}</select>
     <p class="answer"><strong>${lose.length}</strong> of ${rows.length} modelled organisms are projected to lose suitable climate at ${esc(P[0])} by ${per}, and <strong>${gain.length}</strong> to gain it. <span class="small">${keep.length} keep it${wh.length ? `; ${wh.length} not shown because their numbers are withheld for this scenario` : ""}. ${esc(sspLabel())}, ${S.disp} dispersal. Read from the map cell at the city centre (and its neighbours); this is climate suitability, not a forecast.</span></p>
     <ul class="pl">${list.join("") || '<li class="muted" style="grid-template-columns:1fr">No modelled organism has suitable climate here now or later.</li>'}</ul>`;
-  $("place").addEventListener("change", e => { S.place = +e.target.value; placeCard(); placeMarker(); });
+  $("place").addEventListener("change", e => { S.place = +e.target.value; placeCard(); placeMarker(); frameCity(); });
   box.querySelectorAll("[data-sp]").forEach(b => b.addEventListener("click", () => pick(b.dataset.sp)));
+}
+function frameCity() {                  // fly to the chosen city and keep it clear of the bottom sheet, as the places map does for a place
+  if (!map || !PL) return;
+  const P = PL.places[S.place];
+  map.easeTo({ center: [P[2], P[1]], zoom: Math.max(map.getZoom(), 4.5), padding: padFor(), duration: reduced ? 0 : 900 });
+}
+const hav = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 12742 * Math.asin(Math.sqrt(x)); };
+async function mapClick(e) {            // click the map: the nearest listed city (within 800 km) opens its card and the map frames it
+  if (!ST) return;
+  if (!PL) { try { PL = await (await fetch(DATA + ST.places[0])).json(); } catch (err) { return; } }
+  const lat = e.lngLat.lat, lon = ((e.lngLat.lng + 180) % 360 + 360) % 360 - 180;
+  let bi = -1, bd = 800; PL.places.forEach((p, i) => { const d = hav(lat, lon, p[1], p[2]); if (d < bd) { bd = d; bi = i; } });
+  if (bi < 0) return;
+  S.place = bi; const det = $("place-det"); if (!det.open) det.open = true; else { placeCard(); placeMarker(); }
+  frameCity();
 }
 let pm = null;
 function placeMarker() {
@@ -457,10 +485,16 @@ const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
 const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
 const sysDark = matchMedia("(prefers-color-scheme: dark)");
 const isDark = () => { const t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : sysDark.matches; };
-function baseStyle() { return useLand ? BLANK : STYLES[isDark() ? "dark" : "light"]; }
+function baseStyle() { return useLand ? BLANK : STYLES.light; }
+function paintBasemap(force) {              // the places map's basemap: Positron, recoloured for dark mode, state lines
+  if (!map) return;
+  if (useLand) { try { map.setPaintProperty("bg", "background-color", getComputedStyle(document.documentElement).getPropertyValue("--ocean").trim()); } catch (e) { } return; }
+  if (!force && !map.isStyleLoaded()) return;
+  CTBASE.paint(map, isDark()); CTBASE.stateLines(map, isDark());
+}
 function applyTheme(restyle) {
   $("themebtn").innerHTML = isDark() ? SUN : MOON; $("themebtn").setAttribute("aria-pressed", String(isDark())); COL = colours();
-  if (map) { if (restyle) map.setStyle(baseStyle()); else { styleShift(); map.triggerRepaint(); } }
+  if (map) { paintBasemap(); styleShift(); map.triggerRepaint(); }
   if (S.sp && INFO[S.sp]) legend();
 }
 $("themebtn").addEventListener("click", () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("ct-theme", t); } catch (e) { } applyTheme(true); });
@@ -492,19 +526,20 @@ function addLayers() {
 let styleOk = false, started = false;
 function tryStart() { if (started || !styleOk || !S.sp || !INFO[S.sp]) return; started = true; if (!INFO[S.sp].ssps.includes(S.ssp)) S.ssp = INFO[S.sp].ssps[0]; update(true, false); }
 function startMap() {
-  map = new maplibregl.Map({ container: "map", style: baseStyle(), center: [-30, 30], zoom: 1.2, renderWorldCopies: false, attributionControl: false, maxZoom: 9, minZoom: 0.3, dragRotate: false, pitchWithRotate: false, touchPitch: false });
+  map = new maplibregl.Map({ container: "map", style: baseStyle(), center: [-30, 30], zoom: 1.2, attributionControl: false, maxZoom: 10, minZoom: innerWidth < 600 ? 0.8 : 1.5, dragRotate: false, pitchWithRotate: false, touchPitch: false });
   map.touchZoomRotate.disableRotation();
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   window.__map = map;
   let styled = false;
   map.on("error", e => { const u = String((e && e.error && (e.error.message || e.error)) || ""); if (!styled && !useLand && /style|openfreemap|Failed to fetch|NetworkError|tiles/i.test(u)) { useLand = true; map.setStyle(BLANK); } });
   map.on("style.load", () => {
-    styled = true; if (useLand) map.setPaintProperty("bg", "background-color", getComputedStyle(document.documentElement).getPropertyValue("--ocean").trim());
+    styled = true; CTBASE.reset(); paintBasemap(true);
     addLayers(); window.__styleReady = (window.__styleReady || 0) + 1;
     styleOk = true;
     if (!started) tryStart(); else if (S.sp && INFO[S.sp]) loadScene(S.sp, S.ssp);
   });
-  map.on("moveend", () => { if (!S.sp || !SHOWN.sp) return; const sc = sceneFiles(SHOWN.sp, SHOWN.ssp), f = levelFor(); for (const x of [useLand ? sc.land : null, sc.base, sc.scen]) if (x) visible(f).forEach(([bx, by]) => entry(x, f, bx, by)); });
+  map.on("click", mapClick);
+  map.on("moveend", () => { if (!S.sp || !SHOWN.sp) return; const sc = sceneFiles(SHOWN.sp, SHOWN.ssp), f = levelFor(); for (const x of [useLand ? sc.land : null, sc.base, sc.scen]) if (x) visibleAll(f).forEach(([bx, by]) => entry(x, f, bx, by)); });
 }
 async function boot() {
   const t0 = performance.now();
@@ -515,7 +550,7 @@ async function boot() {
   startMap();
   const h = decodeURIComponent(location.hash.slice(1)), id = ST.byId[h] ? h : (ST.byId.acer_saccharum ? "acer_saccharum" : ST.species[0].id);
   const b = rec(id).bbox; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: padFor(), duration: 0, maxZoom: 5 });
-  S.sp = id; renderResults();
+  S.sp = id; $("pick-cur").textContent = rec(id).name; renderResults();
   await loadInfo(id);
   window.__S = S; window.__T = T;
   tryStart();
