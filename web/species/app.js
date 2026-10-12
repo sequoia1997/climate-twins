@@ -312,7 +312,7 @@ function head() {
     <dt>Climate variables used</dt><dd>${esc(i.predictors.join(", "))}</dd><dt>Climate models</dt><dd>${i.n_models}</dd><dt>Range-shift test</dt><dd>${esc(i.range_shifts)}</dd></dl>
     <p class="small">${esc(shiftsText(i))}</p>
     <p class="small">Records: GBIF occurrence download ${dl} (CC0 and CC-BY records only).${i.season ? " Only records from the breeding months (May to July) are used, because the organism migrates." : ""}
-    <a href="species-methods.html#tiers">What the tiers mean</a>, <a href="species-methods.html#limits">limitations</a> and <a href="species-methods.html#credits">credits</a>.</p>`;
+    <a href="methods.html#o-tiers">What the tiers mean</a>, <a href="methods.html#limits-organisms">limitations</a> and <a href="methods.html#credits-organisms">credits</a>.</p>`;
 }
 function bars(rows, max, signed) {
   return rows.map(([lab, v, col, txt]) => {
