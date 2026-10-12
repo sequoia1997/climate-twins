@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Climate Twins: methods, data and references</title>
+<title>Climate Twins: methods, data and references (places and organisms)</title>
 <link rel="canonical" href="https://climatetwins.org/methods.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Climate Twins">
@@ -22,7 +22,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="description" content="How Climate Twins finds present-day analogs for projected 2050 and 2100 climates: data, matching method, validation, limitations and references.">
+<meta name="description" content="How Climate Twins works: climate analogs for places, projected climate suitability for organisms, data, validation, limitations, credits and references.">
+<meta name="species-data-base" content="https://species.climatetwins.org/">
 <script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -160,6 +161,20 @@ math{font-size:1.08em}
 ol.refs{list-style:none;padding:0} ol.refs a,.cite a{overflow-wrap:anywhere} ol.refs li{padding-left:1.6em;text-indent:-1.6em;margin:0 0 10px;font-size:.95rem}
 .small{font-size:.88rem;color:var(--muted)}
 footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;color:var(--muted)}
+/* parts of the unified page */
+.part{margin:56px 0 30px;padding:18px 20px;background:var(--panel);border:1px solid var(--rule);border-left:6px solid var(--accent);border-radius:12px}
+.part{counter-reset:sec} .part:first-of-type{margin-top:8px}
+.part span{display:block;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+article .part h2{margin:0 0 6px;font-size:1.55rem} article .part p{margin:0;color:var(--muted)}
+nav.toc li.grp{counter-increment:none;counter-reset:t;margin-top:14px} nav.toc li.grp:first-child{margin-top:0}
+nav.toc li.grp a{font-weight:700;color:var(--ink);border-left-color:var(--accent);text-transform:none}
+nav.toc li.grp a::before{content:""}
+nav.toc{counter-reset:t}
+dl dt{font-weight:700;margin-top:12px} dl dd{margin:3px 0 0}
+.tw.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:10px} .tw.scroll table{min-width:34rem}
+.note{margin:18px 0}
+@media (max-width:900px){nav.toc h2{cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin:0} nav.toc h2::after{content:"Show";font:400 .85rem var(--font-body);color:var(--muted);text-decoration:underline}
+  nav.toc.open h2::after{content:"Hide"} nav.toc:not(.open) ol{display:none} nav.toc.open ol{margin-top:10px}}
 @media (max-width:900px){
   .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:24px}
   nav.toc{min-width:0}
@@ -180,12 +195,12 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
 <body>
 <header class="top">
   <div class="bar">
-    <a class="back" href="./">Back to the map</a>
+    <span><a class="back" href="./">Places map</a> &nbsp; <a class="back" href="species.html">Organisms map</a></span>
     <button id="themebtn" type="button" aria-pressed="false" aria-label="Dark mode" title="Dark mode"></button>
   </div>
   <div class="head">
-    <h1>How Climate Twins finds a place's future climate today</h1>
-    <p class="sub">Methods, data, validation and references for an interactive map of present-day climate analogs, for 790 places in North America and 1,596 cities worldwide, under four CMIP6 emissions scenarios.</p>
+    <h1>How Climate Twins works</h1>
+    <p class="sub">One page for everything behind the site: Part 1, the climate-twin matching for 790 places in North America and 1,596 cities worldwide under four CMIP6 emissions scenarios; Part 2, the organism maps; Part 3, limitations, data, credits and references.</p>
     <p class="meta"><span id="m-author"></span>. Version <span class="v-rel"></span>, data version <span class="v-data"></span>.</p>
   </div>
   <div class="scale" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -195,7 +210,8 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
 <nav class="toc" aria-label="Contents">
   <h2>Contents</h2>
   <ol>
-    <li class="un"><a href="#summary">Summary</a></li>
+    <li class="un"><a href="#summary">Summary and citation</a></li>
+    <li class="grp"><a href="#part-places">Part 1: Places</a></li>
     <li><a href="#question">The question</a></li>
     <li><a href="#places">Places</a></li>
     <li><a href="#present">Present-day climate</a></li>
@@ -206,18 +222,28 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <li><a href="#models">Climate models</a></li>
     <li><a href="#distance">Measuring similarity</a></li>
     <li><a href="#matches">Choosing matches</a></li>
+    <li><a href="#tropics">Why many tropical places have no match</a></li>
     <li><a href="#validation">Checks and results</a></li>
     <li><a href="#era5">Cross-check against independent datasets</a></li>
     <li><a href="#hindcast">Hindcast test</a></li>
+    <li><a href="#resolution">Sensitivity to model resolution</a></li>
     <li><a href="#features">Climate type, zone and season</a></li>
     <li><a href="#recent">Already happening</a></li>
     <li><a href="#sealevel">Sea level</a></li>
     <li><a href="#extremes">Extreme days</a></li>
-    <li><a href="#updates">Updates and versions</a></li>
-    <li><a href="#tropics">Why many tropical places have no match</a></li>
+    <li class="grp"><a href="#part-organisms">Part 2: Organisms</a></li>
+    <li><a href="#o-what">What the maps show</a></li>
+    <li><a href="#o-data">Data</a></li>
+    <li><a href="#o-model">The model</a></li>
+    <li><a href="#o-dispersal">Dispersal: three bounds</a></li>
+    <li><a href="#o-tiers">How much to trust a map</a></li>
+    <li><a href="#o-shifts">Range shifts</a></li>
+    <li><a href="#o-withheld">Withheld numbers</a></li>
+    <li class="grp"><a href="#part-reference">Part 3: Reference</a></li>
     <li><a href="#limits">Limitations</a></li>
-    <li><a href="#software">Software</a></li>
     <li><a href="#data">Data and attribution</a></li>
+    <li><a href="#software">Software</a></li>
+    <li><a href="#updates">Updates and versions</a></li>
     <li><a href="#refs">References</a></li>
   </ol>
 </nav>
@@ -227,6 +253,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <div class="abstract">
       <p>For any of 2,386 places, Climate Twins asks where on Earth today's climate most resembles the climate that place is projected to have around 2050 (2041–2060) or 2100 (2081–2100). Projected climates are built by adding changes simulated by 24 CMIP6 global climate models to observed 1991–2020 climate. Each projection is compared with present-day climate in every land grid cell, 97,488 cells of 15 km across the United States, Canada and Mexico and 64,958 cells of 0.5° worldwide, using seasonal measures of temperature, precipitation and humidity. Each place also shows its climate type, an estimated hardiness zone and growing season, how its last ten years compare with 1991–2020 and, on the coast, projected sea-level rise.</p>
       <p>Similarity is expressed as sigma dissimilarity (Mahony et al. 2017): a Mahalanobis distance scaled by each place's own year-to-year variability, with Ledoit–Wolf shrinkage of the variability correlations, converted to units of standard deviation. The approach follows Fitzpatrick &amp; Dunn (2019), extended to Canada, Mexico and 823 cities worldwide, to four emissions scenarios, and to an ensemble screened by transient climate response (Hausfather et al. 2022).</p>
+          <p><strong>Organism maps</strong> (Part 2) use the same climate models but a different method: a statistical model of where each organism's recorded places sit in climate, projected to the future as <em>climate suitability</em>, never as a forecast of where it will live. Every organism carries two plain trust checks, one for today's map and one for the future map.</p>
     </div>
     <div class="cite" id="cite">
       <h2>Suggested citation</h2>
@@ -236,6 +263,8 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
       <p class="small" style="margin:10px 0 0">When you use a result, please also cite the underlying datasets and the method papers in <a href="#data">Data and attribution</a>.</p>
     </div>
   </section>
+
+  <div class="part" id="part-places"><span>Part 1</span><h2>Climate twins: places</h2><p>For a city or town, where on Earth today's climate matches its projected future climate. The data, the matching method, the checks, and what else is reported.</p></div>
 
   <section id="question">
     <h2>The question</h2>
@@ -283,6 +312,7 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
   </section>
 
   
+
   <section id="future">
     <h2>Projected climate</h2>
     <p>Projected climate follows the change-factor (delta) approach (e.g. Maraun &amp; Widmann 2018): each model's simulated change is added to the observed present climate at the place, which removes the model's own bias in the baseline.</p>
@@ -363,6 +393,22 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
     <p>All of this is computed in the reader's browser at the moment a place is chosen, from per-place metric matrices shipped with the page, so every cell on the map carries its own σ. The browser results match the Python pipeline cell for cell.</p>
   </section>
 
+  <section id="tropics">
+    <h2>Why many tropical places have no match</h2>
+    <p>Places near the equator are far more likely to have no present-day match. Around 2100 under SSP2-4.5 (models in the likely range):</p>
+    <div class="tablewrap"><table class="data">
+      <thead><tr><th>Latitude</th><th>Places</th><th>No match (4σ or more)</th><th>Partial or no match (2σ or more)</th></tr></thead>
+      <tbody><tr><td>0–15°</td><td>546</td><td>64%</td><td>83%</td></tr><tr><td>15–25°</td><td>336</td><td>47%</td><td>67%</td></tr><tr><td>25–35°</td><td>551</td><td>15%</td><td>40%</td></tr><tr><td>35–45°</td><td>629</td><td>2%</td><td>15%</td></tr><tr><td>45° and poleward</td><td>323</td><td>2%</td><td>7%</td></tr></tbody>
+    </table></div>
+    <p>This is mainly physics, not a gap in the data or an effect of wealth: rich tropical and desert cities such as Singapore, Dubai and Darwin have no match either. Two things combine.</p>
+    <ul>
+      <li><strong>There is nowhere warmer to point to.</strong> A mid-latitude city's future climate usually exists today somewhere closer to the equator. The hottest places on Earth have no hotter place to match, so their future climates are new to the planet. Williams et al. (2007) found such novel climates concentrated in the tropics and subtropics.</li>
+      <li><strong>Tropical climates vary little from year to year.</strong> σ measures change against a place's own normal swings, so a given warming stands out far more where years are steady. This is why tropical climates are expected to leave their historical range first (Mora et al. 2013). It also means the change is large relative to what local ecosystems and people are adapted to.</li>
+    </ul>
+    <p>Data play a smaller part. Where weather stations are sparse, TerraClimate can understate year-to-year variability, which inflates σ; the variability floor (above) limits this, but some tropical results are more uncertain than mid-latitude ones.</p>
+    <p>The pattern also has a moral dimension. The places facing climates with no present-day equivalent are largely those that have contributed least to the emissions causing the change (King &amp; Harrington 2018).</p>
+  </section>
+
   <section id="validation">
     <h2>Checks and results</h2>
     <ul>
@@ -408,6 +454,21 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
   </section>
   <!-- END era5-agreement -->
 
+  <!-- BEGIN nexcheck -->
+  <section id="resolution">
+    <h2>Sensitivity to model resolution</h2>
+    <p>Climate models run on grids of roughly 100 to 250 km, so a place's projected change is really the change of one large grid cell. Three independent downscaled versions of the same CMIP6 changes exist, and once a year we rebuild each place's future climate a second time with each of them (temperature added, precipitation scaled, humidity scaled where the source has it, ratios limited to the same ranges as the main analysis) and compare it with the projection used on the page:</p>
+    <ul>
+      <li><strong>NASA NEX-GDDP-CMIP6</strong> (Thrasher et al. 2022), 25 km, bias-corrected, the same monthly changes as the extreme-day counts (also humidity). Since the main projection now uses these changes wherever they exist (see Projected climate), comparing them with the page would compare a source with itself; the check instead compares the page's projection with the same models' <em>native-grid</em> CMIP6 changes, which keeps measuring how much the answer depends on resolution. Before the NEX-GDDP changes are available it compares NEX-GDDP with the native-grid projection directly.</li>
+      <li><strong>WorldClim 2.1 CMIP6</strong> (Fick &amp; Hijmans 2017), global, statistically downscaled monthly minimum and maximum temperature and precipitation for many models. We use the change from its own 1970&ndash;2000 baseline to 2041&ndash;2060 and 2081&ndash;2100 (temperature difference, precipitation ratio).</li>
+      <li><strong>AdaptWest downscaled CMIP6</strong> (Wang et al. 2016 method; AdaptWest Project 2022), 1 km, North America only: the project's 8-model ensemble mean for 2041&ndash;2060 and 2071&ndash;2100 (its monthly files use 2071&ndash;2100, not 2081&ndash;2100), as a change from the AdaptWest 1991&ndash;2020 normals. Because it is one ensemble product it is compared with the mean of this analysis's likely-sensitivity models rather than model by model.</li>
+    </ul>
+    <p>The comparison uses the models a source shares with this analysis; where fewer than six are shared (for example an AdaptWest multi-model ensemble) the source's own multi-model mean is compared with the mean of this analysis's likely-sensitivity models. A place is marked <strong>moderate</strong> if the two projected climates differ by 0.5σ or more in its own year-to-year variability (or the best match would move more than 500 km), and <strong>high</strong> if they differ by 1σ or more (or 0.5σ or more with a best match that moves more than 500 km). The worst case over both periods and both scenarios counts for each source, and a place is flagged only when <em>two sources agree</em>: WorldClim measures its changes from a 1970&ndash;2000 baseline, so on its own it would flag about 40% of places for two decades of warming that are not a resolution effect at all (a place with a single source is judged by that source). Only &ldquo;high&rdquo; is shown on the page, as one line under the answer that names the source(s) that flagged it; the full list, with each source's own flag, is in <code>data/nexcheck.json</code>.</p>
+    <p><strong>Limits.</strong> This tests one thing: whether the answer would change with a finer version of the same models' changes. It is not a check against observations and not a validation of the method. The NEX-GDDP / native-grid comparison covers the scenarios processed for both; WorldClim and AdaptWest cover SSP2-4.5 and SSP5-8.5 only, and the worst case over all of them is shown for every scenario. NEX-GDDP has one simulation per model, while the native-grid changes average up to three simulations per model, so part of a difference can be internal variability rather than resolution. The sources use different baselines (WorldClim 1970&ndash;2000, AdaptWest 1991&ndash;2020, this analysis 1995&ndash;2014): a WorldClim change therefore includes some warming that has already happened (a few tenths of a degree), which pushes its difference slightly above zero; humidity is held at constant relative humidity for WorldClim and AdaptWest. Places without data in a source's grid are not tested by it. Taking the worst case over sources makes the flag deliberately cautious. The thresholds are judgement calls and are set in <code>config.toml</code>.</p>
+    <p class="small">Fick, S. E., &amp; Hijmans, R. J. (2017). WorldClim 2: new 1-km spatial resolution climate surfaces for global land areas. <em>International Journal of Climatology, 37</em>(12), 4302&ndash;4315. <a href="https://doi.org/10.1002/joc.5086">https://doi.org/10.1002/joc.5086</a>. Wang, T., Hamann, A., Spittlehouse, D., &amp; Carroll, C. (2016). Locally downscaled and spatially customizable climate data for historical and future periods for North America. <em>PLoS ONE, 11</em>(6), e0156720. <a href="https://doi.org/10.1371/journal.pone.0156720">https://doi.org/10.1371/journal.pone.0156720</a>. AdaptWest Project (2022). Gridded current and projected climate data for North America at 1 km resolution, interpolated using the ClimateNA v7.30 software. <a href="https://adaptwest.databasin.org">https://adaptwest.databasin.org</a></p>
+  </section>
+  <!-- END nexcheck -->
+
   <section id="features">
     <h2>Climate type, hardiness zone and growing season</h2>
     <p>These are computed from monthly normals by the same rules for a place today, the same place in the future (the ensemble-mean monthly climate) and every cell of both comparison grids, so the three columns in the comparison are always like with like.</p>
@@ -439,44 +500,67 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
   </section>
   <!-- END extreme-days -->
 
-  <!-- BEGIN nexcheck -->
-  <section id="resolution">
-    <h2>Sensitivity to model resolution</h2>
-    <p>Climate models run on grids of roughly 100 to 250 km, so a place's projected change is really the change of one large grid cell. Three independent downscaled versions of the same CMIP6 changes exist, and once a year we rebuild each place's future climate a second time with each of them (temperature added, precipitation scaled, humidity scaled where the source has it, ratios limited to the same ranges as the main analysis) and compare it with the projection used on the page:</p>
-    <ul>
-      <li><strong>NASA NEX-GDDP-CMIP6</strong> (Thrasher et al. 2022), 25 km, bias-corrected, the same monthly changes as the extreme-day counts (also humidity). Since the main projection now uses these changes wherever they exist (see Projected climate), comparing them with the page would compare a source with itself; the check instead compares the page's projection with the same models' <em>native-grid</em> CMIP6 changes, which keeps measuring how much the answer depends on resolution. Before the NEX-GDDP changes are available it compares NEX-GDDP with the native-grid projection directly.</li>
-      <li><strong>WorldClim 2.1 CMIP6</strong> (Fick &amp; Hijmans 2017), global, statistically downscaled monthly minimum and maximum temperature and precipitation for many models. We use the change from its own 1970&ndash;2000 baseline to 2041&ndash;2060 and 2081&ndash;2100 (temperature difference, precipitation ratio).</li>
-      <li><strong>AdaptWest downscaled CMIP6</strong> (Wang et al. 2016 method; AdaptWest Project 2022), 1 km, North America only: the project's 8-model ensemble mean for 2041&ndash;2060 and 2071&ndash;2100 (its monthly files use 2071&ndash;2100, not 2081&ndash;2100), as a change from the AdaptWest 1991&ndash;2020 normals. Because it is one ensemble product it is compared with the mean of this analysis's likely-sensitivity models rather than model by model.</li>
-    </ul>
-    <p>The comparison uses the models a source shares with this analysis; where fewer than six are shared (for example an AdaptWest multi-model ensemble) the source's own multi-model mean is compared with the mean of this analysis's likely-sensitivity models. A place is marked <strong>moderate</strong> if the two projected climates differ by 0.5σ or more in its own year-to-year variability (or the best match would move more than 500 km), and <strong>high</strong> if they differ by 1σ or more (or 0.5σ or more with a best match that moves more than 500 km). The worst case over both periods and both scenarios counts for each source, and a place is flagged only when <em>two sources agree</em>: WorldClim measures its changes from a 1970&ndash;2000 baseline, so on its own it would flag about 40% of places for two decades of warming that are not a resolution effect at all (a place with a single source is judged by that source). Only &ldquo;high&rdquo; is shown on the page, as one line under the answer that names the source(s) that flagged it; the full list, with each source's own flag, is in <code>data/nexcheck.json</code>.</p>
-    <p><strong>Limits.</strong> This tests one thing: whether the answer would change with a finer version of the same models' changes. It is not a check against observations and not a validation of the method. The NEX-GDDP / native-grid comparison covers the scenarios processed for both; WorldClim and AdaptWest cover SSP2-4.5 and SSP5-8.5 only, and the worst case over all of them is shown for every scenario. NEX-GDDP has one simulation per model, while the native-grid changes average up to three simulations per model, so part of a difference can be internal variability rather than resolution. The sources use different baselines (WorldClim 1970&ndash;2000, AdaptWest 1991&ndash;2020, this analysis 1995&ndash;2014): a WorldClim change therefore includes some warming that has already happened (a few tenths of a degree), which pushes its difference slightly above zero; humidity is held at constant relative humidity for WorldClim and AdaptWest. Places without data in a source's grid are not tested by it. Taking the worst case over sources makes the flag deliberately cautious. The thresholds are judgement calls and are set in <code>config.toml</code>.</p>
-    <p class="small">Fick, S. E., &amp; Hijmans, R. J. (2017). WorldClim 2: new 1-km spatial resolution climate surfaces for global land areas. <em>International Journal of Climatology, 37</em>(12), 4302&ndash;4315. <a href="https://doi.org/10.1002/joc.5086">https://doi.org/10.1002/joc.5086</a>. Wang, T., Hamann, A., Spittlehouse, D., &amp; Carroll, C. (2016). Locally downscaled and spatially customizable climate data for historical and future periods for North America. <em>PLoS ONE, 11</em>(6), e0156720. <a href="https://doi.org/10.1371/journal.pone.0156720">https://doi.org/10.1371/journal.pone.0156720</a>. AdaptWest Project (2022). Gridded current and projected climate data for North America at 1 km resolution, interpolated using the ClimateNA v7.30 software. <a href="https://adaptwest.databasin.org">https://adaptwest.databasin.org</a></p>
-  </section>
-  <!-- END nexcheck -->
+  <div class="part" id="part-organisms"><span>Part 2</span><h2>Organisms: where the climate suits them</h2><p>Maps of projected climate suitability for plants, animals and fungi: what is shown, how it is modelled, and how much to trust each map.</p></div>
 
-  <section id="updates">
-    <h2>Updates and versions</h2>
-    <p>The data are rebuilt from the original sources each year by a public, automated pipeline (source code in the project repository). Each rebuild is checked before release: counts of places, grid cells and models; a self-check that today's climate at each place finds itself (current median 0.00σ); and a comparison with the previous release, flagging for review if more than 10% of best matches move over 500 km or the median change in σ exceeds 0.25. A browser test loads the page with the new data. Nothing is published until the rebuild is reviewed. A monthly check watches for a new TerraClimate year, corrected or withdrawn CMIP6 datasets and the arrival of CMIP7 projections. This page describes method version 10.0, data version 2026-10-01, using 24 models.</p>
+  <div class="note"><strong>Not a forecast.</strong> Every future organism map is <em>projected climate suitability</em>: where the climate may suit an organism according to a statistical model. Land use, soils, other species and chance matter too. Educational use only; not for planting, farming or land decisions.</div>
+
+  <section id="o-what">
+    <h2>What the maps show</h2>
+<p>For each organism the page shows the places where the model finds the climate suitable <em>now</em> (1991&ndash;2020), <em>in the future</em> (2041&ndash;2060 or 2081&ndash;2100, under the moderate SSP2-4.5 or the high-emissions SSP5-8.5 scenario), and the <em>change</em>: land that is suitable now but not later (lost, hatched orange), suitable in both (kept, grey) or suitable only later (gained, dotted blue). Colour is never the only cue: lost is hatched and gained is dotted. Suitability is drawn in three classes, not as a smooth probability.</p>
+<p>The summary gives the area with suitable climate, its change, and how far the centre of that area moves. The centre shift is the movement of an area-weighted average position; it can move even when no single place does.</p>
+  </section>
+  <section id="o-data">
+    <h2>Data</h2>
+<ul>
+<li><strong>Where the organism has been recorded:</strong> GBIF occurrence records with a CC0 or CC-BY licence, cleaned and thinned to one record per 0.125&deg; cell (about 14 km) for counting; each organism cites the download DOI (table below). Records with other licences are not used. Organisms with fewer than 100 such cells are not modelled.</li>
+<li><strong>Native range:</strong> records are restricted to where the organism is native, using Kew&rsquo;s World Checklist of Vascular Plants for plants and curated range polygons for animals. For crops this restriction does not apply.</li>
+<li><strong>Present climate:</strong> TerraClimate, 1991&ndash;2020, on a grid of 1/24&deg; (about 4.6 km). Ten candidate measures: annual mean temperature, temperature range and seasonality, warmest-month and coldest-month temperature, annual precipitation, precipitation seasonality, driest-quarter precipitation, growing degree-days, climatic water deficit and actual evapotranspiration.</li>
+<li><strong>Future climate:</strong> the same present-day climate plus the change in each of 14 climate models from NASA&rsquo;s NEX-GDDP-CMIP6 for SSP2-4.5 and SSP5-8.5.</li>
+<li><strong>Checks against independent data:</strong> the North American Breeding Bird Survey (for birds), and, for trees, comparison with the US Forest Service&rsquo;s published tree projections (RDS-2024-0020).</li>
+</ul>
+  </section>
+  <section id="o-model">
+    <h2>The model</h2>
+<p>For each organism, a gradient-boosted tree model (LightGBM) learns how the recorded places differ in climate from a sample of background places. The background is drawn where observers of the same group of organisms (for example, all birds) have recorded things, which corrects part of the bias towards well-visited places. At most five climate measures are kept, chosen in an order based on the organism&rsquo;s ecology, and a measure is dropped when it is strongly correlated (above 0.7) with one already kept. A second, simpler model (a smooth additive model) is run as a check; when the two disagree strongly about the area change the organism is marked <em>low confidence</em>.</p>
+<p>&ldquo;Suitable&rdquo; means the model score is above a threshold set so that 95% of held-out records fall inside. The model is projected under each of 14 climate models and the median is shown; the share of models that agree can be shaded on the map (dotted where fewer than 3 in 4 agree).</p>
+<p><strong>Migratory birds</strong> use the breeding-season fit: only records from the breeding months (May to July in the north) and a breeding-season native range. Their pages say so. Resident birds, and animals such as the monarch, use all records.</p>
+<p><strong>Crops</strong> are shown where the climate is like where the crop is <em>recorded</em>, in the exact wording on each page. Unless the records are verified as cultivated (for the wine grape they are not), this is not a statement about where the crop can be grown.</p>
+  </section>
+  <section id="o-dispersal">
+    <h2>Dispersal: three bounds</h2>
+<p>An organism cannot occupy all newly suitable land. Each future map can be read with three bounds: <strong>unlimited</strong> (any suitable area counts), <strong>limited</strong> (new area counts only within a reach of today&rsquo;s range) and <strong>none</strong> (only the part of today&rsquo;s range that stays suitable). The limited reach comes from a rule of thumb by group: about 15 km per decade for trees, 10 for crops and reptiles, 40 for insects and ticks, 50 for mammals and 100 for birds. These distances are <strong>uncalibrated</strong> and probably uncertain by a factor of about 10. The truth for a given organism usually lies between the limited and unlimited bounds, or below none if the range retreats faster than it can shift.</p>
+  </section>
+  <section id="o-tiers">
+    <h2>How much to trust a map: two checks</h2>
+<p>Every organism shows two plain checks, because &ldquo;is today&rsquo;s map right?&rdquo; and &ldquo;can the future map be trusted?&rdquo; are different questions.</p>
+<dl>
+<dt>Today&rsquo;s map: checked</dt><dd>The model&rsquo;s map of <em>today&rsquo;s</em> suitable climate was checked against an independent survey it had never seen (so far, the Breeding Bird Survey for birds and US Forest Inventory plots for trees: discrimination AUC at least 0.7 and best-threshold TSS at least 0.4). Internally this is Tier A.</dd>
+<dt>Today&rsquo;s map: fits the records</dt><dd>Checked by spatial-block cross-validation: the model is trained on some regions and tested on others. This is a fair test of skill in new places, but no independent survey exists for most organisms, so it is not checked against one. Internally this is Tier B. It is the normal case, not a warning.</dd>
+<dt>Today&rsquo;s map: looser fit</dt><dd>As above, but the fit is weaker than we would like (for example, discrimination below 0.7 or much of the suitable area far from any record). The reason is on the organism&rsquo;s page.</dd>
+<dt>Not shown</dt><dd>Organisms below the skill or range-check gates are not published (Tier C).</dd>
+</dl>
+<p>The page also states the cross-validation kind: &ldquo;presence against background&rdquo; compares records with a sample of background places, which is a weaker test than &ldquo;presence and absence&rdquo;.</p>
+<p>The second check, <strong>Future map</strong>, is explained next. The future map always shows where climate may suit the organism, never a forecast of where it will live.</p>
+  </section>
+  <section id="o-shifts">
+    <h2>Range shifts: pass, fail, untested</h2>
+<p>The Future map check records whether we could show that models like this one can predict <em>real</em> range changes. We fitted the model to records from an early period, asked it where the organism should be found in a later period, and compared that with surveys of what actually happened.</p>
+<ul>
+<li><strong>Fail</strong> (all birds tested): the model locates today&rsquo;s ranges well, but for the real movements between the two periods the direction of change was no better than chance. In plain words: the model describes where the climate suits a bird today, but we could not show it knows <em>where the bird will go</em>. Treat the future map as a map of climate, and the Today&rsquo;s map check as a statement about today only.</li>
+<li><strong>Untested</strong> (trees, insects and others): there was not enough survey data on real change to run the test (for example, only 5 trees against a minimum of 20). Adult trees also lag the climate, so absence of change is expected even when the climate has moved. This is not a pass.</li>
+<li><strong>Pass</strong>: the model reproduced observed change in the test. No organism has passed yet.</li>
+</ul>
+  </section>
+  <section id="o-withheld">
+    <h2>Withheld numbers</h2>
+<p>When more than 15% of the area projected to be suitable lies in a climate that nothing in the training data resembles (a &ldquo;novel climate&rdquo;, found with the MESS rule), the model would be extrapolating beyond what it has seen. The page then shows the numbers as <strong>withheld</strong>, with the reason and the share of novel climate. The map is still drawn, with those places marked by diagonal lines, so you can see where the problem lies.</p>
   </section>
 
-  <section id="tropics">
-    <h2>Why many tropical places have no match</h2>
-    <p>Places near the equator are far more likely to have no present-day match. Around 2100 under SSP2-4.5 (models in the likely range):</p>
-    <div class="tablewrap"><table class="data">
-      <thead><tr><th>Latitude</th><th>Places</th><th>No match (4σ or more)</th><th>Partial or no match (2σ or more)</th></tr></thead>
-      <tbody><tr><td>0–15°</td><td>546</td><td>64%</td><td>83%</td></tr><tr><td>15–25°</td><td>336</td><td>47%</td><td>67%</td></tr><tr><td>25–35°</td><td>551</td><td>15%</td><td>40%</td></tr><tr><td>35–45°</td><td>629</td><td>2%</td><td>15%</td></tr><tr><td>45° and poleward</td><td>323</td><td>2%</td><td>7%</td></tr></tbody>
-    </table></div>
-    <p>This is mainly physics, not a gap in the data or an effect of wealth: rich tropical and desert cities such as Singapore, Dubai and Darwin have no match either. Two things combine.</p>
-    <ul>
-      <li><strong>There is nowhere warmer to point to.</strong> A mid-latitude city's future climate usually exists today somewhere closer to the equator. The hottest places on Earth have no hotter place to match, so their future climates are new to the planet. Williams et al. (2007) found such novel climates concentrated in the tropics and subtropics.</li>
-      <li><strong>Tropical climates vary little from year to year.</strong> σ measures change against a place's own normal swings, so a given warming stands out far more where years are steady. This is why tropical climates are expected to leave their historical range first (Mora et al. 2013). It also means the change is large relative to what local ecosystems and people are adapted to.</li>
-    </ul>
-    <p>Data play a smaller part. Where weather stations are sparse, TerraClimate can understate year-to-year variability, which inflates σ; the variability floor (above) limits this, but some tropical results are more uncertain than mid-latitude ones.</p>
-    <p>The pattern also has a moral dimension. The places facing climates with no present-day equivalent are largely those that have contributed least to the emissions causing the change (King &amp; Harrington 2018).</p>
-  </section>
+  <div class="part" id="part-reference"><span>Part 3</span><h2>Limitations, data and credits</h2><p>What both halves leave out, every dataset and credit, the software, version history and references.</p></div>
 
   <section id="limits">
     <h2>Limitations</h2>
+    <h3 id="limits-places">Climate twins (places)</h3>
     <ul>
       <li><strong>No extremes.</strong> Heat waves, heat index, cold snaps, hurricanes, wildfire and snowfall are not included. Two places can match on these fourteen measures and still differ in ways that matter to people.</li>
       <li><strong>Estimated features.</strong> Hardiness zones and growing seasons are statistical estimates from monthly data, calibrated in North America only.</li>
@@ -487,15 +571,22 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
       <li><strong>Mixed variability sources.</strong> Places outside the contiguous United States use TerraClimate for year-to-year variability, which is coarser than PRISM.</li>
       <li><strong>Scenarios are not forecasts.</strong> SSP5-8.5 in particular is now widely considered implausible for this century. Each arrow is a way to picture a scenario, not a prediction for a specific town.</li>
     </ul>
-  </section>
-
-  <section id="software">
-    <h2>Software</h2>
-    <p>Data processing uses Python with NumPy, SciPy, pandas, xarray (reading the CMIP6 Zarr stores), rasterio, pyproj and Shapely. The interactive map uses MapLibre GL JS 5.24 with OpenFreeMap vector tiles; the heat layer, distances and arrows are computed in the browser. The North American grid uses an ellipsoidal Lambert azimuthal equal-area projection implemented in JavaScript and checked against pyproj to better than 10<sup>−7</sup> m.</p>
+    <h3 id="limits-organisms">Organism maps</h3>
+<ul>
+<li><strong>Dispersal.</strong> See above: the three bounds are rules of thumb, not predictions. Barriers, habitat loss and human movement are not modelled.</li>
+<li><strong>Non-climatic limits.</strong> Soils, land use, fire, water bodies, competitors, predators, pathogens, pollinators and host species are not in the model. A place can be climatically suitable and have none of what the organism needs. The native-range check catches only some of this.</li>
+<li><strong>Migratory handling.</strong> Breeding-season fits describe the breeding range only. Winter ranges, stopover places and migration routes are not modelled. For the barn swallow the native mask has no South America, so its wintering range there is absent. Month information is missing for some records and they are left out of breeding-season fits. The background still reflects year-round observer effort.</li>
+<li><strong>Precipitation sensitivity.</strong> The change in rainfall in the future climate data is less well validated than the change in temperature. In a test on two trees, setting the rainfall change to zero changed the 2081&ndash;2100 area change by up to 17 percentage points, and the centre shift by only 10 to 50 km. Read area changes for organisms that depend on rainfall or water deficit with that in mind; the direction and size of the centre shift are more robust.</li>
+<li><strong>Agreement with other models.</strong> For trees, the size and direction of the centre shift are similar to the US Forest Service&rsquo;s projections, but not identical. For quaking aspen our shift is about half the size and the area change is smaller (about +5% against +35 to +59%). These are two models agreeing or disagreeing, not tests against what happened.</li>
+<li><strong>Resolution.</strong> Cells are about 4.6 km. Mountains, coasts and small ranges are coarsely represented, and narrow-range organisms are less reliable.</li>
+<li><strong>Records.</strong> Only CC0 and CC-BY records are used, which removes a large share of observations of some organisms (for example about half for the monarch and tick in earlier tests). Records reflect where people look.</li>
+<li><strong>Thresholds.</strong> Several limits (novelty 15%, range-check and agreement limits, the dispersal distances) are first values that have not been calibrated.</li>
+</ul>
   </section>
 
   <section id="data">
     <h2>Data and attribution</h2>
+    <h3 id="data-places">Climate twins (places)</h3>
     <div class="tw"><table class="stack">
       <thead><tr><th>Dataset</th><th>Used for</th><th>Resolution, period</th><th>Credit and terms</th></tr></thead>
       <tbody>
@@ -514,6 +605,29 @@ footer.end{border-top:1px solid var(--rule);padding-top:18px;font-size:.88rem;co
       </tbody>
     </table></div>
     <p><strong>Acknowledgements.</strong> We acknowledge the World Climate Research Programme, which, through its Working Group on Coupled Modelling, coordinated and promoted CMIP6. We thank the climate modelling groups for producing and making available their model output, the Earth System Grid Federation (ESGF) for archiving the data and providing access, and the multiple funding agencies who support CMIP6 and ESGF. Dataset citations for individual CMIP6 models are available from the <a href="https://cmip6cite.wdc-climate.de/" rel="noopener">CMIP6 Citation Service</a>. We also thank the Pangeo project and Google Cloud Public Datasets for the analysis-ready CMIP6 archive, the AdaptWest Project, the Climatology Lab at the University of California, Merced, and the PRISM Climate Group at Oregon State University.</p>
+    <h3 id="credits-organisms">Organism maps</h3>
+<ul>
+<li><strong>GBIF.org</strong> occurrence downloads (CC0 and CC-BY records), each cited by DOI in the table below. Target-group sampling grids: birds <a href="https://doi.org/10.15468/dl.spdj4n">10.15468/dl.spdj4n</a>, mammals <a href="https://doi.org/10.15468/dl.7xq6mb">10.15468/dl.7xq6mb</a>, insects and arachnids <a href="https://doi.org/10.15468/dl.at3mx7">10.15468/dl.at3mx7</a>, plants <a href="https://doi.org/10.15468/dl.qqzta8">10.15468/dl.qqzta8</a> (GBIF.org, 10 October 2026). Thanks to the many data publishers and observers behind these records.</li>
+<li><strong>TerraClimate</strong> (Abatzoglou et al. 2018, Scientific Data 5:170191, <a href="https://doi.org/10.1038/sdata.2017.191">doi:10.1038/sdata.2017.191</a>).</li>
+<li><strong>NEX-GDDP-CMIP6</strong> (NASA; Thrasher et al. 2022, Scientific Data 9:262, <a href="https://doi.org/10.1038/s41597-022-01393-4">doi:10.1038/s41597-022-01393-4</a>), and the modelling groups that produced the CMIP6 simulations.</li>
+<li><strong>World Checklist of Vascular Plants (WCVP)</strong>, Royal Botanic Gardens, Kew, native ranges of plants (via <a href="https://powo.science.kew.org/">Plants of the World Online</a>; CC BY 3.0). No DOI is cited because the one we first had did not resolve.</li>
+<li><strong>North American Breeding Bird Survey</strong>, USGS, 2025 release (<a href="https://doi.org/10.5066/P14SNUV4">doi:10.5066/P14SNUV4</a>), used to check the bird models, with thanks to the volunteers who run the routes.</li>
+<li><strong>US Forest Service</strong> tree projections used for comparison: <a href="https://doi.org/10.2737/RDS-2024-0020">doi:10.2737/RDS-2024-0020</a>.</li>
+<li>Maps are drawn with MapLibre GL; the base map is from OpenFreeMap and OpenStreetMap contributors.</li>
+</ul>
+<p class="small">Organisms are shown as an outline of the climate model, with no photographs. Code and data tables are in the project repository.</p>
+<h3>GBIF download DOI for each organism</h3>
+<div class="tw scroll"><table><caption class="small" style="text-align:left;padding:6px 8px">Loaded from the organism list.</caption><thead><tr><th>Organism</th><th>Group</th><th>Tier</th><th>Fit</th><th>GBIF download</th></tr></thead><tbody id="doirows"><tr><td colspan="5">Loading&hellip;</td></tr></tbody></table></div>
+  </section>
+
+  <section id="software">
+    <h2>Software</h2>
+    <p>Data processing uses Python with NumPy, SciPy, pandas, xarray (reading the CMIP6 Zarr stores), rasterio, pyproj and Shapely. The interactive map uses MapLibre GL JS 5.24 with OpenFreeMap vector tiles; the heat layer, distances and arrows are computed in the browser. The North American grid uses an ellipsoidal Lambert azimuthal equal-area projection implemented in JavaScript and checked against pyproj to better than 10<sup>−7</sup> m.</p>
+  </section>
+
+  <section id="updates">
+    <h2>Updates and versions</h2>
+    <p>The data are rebuilt from the original sources each year by a public, automated pipeline (source code in the project repository). Each rebuild is checked before release: counts of places, grid cells and models; a self-check that today's climate at each place finds itself (current median 0.00σ); and a comparison with the previous release, flagging for review if more than 10% of best matches move over 500 km or the median change in σ exceeds 0.25. A browser test loads the page with the new data. Nothing is published until the rebuild is reviewed. A monthly check watches for a new TerraClimate year, corrected or withdrawn CMIP6 datasets and the arrival of CMIP7 projections. This page describes method version 10.0, data version 2026-10-01, using 24 models.</p>
   </section>
 
   <section id="refs">
@@ -616,12 +730,24 @@ btn.addEventListener("click",()=>{dark=!dark;try{localStorage.setItem(KEY,dark?"
 sys.addEventListener("change",e=>{if(!saved()){dark=e.matches;paint(true);}});
 window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){dark=e.newValue==="dark";paint(false);}});
 
+// ---- contents: collapsed on narrow screens, opens on tap, closes after choosing a section
+(()=>{const n=document.querySelector("nav.toc"),h=n&&n.querySelector("h2");if(!h)return;h.tabIndex=0;h.setAttribute("role","button");
+  const narrow=matchMedia("(max-width:900px)"),set=o=>{n.classList.toggle("open",o);h.setAttribute("aria-expanded",String(o));};
+  set(false);h.addEventListener("click",()=>{if(narrow.matches)set(!n.classList.contains("open"));});
+  h.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&narrow.matches){e.preventDefault();set(!n.classList.contains("open"));}});
+  n.addEventListener("click",e=>{if(narrow.matches&&e.target.closest("a"))set(false);});})();
 // ---- contents: mark the section being read
 const links=[...document.querySelectorAll("nav.toc a")],secs=links.map(a=>document.querySelector(a.getAttribute("href")));
 if("IntersectionObserver" in window){const vis=new Map();
   const io=new IntersectionObserver(es=>{es.forEach(e=>vis.set(e.target,e.isIntersecting));
     const first=secs.find(s=>vis.get(s));if(first)links.forEach((a,i)=>a.classList.toggle("on",secs[i]===first));},{rootMargin:"-10% 0px -70% 0px"});
   secs.forEach(s=>s&&io.observe(s));}
+</script>
+<script>
+(async()=>{const m=document.querySelector('meta[name="species-data-base"]');const base=new URL(m.content,location.href).href.replace(/\/?$/,"/");const tb=document.getElementById("doirows");
+const G={tree:"Trees",bird:"Birds",mammal:"Mammals",insect_arachnid:"Insects and ticks",wild_plant:"Wild plants",crop:"Crops",reptile:"Reptiles and amphibians",amphibian:"Reptiles and amphibians",fish:"Fish"},esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+try{const ix=await (await fetch(base+"index.json")).json();tb.innerHTML=ix.species.map(s=>`<tr><td>${esc(s.name)} <i>(${esc(s.sci)})</i></td><td>${esc(G[s.group]||(s.group[0].toUpperCase()+s.group.slice(1).replace(/_/g," ")))}</td><td>${s.tier}</td><td>${s.season?"breeding season":"all year"}</td><td>${(s.dois||[]).map(d=>`<a href="${esc(d)}">${esc(d.replace("https://doi.org/","doi:"))}</a>`).join(", ")||"n/a"}</td></tr>`).join("");}
+catch(e){tb.innerHTML='<tr><td colspan="5">The organism list could not be loaded.</td></tr>';}})();
 </script>
 </body>
 </html>

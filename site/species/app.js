@@ -15,7 +15,7 @@ const gname = g => GROUPS[g] || (g ? g[0].toUpperCase() + g.slice(1).replace(/_/
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const phone = () => matchMedia("(max-width:820px) and (orientation:portrait)").matches;
 let ST = null, INFO = {}, PL = null, map = null, gl = null, glr = null, useLand = false, COL = null;
-const S = { sp: null, ssp: "ssp245", per: "2050", view: "change", disp: "unlimited", agree: false, novel: false, group: "All", q: "", figview: "abs", place: 0 };
+const S = { sp: null, ssp: "ssp245", per: "2050", view: "change", disp: "unlimited", agree: false, novel: false, path: [], q: "", figview: "abs", place: 0 };
 const SHOWN = { sp: null, ssp: null };
 const T = {};                                   // timings for tests and the page-load report
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -66,16 +66,26 @@ function entry(f, level, bx, by) {
   return e;
 }
 function levelFor() { const wpx = 512 * Math.pow(2, map.getZoom()); for (const f of LEVELS) if (NX / f >= wpx) return f; return 1; }
-function visible(f) {
-  const b = map.getBounds(), cells = NX / f, rows = NY / f, out = [];
-  const x0 = Math.max(0, Math.floor((b.getWest() + 180) / 360 * cells / BS)), x1 = Math.min(Math.ceil(cells / BS) - 1, Math.floor((Math.min(180, b.getEast()) + 180) / 360 * cells / BS));
+function visible(f, wl, el) {          // blocks inside the view; wl/el: west and east longitude (default: the map's own, which can run past +-180 on a repeated world)
+  const b = map.getBounds(), cells = NX / f, rows = NY / f, out = [], W = wl == null ? b.getWest() : wl, E = el == null ? b.getEast() : el;
+  const x0 = Math.max(0, Math.floor((W + 180) / 360 * cells / BS)), x1 = Math.min(Math.ceil(cells / BS) - 1, Math.floor((Math.min(180, E) + 180) / 360 * cells / BS));
   const y0 = Math.max(0, Math.floor((90 - Math.min(85, b.getNorth())) / 180 * rows / BS)), y1 = Math.min(Math.ceil(rows / BS) - 1, Math.floor((90 - Math.max(-85, b.getSouth())) / 180 * rows / BS));
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) out.push([x, y]);
   return out;
 }
+function worldCopies() {              // the repeated worlds in view: [k, west, east] with the longitudes shifted into world 0
+  const b = map.getBounds(), W = b.getWest(), E = b.getEast(), out = [];
+  for (let k = Math.floor((W + 180) / 360); k <= Math.floor((E + 180) / 360); k++) out.push([k, W - 360 * k, E - 360 * k]);
+  return out;
+}
+function visibleAll(f) {
+  const seen = new Set(), out = [];
+  for (const [, w, e] of worldCopies()) for (const [x, y] of visible(f, w, e)) { const q = x + "," + y; if (!seen.has(q)) { seen.add(q); out.push([x, y]); } }
+  return out;
+}
 const merc = lat => 0.5 - Math.log(Math.tan(Math.PI / 4 + Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 360)) / (2 * Math.PI);
 const VS = `#version 300 es
-in vec2 a; uniform mat4 uM; out vec2 vm; void main(){ vm=a; gl_Position=uM*vec4(a,0.0,1.0); }`;
+in vec2 a; uniform mat4 uM; uniform float uOff; out vec2 vm; void main(){ vm=a; gl_Position=uM*vec4(a.x+uOff,a.y,0.0,1.0); }`;
 /* kinds: 0 land mask, 1 species (T0 = scenario file: S1 r, S2 g, agreement b, novel a; T1 = base file: now r), 2 novel-climate lines (T0 = scenario file) */
 const FS = `#version 300 es
 precision highp float; precision highp int;
@@ -115,29 +125,31 @@ function initGL(g) {
   const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(p);
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
   glr = { p, buf: gl.createBuffer(), u: {} };
-  for (const n of ["uM", "uT0", "uT1", "uBlk", "uKind", "uView", "uPer", "uDisp", "uAgree", "uPat", "uDpr", "uLand", "uLost", "uKept", "uGain", "uR1", "uR2", "uR3", "uNov", "uDot"]) glr.u[n] = gl.getUniformLocation(p, n);
+  for (const n of ["uM", "uOff", "uT0", "uT1", "uBlk", "uKind", "uView", "uPer", "uDisp", "uAgree", "uPat", "uDpr", "uLand", "uLost", "uKept", "uGain", "uR1", "uR2", "uR3", "uNov", "uDot"]) glr.u[n] = gl.getUniformLocation(p, n);
   glr.a = gl.getAttribLocation(p, "a");
   zeroTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, zeroTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
 }
 const tex = e => e && e.tex ? e.tex : zeroTex;
 function setTex(unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); }
 function colours() { const cs = getComputedStyle(document.documentElement), g = n => hex(cs.getPropertyValue(n)); return { uLand: g("--land"), uLost: g("--lost"), uKept: g("--kept"), uGain: g("--gained"), uR1: g("--r1"), uR2: g("--r2"), uR3: g("--r3"), uNov: g("--nov"), uDot: g("--dot") }; }
-function leaves(fs, f, bx, by, seen, out) {
+function leaves(fs, f, bx, by, o, out) {       // o = the block at the wanted level this draw stands in for: a coarser fallback is clipped to it, so nothing overlaps
   const need = fs.map(x => entry(x, f, bx, by));
-  if (need.every(e => e.st === 1) || f === 8) { const k = f + "|" + bx + "|" + by; if (!seen.has(k)) { seen.add(k); out.push([f, bx, by, need]); } return; }
-  leaves(fs, f * 2, bx >> 1, by >> 1, seen, out);
+  if (need.every(e => e.st === 1) || f === 8) { out.push([f, bx, by, need, o]); return; }
+  leaves(fs, f * 2, bx >> 1, by >> 1, o, out);
 }
 function drawPass(kind, fs, f, blocks) {
-  const u = glr.u, seen = new Set(), out = [];
-  for (const [bx, by] of blocks) leaves(fs, f, bx, by, seen, out);
-  for (const [lf, bx, by, es] of out) {
+  const u = glr.u, out = [];
+  for (const [bx, by] of blocks) leaves(fs, f, bx, by, [bx, by], out);
+  for (const [lf, bx, by, es, o] of out) {
     if (es.every(e => !e.tex)) continue;
     const dl = lf * 360 / NX, dla = lf * 180 / NY, lon0 = -180 + bx * BS * dl, latT = 90 - by * BS * dla, span = BS * dla;
-    const x0 = (lon0 + 180) / 360, x1 = x0 + BS * dl / 360, y0 = merc(latT), y1 = merc(latT - span);
+    const gl0 = f * 360 / NX, gla0 = f * 180 / NY, ox0 = -180 + o[0] * BS * gl0, oT = 90 - o[1] * BS * gla0, osp = BS * gla0;
+    const x0 = (ox0 + 180) / 360, x1 = x0 + BS * gl0 / 360, y0 = merc(oT), y1 = merc(oT - osp);
+    const bx0 = (lon0 + 180) / 360, bx1 = bx0 + BS * dl / 360;
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x0, y0, x1, y0, x0, y1, x1, y1]), gl.DYNAMIC_DRAW);
     gl.vertexAttribPointer(glr.a, 2, gl.FLOAT, false, 0, 0);
     setTex(0, tex(es[0])); setTex(1, es[1] ? tex(es[1]) : zeroTex);
-    gl.uniform4f(u.uBlk, x0, x1, latT, span); gl.uniform1i(u.uKind, kind);
+    gl.uniform4f(u.uBlk, bx0, bx1, latT, span); gl.uniform1i(u.uKind, kind);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }
@@ -152,9 +164,12 @@ function render(g, args) {
   gl.uniform1i(u.uView, { now: 0, future: 1, change: 2 }[S.view]); gl.uniform1i(u.uPer, S.per === "2050" ? 0 : 1); gl.uniform1i(u.uDisp, MODES.indexOf(S.disp));
   gl.uniform1i(u.uAgree, S.agree ? 1 : 0); gl.uniform1i(u.uPat, map.getZoom() >= 3.2 ? 1 : 0);
   if (!SHOWN.sp && !useLand) return;
-  const f = levelFor(), vis = visible(f), sc = sceneFiles(SHOWN.sp || S.sp, SHOWN.ssp || S.ssp);
-  if (useLand) drawPass(0, [sc.land], f, vis);
-  if (SHOWN.sp) { drawPass(1, [sc.scen, sc.base], f, vis); if (showNovel()) drawPass(2, [sc.scen], f, vis); }
+  const f = levelFor(), sc = sceneFiles(SHOWN.sp || S.sp, SHOWN.ssp || S.ssp);
+  for (const [k, w, e] of worldCopies()) {
+    gl.uniform1f(u.uOff, k); const vis = visible(f, w, e);
+    if (useLand) drawPass(0, [sc.land], f, vis);
+    if (SHOWN.sp) { drawPass(1, [sc.scen, sc.base], f, vis); if (showNovel()) drawPass(2, [sc.scen], f, vis); }
+  }
   window.__drawn = (window.__drawn || 0) + 1;
 }
 let swapToken = 0;
@@ -172,9 +187,9 @@ async function loadScene(sp, ssp) {
   };
   tick(); const timer = setInterval(tick, 400);
   try {
-    for (const fs of [sc.scen, sc.base]) { await fs.ready; for (const [bx, by] of visible(f)) ps.push(entry(fs, f, bx, by).p); const lv = fs.H.levels[fs.level(8)]; for (let y = 0; y < lv.by; y++) for (let x = 0; x < lv.bx; x++) ps.push(entry(fs, 8, x, y).p); }
+    for (const fs of [sc.scen, sc.base]) { await fs.ready; for (const [bx, by] of visibleAll(f)) ps.push(entry(fs, f, bx, by).p); const lv = fs.H.levels[fs.level(8)]; for (let y = 0; y < lv.by; y++) for (let x = 0; x < lv.bx; x++) ps.push(entry(fs, 8, x, y).p); }
     await Promise.race([Promise.all(ps), new Promise(r => setTimeout(r, 8000))]);
-  } catch (e) { clearInterval(timer); if (tok === swapToken) { $("busy").hidden = true; $("live").textContent = "The map files for this species could not be loaded."; $("sp-err").hidden = false; } return; }
+  } catch (e) { clearInterval(timer); if (tok === swapToken) { $("busy").hidden = true; $("live").textContent = "The map files for this organism could not be loaded."; $("sp-err").hidden = false; } return; }
   clearInterval(timer);
   if (tok !== swapToken) return;
   $("sp-err").hidden = true;
@@ -217,29 +232,61 @@ function renderControls() {
   $("disp-d").textContent = i ? dispText() : "";
   $("o-agree").checked = S.agree; $("o-novel").checked = S.novel;
 }
+const TLEVELS = ["kingdom", "group", "order", "family"], TNAME = { kingdom: "kingdom", group: "group", order: "order", family: "family" };
+const KING = { Plantae: "Plants", Animalia: "Animals", Fungi: "Fungi" };
+const tget = (s, lv) => lv === "group" ? gname(s.group) : (s[lv] || "");
+const tlab = (lv, v) => !v ? "Other" : lv === "kingdom" ? (KING[v] || v) : v;
+const inScope = () => ST.species.filter(s => S.path.every(p => tget(s, p.lv) === p.v));
+function nextLevel(list) { for (const lv of TLEVELS) { if (S.path.some(p => p.lv === lv)) continue; if (new Set(list.map(s => tget(s, lv))).size > 1) return lv; } return null; }
+function renderBrowse(scope) {                  // drill down by taxonomy: kingdom, group, order, family
+  const br = $("browse"); if (S.q.trim()) { br.innerHTML = ""; return; }
+  const crumbs = [`<button type="button" class="crumb" data-i="-1">All organisms</button>`, ...S.path.map((p, i) => `<span aria-hidden="true">›</span><button type="button" class="crumb" data-i="${i}">${esc(tlab(p.lv, p.v))}</button>`)].join("");
+  const nl = nextLevel(scope); let kids = "";
+  if (nl) { const m = new Map(); scope.forEach(s => { const v = tget(s, nl); m.set(v, (m.get(v) || 0) + 1); });
+    const items = [...m].sort((a, b) => (a[0] === "") - (b[0] === "") || b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+    kids = `<div class="small">Browse by ${TNAME[nl]}</div><div class="chips">` + items.map(([v, n]) => `<button type="button" data-lv="${nl}" data-v="${esc(v)}">${esc(tlab(nl, v))}<span class="n">${n}</span></button>`).join("") + "</div>"; }
+  br.innerHTML = `<div class="crumbs" aria-label="Where you are in the tree of life">${crumbs}</div>${kids}`;
+  br.querySelectorAll(".crumb").forEach(b => b.addEventListener("click", () => { S.path = S.path.slice(0, +b.dataset.i + 1); renderResults(); }));
+  br.querySelectorAll("[data-lv]").forEach(b => b.addEventListener("click", () => { S.path = [...S.path, { lv: b.dataset.lv, v: b.dataset.v }]; renderResults(); }));
+}
 function renderResults() {
   const q = S.q.trim().toLowerCase(), ul = $("results"); ul.innerHTML = "";
-  const list = ST.species.filter(s => (S.group === "All" || s.group === S.group) && (!q || (s.name + " " + s.sci + " " + gname(s.group)).toLowerCase().includes(q)));
+  const scope = inScope();
+  const list = (q ? ST.species.filter(s => (s.name + " " + s.sci + " " + gname(s.group) + " " + (s.family || "") + " " + (s.order || "")).toLowerCase().includes(q)) : scope)
+    .slice().sort((a, b) => a.name.localeCompare(b.name));
+  renderBrowse(scope);
+  const prev = S.sp;
   list.forEach(s => { const li = document.createElement("li"); li.setAttribute("role", "option"); li.id = "opt-" + s.id; li.tabIndex = -1; li.dataset.id = s.id; li.setAttribute("aria-selected", String(s.id === S.sp));
-    li.innerHTML = `<span>${esc(s.name)}</span><span class="g">${esc(gname(s.group))} · Tier ${esc(s.tier)}</span>`; li.addEventListener("click", () => pick(s.id)); ul.appendChild(li); });
-  if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No species match.</li>';
-  const sel = ul.querySelector('[aria-selected="true"]'); if (sel) ul.scrollTop = Math.max(0, sel.offsetTop - ul.offsetTop - 40);     // the selected species is in view in the list
-  $("chips").innerHTML = ["All", ...new Set(ST.species.map(s => s.group))].map(g => `<button type="button" aria-pressed="${S.group === g}" data-g="${esc(g)}">${esc(g === "All" ? "All groups" : gname(g))}</button>`).join("");
-  $("chips").querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => { S.group = b.dataset.g; renderResults(); }));
+    li.innerHTML = `<span class="nm">${esc(s.name)}</span><span class="sci">${esc(s.sci)}</span><span class="tg">${esc(s.family || gname(s.group))}</span>`; li.addEventListener("click", () => { pick(s.id); const pd = $("pickdet"); if (pd && s.id !== prev) pd.open = false; }); ul.appendChild(li); });
+  if (!list.length) ul.innerHTML = '<li role="option" aria-selected="false" class="muted">No organisms match.</li>';
+  const sel = ul.querySelector('[aria-selected="true"]'); if (sel) ul.scrollTop = Math.max(0, sel.offsetTop - ul.offsetTop - 40);     // the selected organism is in view in the list
 }
-function badge(i) {
-  const a = i.tier === "A";
-  return `<span class="badge ${a ? "q-good" : "q-partial"}"><span aria-hidden="true">${a ? "●●" : "●○"}</span> Tier ${i.tier}</span>`;
+const isFut = f => /check model disagrees/.test(f);       // the engine's soft flags: this one is about the size of the future change, the others about today's map
+function todayCheck(i) {
+  const v = i.validation, own = i.soft_flags.filter(f => !isFut(f));
+  if (i.tier === "A") return { cls: "q-good", ic: "\u25CF", short: "Today's map: checked", long: tierText(i) };
+  const bo = i.skill.boyce, wide = own.length && own.every(f => /lower discrimination/.test(f)) && bo != null && bo >= 0.8;
+  if (wide) return { cls: "q-ok", ic: "\u25CB", short: "Today's map: fits the records", long: `Fits the recorded locations well (Boyce index ${bo.toFixed(2)}). This is a wide-ranging organism: its records resemble much of the background, so the separation score is modest (AUC ${i.skill.auc.toFixed(2)}) however good the model. No independent survey was available to check it against.` };
+  if (i.confidence === "low" && own.length) return { cls: "q-partial", ic: "\u25D0", short: "Today's map: looser fit", long: `Fits the records only loosely: ${own.map(flagText).join("; and ")}. No independent survey was available to check it against.` };
+  return { cls: "q-ok", ic: "\u25CB", short: "Today's map: fits the records", long: `Fits the recorded locations well in cross-validation${i.skill.auc != null ? ` (AUC ${i.skill.auc.toFixed(2)})` : ""}. No independent survey was available to check it against.` };
 }
+function futureCheck(i) {
+  const fl = i.soft_flags.filter(isFut).map(flagText), extra = fl.length ? ` Also, ${fl.join("; and ")}.` : "";
+  if (isWithheld()) return { cls: "q-partial", ic: "\u25D0", short: "Future map: numbers withheld", long: shiftsText(i) + extra };
+  if (i.range_shifts === "pass") return { cls: "q-good", ic: "\u25CF", short: "Future map: change tested \u2713", long: shiftsText(i) + extra };
+  if (i.range_shifts === "fail") return { cls: "q-partial", ic: "\u25D0", short: "Future map: direction unreliable", long: shiftsText(i) + extra };
+  return { cls: "q-ok", ic: "\u25CB", short: "Future map: change untested", long: shiftsText(i) + extra };
+}
+const chip = c => `<span class="badge ${c.cls}"><span aria-hidden="true">${c.ic}</span> ${esc(c.short)}</span>`;
 function tierText(i) {
   const v = i.validation;
-  if (i.tier === "A") return `Present-day skill checked against an independent survey (${KINDS[v && v.kind] || "an independent survey"}${v && v.auc != null ? `; AUC ${v.auc.toFixed(2)}, TSS ${v.tss == null ? "n/a" : v.tss.toFixed(2)}${v.n_presence ? `, ${v.n_presence} presence and ${v.n_absence} absence sites` : ""}` : ""}).`;
+  if (i.tier === "A") return `Checked against an independent survey (${KINDS[v && v.kind] || "an independent survey"}${v && v.auc != null ? `; AUC ${v.auc.toFixed(2)}, TSS ${v.tss == null ? "n/a" : v.tss.toFixed(2)}${v.n_presence ? `, ${v.n_presence} presence and ${v.n_absence} absence sites` : ""}` : ""}).`;
   return "Skill checked by spatial cross-validation only; no independent survey was available to check it against.";
 }
 function shiftsText(i) {
-  if (i.range_shifts === "fail") return "We tested whether models like this one, fitted to earlier decades, could predict where these species actually moved by recent decades. For birds they could not do so reliably. So the future map shows where the climate may suit the species, not where it will be found.";
-  if (i.range_shifts === "pass") return "Models like this one reproduced the range changes observed in our test.";
-  return "There was not enough survey data on real range changes for this species, so this check has not been made.";
+  if (i.range_shifts === "fail") return "We tested whether models like this one, fitted to earlier decades, could predict where these organisms actually moved by recent decades, and they could not do so reliably. So read the future map as where the climate may suit the organism, not where it will be found.";
+  if (i.range_shifts === "pass") return "Models like this one reproduced the range changes observed in our test, so the direction of change shown here is better supported.";
+  return "We could not test this against real range changes (not enough survey data), so read the future map as where the climate may suit the organism, not where it will be found.";
 }
 function flagText(f) {                          // plain words for the engine's soft flags
   let m;
@@ -251,22 +298,21 @@ function flagText(f) {                          // plain words for the engine's 
 function head() {
   const i = I();
   const wh = isWithheld();
-  const bd = `${badge(i)}${i.confidence === "low" ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Low confidence</span>' : ""}${wh ? ' <span class="badge q-low"><span aria-hidden="true">!</span> Numbers withheld</span>' : ""}
-    <span class="badge ${i.range_shifts === "pass" ? "q-good" : i.range_shifts === "fail" ? "q-low" : "q-partial"}"><span aria-hidden="true">${i.range_shifts === "pass" ? "\u2713" : i.range_shifts === "fail" ? "\u2717" : "?"}</span> Range shifts: ${esc(i.range_shifts)}</span>`;
+  const T = todayCheck(i), F = futureCheck(i), bd = chip(T) + " " + chip(F);
   $("sh-badges").innerHTML = bd;                                              // always visible in the phone sheet header
   $("sp-head").innerHTML = `<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
   <p class="badges">${bd}</p>
-  <p class="small tierline">${esc(tierText(i))}${i.confidence === "low" && i.soft_flags.length ? " Low confidence because " + esc(i.soft_flags.map(flagText).join("; and ")) + "." : ""}</p>
+  <dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd></dl>
   ${isWithheld() ? `<p class="note withheld"><strong>Numbers withheld for ${esc(PERLAB())} under ${esc(sspLabel())}:</strong> ${esc(i.withheld[S.ssp + "|" + S.per])}.</p>` : ""}
   <p class="disc">${FLAG}</p><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
   $("sh-title").textContent = i.name;
   const dl = i.dois.map(d => `<a href="${esc(d)}" rel="noopener">${esc(d.replace("https://doi.org/", "doi:"))}</a>`).join(", ") || "none recorded";
-  $("about").innerHTML = `<dl class="facts"><dt>Tier</dt><dd>${i.tier}</dd><dt>Confidence</dt><dd>${esc(i.confidence)}</dd><dt>Cross-validation</dt><dd>${esc(CVK[i.cv_kind] || i.cv_kind || "n/a")}</dd>
+  $("about").innerHTML = `<dl class="facts"><dt>Internal grade</dt><dd>Tier ${i.tier}, ${esc(i.confidence)} confidence</dd><dt>Cross-validation</dt><dd>${esc(CVK[i.cv_kind] || i.cv_kind || "n/a")}</dd>
     <dt>Cross-validation AUC</dt><dd>${i.skill.auc == null ? "n/a" : i.skill.auc.toFixed(2)}</dd><dt>Records (grid cells)</dt><dd>${i.records.cells == null ? "n/a" : i.records.cells.toLocaleString("en")}</dd>
     <dt>Climate variables used</dt><dd>${esc(i.predictors.join(", "))}</dd><dt>Climate models</dt><dd>${i.n_models}</dd><dt>Range-shift test</dt><dd>${esc(i.range_shifts)}</dd></dl>
     <p class="small">${esc(shiftsText(i))}</p>
-    <p class="small">Records: GBIF occurrence download ${dl} (CC0 and CC-BY records only).${i.season ? " Only records from the breeding months (May to July) are used, because the species migrates." : ""}
-    <a href="species-methods.html#tiers">What the tiers mean</a>, <a href="species-methods.html#limits">limitations</a> and <a href="species-methods.html#credits">credits</a>.</p>`;
+    <p class="small">Records: GBIF occurrence download ${dl} (CC0 and CC-BY records only).${i.season ? " Only records from the breeding months (May to July) are used, because the organism migrates." : ""}
+    <a href="methods.html#o-tiers">What the tiers mean</a>, <a href="methods.html#limits-organisms">limitations</a> and <a href="methods.html#credits-organisms">credits</a>.</p>`;
 }
 function bars(rows, max, signed) {
   return rows.map(([lab, v, col, txt]) => {
@@ -290,7 +336,7 @@ function summary() {
   const ch = pct(c.fut, c.now);
   let shift = "";
   if (c.fut <= 0) shift = `<p class="answer">No suitable climate remains under this scenario${S.disp === "none" ? "" : ", even with spreading allowed"}.</p>`;
-  else if (c.cok === false) shift = `<p class="answer"><strong>Centre of the range: not meaningful</strong> for a range spread over several regions (the average position falls outside the area where the species has suitable climate).</p>`;
+  else if (c.cok === false) shift = `<p class="answer"><strong>Centre of the range: not meaningful</strong> for a range spread over several regions (the average position falls outside the area where the organism has suitable climate).</p>`;
   else if (c.shift_km < 40) shift = `<div class="shift"><div><strong>The centre of the range hardly moves</strong> (${Math.round(c.shift_km)} km).</div></div>`;
   else shift = `<div class="shift">${arrowSvg(c.bearing)}<div><strong>Centre of the range moves about ${Math.round(c.shift_km / 10) * 10} km ${compass(c.bearing)}.</strong><p class="kicker">From ${c.c0[0].toFixed(1)}°, ${c.c0[1].toFixed(1)}° to ${c.c1[0].toFixed(1)}°, ${c.c1[1].toFixed(1)}° (area-weighted centre of the suitable climate).</p></div></div>`;
   const maxA = Math.max(c.now, c.fut, 1), maxC = Math.max(c.lost, c.gained, 1);
@@ -322,13 +368,28 @@ async function placeCard() {
   const k = key(), per = PERLAB(), P = PL.places[S.place];
   const rows = ST.species.map(s => ({ s, c: (PL.sp[s.id][k] || "")[S.place] || "0" }));
   const lose = rows.filter(r => r.c === "1"), gain = rows.filter(r => r.c === "3"), keep = rows.filter(r => r.c === "2"), wh = rows.filter(r => r.c === "9");
-  const li = (r, kind, word) => `<li>${ICON[kind]}<span><button class="linkbtn" data-sp="${r.s.id}">${esc(r.s.name)}</button> <span class="w">Tier ${r.s.tier}</span></span><span class="w">${word}</span></li>`;
+  const li = (r, kind, word) => `<li>${ICON[kind]}<span><button class="linkbtn" data-sp="${r.s.id}">${esc(r.s.name)}</button> </span><span class="w">${word}</span></li>`;
   const list = [...lose.map(r => li(r, "lose", "loses")), ...gain.map(r => li(r, "gain", "gains")), ...keep.map(r => li(r, "keep", "keeps"))];
   box.innerHTML = `<label class="small" for="place">City</label><select id="place">${PL.places.map((p, i) => `<option value="${i}"${i === S.place ? " selected" : ""}>${esc(p[0])}</option>`).join("")}</select>
-    <p class="answer"><strong>${lose.length}</strong> of ${rows.length} modelled species are projected to lose suitable climate at ${esc(P[0])} by ${per}, and <strong>${gain.length}</strong> to gain it. <span class="small">${keep.length} keep it${wh.length ? `; ${wh.length} not shown because their numbers are withheld for this scenario` : ""}. ${esc(sspLabel())}, ${S.disp} dispersal. Read from the map cell at the city centre (and its neighbours); this is climate suitability, not a forecast.</span></p>
-    <ul class="pl">${list.join("") || '<li class="muted" style="grid-template-columns:1fr">No modelled species has suitable climate here now or later.</li>'}</ul>`;
-  $("place").addEventListener("change", e => { S.place = +e.target.value; placeCard(); placeMarker(); });
+    <p class="answer"><strong>${lose.length}</strong> of ${rows.length} modelled organisms are projected to lose suitable climate at ${esc(P[0])} by ${per}, and <strong>${gain.length}</strong> to gain it. <span class="small">${keep.length} keep it${wh.length ? `; ${wh.length} not shown because their numbers are withheld for this scenario` : ""}. ${esc(sspLabel())}, ${S.disp} dispersal. Read from the map cell at the city centre (and its neighbours); this is climate suitability, not a forecast.</span></p>
+    <ul class="pl">${list.join("") || '<li class="muted" style="grid-template-columns:1fr">No modelled organism has suitable climate here now or later.</li>'}</ul>`;
+  $("place").addEventListener("change", e => { S.place = +e.target.value; placeCard(); placeMarker(); frameCity(); });
   box.querySelectorAll("[data-sp]").forEach(b => b.addEventListener("click", () => pick(b.dataset.sp)));
+}
+function frameCity() {                  // fly to the chosen city and keep it clear of the bottom sheet, as the places map does for a place
+  if (!map || !PL) return;
+  const P = PL.places[S.place];
+  map.easeTo({ center: [P[2], P[1]], zoom: Math.max(map.getZoom(), 4.5), padding: padFor(), duration: reduced ? 0 : 900 });
+}
+const hav = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 12742 * Math.asin(Math.sqrt(x)); };
+async function mapClick(e) {            // click the map: the nearest listed city (within 800 km) opens its card and the map frames it
+  if (!ST) return;
+  if (!PL) { try { PL = await (await fetch(DATA + ST.places[0])).json(); } catch (err) { return; } }
+  const lat = e.lngLat.lat, lon = ((e.lngLat.lng + 180) % 360 + 360) % 360 - 180;
+  let bi = -1, bd = 800; PL.places.forEach((p, i) => { const d = hav(lat, lon, p[1], p[2]); if (d < bd) { bd = d; bi = i; } });
+  if (bi < 0) return;
+  S.place = bi; const det = $("place-det"); if (!det.open) det.open = true; else { placeCard(); placeMarker(); }
+  frameCity();
 }
 let pm = null;
 function placeMarker() {
@@ -393,10 +454,10 @@ async function loadInfo(id) {
 }
 async function pick(id) {
   if (!ST.byId[id]) return;
-  S.sp = id; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
+  S.sp = id; const pc = $("pick-cur"); if (pc) pc.textContent = rec(id).name; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
   if (!INFO[id]) $("sp-head").innerHTML = `<h2>${esc(rec(id).name)}</h2><p class="small" role="status">Loading\u2026</p>`;
   try { history.replaceState(null, "", "#" + id); } catch (e) { }
-  try { await loadInfo(id); } catch (e) { $("sp-head").innerHTML = '<p role="alert">This species could not be loaded. Check your connection and try again.</p>'; return; }
+  try { await loadInfo(id); } catch (e) { $("sp-head").innerHTML = '<p role="alert">This organism could not be loaded. Check your connection and try again.</p>'; return; }
   $("sp-head").removeAttribute("aria-busy");
   if (!INFO[id].ssps.includes(S.ssp)) S.ssp = INFO[id].ssps[0];
   update(true, true);
@@ -424,10 +485,16 @@ const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
 const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
 const sysDark = matchMedia("(prefers-color-scheme: dark)");
 const isDark = () => { const t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : sysDark.matches; };
-function baseStyle() { return useLand ? BLANK : STYLES[isDark() ? "dark" : "light"]; }
+function baseStyle() { return useLand ? BLANK : STYLES.light; }
+function paintBasemap(force) {              // the places map's basemap: Positron, recoloured for dark mode, state lines
+  if (!map) return;
+  if (useLand) { try { map.setPaintProperty("bg", "background-color", getComputedStyle(document.documentElement).getPropertyValue("--ocean").trim()); } catch (e) { } return; }
+  if (!force && !map.isStyleLoaded()) return;
+  CTBASE.paint(map, isDark()); CTBASE.stateLines(map, isDark());
+}
 function applyTheme(restyle) {
   $("themebtn").innerHTML = isDark() ? SUN : MOON; $("themebtn").setAttribute("aria-pressed", String(isDark())); COL = colours();
-  if (map) { if (restyle) map.setStyle(baseStyle()); else { styleShift(); map.triggerRepaint(); } }
+  if (map) { paintBasemap(); styleShift(); map.triggerRepaint(); }
   if (S.sp && INFO[S.sp]) legend();
 }
 $("themebtn").addEventListener("click", () => { const t = isDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("ct-theme", t); } catch (e) { } applyTheme(true); });
@@ -441,7 +508,7 @@ $("retry").addEventListener("click", () => location.reload());
 $("search").addEventListener("keydown", e => {
   const opts = [...$("results").querySelectorAll("[data-id]")]; if (!opts.length) return; let i = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
   if (e.key === "ArrowDown" || e.key === "ArrowUp") { i = (i + (e.key === "ArrowDown" ? 1 : -1) + opts.length) % opts.length; opts.forEach(o => o.setAttribute("aria-selected", "false")); opts[i].setAttribute("aria-selected", "true"); opts[i].scrollIntoView({ block: "nearest" }); $("search").setAttribute("aria-activedescendant", opts[i].id); e.preventDefault(); }
-  if (e.key === "Enter" && i >= 0) { pick(opts[i].dataset.id); e.preventDefault(); }
+  if (e.key === "Enter" && i >= 0) { pick(opts[i].dataset.id); $("pickdet").open = false; e.preventDefault(); }
 });
 function addLayers() {
   if (!map.getSource("shift")) {
@@ -459,19 +526,20 @@ function addLayers() {
 let styleOk = false, started = false;
 function tryStart() { if (started || !styleOk || !S.sp || !INFO[S.sp]) return; started = true; if (!INFO[S.sp].ssps.includes(S.ssp)) S.ssp = INFO[S.sp].ssps[0]; update(true, false); }
 function startMap() {
-  map = new maplibregl.Map({ container: "map", style: baseStyle(), center: [-30, 30], zoom: 1.2, renderWorldCopies: false, attributionControl: false, maxZoom: 9, minZoom: 0.3, dragRotate: false, pitchWithRotate: false, touchPitch: false });
+  map = new maplibregl.Map({ container: "map", style: baseStyle(), center: [-30, 30], zoom: 1.2, attributionControl: false, maxZoom: 10, minZoom: innerWidth < 600 ? 0.8 : 1.5, dragRotate: false, pitchWithRotate: false, touchPitch: false });
   map.touchZoomRotate.disableRotation();
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   window.__map = map;
   let styled = false;
   map.on("error", e => { const u = String((e && e.error && (e.error.message || e.error)) || ""); if (!styled && !useLand && /style|openfreemap|Failed to fetch|NetworkError|tiles/i.test(u)) { useLand = true; map.setStyle(BLANK); } });
   map.on("style.load", () => {
-    styled = true; if (useLand) map.setPaintProperty("bg", "background-color", getComputedStyle(document.documentElement).getPropertyValue("--ocean").trim());
+    styled = true; CTBASE.reset(); paintBasemap(true);
     addLayers(); window.__styleReady = (window.__styleReady || 0) + 1;
     styleOk = true;
     if (!started) tryStart(); else if (S.sp && INFO[S.sp]) loadScene(S.sp, S.ssp);
   });
-  map.on("moveend", () => { if (!S.sp || !SHOWN.sp) return; const sc = sceneFiles(SHOWN.sp, SHOWN.ssp), f = levelFor(); for (const x of [useLand ? sc.land : null, sc.base, sc.scen]) if (x) visible(f).forEach(([bx, by]) => entry(x, f, bx, by)); });
+  map.on("click", mapClick);
+  map.on("moveend", () => { if (!S.sp || !SHOWN.sp) return; const sc = sceneFiles(SHOWN.sp, SHOWN.ssp), f = levelFor(); for (const x of [useLand ? sc.land : null, sc.base, sc.scen]) if (x) visibleAll(f).forEach(([bx, by]) => entry(x, f, bx, by)); });
 }
 async function boot() {
   const t0 = performance.now();
@@ -482,7 +550,7 @@ async function boot() {
   startMap();
   const h = decodeURIComponent(location.hash.slice(1)), id = ST.byId[h] ? h : (ST.byId.acer_saccharum ? "acer_saccharum" : ST.species[0].id);
   const b = rec(id).bbox; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: padFor(), duration: 0, maxZoom: 5 });
-  S.sp = id; renderResults();
+  S.sp = id; $("pick-cur").textContent = rec(id).name; renderResults();
   await loadInfo(id);
   window.__S = S; window.__T = T;
   tryStart();

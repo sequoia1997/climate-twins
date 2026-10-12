@@ -21,6 +21,8 @@ def make_site(dst: Path):
     (dst / "species" / "land.cts").write_bytes((ROOT / "web" / "species" / "land.cts").read_bytes())
     (dst / "species" / "app.js").write_text((ROOT / "web" / "species" / "app.js").read_text())
     R2 = "https://species.climatetwins.org/"
+    import re as _re
+    (dst / "methods.html").write_text(_re.sub(r"\{\{[A-Z_0-9]+\}\}", "0", (ROOT / "web" / "methods.html").read_text()).replace("__SITE_URL__", "").replace('content="https://species.climatetwins.org/"', 'content="species/data/"'))
     for n in ("species.html", "species-methods.html"):
         if (ROOT / "web" / n).exists():
             (dst / n).write_text((ROOT / "web" / n).read_text().replace("__SITE_URL__", "").replace(f'content="{R2}"', 'content="species/data/"'))
@@ -180,11 +182,11 @@ async def main():
             if e2: fails.append(f"{name}: JS errors (stub page) {e2[:2]}")
             await pg2.close()
             # methods page: loads, DOI table filled from the index, no overflow
-            await pg.goto(f"http://127.0.0.1:{port}/species-methods.html"); await pg.wait_for_function("document.querySelectorAll('#doirows tr').length>=3", timeout=20000)
+            await pg.goto(f"http://127.0.0.1:{port}/methods.html#part-organisms"); await pg.wait_for_function("document.querySelectorAll('#doirows tr').length>=3", timeout=20000)
             ov = await pg.evaluate("[document.documentElement.scrollWidth, innerWidth]")
             if ov[0] > ov[1]: fails.append(f"{name}: methods page overflows {ov}")
             body = (await pg.inner_text("body")).lower()
-            for need in ("not a forecast", "range shifts: pass, fail, untested", "dispersal", "10.15468/dl.j78pf6", "terraclimate", "nex-gddp", "wcvp", "breeding bird survey", "withheld", "precipitation sensitivity"):
+            for need in ("part 1", "part 2", "part 3", "not a forecast", "range shifts: pass, fail, untested", "dispersal", "10.15468/dl.j78pf6", "terraclimate", "nex-gddp", "wcvp", "breeding bird survey", "withheld", "precipitation sensitivity"):
                 if need not in body: fails.append(f"{name}: methods page lacks '{need}'")
             if SHOTS and name == "desktop-light": await pg.screenshot(path=str(OUT / "methods-desktop-light.png"), full_page=False)
             await pg.goto(f"http://127.0.0.1:{port}/species.html#acer_saccharum"); await settle(pg)

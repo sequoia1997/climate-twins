@@ -4,6 +4,13 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 12 October 2026: organisms and one methods page
+
+- **Organisms.** A second half of the site shows where the climate suits a few hundred plants, animals and fungi now and later, as projected climate suitability (never a forecast). Switch between Places and Organisms at the top of the panel, and browse by group, order and family.
+- **Two plain trust checks** on every organism: how well today's map fits, and whether the future map could be tested against real range changes.
+- **One methods page** covers both halves, in three parts: places, organisms, then limitations, data, credits and references. The old organisms methods page redirects to it.
+- The organisms map now uses the same basemap as places and repeats the world, so you can pan across the date line.
+
 ## 1 October 2026: data update
 <!-- data:2026-10-01 -->
 
