@@ -15,7 +15,7 @@ const gname = g => GROUPS[g] || (g ? g[0].toUpperCase() + g.slice(1).replace(/_/
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const phone = () => matchMedia("(max-width:820px) and (orientation:portrait)").matches;
 let ST = null, INFO = {}, PL = null, map = null, gl = null, glr = null, useLand = false, COL = null;
-const S = { sp: null, ssp: "ssp245", per: "2050", view: "change", disp: "unlimited", agree: false, novel: false, path: [], q: "", figview: "abs", place: 0 };
+const S = { sp: null, ssp: "ssp245", per: "2050", view: "change", disp: "unlimited", agree: false, novel: false, focus: "", q: "", figview: "abs", place: 0 };
 const SHOWN = { sp: null, ssp: null };
 const T = {};                                   // timings for tests and the page-load report
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -236,64 +236,103 @@ function renderControls() {
   $("per-d").textContent = "\u201CAround " + S.per + "\u201D means the 20-year average " + (ST.periods[S.per] || "") + ", so one unusual year does not skew it.";
   $("o-agree").checked = S.agree; $("o-novel").checked = S.novel;
 }
-const TLEVELS = ["kingdom", "group", "order", "family"], TNAME = { kingdom: "kingdom", group: "group", order: "order", family: "family" };
-const KING = { Plantae: "Plants", Animalia: "Animals", Fungi: "Fungi" };
-const tget = (s, lv) => lv === "group" ? gname(s.group) : (s[lv] || "");
-const tlab = (lv, v) => !v ? "Other" : lv === "kingdom" ? (KING[v] || v) : v;
-const inScope = () => ST.species.filter(s => S.path.every(p => tget(s, p.lv) === p.v));
-function nextLevel(list) { for (const lv of TLEVELS) { if (S.path.some(p => p.lv === lv)) continue; if (new Set(list.map(s => tget(s, lv))).size > 1) return lv; } return null; }
-/* ---- tree-of-life sunburst: a colourful, tappable way into the same drill-down (the chips below it are the keyboard / screen-reader route) */
-const HUES = { bird: 42, mammal: 18, reptile: 100, amphibian: 172, insect_arachnid: 268, wild_plant: 135, tree: 150, crop: 32 };
-const EMO = { bird: "\uD83E\uDEB6", mammal: "\uD83D\uDC3E", reptile: "\uD83E\uDD8E", amphibian: "\uD83D\uDC38", insect_arachnid: "\uD83E\uDD8B", wild_plant: "\uD83C\uDF3F", tree: "\uD83C\uDF33", crop: "\uD83C\uDF3E" };
-const hueOf = list => HUES[list[0].group] != null ? HUES[list[0].group] : 200;
-function arc(r0, r1, a0, a1) {
-  if (a1 - a0 >= Math.PI * 2 - 1e-6) a1 = a0 + Math.PI * 2 - 1e-4;
-  const c = (r, a) => [(r * Math.sin(a)).toFixed(2), (-r * Math.cos(a)).toFixed(2)], big = a1 - a0 > Math.PI ? 1 : 0;
-  const [x0, y0] = c(r1, a0), [x1, y1] = c(r1, a1), [x2, y2] = c(r0, a1), [x3, y3] = c(r0, a0);
-  return `M${x0} ${y0}A${r1} ${r1} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${big} 0 ${x3} ${y3}Z`;
-}
-function groupBy(list, lv) { const m = new Map(); list.forEach(s => { const v = tget(s, lv); (m.get(v) || m.set(v, []).get(v)).push(s); }); return [...m].sort((a, b) => (a[0] === "") - (b[0] === "") || b[1].length - a[1].length || String(a[0]).localeCompare(String(b[0]))); }
-function sunburst(scope, nl) {
-  let kids, leaf = false;
-  if (nl) kids = groupBy(scope, nl).map(([v, l]) => ({ v, l, lv: nl }));
-  else if (scope.length > 1 && scope.length <= 30) { leaf = true; kids = scope.slice().sort((a, b) => a.name.localeCompare(b.name)).map(sp => ({ v: sp.name, l: [sp], sp })); }
-  else return "";
-  const tot = scope.length, TAU = Math.PI * 2, gap = 0.012;
-  const nl2 = nl ? (TLEVELS.slice(TLEVELS.indexOf(nl) + 1).find(lv => new Set(scope.map(s => tget(s, lv))).size > 1) || null) : null;
-  let a = 0, out = "";
-  kids.forEach((k, i) => {
-    const w = (nl === "kingdom" || nl === "group" ? 1 / kids.length : k.l.length / tot) * TAU, a0 = a + gap / 2, a1 = a + w - gap / 2; a += w;
-    const hue = hueOf(k.l), mid = (a0 + a1) / 2, sat = nl === "kingdom" ? 55 : 62;
-    const fill = `hsl(${hue + (nl === "family" || leaf ? (i % 5) * 6 : 0)} ${sat}% ${58 + (i % 3) * 5}%)`;
-    const lab = (nl ? tlab(nl, k.v) : k.v), show = (a1 - a0) > (leaf ? 0.2 : 0.3);
-    const tx = (41 * Math.sin(mid)).toFixed(1), ty = (-41 * Math.cos(mid)).toFixed(1);
-    const ic = nl === "group" ? (EMO[k.l[0].group] || "") : "";
-    const nm = lab.length > 12 ? lab.slice(0, 11) + "\u2026" : lab;
-    out += `<g class="wd" style="--d:${Math.min(i * 25, 400)}ms" ${leaf ? `data-sp="${esc(k.sp.id)}"` : `data-lv="${k.lv}" data-v="${esc(k.v)}"`}><title>${esc(lab)} (${k.l.length})</title><path d="${arc(22, 60, a0, a1)}" fill="${fill}"/>`
-      + (show ? `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle">${ic ? `<tspan x="${tx}" dy="-2.5" font-size="8">${ic}</tspan><tspan x="${tx}" dy="7.5">${esc(nm)}</tspan>` : esc(nm)}</text>` : "") + "</g>";
-    if (nl2 && !leaf) {                                                       // outer ring: what is inside each wedge, for a glimpse of the next level
-      let b = a0; const subs = groupBy(k.l, nl2);
-      subs.forEach(([v, l], j) => { const w2 = l.length / k.l.length * (a1 - a0), c0 = b, c1 = b + w2; b = c1;
-        out += `<path class="sub" d="${arc(62, 92, c0 + 0.004, Math.max(c0 + 0.006, c1 - 0.004))}" fill="hsl(${hue} ${sat - 8}% ${74 + (j % 3) * 4}%)"><title>${esc(tlab(nl2, v))} (${l.length})</title></path>`; });
-    }
+/* ---- taxonomic tree: kingdom > phylum > class > order > family > genus > species, drawn as a left-to-right dendrogram that fits the space it is given.
+   Tap a branch to zoom into it (its subtree is laid out again to fill the panel), tap the first box to go back up, tap a species to pick it. */
+const TLEVELS = ["kingdom", "phylum", "cls", "order", "family", "genus"], RANK = { kingdom: "kingdom", phylum: "phylum", cls: "class", order: "order", family: "family", genus: "genus" };
+const HUES = { bird: 42, mammal: 14, reptile: 100, amphibian: 172, insect_arachnid: 268, wild_plant: 135, tree: 152, crop: 30 };
+const FRIEND = { Animalia: "Animals", Plantae: "Plants", Fungi: "Fungi", Chordata: "Vertebrates", Arthropoda: "Arthropods", Tracheophyta: "Vascular plants", Mammalia: "Mammals", Aves: "Birds", Reptilia: "Reptiles", Amphibia: "Amphibians",
+  Insecta: "Insects", Arachnida: "Arachnids", Magnoliopsida: "Flowering plants (dicots)", Liliopsida: "Flowering plants (monocots)", Pinopsida: "Conifers", Polypodiopsida: "Ferns", Equisetopsida: "Horsetails and relatives", Cycadopsida: "Cycads", Ginkgoopsida: "Ginkgo",
+  Carnivora: "Carnivores", Rodentia: "Rodents", Passeriformes: "Perching birds", Lepidoptera: "Butterflies and moths", Odonata: "Dragonflies", Squamata: "Lizards and snakes", Anura: "Frogs and toads", Caudata: "Salamanders", Primates: "Primates", Artiodactyla: "Even-toed hoofed mammals",
+  Perissodactyla: "Odd-toed hoofed mammals", Chiroptera: "Bats", Hymenoptera: "Bees, wasps, ants", Coleoptera: "Beetles", Orthoptera: "Grasshoppers and crickets", Diptera: "Flies", Hemiptera: "True bugs", Testudines: "Turtles", Crocodylia: "Crocodiles", Lagomorpha: "Hares and rabbits",
+  Eulipotyphla: "Hedgehogs and moles", Proboscidea: "Elephants", Araneae: "Spiders", Accipitriformes: "Hawks and eagles", Columbiformes: "Pigeons and doves", Strigiformes: "Owls", Piciformes: "Woodpeckers", Fagales: "Oaks, beeches, birches", Rosales: "Roses and relatives", Poales: "Grasses and sedges",
+  Fabales: "Legumes", Sapindales: "Maples and soapberries", Lamiales: "Mints and olives", Asterales: "Daisies and relatives", Pinales: "Pines and firs", Myrtales: "Eucalypts and myrtles", Arecales: "Palms" };
+const fname = n => FRIEND[n] || n;
+let TREE = null, tmeasure = null;
+function buildTree() {
+  const root = { key: "", name: "Life", rank: "root", kids: [], depth: 0, species: [] };
+  ST.species.forEach(sp => {
+    let node = root; node.species.push(sp);
+    const vals = TLEVELS.map(lv => lv === "genus" ? sp.sci.split(" ")[0] : (sp[lv] || ""));
+    vals.forEach((v, i) => {
+      if (!v) return;
+      let c = node.kids.find(k => k.name === v && k.rank === TLEVELS[i]);
+      if (!c) { c = { key: node.key + "/" + v, name: v, rank: TLEVELS[i], kids: [], species: [], parent: node }; node.kids.push(c); }
+      c.species.push(sp); node = c;
+    });
+    node.kids.push({ key: node.key + "/" + sp.id, name: sp.name, sci: sp.sci, rank: "species", id: sp.id, kids: [], species: [sp], parent: node, leaf: true });
   });
-  const here = S.path.length ? tlab(S.path[S.path.length - 1].lv, S.path[S.path.length - 1].v) : "Tree of life";
-  return `<svg class="sun" viewBox="-96 -96 192 192" role="img" aria-label="Tree of life: tap a coloured wedge to zoom in"><g class="rings">${out}</g>
-    <g class="hub" ${S.path.length ? 'data-up="1" tabindex="-1"' : ""}><circle r="21"/><text y="-3" text-anchor="middle" class="h1">${esc(here.length > 14 ? here.slice(0, 13) + "\u2026" : here)}</text><text y="7" text-anchor="middle" class="h2">${tot} organisms</text>${S.path.length ? '<text y="15" text-anchor="middle" class="h3">\u21A9 back</text>' : ""}</g></svg>`;
+  const squash = n => {                                   // a branch with a single child adds nothing: join the two, keeping the more specific name
+    n.kids = n.kids.map(squash);
+    if (n.kids.length === 1 && !n.kids[0].leaf && n.rank !== "root") { const c = n.kids[0]; c.via = [n.name, ...(n.via || [])]; c.parent = n.parent; return c; }
+    n.kids.forEach(k => k.parent = n);
+    return n;
+  };
+  squash(root);
+  const order = (n, d = 0) => { n.d = d; n.kids.sort((a, b) => b.species.length - a.species.length || a.name.localeCompare(b.name)); n.kids.forEach(k => order(k, d + 1)); n.n = n.species.length; };
+  order(root);
+  const find = (n, key) => n.key === key ? n : n.kids.reduce((r, k) => r || (key.startsWith(k.key) ? find(k, key) : null), null);
+  TREE = { root, find };
+  return TREE;
 }
-function renderBrowse(scope) {                  // drill down by taxonomy: kingdom, group, order, family
-  const br = $("browse"); if (S.q.trim()) { br.innerHTML = ""; return; }
-  const crumbs = [`<button type="button" class="crumb" data-i="-1">All organisms</button>`, ...S.path.map((p, i) => `<span aria-hidden="true">›</span><button type="button" class="crumb" data-i="${i}">${esc(tlab(p.lv, p.v))}</button>`)].join("");
-  const nl = nextLevel(scope); let kids = "";
-  if (nl) { const m = new Map(); scope.forEach(s => { const v = tget(s, nl); m.set(v, (m.get(v) || 0) + 1); });
-    const items = [...m].sort((a, b) => (a[0] === "") - (b[0] === "") || b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
-    kids = `<div class="small">Browse by ${TNAME[nl]}</div><div class="chips">` + items.map(([v, n]) => `<button type="button" data-lv="${nl}" data-v="${esc(v)}">${esc(tlab(nl, v))}<span class="n">${n}</span></button>`).join("") + "</div>"; }
-  br.innerHTML = `<div class="crumbs" aria-label="Where you are in the tree of life">${crumbs}</div><div class="sunwrap">${sunburst(scope, nl)}</div>${kids}`;
-  br.querySelectorAll(".sun [data-lv]").forEach(g => g.addEventListener("click", () => { S.path = [...S.path, { lv: g.dataset.lv, v: g.dataset.v }]; renderResults(); }));
-  br.querySelectorAll(".sun [data-sp]").forEach(g => g.addEventListener("click", () => { pick(g.dataset.sp); const pd = $("pickdet"); if (pd) pd.open = false; }));
-  const hub = br.querySelector(".sun [data-up]"); if (hub) hub.addEventListener("click", () => { S.path = S.path.slice(0, -1); renderResults(); });
-  br.querySelectorAll(".crumb").forEach(b => b.addEventListener("click", () => { S.path = S.path.slice(0, +b.dataset.i + 1); renderResults(); }));
-  br.querySelectorAll("[data-lv]").forEach(b => b.addEventListener("click", () => { S.path = [...S.path, { lv: b.dataset.lv, v: b.dataset.v }]; renderResults(); }));
+const hueOf = n => { const g = new Set(n.species.map(s => s.group)); return g.size === 1 ? HUES[[...g][0]] : null; };
+const focusNode = () => (TREE && S.focus && TREE.find(TREE.root, S.focus)) || (TREE && TREE.root);
+const inScope = () => (TREE ? focusNode().species : ST.species);
+function textW(str, font) {
+  tmeasure = tmeasure || document.createElement("canvas").getContext("2d");
+  tmeasure.font = font; return tmeasure.measureText(str).width;
+}
+function layout(focus, W, H) {
+  const FONT = "600 12px system-ui, sans-serif", PAD = 6, ROW = 30;
+  const maxRows = Math.max(10, Math.floor(H / 26));
+  const open = new Set([focus]), stuck = new Set();
+  const visible = () => { const out = []; (function walk(n) { out.push(n); if (open.has(n)) n.kids.forEach(walk); })(focus); return out; };
+  let rows = visible();
+  for (;;) {                                               // open one branch at a time, shallowest and biggest first, until the rows are used up
+    const cand = rows.filter(n => n.kids.length && !open.has(n) && !stuck.has(n)).sort((a, b) => (a.d || 0) - (b.d || 0) || b.n - a.n);
+    if (!cand.length) break;
+    const n = cand[0];
+    if (rows.length + n.kids.length <= maxRows) { open.add(n); rows = visible(); } else stuck.add(n);
+  }
+  const depth = new Map(); (function walk(n, d) { depth.set(n, d); if (open.has(n)) n.kids.forEach(k => walk(k, d + 1)); })(focus, 0);
+  const maxD = Math.max(...depth.values());
+  const indent = Math.max(12, Math.min(26, (W - 170) / Math.max(1, maxD)));          // the staircase narrows on small screens instead of overflowing
+  const rowH = Math.max(26, Math.min(ROW + 6, H / rows.length)), nodes = [];
+  rows.forEach((n, i) => {
+    const d = depth.get(n), x = PAD + d * indent, lab = n.leaf ? n.name : fname(n.name) + (open.has(n) ? "" : "  · " + n.n);
+    const w = Math.min(W - x - PAD, textW(lab, FONT) + 24);
+    nodes.push({ n, x, y: 4 + (i + .5) * rowH, w, d, lab, collapsed: !!n.kids.length && !open.has(n) });
+  });
+  const byN = new Map(nodes.map(o => [o.n, o])), links = [];
+  nodes.forEach(o => { if (open.has(o.n)) o.n.kids.forEach(k => links.push([o, byN.get(k)])); });
+  return { nodes, links, height: rows.length * rowH + 8, width: W, rowH, indent };
+}
+function treeSvg(focus, W, H) {
+  const L = layout(focus, W, H), ph = Math.min(24, L.rowH - 5), FONT = "600 12px system-ui, sans-serif";
+  const col = n => hueOf(n);
+  let svg = `<svg class="tree" width="${Math.round(L.width)}" height="${Math.round(L.height)}" viewBox="0 0 ${Math.round(L.width)} ${Math.round(L.height)}" role="tree" aria-label="Tree of life: choose a branch to zoom in, or a species to pick it">`;
+  L.links.forEach(([a, b]) => { const tx = a.x + L.indent / 2, h = col(b.n); svg += `<path class="lk" d="M${tx} ${a.y + ph / 2}V${b.y}H${b.x}" stroke="${h == null ? "var(--line)" : `hsl(${h} 45% 55%)`}"/>`; });
+  L.nodes.forEach((o, i) => {
+    const h = col(o.n), leaf = !!o.n.leaf, sel = leaf && o.n.id === S.sp, isFocus = o.n === focus;
+    const fill = h == null ? "var(--chip)" : `hsl(${h} ${leaf ? 62 : 56}% ${leaf ? 72 : 62}%)`, stroke = sel ? "var(--ink)" : h == null ? "var(--line)" : `hsl(${h} 45% 45%)`;
+    const txt = (o.lab.length > 3 && textW(o.lab, FONT) > o.w - 14) ? o.lab.slice(0, Math.max(3, Math.floor((o.w - 22) / 6.6))) + "…" : o.lab;
+    const attr = leaf ? `data-sp="${esc(o.n.id)}"` : `data-focus="${esc(o.n.key)}"`;
+    const tip = leaf ? `${o.n.name} (${o.n.sci})` : `${fname(o.n.name)}${FRIEND[o.n.name] ? " · " + o.n.name : ""} · ${RANK[o.n.rank] || ""} · ${o.n.n} organisms`;
+    svg += `<g class="nd${leaf ? " lf" : ""}${sel ? " sel" : ""}${isFocus ? " fc" : ""}" ${attr} role="treeitem" tabindex="0" aria-label="${esc(tip)}" style="--d:${Math.min(i * 16, 300)}ms"><title>${esc(tip)}</title>
+      <rect x="${o.x}" y="${o.y - ph / 2}" width="${o.w}" height="${ph}" rx="${ph / 2}" fill="${fill}" stroke="${stroke}" stroke-width="${sel ? 2 : 1}"/>
+      <text x="${o.x + 12}" y="${o.y}" dominant-baseline="central">${esc(txt)}</text></g>`;
+  });
+  return svg + "</svg>";
+}
+function renderBrowse(scope) {
+  const br = $("browse"); if (S.q.trim() || !TREE) { br.innerHTML = ""; return; }
+  const focus = focusNode(), chain = []; for (let n = focus; n; n = n.parent) chain.unshift(n);
+  const crumbs = chain.map((n, i) => `${i ? '<span aria-hidden="true">›</span>' : ""}<button type="button" class="crumb" data-k="${esc(n.key)}">${esc(i ? fname(n.name) : "All organisms")}</button>`).join("");
+  const W = Math.max(240, br.clientWidth || br.parentElement.clientWidth || 320), H = Math.max(260, Math.min(560, Math.round(innerHeight * (phone() ? 0.42 : 0.5))));
+  br.innerHTML = `<div class="crumbs" aria-label="Where you are in the tree of life">${crumbs}</div><div class="treewrap">${treeSvg(focus, W - 4, H)}</div>`;
+  const go = key => { S.focus = key; renderResults(); };
+  br.querySelectorAll(".crumb").forEach(b => b.addEventListener("click", () => go(b.dataset.k)));
+  br.querySelectorAll("[data-focus]").forEach(g => { const act = () => { const n = TREE.find(TREE.root, g.dataset.focus); go(n === focus ? (n.parent ? n.parent.key : "") : n.key); }; g.addEventListener("click", act); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } }); });
+  br.querySelectorAll("[data-sp]").forEach(g => { const act = () => { pick(g.dataset.sp); const pd = $("pickdet"); if (pd) pd.open = false; }; g.addEventListener("click", act); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } }); });
 }
 function renderResults() {
   const q = S.q.trim().toLowerCase(), ul = $("results"); ul.innerHTML = "";
@@ -574,6 +613,8 @@ $("place-det").addEventListener("toggle", () => { placeCard(); placeMarker(); })
 $("search").addEventListener("input", e => { S.q = e.target.value; renderResults(); });
 addEventListener("hashchange", () => { const o = parseHash(); if (ST && ST.byId[o.id]) { applyHash(o); if (o.id !== S.sp) pick(o.id); else update(true); } });
 $("retry").addEventListener("click", () => location.reload());
+let rzT; addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(() => { if (TREE && $("pickdet") && $("pickdet").open) renderBrowse(inScope()); }, 150); });
+$("pickdet").addEventListener("toggle", () => { if ($("pickdet").open && TREE) renderBrowse(inScope()); });
 $("search").addEventListener("keydown", e => {
   const opts = [...$("results").querySelectorAll("[data-id]")]; if (!opts.length) return; let i = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
   if (e.key === "ArrowDown" || e.key === "ArrowUp") { i = (i + (e.key === "ArrowDown" ? 1 : -1) + opts.length) % opts.length; opts.forEach(o => o.setAttribute("aria-selected", "false")); opts[i].setAttribute("aria-selected", "true"); opts[i].scrollIntoView({ block: "nearest" }); $("search").setAttribute("aria-activedescendant", opts[i].id); e.preventDefault(); }
@@ -614,7 +655,7 @@ async function boot() {
   const t0 = performance.now();
   const r = await fetch(DATA + "index.json"); if (!r.ok) throw new Error("index " + r.status);
   ST = await r.json(); ST.byId = Object.fromEntries(ST.species.map(s => [s.id, s])); T.index = Math.round(performance.now() - t0);
-  $("count").textContent = ST.species.length;
+  $("count").textContent = ST.species.length; buildTree();
   applyTheme(false); renderResults(); renderControls();
   startMap();
   const ho = parseHash(), h = ho.id, id = ST.byId[h] ? h : (ST.byId.acer_saccharum ? "acer_saccharum" : ST.species[0].id);

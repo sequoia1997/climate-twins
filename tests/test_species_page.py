@@ -150,12 +150,17 @@ async def main():
             if await pg.locator("nav.modes a[aria-current=page]").inner_text() != "Organisms": fails.append(f"{name}: modes toggle missing or wrong current")
             if await pg.locator("nav.modes a[href='./']").count() != 1: fails.append(f"{name}: no link back to climate twins")
             if not await pg.evaluate("document.getElementById('pickdet').open"): await pg.click("#pickdet > summary")
+            await pg.fill("#search", ""); await pg.wait_for_timeout(150)
             n0 = await pg.locator("#results li").count()
-            chip = pg.locator("#browse .chips button").first
-            if await chip.count():
-                await chip.click(); await pg.wait_for_timeout(200)
-                if await pg.locator("#results li").count() > n0: fails.append(f"{name}: drill-down grew the list")
-                if not await pg.locator("#browse .crumb").count(): fails.append(f"{name}: no breadcrumb after drilling down")
+            if not await pg.locator("#browse svg.tree").count(): fails.append(f"{name}: taxonomic tree missing")
+            else:
+                if await pg.evaluate("(() => { const s = document.querySelector('#browse svg.tree'); return s.getBoundingClientRect().width > document.getElementById('browse').clientWidth + 2; })()"): fails.append(f"{name}: tree wider than its pane")
+                node = pg.locator("#browse .nd[data-focus]:not(.fc)").first
+                if await node.count():
+                    await node.click(); await pg.wait_for_timeout(300)
+                    if await pg.locator("#results li").count() > n0: fails.append(f"{name}: drill-down grew the list")
+                    if await pg.locator("#browse .crumb").count() < 2: fails.append(f"{name}: no breadcrumb after drilling down")
+                    await pg.locator("#browse .crumb").first.click(); await pg.wait_for_timeout(200)
             # phone: tier, confidence and withheld status are visible in the half-open sheet without scrolling
             if w < 500:
                 r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")
