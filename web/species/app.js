@@ -263,7 +263,9 @@ function buildTree() {
   });
   const squash = n => {                                   // a branch with a single child adds nothing: join the two, keeping the more specific name
     n.kids = n.kids.map(squash);
-    if (n.kids.length === 1 && !n.kids[0].leaf && n.rank !== "root") { const c = n.kids[0]; c.via = [n.name, ...(n.via || [])]; c.parent = n.parent; return c; }
+    if (n.kids.length === 1 && !n.kids[0].leaf && n.rank !== "root") { const c = n.kids[0]; c.via = [n.name, ...(n.via || [])]; c.parent = n.parent;
+      if (FRIEND[n.name] && !FRIEND[c.name]) { c.name = n.name; c.rank = n.rank; }          // keep the familiar name of the chain ("Crocodiles", not the one genus inside)
+      return c; }
     n.kids.forEach(k => k.parent = n);
     return n;
   };
