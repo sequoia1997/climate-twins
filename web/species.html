@@ -164,7 +164,7 @@ details p{font-size:.9rem}
   #sh-tog{flex:none;width:36px;height:36px;border:1px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink);display:grid;place-items:center}
   aside:not(.collapsed) #sh-tog svg{transform:rotate(180deg)}
   aside.collapsed{overflow:hidden}
-  aside h1.main{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  #sp-head h2,#sp-head .badges{display:none}
   #legend{bottom:calc(var(--sheet-h,300px) + 12px);transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
   #attrib{bottom:var(--sheet-h,300px)}
   #busy{top:56px;right:10px}
@@ -181,6 +181,22 @@ details p{font-size:.9rem}
 .modes[data-pos="0"] a:first-child,.modes[data-pos="1"] a:last-child{color:var(--chipOnInk)}
 .modes a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.modes::before,.modes a{transition:none}}
+.lineage{display:flex;flex-wrap:wrap;align-items:center;gap:1px 3px;margin:2px 0 8px;font-size:.8rem}
+.lineage .lg{font:inherit;border:0;background:none;padding:3px 5px;border-radius:999px;color:var(--ink);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.lineage .lg:hover,.lineage .lg:focus-visible{background:var(--chip);text-decoration-color:var(--ink)}
+.lineage span{opacity:.5}
+.photo{float:right;margin:0 0 8px 12px;width:min(46%,200px)}
+.photo img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:var(--chip)}
+.photo figcaption{font-size:.62rem;line-height:1.25;margin-top:3px;opacity:.75;overflow-wrap:anywhere}
+.photo figcaption a{color:inherit}
+@media (min-width:900px){.photo{width:min(40%,240px)}}
+h1.main{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.caveat{font-size:.84rem;margin:2px 0 10px;padding:6px 10px;border-left:3px solid var(--warn);background:var(--chip);border-radius:0 8px 8px 0}
+.caveat a{color:inherit}
+.ctl.two{display:grid;grid-template-columns:1fr auto;gap:10px 14px;align-items:end}
+.hint{margin:-4px 0 8px}
+.card .inner{padding-top:6px}.card .inner h3{font-size:.86rem;margin:14px 0 4px}.card .inner h3:first-child{margin-top:4px}
+.card .inner p{font-size:.88rem;margin:4px 0 8px}
 .treewrap{overflow:auto;margin:6px -4px 8px;padding:2px 4px;border-radius:14px;background:linear-gradient(180deg,var(--chip),transparent);max-height:62vh}
 .tree{display:block;margin:0 auto;max-width:none}
 .tree .lk{fill:none;stroke-width:1.6;opacity:.55}
@@ -234,9 +250,8 @@ a{color:inherit;text-decoration-color:var(--line)}
       <div id="sh-badges" class="badges"></div>
     </div>
     <nav class="modes" data-pos="1" aria-label="Site sections"><a href="./">Places</a><a href="species.html" aria-current="page">Organisms</a></nav>
-    <div class="top"><span></span><a href="methods.html#part-organisms">Methods and credits</a></div>
     <h1 class="main">Organisms and future climate</h1>
-    <p class="note"><strong>Educational use.</strong> This shows <em>projected climate suitability</em> for <span id="count">&nbsp;</span> organisms, not where they will live. Land use, soils, other species and chance matter too. Not for planting, farming or land decisions.</p>
+    <p class="caveat"><strong>Projected climate suitability, not a forecast</strong> of where an organism will live. <a href="methods.html#part-organisms">How to read it</a></p>
 
     <details class="ctl pick" id="pickdet" open>
       <summary><strong id="pick-cur">Choose one</strong><span class="chg">Change</span></summary>
@@ -251,23 +266,39 @@ a{color:inherit;text-decoration-color:var(--line)}
     <p class="err" id="sp-err" hidden role="alert">The map files for this organism could not be loaded. Check your connection and pick the organism again.</p>
 
     <div class="ctl"><div class="small" id="l-view">Map shows</div><div class="seg" id="view" role="group" aria-labelledby="l-view"></div></div>
-    <div class="ctl"><div class="small" id="l-ssp">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="l-ssp"></div><div class="small" id="ssp-d" style="margin-top:4px"></div></div>
-    <div class="ctl"><div class="small" id="l-per">Period</div><div class="seg" id="per" role="group" aria-labelledby="l-per"></div><div class="small" id="per-d" style="margin-top:4px"></div></div>
-    <div class="ctl"><div class="small" id="l-disp">Dispersal (how far the organism can spread)</div><div class="seg" id="disp" role="group" aria-labelledby="l-disp"></div>
-      <div class="small" id="disp-d" style="margin-top:4px"></div></div>
-    <div class="opts">
-      <label><input type="checkbox" id="o-agree"><span>Shade where fewer than 3 in 4 climate models agree (dotted)</span></label>
-      <label><input type="checkbox" id="o-novel"><span>Shade climates with no present-day match (diagonal lines)</span></label>
+    <div class="ctl two">
+      <div><div class="small" id="l-ssp">Emissions future</div><div class="seg" id="ssp" role="group" aria-labelledby="l-ssp"></div></div>
+      <div><div class="small" id="l-per">When</div><div class="seg" id="per" role="group" aria-labelledby="l-per"></div></div>
     </div>
+    <p class="small hint" id="ssp-d"></p>
 
     <div id="summary" class="fig" data-view="abs"></div>
-    <details class="card" id="how-future"><summary>How can a map know the future?</summary><div><p>It does not predict the future. It answers a narrower question: <em>where will the climate be like the climate this organism lives in today?</em></p>
-      <p>The model learns from real records which temperatures and rainfall the organism is found in. Then climate models project what each place will be like around 2050 or 2100 under the chosen scenario. Think of it as moving today&rsquo;s climate around the map: places that will feel like the organism&rsquo;s current homes are shaded as suitable.</p>
-      <p>Whether the organism actually gets there depends on things the model does not know, such as whether it can travel that far, find food, or share the place with competitors. That is why the dispersal setting exists, and why every map says &ldquo;suitable climate, not a forecast&rdquo;.</p></div></details>
+
+    <details class="card" id="more-det"><summary>More options</summary><div class="inner">
+      <div class="ctl"><div class="small" id="l-disp">Dispersal (how far the organism can spread)</div><div class="seg" id="disp" role="group" aria-labelledby="l-disp"></div>
+        <div class="small" id="disp-d" style="margin-top:4px"></div></div>
+      <div class="opts">
+        <label><input type="checkbox" id="o-agree"><span>Dotted: fewer than 3 in 4 climate models agree</span></label>
+        <label><input type="checkbox" id="o-novel"><span>Diagonal lines: climate with no present-day match</span></label>
+      </div>
+      <p class="small"><button type="button" class="linkbtn" id="copylink">Copy link to this view</button> <span id="copied" role="status"></span></p>
+    </div></details>
+
+    <details class="card" id="learn-det"><summary>About this map and model</summary><div class="inner">
+      <h3>How reliable is it?</h3><div id="reliab"></div>
+      <h3>How can a map know the future?</h3>
+      <p>It does not predict the future. It answers a narrower question: <em>where will the climate be like the climate this organism lives in today?</em> The model learns from real records which temperatures and rainfall the organism is found in. Climate models then project what each place will be like around 2050 or 2100 under the chosen emissions future, and places that will feel like the organism&rsquo;s current homes are shaded as suitable.</p>
+      <p>Whether the organism actually gets there depends on things the model does not know, such as whether it can travel that far, find food, or share the place with competitors. That is why there is a dispersal setting, and why every map says &ldquo;suitable climate, not a forecast&rdquo;.</p>
+      <h3>About the emissions futures</h3>
+      <p>The four choices are named after the IPCC scenarios (SSPs): low emissions SSP1-2.6, middle SSP2-4.5, high SSP3-7.0 and very high SSP5-8.5. &ldquo;Around 2050&rdquo; means the 20-year average 2041&ndash;2060, &ldquo;around 2100&rdquo; means 2081&ndash;2100, so one unusual year does not skew it.</p>
+      <h3>About this model</h3><div id="about"></div>
+      <h3>Educational use</h3>
+      <p>This shows <em>projected climate suitability</em> for <span id="count">&nbsp;</span> organisms, not where they will live. Land use, soils, other species and chance matter too. Not for planting, farming or land decisions. <a href="methods.html#part-organisms">Methods and credits</a>.</p>
+    </div></details>
+
     <details class="card" id="place-det"><summary>Which organisms lose or gain climate where you are</summary><div id="place-body"></div></details>
-    <details class="card" id="about-det"><summary>About this model: tier, skill, records and DOIs</summary><div id="about"></div></details>
-    <details><summary>Text description of the map</summary><p id="textdesc"></p></details>
-    <p class="small">Climate suitability, not a forecast. It shows where an organism's climate niche may fit, not where it will live. <a href="methods.html#part-organisms">Methods, limitations and credits</a>.</p>
+    <details class="textdesc"><summary>Text description of the map</summary><p id="textdesc"></p></details>
+    <p class="small foot"><a href="methods.html#part-organisms">Methods, limitations and credits</a></p>
   </aside>
 </div>
 <div class="sr" id="live" aria-live="polite"></div>

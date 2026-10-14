@@ -88,7 +88,7 @@ jobs:
           p="${{ matrix.item.pre }}"
           gh release download ${{ matrix.item.rel }} -D work/occ -p "${p}occ_cells_v1.parquet" -p "${p}occ_cells_pilot_v1.parquet" -p "${p}occ_cells_v1_excluded_non_native.parquet" -p "occ_cells_pilot_v1_excluded_non_native.parquet" -p "${p}occ_cells_crops_v1.parquet" -p "occ_cells_crops_cultivated_pilot_v1.parquet" -p "${p}w2_report_v1.json" -p "w2_report_pilot_v1.json" --clobber || true
           gh release download species-pilot-data -D work/occ -p "tg_density_*_v1.npz" -p "s2_tg_density_*_v1.npz" --clobber
-          gh release download species-data-allrange -D work/occ -p "intro_occ_cells_v1.parquet" --clobber || echo "no introduced-records table"
+          gh release download species-data-allrange -D work/occ -p "intro_occ_cells_v1.parquet" -p "nc_occ_cells_v1.parquet" -p "nc_downloads_v1.json" --clobber || echo "no introduced-records / non-commercial table"
           ls -la work/occ
       - name: Fit (all records)
         if: steps.skip.outputs.done != 'true'

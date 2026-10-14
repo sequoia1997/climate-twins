@@ -153,6 +153,18 @@ def _place_codes(cts_mod, base: bytes, scen: dict, withheld: dict, by: dict = No
     return out
 
 
+_IMG = None
+
+
+def image_of(sci: str):
+    """Photo credit record for the organism from data/species/images.json (built by ctw.species.images), or None."""
+    global _IMG
+    if _IMG is None:
+        f = Path(__file__).resolve().parent.parent / "data" / "species" / "images.json"
+        _IMG = json.load(open(f, encoding="utf-8")) if f.exists() else {}
+    return _IMG.get(sci)
+
+
 def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) -> dict:
     sp = S["species"]
     by, withheld = {}, {}
@@ -179,6 +191,7 @@ def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) ->
     return {
         "id": sp["id"].replace("_breeding", ""), "name": display_name(sp.get("common_name") or sp["scientific_name"]), "sci": sp["scientific_name"], "group": sp["group"], **taxonomy_of(sp["scientific_name"]),
         "kind": S.get("species_kind", sp.get("kind", "wild")), "season": season if season == "breeding" else None,
+        "image": image_of(sp["scientific_name"]),
         "range_basis": ("recorded" if (S.get("species_kind") == "crop" or (S.get("domain") or {}).get("native_range_used") in (False, None)) else "native"),
         "tier": S["tier"], "confidence": S["confidence"], "soft_flags": S.get("soft_flags", []), "wording": S["wording"],
         "range_shifts": S.get("range_shifts_tested", "untested"), "range_shift_checks": rs.get("group_checks", []),

@@ -1,0 +1,25 @@
+# Photos for the organism pages from Wikipedia / Wikimedia Commons (reusable licences only), committed as data/species/images.json.
+# Trigger: push to .github/run/images.
+name: images
+on:
+  push:
+    paths: [".github/run/images"]
+permissions:
+  contents: write
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12" }
+      - run: pip install requests
+      - run: python -m ctw.species.images
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/species/images.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Organism photos from Wikimedia Commons (Actions run ${{ github.run_id }})"
+          for i in 1 2 3; do git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done

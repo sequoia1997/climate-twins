@@ -85,12 +85,14 @@ async def main():
                 fails.append(f"{name}: horizontal overflow {ov} {wide}")
             unnamed = await pg.evaluate("""[...document.querySelectorAll('button,input,select')].filter(e => !(e.getAttribute('aria-label') || e.textContent.trim() || (e.labels && e.labels.length) || e.title)).map(e => e.outerHTML.slice(0, 80))""")
             if unnamed: fails.append(f"{name}: controls without a name {unnamed}")
-            head = await pg.inner_text("#sp-head")
-            for need in ("Today's map", "Future map", "not a forecast", "Sugar maple"):
+            head = await pg.evaluate("document.getElementById('sp-head').textContent + ' ' + document.getElementById('sh-badges').textContent")
+            for need in ("Today's map", "Future map", "Sugar maple"):
                 if need.lower() not in head.lower(): fails.append(f"{name}: sugar maple header lacks '{need}'")
+            if "not a forecast" not in (await pg.inner_text("#panel")).lower(): fails.append(f"{name}: panel lacks the not-a-forecast caveat")
             if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-maple-change.png"))
             # scenario, period, dispersal, overlays
             await pg.click("#ssp button:nth-child(2)"); await settle(pg, 2)
+            await pg.evaluate("document.getElementById('more-det').open = true")
             await pg.click("#per button:nth-child(2)"); await pg.click("#disp button:nth-child(2)")
             await pg.check("#o-agree"); await pg.check("#o-novel"); await pg.wait_for_timeout(1000)
             if "km" not in await pg.inner_text("#disp-d"): fails.append(f"{name}: limited-dispersal text has no distance")
@@ -109,7 +111,7 @@ async def main():
             await pg.click("#pickdet > summary") if not await pg.evaluate("document.getElementById('pickdet').open") else None
             await pg.fill("#search", "robin"); await pg.keyboard.press("ArrowDown"); await pg.keyboard.press("Enter")
             await settle(pg, 3)
-            head = await pg.inner_text("#sp-head")
+            head = await pg.evaluate("document.getElementById('sp-head').textContent + ' ' + document.getElementById('sh-badges').textContent")
             if "American robin" not in head: fails.append(f"{name}: search did not select the robin")
             for need in ("Today's map: checked", "Future map: direction unreliable", "breeding-season"):
                 if need.lower() not in head.lower(): fails.append(f"{name}: robin header lacks '{need}'")
@@ -120,7 +122,7 @@ async def main():
             t = await pg.inner_text("#summary")
             if "withheld" not in t.lower(): fails.append(f"{name}: withheld numbers not shown for the kookaburra: {t[:120]!r}")
             elif "unlike anything" not in t.lower(): fails.append(f"{name}: withheld reason missing")
-            if "withheld" not in (await pg.inner_text("#sp-head")).lower(): fails.append(f"{name}: withheld banner missing from the header")
+            if "withheld" not in (await pg.evaluate("document.getElementById('sp-head').textContent + ' ' + document.getElementById('sh-badges').textContent + ' ' + document.getElementById('summary').textContent")).lower(): fails.append(f"{name}: withheld banner missing from the header")
             if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-kookaburra-withheld.png"))
             # picking an organism frames its range; the map repeats the world (no wall at the date line) and draws the data in every copy
             bb = await pg.evaluate("(() => { const m = window.__map, b = m.getBounds(), c = m.getCenter(); return [b.getWest(), b.getEast(), c.lng, m.getMaxBounds() === null || m.getMaxBounds() === undefined]; })()")
@@ -161,6 +163,12 @@ async def main():
                     if await pg.locator("#results li").count() > n0: fails.append(f"{name}: drill-down grew the list")
                     if await pg.locator("#browse .crumb").count() < 2: fails.append(f"{name}: no breadcrumb after drilling down")
                     await pg.locator("#browse .crumb").first.click(); await pg.wait_for_timeout(200)
+            lg = pg.locator("#sp-head .lineage .lg")
+            if not await lg.count(): fails.append(f"{name}: no lineage under the organism name")
+            else:
+                await lg.last.click(); await pg.wait_for_timeout(300)
+                if not await pg.evaluate("document.getElementById('pickdet').open"): fails.append(f"{name}: lineage step did not open the picker")
+                if await pg.locator("#browse .crumb").count() < 2: fails.append(f"{name}: lineage step did not zoom the tree")
             # phone: tier, confidence and withheld status are visible in the half-open sheet without scrolling
             if w < 500:
                 r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")

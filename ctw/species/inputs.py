@@ -305,6 +305,7 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     if "species" in df.columns:
         df = df[df["species"] == meta["scientific_name"]]
     all_range = os.environ.get("W3_RANGE") == "all" and season != "breeding"
+    used_nc = False
     if all_range:                       # every wild record, native and introduced: add back the cells the native mask removed (saved by every assemble stage)
         ex_name = (pre + "occ_cells_v1_excluded_non_native.parquet") if s1 else "occ_cells_pilot_v1_excluded_non_native.parquet"
         ex_f = os.path.join(root, ex_name)
@@ -315,6 +316,14 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
             if len(it):
                 sh = [c for c in df.columns if c in it.columns]
                 df = pd.concat([df, it[sh]], ignore_index=True).drop_duplicates(["row", "col"])
+        nc_f = os.path.join(root, "nc_occ_cells_v1.parquet")             # CC BY-NC records (ctw.species.ncrun): the site is educational and non-commercial
+        if os.path.exists(nc_f):
+            nc = pd.read_parquet(nc_f)
+            nc = nc[nc["species"] == meta["scientific_name"]]
+            if len(nc):
+                used_nc = True
+                sh = [c for c in df.columns if c in nc.columns]
+                df = pd.concat([df, nc[sh]], ignore_index=True).drop_duplicates(["row", "col"])
         if os.path.exists(ex_f):
             ex = pd.read_parquet(ex_f)
             if "species" in ex.columns:
@@ -373,4 +382,10 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
         dois.append("https://doi.org/" + r["doi"])
     for d_ in (r.get("target_group_dois") or []):
         dois.append(d_)
+    if used_nc:                                                                  # cite the non-commercial downloads too
+        nf = os.path.join(root, "nc_downloads_v1.json")
+        if os.path.exists(nf):
+            for x in json.load(open(nf)):
+                if x.get("doi"):
+                    dois.append("https://doi.org/" + x["doi"])
     return occ, native, density, dois

@@ -127,6 +127,7 @@ details.intro>summary,details.settings>summary,details.more>summary,details.more
 .modes[data-pos="0"] a:first-child,.modes[data-pos="1"] a:last-child{color:var(--chipOnInk)}
 .modes a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.modes::before,.modes a{transition:none}}
+.caveat{font-size:.84rem;margin:2px 0 10px;padding:6px 10px;border-left:3px solid var(--warn,#b8860b);background:var(--chip,#eef1f3);border-radius:0 8px 8px 0}.about h3{font-size:.86rem;margin:14px 0 4px;color:var(--ink)}.about h3:first-of-type{margin-top:6px}
 details.intro{margin:0 0 10px} details.intro[open]>summary{margin-bottom:8px} details.settings{margin:6px 0 4px}
 #ctlbar{background:var(--panel);padding:4px 0 6px;z-index:3} #sheethead{display:none}
 .ctl{display:flex;align-items:center;gap:8px;margin:4px 0} .ctl>.small{width:56px;flex:none;margin:0;color:var(--muted)}
@@ -384,6 +385,7 @@ aside a:hover{text-decoration-thickness:2px}
     </div>
     <h1>Climate twins</h1>
     <nav class="modes" data-pos="0" aria-label="Site sections"><a href="./" aria-current="page">Places</a><a href="species.html">Organisms</a></nav>
+    <p class="caveat"><strong>Projections, not forecasts.</strong> Read each arrow as a way to picture a scenario, not a prediction for a specific town.</p>
     <details id="intro" class="intro"><summary>About this map and σ</summary>
     <p class="lede">Pick a place anywhere in North America, or one of 800 major cities around the world. The arrow points to where today's climate is the closest match to the climate that place is projected to have around 2050 or 2100.</p>
     <div class="sigma-note">
@@ -415,10 +417,10 @@ aside a:hover{text-decoration-thickness:2px}
       <div class="ctl gw-off" id="gwl-ctl"><div class="small" id="gwl-label">Warming</div><div class="seg" id="gwl-seg" role="group" aria-labelledby="gwl-label"></div></div>
       <!-- GWL-END -->
       <div class="ctl" id="per-ctl"><div class="small" id="per-label">Period</div><div class="seg" id="per" role="group" aria-labelledby="per-label"></div></div>
-      <div class="ctl" id="ssp-ctl"><div class="small" id="ssp-label">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="ssp-label"></div></div>
+      <div class="ctl" id="ssp-ctl"><div class="small" id="ssp-label">Emissions future</div><div class="seg" id="ssp" role="group" aria-labelledby="ssp-label"></div></div>
     </div>
     <div class="small" id="ssp-desc"></div>
-    <details class="settings" data-k="settings"><summary>Settings</summary>
+    <details class="settings" data-k="settings"><summary>More options</summary>
     <div class="opts">
       <label><input type="checkbox" id="optModels" checked> Individual models</label>
       <label><input type="checkbox" id="optAll" checked> All arrows</label>
@@ -430,8 +432,8 @@ aside a:hover{text-decoration-thickness:2px}
     <hr>
     <section id="result" aria-live="polite"><p class="muted">Tap a dot on the map or search for a place. With “All arrows” on, the map shows every place's best match for the chosen scenario, colored by how good the match is.</p></section>
     <hr>
-    <details>
-      <summary>How this works</summary>
+    <details class="settings about"><summary>About this map and method</summary>
+<h3>How this works</h3>
       <p>For each place, the projected climate (averaged over 2041–2060 for “2050” and 2081–2100 for “2100”, the IPCC's standard mid-century and end-of-century periods) is the place's 1991–2020 climate plus the change simulated by CMIP6 climate models. That future climate is compared with today's (1991–2020) climate in every 15 km grid cell across the United States, Canada and Mexico.</p>
       <p><strong>Cities outside North America</strong> are compared with today's climate everywhere on Earth's land (except Antarctica), in cells of 0.5° (about 55 km). Their present climate, and the global cells, come from TerraClimate 1991–2020; the same 24 climate models and the same method are used.</p>
       <p>The comparison uses 14 numbers: average daily high, average nightly low and total precipitation for each season, plus how humid it is (dewpoint) in December–February and June–August. Differences are measured against how much each season normally varies from year to year at the place itself, then expressed as <em>sigma dissimilarity</em> (Mahony et al. 2017), the method Fitzpatrick &amp; Dunn used for their 2019 map of 540 North American cities.</p>
@@ -444,9 +446,7 @@ aside a:hover{text-decoration-thickness:2px}
       <p><strong>How year-to-year variation is used.</strong> The 14 measures don't vary independently. Hot summers tend to be dry, for example. The comparison accounts for these links, using a statistical technique called shrinkage (Ledoit &amp; Wolf 2004) so that patterns which barely vary at a place are neither ignored nor exaggerated.</p>
       <p><strong>Models.</strong> The map averages 15 of 24 CMIP6 models: those whose transient climate response lies in the IPCC AR6 likely range of 1.4–2.2 °C, following Hausfather et al. (2022). The other nine (seven above the range, one below it, one without a published value) can be included under Advanced. The small dots show each model's own best match, so a tight cluster means the models agree.</p>
       <p><strong>Confidence.</strong> High means at least 60% of the models put their own best match within 500 km of the arrow's tip, and a second statistical method (keeping only the main patterns of variation) agrees. Low means fewer than 40% of models agree, or the second method points elsewhere and model agreement is modest. <!-- BEGIN era5-agreement -->Independent datasets (ERA5, and where available CHIRPS and CHELSA) are also compared with the place's present climate; where the two differ a lot, the level drops by one and the panel says so.<!-- END era5-agreement --></p>
-    </details>
-    <details>
-      <summary>What this leaves out</summary>
+<h3>What this leaves out</h3>
       <ul>
         <li>Only temperature and precipitation. Humidity, heat index, extremes, hurricanes, wildfire and sea-level rise are not included.</li>
         <li>Model changes come from grid cells roughly 50–300 km wide and are added to the local climate, so changes in fine-scale patterns (for example along mountains or coasts) are not captured.</li>
@@ -456,12 +456,11 @@ aside a:hover{text-decoration-thickness:2px}
         <li>Cities outside North America are matched at 0.5° (about 55 km), so mountain and coastal cities are compared more coarsely than in North America. Small islands and narrow coastal strips (Malé, Funafuti, Aden, Dakar) have no 55 km cell like them, so even their present climate may have no close match, and their arrows should be read loosely.</li>
         <li>Where a season has almost no rain in any year (Lima, Cairo), its year-to-year variation is set to a small minimum (about 10%) so the comparison stays defined.</li>
       </ul>
-    </details>
-    <details>
-      <summary>Data and sources</summary>
+<h3>Data and sources</h3>
       <p>Today's climate: AdaptWest/ClimateNA 1991–2020 monthly normals (1 km, averaged to 15 km; place values use the 1 km cells within 10 km). Year-to-year variability: PRISM monthly 4 km, 1991–2020, detrended (lower 48); TerraClimate elsewhere. Future change: 24 CMIP6 models (Pangeo archive), 2041–2060 and 2081–2100 minus 1991–2020, land-weighted. Worldwide matches and cities outside North America: TerraClimate 1991–2020 monthly (1/24°), averaged to 0.5° for the global pool and within 10 km for each city. Places: GeoNames; national capitals: Natural Earth. Basemap: OpenFreeMap, built from OpenStreetMap data. Backup outlines: Natural Earth.</p>
       <p>Mahony, C.R. et al. (2017) Global Change Biology 23:3934. Fitzpatrick, M.C. &amp; Dunn, R.R. (2019) Nature Communications 10:614. Hausfather, Z. et al. (2022) Nature 605:26.</p>
       <p id="modelslist" class="small"></p>
+    
     </details>
     <p class="foot" id="dver"></p>
     <p class="foot"><a href="methods.html" target="_blank" rel="noopener">How this map was made: methods, data and references</a></p>
@@ -486,7 +485,6 @@ aside a:hover{text-decoration-thickness:2px}
         <div class="reqbtns"><button type="button" id="fbcancel">Cancel</button><button type="submit" id="fbsend">Send</button></div>
       </form>
     </dialog>
-    <p class="foot">Projections are not forecasts. Treat each arrow as a way to picture a scenario, not a prediction for a specific town.</p>
   </aside>
 </div>
 
@@ -497,6 +495,7 @@ const RAMP_L=["#ffd23f","#ffa630","#f26b3a","#d1435b","#9c3f7c","#6c4585","#4f4f
 // Dark basemap: same hues, but the high end is lifted so 4-8 sigma stays visible on near-black land.
 const RAMP_D=["#ffd23f","#ffa630","#f47a45","#e0566c","#c05c9e","#9a6cc4","#7a7fc0","#7f8b99"];
 let RAMP=RAMP_L;
+const SSP_PLAIN={"SSP1-2.6":"Low","SSP2-4.5":"Middle","SSP3-7.0":"High","SSP5-8.5":"Very high"},sspName=n=>SSP_PLAIN[n]||n;
 const SSP_DESC=["Strong mitigation: warming held near 2 °C this century.","Middle of the road: today's policies, roughly 2.5–3 °C by 2100.","High emissions: rising fossil fuel use, around 4 °C by 2100.","Very high emissions. Now widely considered implausible; the next generation of scenarios drops it."];
 const SEAS=["Winter","Spring","Summer","Fall"],SEASM=["Dec–Feb","Mar–May","Jun–Aug","Sep–Nov"];
 function seasons(lat){return lat<23.5?SEASM:SEAS;}
@@ -1370,11 +1369,11 @@ function centerOn(lon,lat){map.easeTo({center:[lon,lat],duration:RM?0:500});}
 function segs(){
   document.getElementById("dver").textContent=`Data version ${D.data_version}. Climate models: CMIP6. Baseline: 1991–2020.`;
   const pe=document.getElementById("per");D.periods.forEach((q,i)=>{const b=document.createElement("button");b.textContent="~"+q.label;b.title=q.years;b.setAttribute("aria-label",`${q.label} (${q.years})`);b.setAttribute("aria-pressed",i===S.per);b.onclick=()=>{S.per=i;[...pe.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));refresh();};pe.appendChild(b);});
-  const s=document.getElementById("ssp");D.ssps.forEach((n,i)=>{const b=document.createElement("button");b.textContent=n;b.setAttribute("aria-pressed",i===S.ssp);b.onclick=()=>{S.ssp=i;[...s.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));document.getElementById("ssp-desc").textContent=SSP_DESC[i];refresh();};s.appendChild(b);});
+  const s=document.getElementById("ssp");D.ssps.forEach((n,i)=>{const b=document.createElement("button");b.textContent=sspName(n);b.title=n;b.setAttribute("aria-pressed",i===S.ssp);b.onclick=()=>{S.ssp=i;[...s.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i));document.getElementById("ssp-desc").textContent=SSP_DESC[i];refresh();};s.appendChild(b);});
   document.getElementById("ssp-desc").textContent=SSP_DESC[S.ssp];
   gwlInit();
   const mp=document.getElementById("mper"),ms=document.getElementById("mssp");
-  mp.innerHTML=D.periods.map((q,i)=>`<option value="${i}">~${q.label}</option>`).join("");ms.innerHTML=D.ssps.map((n,i)=>`<option value="${i}">${n}</option>`).join("");
+  mp.innerHTML=D.periods.map((q,i)=>`<option value="${i}">~${q.label}</option>`).join("");ms.innerHTML=D.ssps.map((n,i)=>`<option value="${i}">${sspName(n)} (${n})</option>`).join("");
   mp.value=S.per;ms.value=S.ssp;mp.onchange=()=>pe.children[+mp.value].click();ms.onchange=()=>s.children[+ms.value].click();
   document.querySelectorAll(".pk-per").forEach(x=>{x.innerHTML=mp.innerHTML;x.value=S.per;x.onchange=()=>pe.children[+x.value].click();});
   document.querySelectorAll(".pk-ssp").forEach(x=>{x.innerHTML=ms.innerHTML;x.value=S.ssp;x.onchange=()=>s.children[+x.value].click();});

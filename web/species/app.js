@@ -208,6 +208,7 @@ const sgn = n => (n > 0 ? "+" : n < 0 ? MIN : "") + Math.abs(n);
 const compass = b => ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"][Math.round(b / 45) % 8];
 const PERLAB = () => "around " + S.per;
 const PERFULL = () => `around ${S.per} (${ST.periods[S.per]})`;
+const SSPN = { ssp126: "Low", ssp245: "Middle", ssp370: "High", ssp585: "Very high" };
 const SSPD = { ssp126: "Emissions fall quickly. Global warming about 1.8 \u00B0C by 2100.", ssp245: "A middle road: emissions peak mid-century, then fall. About 2.7 \u00B0C by 2100.", ssp370: "Emissions keep rising slowly. About 3.6 \u00B0C by 2100.", ssp585: "Emissions keep rising fast. About 4.4 \u00B0C by 2100." };
 const sspLabel = () => ST.ssps[S.ssp];
 const FLAG = "Climate suitability, not a forecast.";
@@ -228,12 +229,11 @@ function dispText() {
 function renderControls() {
   seg("view", [["now", "Now"], ["future", "Future"], ["change", "Change"]], () => S.view, v => { S.view = v; update(); });
   const i = INFO[S.sp];
-  seg("ssp", Object.entries(ST.ssps).filter(([k]) => !i || i.ssps.includes(k)), () => S.ssp, v => { S.ssp = v; update(true); });
+  seg("ssp", Object.entries(ST.ssps).filter(([k]) => !i || i.ssps.includes(k)).map(([k, v]) => [k, SSPN[k] || v]), () => S.ssp, v => { S.ssp = v; update(true); });
   seg("per", Object.keys(ST.periods).map(k => [k, "Around " + k]), () => S.per, v => { S.per = v; update(); });
   seg("disp", [["unlimited", "Unlimited"], ["limited", "Limited"], ["none", "None"]], () => S.disp, v => { S.disp = v; update(); });
   $("disp-d").textContent = i ? dispText() : "";
-  $("ssp-d").textContent = (SSPD[S.ssp] || "") + " SSP is the name climate scientists give to a possible future path of emissions.";
-  $("per-d").textContent = "\u201CAround " + S.per + "\u201D means the 20-year average " + (ST.periods[S.per] || "") + ", so one unusual year does not skew it.";
+  $("ssp-d").textContent = `${SSPN[S.ssp] || ""} emissions (${ST.ssps[S.ssp] || S.ssp}): ${SSPD[S.ssp] || ""}`;
   $("o-agree").checked = S.agree; $("o-novel").checked = S.novel;
 }
 /* ---- taxonomic tree: kingdom > phylum > class > order > family > genus > species, drawn as a left-to-right dendrogram that fits the space it is given.
@@ -270,10 +270,11 @@ function buildTree() {
     return n;
   };
   squash(root);
+  const byId = {}; (function w(n) { if (n.leaf) byId[n.id] = n; n.kids.forEach(w); })(root);
   const order = (n, d = 0) => { n.d = d; n.kids.sort((a, b) => b.species.length - a.species.length || a.name.localeCompare(b.name)); n.kids.forEach(k => order(k, d + 1)); n.n = n.species.length; };
   order(root);
   const find = (n, key) => n.key === key ? n : n.kids.reduce((r, k) => r || (key.startsWith(k.key) ? find(k, key) : null), null);
-  TREE = { root, find };
+  TREE = { root, find, byId };
   return TREE;
 }
 const hueOf = n => { const g = new Set(n.species.map(s => s.group)); return g.size === 1 ? HUES[[...g][0]] : null; };
@@ -387,19 +388,20 @@ function head() {
   const wh = isWithheld();
   const T = todayCheck(i), F = futureCheck(i), bd = chip(T) + " " + chip(F);
   $("sh-badges").innerHTML = bd;                                              // always visible in the phone sheet header
-  $("sp-head").innerHTML = `<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
-  <p class="badges">${bd}</p>
-  <dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd><dt>Records used</dt><dd>${esc(i.kind === "crop" ? "Places where the crop is recorded." : i.range_basis === "native" ? "Records inside the organism\u2019s known native range." : "Every recorded location, including places it has been introduced to.")}</dd></dl>
-  <p class="small"><button type="button" class="linkbtn" id="copylink">Copy link to this view</button> <span id="copied" role="status"></span></p>
-  ${isWithheld() ? `<p class="note withheld"><strong>Numbers withheld for ${esc(PERLAB())} under ${esc(sspLabel())}:</strong> ${esc(i.withheld[S.ssp + "|" + S.per])}.</p>` : ""}
-  <p class="disc">${FLAG}</p><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
+  const leaf = TREE && TREE.byId[i.id], chain = []; for (let n = leaf && leaf.parent; n && n.rank !== "root"; n = n.parent) chain.unshift(n);
+  const lineage = leaf ? `<nav class="lineage" aria-label="Where this organism sits in the tree of life"><button type="button" class="lg" data-k="">Tree of life</button>${chain.map(n => `<span aria-hidden="true">\u203A</span><button type="button" class="lg" data-k="${esc(n.key)}" title="${esc(n.name + " \u00B7 " + (RANK[n.rank] || ""))}">${esc(fname(n.name))}</button>`).join("")}</nav>` : "";
+  const im = i.image, photo = im ? `<figure class="photo"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(im.file)}?width=520" alt="${esc(i.name)}" loading="lazy" decoding="async" onerror="this.closest('figure').remove()"><figcaption>${esc(im.artist)} &middot; <a href="${esc(im.licence_url || im.page)}" rel="noopener">${esc(im.licence)}</a> &middot; <a href="${esc(im.page)}" rel="noopener">Commons</a></figcaption></figure>` : "";
+  $("sp-head").innerHTML = `${photo}<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 4px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
+  ${lineage}<p class="badges">${bd}</p>`;
+  $("reliab").innerHTML = `<dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd><dt>Records used</dt><dd>${esc(i.kind === "crop" ? "Places where the crop is recorded." : i.range_basis === "native" ? "Records inside the organism\u2019s known native range." : "Every recorded location, including places it has been introduced to.")}</dd></dl><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
   $("sh-title").textContent = i.name;
+  $("sp-head").querySelectorAll(".lineage .lg").forEach(b => b.addEventListener("click", () => { S.focus = b.dataset.k; const pd = $("pickdet"); if (pd) pd.open = true; renderResults(); if (pd) pd.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" }); }));
   const dl = i.dois.map(d => `<a href="${esc(d)}" rel="noopener">${esc(d.replace("https://doi.org/", "doi:"))}</a>`).join(", ") || "none recorded";
   $("about").innerHTML = `<dl class="facts"><dt>Internal grade</dt><dd>Tier ${i.tier}, ${esc(i.confidence)} confidence</dd><dt>Cross-validation</dt><dd>${esc(CVK[i.cv_kind] || i.cv_kind || "n/a")}</dd>
     <dt>Cross-validation AUC</dt><dd>${i.skill.auc == null ? "n/a" : i.skill.auc.toFixed(2)}</dd><dt>Records (grid cells)</dt><dd>${i.records.cells == null ? "n/a" : i.records.cells.toLocaleString("en")}</dd>
     <dt>Climate variables used</dt><dd>${esc(i.predictors.join(", "))}</dd><dt>Climate models</dt><dd>${i.n_models}</dd><dt>Range-shift test</dt><dd>${esc(i.range_shifts)}</dd></dl>
     <p class="small">${esc(shiftsText(i))}</p>
-    <p class="small">Records: GBIF occurrence download ${dl} (CC0 and CC-BY records only).${i.season ? " Only records from the breeding months (May to July) are used, because the organism migrates." : ""}
+    <p class="small">Records: GBIF occurrence download ${dl} (CC0, CC-BY and CC BY-NC records; the site is non-commercial).${i.season ? " Only records from the breeding months (May to July) are used, because the organism migrates." : ""}
     <a href="methods.html#o-tiers">What the tiers mean</a>, <a href="methods.html#limits-organisms">limitations</a> and <a href="methods.html#credits-organisms">credits</a>.</p>`;
 }
 function bars(rows, max, signed) {
@@ -411,7 +413,7 @@ function bars(rows, max, signed) {
 }
 function withheldWhy(i, c) {
   const nv = c && c.novel != null ? Math.round(c.novel * 100) : null;
-  return `${nv ? "About " + nv + "% of the area where this organism could live by " + PERLAB() + " would have a climate unlike anything in its present-day records" : "Much of the projected area would have a climate unlike anything in this organism's present-day records"} (for example hotter than anywhere it has been recorded). The model has nothing to compare that with, so any number would be a guess, and we would rather show no number than a made-up one.`;
+  return `${nv ? "About " + nv + "% of the area" : "Much of the area"} where this organism could live by ${PERLAB()} would have a climate unlike anything in its records, so any number would be a guess. The hatched areas on the map show where.`;
 }
 function summary() {
   const i = I(), c = cur(), per = PERLAB(), el = $("summary");
@@ -421,7 +423,7 @@ function summary() {
     el.innerHTML = `<div class="stats"><div class="st s-now"><div class="k">Suitable now</div><div class="v">${fmtA(i.area_now_km2)}</div><div class="d">1991–2020</div></div>
       <div class="st s-fut"><div class="k">Suitable by ${per}</div><div class="v">Withheld</div><div class="d">${esc(sspLabel())}</div></div>
       <div class="st s-mat"><div class="k">Change</div><div class="v">Withheld</div><div class="d">&nbsp;</div></div></div>
-      <p class="note withheld"><strong>Numbers withheld.</strong> ${withheldWhy(i, c)} The map is still drawn, and the hatched (diagonal-line) areas show where the model would be guessing.</p>`;
+      <p class="note withheld"><strong>Numbers withheld.</strong> ${withheldWhy(i, c)}</p>`;
     const txt = `${i.name}: suitable climate now covers ${fmtA(i.area_now_km2)}. The numbers for ${per} under ${sspLabel()} are withheld: ${why}. ${FLAG}`;
     $("textdesc").textContent = txt; $("live").textContent = txt; return;
   }
@@ -564,6 +566,7 @@ document.addEventListener("click", e => {
 });
 async function pick(id) {
   if (!ST.byId[id]) return;
+  if (TREE && TREE.byId[id]) S.focus = TREE.byId[id].parent.key;
   S.sp = id; const pc = $("pick-cur"); if (pc) pc.textContent = rec(id).name; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
   if (!INFO[id]) $("sp-head").innerHTML = `<h2>${esc(rec(id).name)}</h2><p class="small" role="status">Loading\u2026</p>`;
   writeHash();
