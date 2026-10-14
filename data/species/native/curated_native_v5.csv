@@ -1,0 +1,24 @@
+scientific_name,group,native_spec,season_scheme,breeding_native_spec,winter_native_spec,gbif_continent_shares,share_outside_mask,outside_continents,introduced_or_migration_note,second_pass
+Pseudacris regilla,amphibian,NORTH_AMERICA,,,,NORTH_AMERICA:1.0;OCEANIA:0.0,0.0,OCEANIA:0.0,native western North America,consistent: record shares by continent all inside the curated continents
+Anaxyrus boreas,amphibian,NORTH_AMERICA,,,,NORTH_AMERICA:1.0;OCEANIA:0.0,0.0,OCEANIA:0.0,native western North America,consistent: record shares by continent all inside the curated continents
+Dryophytes versicolor,amphibian,NORTH_AMERICA,,,,NORTH_AMERICA:1.0;ASIA:0.0,0.0,ASIA:0.0,native eastern North America,consistent: record shares by continent all inside the curated continents
+Notophthalmus viridescens,amphibian,NORTH_AMERICA,,,,NORTH_AMERICA:1.0,0,,native eastern North America,consistent: record shares by continent all inside the curated continents
+Ambystoma maculatum,amphibian,NORTH_AMERICA,,,,NORTH_AMERICA:1.0;EUROPE:0.0,0.0,EUROPE:0.0,native eastern North America,consistent: record shares by continent all inside the curated continents
+Litoria peronii,amphibian,OCEANIA(AU),,,,OCEANIA:1.0,0,,native eastern Australia,consistent: record shares by continent all inside the curated continents
+Litoria ewingii,amphibian,OCEANIA(AU),,,,OCEANIA:1.0,0,,native south-eastern Australia; introduced New Zealand (excluded),consistent: record shares by continent all inside the curated continents
+Crinia parinsignifera,amphibian,OCEANIA(AU),,,,OCEANIA:1.0,0,,native eastern Australia,consistent: record shares by continent all inside the curated continents
+Sceloporus undulatus,reptile,NORTH_AMERICA,,,,NORTH_AMERICA:1.0,0,,native eastern and central North America,consistent: record shares by continent all inside the curated continents
+Plestiodon fasciatus,reptile,NORTH_AMERICA,,,,NORTH_AMERICA:1.0,0,,native eastern North America,consistent: record shares by continent all inside the curated continents
+Pantherophis alleghaniensis,reptile,NORTH_AMERICA,,,,NORTH_AMERICA:1.0;EUROPE:0.0,0.0,EUROPE:0.0,native eastern North America,consistent: record shares by continent all inside the curated continents
+Storeria dekayi,reptile,NORTH_AMERICA,,,,NORTH_AMERICA:1.0;ASIA:0.0;EUROPE:0.0,0.0,ASIA:0.0;EUROPE:0.0,native eastern North America to Central America,consistent: record shares by continent all inside the curated continents
+Coluber constrictor,reptile,NORTH_AMERICA,,,,NORTH_AMERICA:1.0;EUROPE:0.0,0.0,EUROPE:0.0,native North America,consistent: record shares by continent all inside the curated continents
+Lampropholis delicata,reptile,OCEANIA(AU),,,,OCEANIA:0.994;NORTH_AMERICA:0.006,0.006,NORTH_AMERICA:0.006,"native eastern Australia; introduced New Zealand, Hawaii (excluded)",consistent: record shares by continent all inside the curated continents
+Pseudonaja textilis,reptile,OCEANIA(AU),,,,OCEANIA:1.0,0,,native eastern Australia,consistent: record shares by continent all inside the curated continents
+Crotalus atrox,reptile,NORTH_AMERICA,,,,NORTH_AMERICA:1.0,0,,native south-western US and Mexico,consistent: record shares by continent all inside the curated continents
+Myotis daubentonii,mammal,EUROPE;ASIA,,,,EUROPE:0.999;ASIA:0.001,0,,native Europe and Asia,consistent: record shares by continent all inside the curated continents
+Nyctalus noctula,mammal,EUROPE;ASIA,,,,EUROPE:0.999;ASIA:0.001;NORTH_AMERICA:0.0,0.0,NORTH_AMERICA:0.0,native Europe and Asia; migratory in part,consistent: record shares by continent all inside the curated continents
+Capra ibex,mammal,EUROPE,,,,EUROPE:1.0;AFRICA:0.0;ASIA:0.0;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0,0.0,AFRICA:0.0;ASIA:0.0;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0,native Alps; reintroduced across the Alps inside the mask,consistent: record shares by continent all inside the curated continents
+Coenagrion puella,insect_arachnid,EUROPE;ASIA(W),,,,EUROPE:0.998;ASIA:0.002;AFRICA:0.0;NORTH_AMERICA:0.0,0.0,AFRICA:0.0;NORTH_AMERICA:0.0,native Europe and west Asia,consistent: record shares by continent all inside the curated continents
+Orthetrum cancellatum,insect_arachnid,EUROPE;ASIA;AFRICA(N),,,,EUROPE:0.997;ASIA:0.003;AFRICA:0.0,0,,native Eurasia and North Africa,consistent: record shares by continent all inside the curated continents
+Libellula quadrimaculata,insect_arachnid,EUROPE;ASIA;NORTH_AMERICA,,,,EUROPE:0.956;NORTH_AMERICA:0.037;ASIA:0.006;AFRICA:0.0,0.0,AFRICA:0.0,native Holarctic; some migration inside the mask,consistent: record shares by continent all inside the curated continents
+Tettigonia viridissima,insect_arachnid,EUROPE;ASIA,,,,EUROPE:0.998;ASIA:0.002;AFRICA:0.0;SOUTH_AMERICA:0.0;ANTARCTICA:0.0,0.0,AFRICA:0.0;SOUTH_AMERICA:0.0;ANTARCTICA:0.0,native Europe and Asia,consistent: record shares by continent all inside the curated continents

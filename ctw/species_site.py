@@ -52,7 +52,7 @@ def defensible(S: dict) -> tuple[bool, str]:
     sk = S.get("skill") or {}
     auc, boyce = sk.get("cv_auc"), sk.get("cv_boyce")
     rc = (S.get("gates", {}).get("range_check") or {}).get("status")
-    if rc not in ("pass", "exempt_crop"):
+    if rc not in ("pass", "exempt_crop", "records_only"):
         return False, f"range check {rc}"
     if auc is None or boyce is None:
         return False, "no cross-validated skill"
@@ -65,14 +65,15 @@ def pick_runs(src: Path) -> tuple[dict, list]:
     """{public id: (summary path, zip path, season)} and a list of (name, reason) for what was left out."""
     runs: dict[str, dict] = {}
     for f in sorted(src.glob("*_summary.json")):
-        m = re.match(r"^(?:(?:s\d+|w\d+)_)+(.+?)(_breeding)?_summary\.json$", f.name)
+        m = re.match(r"^(rg_)?(?:(?:s\d+|w\d+)_)+(.+?)(_breeding)?_summary\.json$", f.name)
         if not m:
             continue
         z = f.with_name(f.name.replace("_summary.json", "_cts.zip"))
-        runs.setdefault(m.group(1), {})["breeding" if m.group(2) else "all"] = (f, z)
+        runs.setdefault(m.group(2), {})[("rg_" if m.group(1) else "") + ("breeding" if m.group(3) else "all")] = (f, z)
     chosen, skipped = {}, []
     for sid, v in runs.items():
-        order = ("breeding", "all") if (json.load(open((v.get("breeding") or v["all"])[0]))["species"].get("group") == "bird") else ("all", "breeding")
+        first = next(iter(v.values()))
+        order = ("breeding", "all") if (json.load(open((v.get("breeding") or v.get("all") or first)[0]))["species"].get("group") == "bird") else ("rg_all", "all", "breeding")
         for k in order:
             if k not in v:
                 continue
@@ -178,6 +179,7 @@ def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) ->
     return {
         "id": sp["id"].replace("_breeding", ""), "name": display_name(sp.get("common_name") or sp["scientific_name"]), "sci": sp["scientific_name"], "group": sp["group"], **taxonomy_of(sp["scientific_name"]),
         "kind": S.get("species_kind", sp.get("kind", "wild")), "season": season if season == "breeding" else None,
+        "range_basis": ("recorded" if (S.get("species_kind") == "crop" or (S.get("domain") or {}).get("native_range_used") in (False, None)) else "native"),
         "tier": S["tier"], "confidence": S["confidence"], "soft_flags": S.get("soft_flags", []), "wording": S["wording"],
         "range_shifts": S.get("range_shifts_tested", "untested"), "range_shift_checks": rs.get("group_checks", []),
         "cv_kind": S.get("cv_kind"), "skill": {"auc": S["skill"].get("cv_auc"), "tss": S["skill"].get("cv_tss"), "boyce": S["skill"].get("cv_boyce"), "block_km": S["skill"].get("block_km")},

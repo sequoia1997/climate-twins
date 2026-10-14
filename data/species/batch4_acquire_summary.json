@@ -1,0 +1,38 @@
+{
+ "failed": {},
+ "not_stored": [],
+ "downloads": {
+  "batch:b1": {
+   "key": "0020773-260928105237408",
+   "doi": "10.15468/dl.cpyvk5",
+   "records": 12162641,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-12T03:21:12Z",
+   "unmatched_records": 24
+  },
+  "batch:b2": {
+   "key": "0020774-260928105237408",
+   "doi": "10.15468/dl.p6p767",
+   "records": 12466913,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-12T03:47:11Z",
+   "unmatched_records": 936
+  },
+  "batch:b3": {
+   "key": "0020775-260928105237408",
+   "doi": "10.15468/dl.z4p37q",
+   "records": 12744637,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-12T06:09:23Z",
+   "unmatched_records": 223781
+  },
+  "batch:b4": {
+   "key": "0020792-260928105237408",
+   "doi": "10.15468/dl.w6982k",
+   "records": 975711,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-12T06:21:03Z",
+   "unmatched_records": 25519
+  }
+ }
+}

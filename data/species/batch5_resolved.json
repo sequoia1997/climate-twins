@@ -1,0 +1,163 @@
+{
+"Pseudacris regilla": {
+"key": 2428132,
+"n": 84768,
+"fam": "Hylidae",
+"common": "Northern Baja California treefrog",
+"shares": "NORTH_AMERICA:1.0;OCEANIA:0.0"
+},
+"Anaxyrus boreas": {
+"key": 2422924,
+"n": 47025,
+"fam": "Bufonidae",
+"common": "Boreal Toad",
+"shares": "NORTH_AMERICA:1.0;OCEANIA:0.0"
+},
+"Dryophytes versicolor": {
+"key": 10806364,
+"n": 46421,
+"fam": "Hylidae",
+"common": "Eastern Gray Treefrog",
+"shares": "NORTH_AMERICA:1.0;ASIA:0.0"
+},
+"Notophthalmus viridescens": {
+"key": 5218390,
+"n": 85067,
+"fam": "Salamandridae",
+"common": "Eastern Newt",
+"shares": "NORTH_AMERICA:1.0"
+},
+"Ambystoma maculatum": {
+"key": 2431951,
+"n": 41167,
+"fam": "Ambystomatidae",
+"common": "Spotted Salamander",
+"shares": "NORTH_AMERICA:1.0;EUROPE:0.0"
+},
+"Litoria peronii": {
+"key": 2427831,
+"n": 120095,
+"fam": "Pelodryadidae",
+"common": "Peron\u2019s Tree Frog",
+"shares": "OCEANIA:1.0"
+},
+"Litoria ewingii": {
+"key": 2427705,
+"n": 56065,
+"fam": "Pelodryadidae",
+"common": "southern brown tree frog",
+"shares": "OCEANIA:1.0"
+},
+"Crinia parinsignifera": {
+"key": 2424593,
+"n": 54387,
+"fam": "Myobatrachidae",
+"common": "Beeping Froglet",
+"shares": "OCEANIA:1.0"
+},
+"Sceloporus undulatus": {
+"key": 2451347,
+"n": 37659,
+"fam": "Phrynosomatidae",
+"common": "Eastern Fence Lizard",
+"shares": "NORTH_AMERICA:1.0"
+},
+"Plestiodon fasciatus": {
+"key": 5789613,
+"n": 34732,
+"fam": "Scincidae",
+"common": "American Five-lined Skink",
+"shares": "NORTH_AMERICA:1.0"
+},
+"Pantherophis alleghaniensis": {
+"key": 7453543,
+"n": 41756,
+"fam": "Colubridae",
+"common": "Black Ratsnake",
+"shares": "NORTH_AMERICA:1.0;EUROPE:0.0"
+},
+"Storeria dekayi": {
+"key": 9056579,
+"n": 50083,
+"fam": "Colubridae",
+"common": "(Dekay\u2019s) Brown Snake",
+"shares": "NORTH_AMERICA:1.0;ASIA:0.0;EUROPE:0.0"
+},
+"Coluber constrictor": {
+"key": 6161776,
+"n": 49691,
+"fam": "Colubridae",
+"common": "Black Racer",
+"shares": "NORTH_AMERICA:1.0;EUROPE:0.0"
+},
+"Lampropholis delicata": {
+"key": 5225256,
+"n": 33995,
+"fam": "Scincidae",
+"common": "Dark-flecked garden sunskink",
+"shares": "OCEANIA:0.994;NORTH_AMERICA:0.006"
+},
+"Pseudonaja textilis": {
+"key": 8615718,
+"n": 22591,
+"fam": "Elapidae",
+"common": "Common Brown Snake",
+"shares": "OCEANIA:1.0"
+},
+"Crotalus atrox": {
+"key": 2444356,
+"n": 28610,
+"fam": "Viperidae",
+"common": "Tortuga Island Rattlesnake",
+"shares": "NORTH_AMERICA:1.0"
+},
+"Myotis daubentonii": {
+"key": 2432439,
+"n": 272864,
+"fam": "Vespertilionidae",
+"common": "Daubenton's Bat",
+"shares": "EUROPE:0.999;ASIA:0.001"
+},
+"Nyctalus noctula": {
+"key": 5218524,
+"n": 322723,
+"fam": "Vespertilionidae",
+"common": "Common Noctule",
+"shares": "EUROPE:0.999;ASIA:0.001;NORTH_AMERICA:0.0"
+},
+"Capra ibex": {
+"key": 2441055,
+"n": 185542,
+"fam": "Bovidae",
+"common": "Alpine Ibex",
+"shares": "EUROPE:1.0;AFRICA:0.0;ASIA:0.0;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Coenagrion puella": {
+"key": 1421964,
+"n": 708125,
+"fam": "Coenagrionidae",
+"common": "Azure Bluet",
+"shares": "EUROPE:0.998;ASIA:0.002;AFRICA:0.0;NORTH_AMERICA:0.0"
+},
+"Orthetrum cancellatum": {
+"key": 1428686,
+"n": 587655,
+"fam": "Libellulidae",
+"common": "Black-Tailed Skimmer",
+"shares": "EUROPE:0.997;ASIA:0.003;AFRICA:0.0"
+},
+"Libellula quadrimaculata": {
+"key": 1427915,
+"n": 497879,
+"fam": "Libellulidae",
+"common": "Four-Spotted Chaser",
+"shares": "EUROPE:0.956;NORTH_AMERICA:0.037;ASIA:0.006;AFRICA:0.0"
+},
+"Tettigonia viridissima": {
+"key": 1692898,
+"n": 479365,
+"fam": "Tettigoniidae",
+"common": "Great Green Bush Cricket",
+"shares": "EUROPE:0.998;ASIA:0.002;AFRICA:0.0;SOUTH_AMERICA:0.0;ANTARCTICA:0.0"
+}
+}

@@ -80,10 +80,11 @@ def _hash(df: pd.DataFrame, cols: list[str]) -> np.ndarray:
 class CellCleaner:
     """Feed it chunks of one species' records, then call finish() -> (cells, report)."""
 
-    def __init__(self, land=None, ref=None, max_unc_m=10_000.0, radius_m=None, keep_cultivated=False):
+    def __init__(self, land=None, ref=None, max_unc_m=10_000.0, radius_m=None, keep_cultivated=False, keep_introduced=False):
         """keep_cultivated: crops are modelled where they are cultivated, so the establishmentMeans step only counts, never drops."""
         self.land, self.ref, self.max_unc_m, self.radius_m = land, ref, max_unc_m, radius_m
         self.keep_cultivated = keep_cultivated
+        self.keep_introduced = keep_introduced       # introduced / naturalised / invasive records are kept (managed, cultivated, vagrant still dropped)
         self.keep_months = False          # set True to keep the month of each record for finish_seasonal()
         self._deduped = None
         self.datasets: dict[str, int] = {}
@@ -120,7 +121,7 @@ class CellCleaner:
         L["land"] += len(df)
         if "establishmentmeans" in df and len(df):
             est = df["establishmentmeans"].astype("string").str.upper().fillna("")
-            bad = est.isin(DROP_EST) | est.str.startswith("INTRODUCED")
+            bad = est.isin({"MANAGED", "CULTIVATED", "VAGRANT"}) if self.keep_introduced else (est.isin(DROP_EST) | est.str.startswith("INTRODUCED"))
             self.cultivated_seen += int(est.isin({"MANAGED", "CULTIVATED"}).sum())
             for k, v in est[bad].value_counts().items():
                 self.est_dropped[str(k)] = self.est_dropped.get(str(k), 0) + int(v)

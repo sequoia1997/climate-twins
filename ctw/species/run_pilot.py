@@ -96,6 +96,15 @@ def run_species(meta: dict, src, spec, occ, native, density, outdir: Path, *, la
         if direct.get("available"):
             # the direct check of THIS fit replaces W4's pipeline-level evidence for the Tier A decision; W4's numbers stay in the record
             validation = dict(kind="bbs", passed=direct["passed"], direct=direct, w4_pipeline_evidence=validation)
+    if os.environ.get("W3_GATE_FIRST") == "1" and not (validation and validation.get("passed")):
+        m = fit.cv["metrics"]["gbm"]
+        if not G.skill_publishable(m.get("auc"), m.get("boyce"), gate_cfg):
+            summ = dict(species=meta, tier="C", confidence="none", published=False, gate_first=True,
+                        skill=dict(cv_auc=m.get("auc"), cv_boyce=m.get("boyce")), reason="skill below publication threshold; projection skipped")
+            (d / "summary.json").write_text(json.dumps(summ, default=str))
+            (d / "DONE").write_text(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+            log(f"{sid}: gate-first stop (AUC {m.get('auc')}, Boyce {m.get('boyce')})")
+            return summ
     proj = PR.project_species(fit, src, ssps, periods, group=meta.get("group"), cfg=pcfg, log=log)
     t2 = time.time()
     summ = SM.build_summary(fit, proj, meta, expert=native, expert_kind=expert_kind, validation=validation, range_shift_test=range_shift_test, gate_cfg=gate_cfg, dois=dois)
@@ -314,7 +323,7 @@ def main(argv=None):
         rows = {r["id"]: r for r in read_table(Path(args.table))}
         r = rows[args.species]
         # a crop has no native-range mask: its domain follows the cultivated records, which are worldwide
-        print(" ".join(inputs.tiles_for("" if r.get("group") == "crop" else r["native_continents_curated"])))
+        print(" ".join(inputs.tiles_for("" if (r.get("group") == "crop" or os.environ.get("W3_RANGE") == "all") else r["native_continents_curated"])))
         return 0
     if args.cmd == "report":
         md = full_report(Path(args.out)) if args.full else report(Path(args.out), args.key)
@@ -353,8 +362,9 @@ def main(argv=None):
     if args.season:
         meta["id"] = f"{base_id}_{args.season}"
         meta["season"] = args.season
+    ek = "all_records" if (os.environ.get("W3_RANGE") == "all" and native is None) else "native_range"
     run_species(meta, src, spec, occ, native, density, out, cfg=cfg, pcfg=pcfg, validation=validation, range_shift_test=shift, dois=dois, force=args.force,
-                product=args.product, bbs_dir=args.bbs_dir, aou=aou, redo_summary=args.redo_summary)
+                expert_kind=ek, product=args.product, bbs_dir=args.bbs_dir, aou=aou, redo_summary=args.redo_summary)
     return 0
 
 

@@ -43,6 +43,19 @@ class GateConfig:
     unrecorded_warn: float = 0.5
     gam_disagree_pp: float = 25.0        # UNCALIBRATED: |area change main - check| above this percentage points -> low confidence
     tierA_kinds: tuple = ("bbs", "fia")  # kinds of independent-survey evidence that count as validated static skill
+    # Publication rule ("defensible"), shared with ctw.species_site.defensible and the skill-first shortcut: Tier A, or AUC >= 0.70 with Boyce >= 0.50, or
+    # (very wide-ranging organisms, whose records resemble much of the background and so depress AUC) AUC >= 0.60 with Boyce >= 0.80.
+    pub_auc: float = 0.70
+    pub_boyce: float = 0.50
+    wide_auc: float = 0.60
+    wide_boyce: float = 0.80
+
+
+def skill_publishable(auc, boyce, cfg: "GateConfig" = None) -> bool:
+    cfg = cfg or GateConfig()
+    if auc is None or boyce is None or not (np.isfinite(auc) and np.isfinite(boyce)):
+        return False
+    return (auc >= cfg.pub_auc and boyce >= cfg.pub_boyce) or (auc >= cfg.wide_auc and boyce >= cfg.wide_boyce)
 
 
 def area(mask: np.ndarray, spec: GridSpec) -> float:
@@ -73,6 +86,8 @@ def range_check(now: np.ndarray, spec: GridSpec, rec_rc: np.ndarray, expert: np.
         out["status"] = "exempt_crop"
         return out
     if expert is None:
+        if kind == "all_records":          # fitted on every wild record, native and introduced: there is no mask to check against; recall and the unrecorded share still apply
+            out["kind"] = "all_records"; out["status"] = "records_only"
         return out
     from .grid import resample
     ex = expert if expert.shape == (spec.H, spec.W) else resample(expert.astype(np.uint8), spec).astype(bool)

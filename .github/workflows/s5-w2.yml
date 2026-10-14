@@ -1,0 +1,104 @@
+# S3 batch 5, data stage: GBIF multi-species downloads (resumable, state on the release species-pilot-data as s5_state.json), cleaning to 1/24 degree
+# cells, native-range inputs (WCVP, GRIIS), final occurrence assets s2_*. Species list: data/species/batch5.csv.
+# Trigger: push a change to .github/run/s5-w2 with [acquire], [native] and/or [assemble] in the commit message (assemble after the other two are done).
+# Secrets reach only the acquire step; nothing prints them. Pilot assets are never replaced (all names start with s5_).
+name: s5-w2
+on:
+  push:
+    paths: [".github/run/s5-w2"]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "acquire | native | assemble"
+        type: string
+        default: "acquire"
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  S5_WORK: ${{ github.workspace }}/work/s5
+  W2_TAG: species-data-batch5
+  W2_EXTRA_TAGS: species-pilot-data
+jobs:
+  acquire:
+    concurrency: { group: s5-w2-acquire, cancel-in-progress: false }
+    if: (github.event_name == 'workflow_dispatch' && inputs.stage == 'acquire') || contains(github.event.head_commit.message, '[acquire]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pyarrow
+      - name: Request, wait, fetch, split by species, clean, store (resumable)
+        env:
+          GBIF_USER: ${{ secrets.GBIF_USER }}
+          GBIF_PWD: ${{ secrets.GBIF_PWD }}
+          GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+        run: |
+          if grep -qw redo .github/run/s5-w2; then export S5_REDO=1; fi
+          python -m ctw.species.s5run acquire --hours 5.6
+      - name: State (keys and DOIs, no secrets)
+        if: always()
+        run: |
+          cat work/s5/acquire_summary.json || true
+          python - <<'PY'
+          import json
+          d=json.load(open("work/s5/s5_state.json"))
+          print(json.dumps({k:{x:v.get(x) for x in ("key","doi","records","status","processed")} for k,v in d.items() if not k.startswith("_")}))
+          PY
+      - name: Commit the small acquisition summary (keys, DOIs, record counts; no secrets)
+        if: always()
+        run: |
+          test -f work/s5/acquire_summary.json || exit 0
+          cp work/s5/acquire_summary.json data/species/batch5_acquire_summary.json
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/species/batch5_acquire_summary.json
+          git diff --cached --quiet && exit 0
+          git commit -m "S3: batch 5 acquisition summary (Actions run ${{ github.run_id }})"
+          for i in 1 2 3; do git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done
+  native:
+    concurrency: { group: s5-w2-native, cancel-in-progress: false }
+    if: (github.event_name == 'workflow_dispatch' && inputs.stage == 'native') || contains(github.event.head_commit.message, '[native]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pyarrow
+      - name: WCVP native areas and GRIIS rows for the batch species
+        run: python -m ctw.species.s5run native
+  assemble:
+    concurrency: { group: s5-w2-assemble, cancel-in-progress: false }
+    if: (github.event_name == 'workflow_dispatch' && inputs.stage == 'assemble') || contains(github.event.head_commit.message, '[assemble]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pyarrow
+      - name: Masks, flags, target-group lookup, publish assets
+        run: python -m ctw.species.s5run assemble
+      - run: |
+          python - <<'PY'
+          import json
+          m=json.load(open("work/s5/final/s5_manifest_w2_v1.json")); print(json.dumps({k:v["bytes"] for k,v in m["files"].items()}))
+          r=json.load(open("work/s5/final/s5_w2_report_v1.json"))["species"]
+          for s,x in r.items():
+              n=x.get("native_mask") or {}
+              print(s, "|", x.get("records"), "records |", x.get("n_cells"), "cells |", n.get("cells_kept"), "kept |", n.get("cells_removed"), "removed |", n.get("source"))
+          PY
+        if: always()
+      - name: Commit the per-species summary (fit stage reads it)
+        if: always()
+        run: |
+          test -f work/s5/final/batch5_w2_summary.csv || exit 0
+          cp work/s5/final/batch5_w2_summary.csv data/species/batch5_w2_summary.csv
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/species/batch5_w2_summary.csv
+          git diff --cached --quiet && exit 0
+          git commit -m "S3: batch 5 occurrence summary per species (Actions run ${{ github.run_id }})"
+          for i in 1 2 3; do git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done

@@ -364,3 +364,31 @@ Rule from here on: **no group above about 20% of species shown.** Batch 2 (alrea
 The old Tier A/B/C badges plus a red "Low confidence" read as "we don't know" for almost every organism. They now show two plain checks: **Today's map** (checked against an independent survey / fits the records / looser fit) and **Future map** (change tested / direction unreliable / untested / numbers withheld). Tier and confidence stay as the internal grade (About panel). Red is no longer used for these. Goal stated by the owner: something a layperson or interested party can use to see what might happen from real current data and the best available modelling, not a textbook citation.
 
 To move more organisms from "fits the records" to "checked": add independent presence-absence surveys beyond the Breeding Bird Survey and US Forest Inventory (candidates to assess: national bird atlases with open licences, eBird Status products where terms allow, national forest inventories in Europe, Australia's NVIS/ALA surveys, GBIF datasets with sampling-event absences), and extend the past-range-change test beyond North American birds. Each needs a licence and a method note before it can award the "checked" label.
+
+## 20. Path to 250 defensible organisms (11 Oct 2026, owner request: at least 250, every one defensible, mindful of compute)
+
+**State after batch 2** (before the publication rule): 124 organisms built; birds 43 (35%), trees 26, mammals 19, insects/arachnids 17, reptiles 6, amphibians 4, wild plants 5, crops 4. 9 Tier A, 115 Tier B, 72 flagged low, 41 range-shift tests failed (all birds), 7 below the hard gates. The release `species-pilot-data` hit GitHub's 1000-asset limit; new fits go to `species-fits-batch2` (use a new release per batch).
+
+**"Defensible" is now an explicit publication rule** (`ctw/species_site.defensible`): Tier A (independent survey), or range check passed and cross-validated AUC >= 0.70 with Boyce >= 0.50, or, for very wide-ranging organisms (records resemble much of the background, which depresses AUC regardless of model quality), AUC >= 0.60 with Boyce >= 0.80. Everything else is not published and the reason is logged. Not a claim of accuracy: the Future-map check still says what could and could not be tested.
+
+**Supply.** 203 usable candidates remain in the shortlist (birds 47, trees 50, crops 25, insects 25, wild plants 23, mammals 17, herps 10, fish 6). Batch 1 pass rate under the rule was about 84%. Expected: ~105 of the 124 stay; 160 more fits give ~130; birds capped near 20% (add at most a handful). That lands near 235 to 245, so the shortlist is extended by ~60 candidates in under-represented groups (wild plants, mammals, herps, insects, fish) before batch 4.
+
+**Compute.** One fit is about 12 runner-minutes (most of it projecting 14 climate models for 4 scenarios). Batch 2 was 99 fits, roughly 20 runner-hours. Remaining ~160 fits is roughly 30 runner-hours. Savings: (1) check the skill gates first and skip the projection for organisms that would not be published (saves most of the time on the ~15% that fail); (2) one release per batch; (3) never re-fit a finished species (resume from the release); (4) publish to R2 only when a batch is done.
+
+## 21. Plan: model from observed records, not native ranges (14 Oct 2026, owner direction after feedback from the first outside reader)
+
+**Decision.** Fit each organism on everywhere it has been recorded in the wild (native and introduced), not only inside a native-range mask. The native mask is out of date for many species, is coarse for animals (own curation at continent level), and gave visible failures (multiflora rose showed only China and Korea although it is widespread in the north-eastern US). Gardens, zoos and other managed records stay out.
+
+**What the code already gives us.** Every assemble stage saved the records the native mask removed (`*_occ_cells_v1_excluded_non_native.parquet`, pilot to batch 5), so an all-records table is main plus excluded: no new GBIF download. One catch: the record-level cleaner (`w2cells`, step "establishment") drops records the data provider tagged INTRODUCED, NATURALISED or INVASIVE as well as MANAGED and CULTIVATED. Free-living introduced records are the ones we now want, so a second pass re-reads the stored downloads (GBIF keeps them; the retries already reuse them) with the rule changed to drop only MANAGED and CULTIVATED.
+
+**Phases (compute is estimated: a fit is about 12 runner-minutes).**
+0. Reader-feedback fixes, no compute: plain-language scenario and period text, a short "how can this know the future" explainer, clearer "numbers withheld", copyable link to the exact view, range-used label.
+1. Experiment, about 3 runner-hours: 12 widely introduced organisms fitted both ways (all-records vs native-only); compare suitable area, skill and map; check multiflora rose, grey squirrel, bullfrog, wild boar, Eucalyptus globulus, Norway maple and similar.
+2. Engine changes, small: option to fit on all records; the range check (needs a native mask) replaced by an omission test and a distance-from-records check; gate-first (fit and check skill, project the 14 models only if the organism will be published; saves most of the time on the roughly 25 percent that fail).
+3. Rollout, about 15 to 20 runner-hours: refit only organisms where the mask removed at least 3 percent of records (expected 80 to 100 of 259); others would be unchanged.
+4. Americas growth to 300 under the new method, about 14 runner-hours for about 55 candidates (GBIF filtered to North and South America).
+5. Methods text, labels and tests updated to say which range each model used.
+
+
+### Status (14 October 2026)
+Steps 1 to 3 and 5 are done: the 12-organism experiment (all-records fits equal or better for 10 of 12; black locust rescued, grey squirrel lost skill but still passes), the engine option (`W3_RANGE=all`, `W3_GATE_FIRST=1`, range check `records_only`), the rollout refit (103 organisms, 88 of 99 fitted pass the publication rule) and methods text. Step 4 changed: batch 6 (67 organisms, spread across continents and groups, fitted all-records) replaces the Americas-only plan. Re-reading introduced-tagged records is deferred.

@@ -1,0 +1,625 @@
+{
+"Lepus europaeus": {
+"key": 7952072,
+"n": 1267896,
+"fam": "Leporidae",
+"common": "Brown Hare",
+"shares": "EUROPE:0.924;SOUTH_AMERICA:0.038;OCEANIA:0.037;ASIA:0.001;NORTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Erinaceus europaeus": {
+"key": 5219616,
+"n": 906414,
+"fam": "Erinaceidae",
+"common": "Brown-breasted Hedgehog",
+"shares": "EUROPE:0.997;OCEANIA:0.003;ASIA:0.0;NORTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Cervus elaphus": {
+"key": 2440958,
+"n": 680767,
+"fam": "Cervidae",
+"common": "Barbary Red Deer (barbarus)",
+"shares": "EUROPE:0.928;NORTH_AMERICA:0.064;OCEANIA:0.006;ASIA:0.002;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Meles meles": {
+"key": 2433875,
+"n": 550624,
+"fam": "Mustelidae",
+"common": "Badger",
+"shares": "EUROPE:0.986;ASIA:0.014;NORTH_AMERICA:0.0"
+},
+"Rupicapra rupicapra": {
+"key": 5220170,
+"n": 493434,
+"fam": "Bovidae",
+"common": "(Pronounce: Sha-mee or Sham-wa)",
+"shares": "EUROPE:1.0;OCEANIA:0.0;ASIA:0.0"
+},
+"Castor fiber": {
+"key": 4409131,
+"n": 415764,
+"fam": "Castoridae",
+"common": "Beaver",
+"shares": "EUROPE:0.997;ASIA:0.003;NORTH_AMERICA:0.0"
+},
+"Talpa europaea": {
+"key": 7872906,
+"n": 414719,
+"fam": "Talpidae",
+"common": "Common Mole",
+"shares": "EUROPE:1.0;ASIA:0.0;NORTH_AMERICA:0.0"
+},
+"Lutra lutra": {
+"key": 2433753,
+"n": 301189,
+"fam": "Mustelidae",
+"common": "Common Otter",
+"shares": "EUROPE:0.978;ASIA:0.021;AFRICA:0.001"
+},
+"Apodemus sylvaticus": {
+"key": 2437760,
+"n": 183746,
+"fam": "Muridae",
+"common": "Common Field Mouse",
+"shares": "EUROPE:0.994;AFRICA:0.005;ASIA:0.002;SOUTH_AMERICA:0.0"
+},
+"Myodes glareolus": {
+"key": 5706764,
+"n": 207620,
+"fam": "Cricetidae",
+"common": "Bank Vole",
+"shares": "EUROPE:0.997;ASIA:0.002;NORTH_AMERICA:0.001;AFRICA:0.0"
+},
+"Pipistrellus pipistrellus": {
+"key": 5218465,
+"n": 3250785,
+"fam": "Vespertilionidae",
+"common": "45 Khz Pipistrelle",
+"shares": "EUROPE:1.0;ASIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0;NORTH_AMERICA:0.0"
+},
+"Peromyscus maniculatus": {
+"key": 2437967,
+"n": 259336,
+"fam": "Cricetidae",
+"common": "Deer Mouse",
+"shares": "NORTH_AMERICA:0.994;AFRICA:0.006;SOUTH_AMERICA:0.0;OCEANIA:0.0"
+},
+"Phascolarctos cinereus": {
+"key": 2440012,
+"n": 450508,
+"fam": "Phascolarctidae",
+"common": "Australian Koala",
+"shares": "OCEANIA:1.0;NORTH_AMERICA:0.0;ASIA:0.0;EUROPE:0.0"
+},
+"Martes foina": {
+"key": 5218887,
+"n": 210390,
+"fam": "Mustelidae",
+"common": "Beech Marten",
+"shares": "EUROPE:0.993;ASIA:0.007"
+},
+"Lissotriton vulgaris": {
+"key": 5218405,
+"n": 309868,
+"fam": "Salamandridae",
+"common": "Common Newt",
+"shares": "EUROPE:0.998;ASIA:0.002;OCEANIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0;NORTH_AMERICA:0.0"
+},
+"Crinia signifera": {
+"key": 2424585,
+"n": 307685,
+"fam": "Myobatrachidae",
+"common": "Brown Froglet",
+"shares": "OCEANIA:1.0;EUROPE:0.0"
+},
+"Ichthyosaura alpestris": {
+"key": 2431783,
+"n": 285851,
+"fam": "Salamandridae",
+"common": "Alpine Newt",
+"shares": "EUROPE:1.0;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Salamandra salamandra": {
+"key": 2431776,
+"n": 243770,
+"fam": "Salamandridae",
+"common": "Common Fire Salamander",
+"shares": "EUROPE:1.0;ASIA:0.0;NORTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Triturus cristatus": {
+"key": 2431885,
+"n": 204304,
+"fam": "Salamandridae",
+"common": "(Great or Northern) Crested Newt",
+"shares": "EUROPE:1.0;ASIA:0.0;NORTH_AMERICA:0.0"
+},
+"Plethodon cinereus": {
+"key": 2431491,
+"n": 186397,
+"fam": "Plethodontidae",
+"common": "Eastern Red-backed Salamander",
+"shares": "NORTH_AMERICA:1.0"
+},
+"Epidalea calamita": {
+"key": 2422507,
+"n": 185714,
+"fam": "Bufonidae",
+"common": "Natterjack",
+"shares": "EUROPE:1.0;AFRICA:0.0;ASIA:0.0"
+},
+"Hyla arborea": {
+"key": 2427573,
+"n": 169539,
+"fam": "Hylidae",
+"common": "Common Tree Frog",
+"shares": "EUROPE:0.996;ASIA:0.004;AFRICA:0.0;NORTH_AMERICA:0.0"
+},
+"Lithobates clamitans": {
+"key": 2427172,
+"n": 144247,
+"fam": "Ranidae",
+"common": "Green Frog",
+"shares": "NORTH_AMERICA:1.0;AFRICA:0.0;EUROPE:0.0;OCEANIA:0.0;SOUTH_AMERICA:0.0"
+},
+"Rana dalmatina": {
+"key": 2426760,
+"n": 119962,
+"fam": "Ranidae",
+"common": "Agile Frog",
+"shares": "EUROPE:0.999;ASIA:0.001;NORTH_AMERICA:0.0"
+},
+"Limnodynastes tasmaniensis": {
+"key": 2429578,
+"n": 122438,
+"fam": "Limnodynastidae",
+"common": "Spotted Grass Frog",
+"shares": "OCEANIA:1.0"
+},
+"Pseudacris crucifer": {
+"key": 2428182,
+"n": 71014,
+"fam": "Hylidae",
+"common": "Northern Spring Peeper",
+"shares": "NORTH_AMERICA:1.0"
+},
+"Podarcis muralis": {
+"key": 2469188,
+"n": 418861,
+"fam": "Lacertidae",
+"common": "Common Wall Lizard",
+"shares": "EUROPE:0.983;NORTH_AMERICA:0.017;ASIA:0.0;AFRICA:0.0"
+},
+"Zootoca vivipara": {
+"key": 9702100,
+"n": 274534,
+"fam": "Lacertidae",
+"common": "European Common Lizard",
+"shares": "EUROPE:0.992;ASIA:0.008;OCEANIA:0.0"
+},
+"Lacerta agilis": {
+"key": 6159223,
+"n": 217721,
+"fam": "Lacertidae",
+"common": "Sand Lizard",
+"shares": "EUROPE:0.989;ASIA:0.011;NORTH_AMERICA:0.0"
+},
+"Sceloporus occidentalis": {
+"key": 2451234,
+"n": 172347,
+"fam": "Phrynosomatidae",
+"common": "Pacific blue-bellied lizard",
+"shares": "NORTH_AMERICA:1.0;OCEANIA:0.0;SOUTH_AMERICA:0.0"
+},
+"Natrix natrix": {
+"key": 6161347,
+"n": 146334,
+"fam": "Colubridae",
+"common": "Common Grass Snake",
+"shares": "EUROPE:0.991;ASIA:0.009;NORTH_AMERICA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Vipera berus": {
+"key": 5960862,
+"n": 130874,
+"fam": "Viperidae",
+"common": "Adder",
+"shares": "EUROPE:0.993;ASIA:0.007;OCEANIA:0.0"
+},
+"Anolis carolinensis": {
+"key": 2466939,
+"n": 120100,
+"fam": "Dactyloidae",
+"common": "American Chameleon",
+"shares": "NORTH_AMERICA:0.98;OCEANIA:0.019;ASIA:0.001;SOUTH_AMERICA:0.0;EUROPE:0.0;AFRICA:0.0"
+},
+"Coronella austriaca": {
+"key": 5959617,
+"n": 68648,
+"fam": "Colubridae",
+"common": "Culebra lisa europea",
+"shares": "EUROPE:0.996;ASIA:0.004;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Tiliqua scincoides": {
+"key": 2462503,
+"n": 61614,
+"fam": "Scincidae",
+"common": "Common Blue-tongued Skink",
+"shares": "OCEANIA:1.0;ASIA:0.0;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Thamnophis elegans": {
+"key": 2457545,
+"n": 58762,
+"fam": "Colubridae",
+"common": "Terrestrial (Wandering) Garter Snake",
+"shares": "NORTH_AMERICA:1.0"
+},
+"Hierophis viridiflavus": {
+"key": 2458916,
+"n": 58174,
+"fam": "Colubridae",
+"common": "Dark Green Snake",
+"shares": "EUROPE:1.0;AFRICA:0.0"
+},
+"Pituophis catenifer": {
+"key": 2453826,
+"n": 65649,
+"fam": "Colubridae",
+"common": "Bullsnake",
+"shares": "NORTH_AMERICA:1.0;EUROPE:0.0"
+},
+"Intellagama lesueurii": {
+"key": 8161292,
+"n": 43606,
+"fam": "Agamidae",
+"common": "Australian Water Dragon",
+"shares": "OCEANIA:1.0;EUROPE:0.0;AFRICA:0.0;NORTH_AMERICA:0.0"
+},
+"Pseudechis porphyriacus": {
+"key": 2449538,
+"n": 36732,
+"fam": "Elapidae",
+"common": "Australian Black Snake",
+"shares": "OCEANIA:1.0"
+},
+"Maniola jurtina": {
+"key": 5135513,
+"n": 4594346,
+"fam": "Nymphalidae",
+"common": "Meadow Brown",
+"shares": "EUROPE:1.0;ASIA:0.0;AFRICA:0.0;NORTH_AMERICA:0.0"
+},
+"Pararge aegeria": {
+"key": 8049830,
+"n": 3496470,
+"fam": "Nymphalidae",
+"common": "Speckled Wood",
+"shares": "EUROPE:0.999;AFRICA:0.001;ASIA:0.0;NORTH_AMERICA:0.0"
+},
+"Aglais io": {
+"key": 4535827,
+"n": 3070305,
+"fam": "Nymphalidae",
+"common": "European Peacock Butterfly",
+"shares": "EUROPE:0.998;ASIA:0.002;NORTH_AMERICA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Pieris napi": {
+"key": 1920494,
+"n": 3005469,
+"fam": "Pieridae",
+"common": "Green-veined White",
+"shares": "EUROPE:0.999;ASIA:0.001;NORTH_AMERICA:0.0;AFRICA:0.0;ANTARCTICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Aglais urticae": {
+"key": 1894840,
+"n": 2609298,
+"fam": "Nymphalidae",
+"common": "Small Tortoiseshell",
+"shares": "EUROPE:0.998;ASIA:0.002;NORTH_AMERICA:0.0;AFRICA:0.0;ANTARCTICA:0.0;OCEANIA:0.0"
+},
+"Pieris brassicae": {
+"key": 1920506,
+"n": 2609231,
+"fam": "Pieridae",
+"common": "Cabbage White",
+"shares": "EUROPE:0.993;ASIA:0.006;AFRICA:0.001;SOUTH_AMERICA:0.0;OCEANIA:0.0;NORTH_AMERICA:0.0"
+},
+"Polyommatus icarus": {
+"key": 5140214,
+"n": 2413825,
+"fam": "Lycaenidae",
+"common": "Common Blue",
+"shares": "EUROPE:0.991;NORTH_AMERICA:0.005;ASIA:0.004;AFRICA:0.0"
+},
+"Gonepteryx rhamni": {
+"key": 1920712,
+"n": 2360928,
+"fam": "Pieridae",
+"common": "Brimstone",
+"shares": "EUROPE:0.999;ASIA:0.001;AFRICA:0.0;NORTH_AMERICA:0.0"
+},
+"Coenonympha pamphilus": {
+"key": 1911461,
+"n": 1909496,
+"fam": "Nymphalidae",
+"common": "Small Heath",
+"shares": "EUROPE:0.998;ASIA:0.001;AFRICA:0.0"
+},
+"Aphantopus hyperantus": {
+"key": 1896841,
+"n": 1830798,
+"fam": "Nymphalidae",
+"common": "Ringlet",
+"shares": "EUROPE:0.999;ASIA:0.001;NORTH_AMERICA:0.0"
+},
+"Anthocharis cardamines": {
+"key": 1919712,
+"n": 1466090,
+"fam": "Pieridae",
+"common": "Orange Tip",
+"shares": "EUROPE:0.997;ASIA:0.003;NORTH_AMERICA:0.0;AFRICA:0.0;OCEANIA:0.0"
+},
+"Lycaena phlaeas": {
+"key": 1929697,
+"n": 1286897,
+"fam": "Lycaenidae",
+"common": "American Copper",
+"shares": "EUROPE:0.988;ASIA:0.007;NORTH_AMERICA:0.004;AFRICA:0.002"
+},
+"Ischnura elegans": {
+"key": 1423395,
+"n": 903772,
+"fam": "Coenagrionidae",
+"common": "Blue-Tailed Damselfly",
+"shares": "EUROPE:0.995;ASIA:0.005;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Anax imperator": {
+"key": 5051775,
+"n": 549084,
+"fam": "Aeshnidae",
+"common": "Blue Emperor",
+"shares": "EUROPE:0.986;AFRICA:0.011;ASIA:0.003"
+},
+"Araneus diadematus": {
+"key": 2160133,
+"n": 260611,
+"fam": "Araneidae",
+"common": "Cross Orbweaver",
+"shares": "EUROPE:0.843;NORTH_AMERICA:0.149;ASIA:0.008;AFRICA:0.0"
+},
+"Argiope bruennichi": {
+"key": 5170994,
+"n": 158062,
+"fam": "Araneidae",
+"common": "Wasp Spider",
+"shares": "EUROPE:0.973;ASIA:0.027;AFRICA:0.001;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Pisaura mirabilis": {
+"key": 2150764,
+"n": 180637,
+"fam": "Pisauridae",
+"common": "European Nursery Web spider",
+"shares": "EUROPE:0.997;ASIA:0.003;AFRICA:0.001"
+},
+"Phidippus audax": {
+"key": 5173257,
+"n": 85449,
+"fam": "Salticidae",
+"common": "Bold Jumper",
+"shares": "NORTH_AMERICA:0.999;EUROPE:0.001;OCEANIA:0.0;AFRICA:0.0"
+},
+"Argiope aurantia": {
+"key": 5171022,
+"n": 74262,
+"fam": "Araneidae",
+"common": "Black-and-yellow Argiope",
+"shares": "NORTH_AMERICA:1.0;ASIA:0.0"
+},
+"Phalangium opilio": {
+"key": 5776654,
+"n": 61154,
+"fam": "Phalangiidae",
+"common": "Daddy Longleg",
+"shares": "EUROPE:0.775;NORTH_AMERICA:0.205;OCEANIA:0.018;ASIA:0.002;AFRICA:0.0"
+},
+"Plantago lanceolata": {
+"key": 8208358,
+"n": 1909049,
+"fam": "Plantaginaceae",
+"common": "Buckhorn",
+"shares": "EUROPE:0.927;NORTH_AMERICA:0.036;OCEANIA:0.029;AFRICA:0.003;ASIA:0.003;SOUTH_AMERICA:0.001;ANTARCTICA:0.0"
+},
+"Dactylis glomerata": {
+"key": 2705308,
+"n": 1820257,
+"fam": "Poaceae",
+"common": "Akaroa",
+"shares": "EUROPE:0.959;OCEANIA:0.018;NORTH_AMERICA:0.016;ASIA:0.007;AFRICA:0.0;SOUTH_AMERICA:0.0;ANTARCTICA:0.0"
+},
+"Hedera helix": {
+"key": 8351737,
+"n": 1276467,
+"fam": "Araliaceae",
+"common": "Common Ivy",
+"shares": "EUROPE:0.965;NORTH_AMERICA:0.027;OCEANIA:0.006;ASIA:0.001;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Calluna vulgaris": {
+"key": 2882482,
+"n": 1132622,
+"fam": "Ericaceae",
+"common": "Common Heather",
+"shares": "EUROPE:0.998;OCEANIA:0.001;NORTH_AMERICA:0.001;ASIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0;ANTARCTICA:0.0"
+},
+"Vaccinium myrtillus": {
+"key": 2882833,
+"n": 997035,
+"fam": "Ericaceae",
+"common": "Bilberry",
+"shares": "EUROPE:0.992;ASIA:0.006;NORTH_AMERICA:0.002;AFRICA:0.0;ANTARCTICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Hypericum perforatum": {
+"key": 3189486,
+"n": 911498,
+"fam": "Hypericaceae",
+"common": "Common St. John's Wort",
+"shares": "EUROPE:0.904;OCEANIA:0.055;NORTH_AMERICA:0.035;ASIA:0.005;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Lythrum salicaria": {
+"key": 3188736,
+"n": 815892,
+"fam": "Lythraceae",
+"common": "Hairy Purple Loosestrife",
+"shares": "EUROPE:0.902;NORTH_AMERICA:0.083;ASIA:0.012;OCEANIA:0.003;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Chamaenerion angustifolium": {
+"key": 6428353,
+"n": 848037,
+"fam": "Onagraceae",
+"common": "Fireweed",
+"shares": "EUROPE:0.894;NORTH_AMERICA:0.089;ASIA:0.017;AFRICA:0.0;SOUTH_AMERICA:0.0;OCEANIA:0.0"
+},
+"Juniperus communis": {
+"key": 2684709,
+"n": 743981,
+"fam": "Cupressaceae",
+"common": "Common Juniper",
+"shares": "EUROPE:0.942;NORTH_AMERICA:0.048;ASIA:0.01;OCEANIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Anemone nemorosa": {
+"key": 3033263,
+"n": 740422,
+"fam": "Ranunculaceae",
+"common": "European thimbleweed",
+"shares": "EUROPE:0.999;NORTH_AMERICA:0.001;ASIA:0.0;OCEANIA:0.0;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Oxalis acetosella": {
+"key": 8211958,
+"n": 680712,
+"fam": "Oxalidaceae",
+"common": "Common wood sorrel",
+"shares": "EUROPE:0.993;ASIA:0.006;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Dryopteris filix-mas": {
+"key": 5275132,
+"n": 832485,
+"fam": "Dryopteridaceae",
+"common": "Common Male Fern",
+"shares": "EUROPE:0.992;NORTH_AMERICA:0.004;ASIA:0.003;OCEANIA:0.002;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Equisetum arvense": {
+"key": 7924597,
+"n": 916836,
+"fam": "Equisetaceae",
+"common": "Common Horsetail",
+"shares": "EUROPE:0.928;NORTH_AMERICA:0.052;ASIA:0.019;OCEANIA:0.001;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Iris pseudacorus": {
+"key": 5298231,
+"n": 743652,
+"fam": "Iridaceae",
+"common": "Flag Iris",
+"shares": "EUROPE:0.96;NORTH_AMERICA:0.034;ASIA:0.003;OCEANIA:0.002;SOUTH_AMERICA:0.001;AFRICA:0.0"
+},
+"Leucanthemum vulgare": {
+"key": 8848598,
+"n": 804820,
+"fam": "Asteraceae",
+"common": "Dog Daisy",
+"shares": "EUROPE:0.913;NORTH_AMERICA:0.059;OCEANIA:0.023;ASIA:0.004;SOUTH_AMERICA:0.001;AFRICA:0.0;ANTARCTICA:0.0"
+},
+"Epilobium hirsutum": {
+"key": 3189172,
+"n": 817462,
+"fam": "Onagraceae",
+"common": "Codlins And Cream",
+"shares": "EUROPE:0.99;ASIA:0.005;NORTH_AMERICA:0.004;OCEANIA:0.001;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Tussilago farfara": {
+"key": 3149879,
+"n": 795722,
+"fam": "Asteraceae",
+"common": "Colt's-Foot",
+"shares": "EUROPE:0.927;NORTH_AMERICA:0.06;ASIA:0.013;OCEANIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Primula veris": {
+"key": 8377689,
+"n": 609111,
+"fam": "Primulaceae",
+"common": "Cowslip",
+"shares": "EUROPE:0.995;ASIA:0.004;NORTH_AMERICA:0.0;OCEANIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0"
+},
+"Lonicera periclymenum": {
+"key": 5334277,
+"n": 715949,
+"fam": "Caprifoliaceae",
+"common": "European honeysuckle",
+"shares": "EUROPE:0.999;NORTH_AMERICA:0.001;OCEANIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0;ASIA:0.0"
+},
+"Ilex aquifolium": {
+"key": 5414222,
+"n": 769752,
+"fam": "Aquifoliaceae",
+"common": "English holly",
+"shares": "EUROPE:0.97;NORTH_AMERICA:0.023;OCEANIA:0.007;AFRICA:0.0;ASIA:0.0;SOUTH_AMERICA:0.0"
+},
+"Cornus sanguinea": {
+"key": 3082234,
+"n": 796866,
+"fam": "Cornaceae",
+"common": "Bloodtwig dogwood",
+"shares": "EUROPE:0.999;ASIA:0.001;NORTH_AMERICA:0.0;OCEANIA:0.0"
+},
+"Silene dioica": {
+"key": 5384795,
+"n": 741448,
+"fam": "Caryophyllaceae",
+"common": "Red Campion",
+"shares": "EUROPE:0.998;NORTH_AMERICA:0.002;OCEANIA:0.0;ASIA:0.0;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Filipendula ulmaria": {
+"key": 2987999,
+"n": 1313506,
+"fam": "Rosaceae",
+"common": "European Meadowsweet",
+"shares": "EUROPE:0.994;ASIA:0.005;NORTH_AMERICA:0.001;OCEANIA:0.0"
+},
+"Hypochaeris radicata": {
+"key": 3093702,
+"n": 973358,
+"fam": "Asteraceae",
+"common": "Cat's Ear",
+"shares": "EUROPE:0.875;OCEANIA:0.099;NORTH_AMERICA:0.013;AFRICA:0.007;SOUTH_AMERICA:0.003;ASIA:0.002;ANTARCTICA:0.0"
+},
+"Corylus avellana": {
+"key": 2875979,
+"n": 1365390,
+"fam": "Betulaceae",
+"common": "Barcelona-nuts",
+"shares": "EUROPE:0.998;ASIA:0.001;NORTH_AMERICA:0.001;OCEANIA:0.0;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Quercus rotundifolia": {
+"key": 2881550,
+"n": 1449198,
+"fam": "Fagaceae",
+"common": "Ballota oak",
+"shares": "EUROPE:1.0;AFRICA:0.0;NORTH_AMERICA:0.0;OCEANIA:0.0"
+},
+"Alnus glutinosa": {
+"key": 2876213,
+"n": 1019473,
+"fam": "Betulaceae",
+"common": "Alder",
+"shares": "EUROPE:0.996;NORTH_AMERICA:0.003;ASIA:0.001;OCEANIA:0.001;SOUTH_AMERICA:0.0;AFRICA:0.0"
+},
+"Populus tremula": {
+"key": 3040249,
+"n": 718134,
+"fam": "Salicaceae",
+"common": "Aspen",
+"shares": "EUROPE:0.983;ASIA:0.016;NORTH_AMERICA:0.0;OCEANIA:0.0;AFRICA:0.0"
+},
+"Quercus suber": {
+"key": 2879411,
+"n": 689070,
+"fam": "Fagaceae",
+"common": "Cork Oak",
+"shares": "EUROPE:0.998;AFRICA:0.001;NORTH_AMERICA:0.0;ASIA:0.0;OCEANIA:0.0;SOUTH_AMERICA:0.0"
+}
+}

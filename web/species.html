@@ -181,6 +181,15 @@ details p{font-size:.9rem}
 .modes[data-pos="0"] a:first-child,.modes[data-pos="1"] a:last-child{color:var(--chipOnInk)}
 .modes a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.modes::before,.modes a{transition:none}}
+.sunwrap{display:flex;justify-content:center;margin:6px 0 8px}
+.sun{width:min(100%,340px);height:auto;display:block}
+.sun .wd{cursor:pointer}.sun .wd path{stroke:var(--card,#fff);stroke-width:.8;transition:filter .15s}
+.sun .wd:hover path{filter:brightness(1.12)}
+.sun .wd text{font:600 5.2px system-ui,sans-serif;fill:#1b1b1b;pointer-events:none}
+.sun .sub{stroke:var(--card,#fff);stroke-width:.5;opacity:.9}
+.sun .hub circle{fill:var(--chip);stroke:var(--line)}.sun .hub[data-up]{cursor:pointer}
+.sun .hub text{fill:var(--ink);pointer-events:none}.sun .h1{font:700 5.6px system-ui,sans-serif}.sun .h2{font:4.4px system-ui,sans-serif;opacity:.75}.sun .h3{font:600 4.2px system-ui,sans-serif;opacity:.9}
+@media (prefers-reduced-motion:no-preference){.sun .wd,.sun .sub{animation:wdin .35s both;animation-delay:var(--d,0ms);transform-origin:0 0}@keyframes wdin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}}
 .crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;margin:10px 0 4px;font-size:.86rem}
 .crumbs .crumb{font:inherit;border:0;background:none;padding:3px 2px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .crumbs .crumb:last-child{font-weight:700;text-decoration:none;cursor:default}
@@ -237,8 +246,8 @@ a{color:inherit;text-decoration-color:var(--line)}
     <p class="err" id="sp-err" hidden role="alert">The map files for this organism could not be loaded. Check your connection and pick the organism again.</p>
 
     <div class="ctl"><div class="small" id="l-view">Map shows</div><div class="seg" id="view" role="group" aria-labelledby="l-view"></div></div>
-    <div class="ctl"><div class="small" id="l-ssp">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="l-ssp"></div></div>
-    <div class="ctl"><div class="small" id="l-per">Period</div><div class="seg" id="per" role="group" aria-labelledby="l-per"></div></div>
+    <div class="ctl"><div class="small" id="l-ssp">Scenario</div><div class="seg" id="ssp" role="group" aria-labelledby="l-ssp"></div><div class="small" id="ssp-d" style="margin-top:4px"></div></div>
+    <div class="ctl"><div class="small" id="l-per">Period</div><div class="seg" id="per" role="group" aria-labelledby="l-per"></div><div class="small" id="per-d" style="margin-top:4px"></div></div>
     <div class="ctl"><div class="small" id="l-disp">Dispersal (how far the organism can spread)</div><div class="seg" id="disp" role="group" aria-labelledby="l-disp"></div>
       <div class="small" id="disp-d" style="margin-top:4px"></div></div>
     <div class="opts">
@@ -247,6 +256,9 @@ a{color:inherit;text-decoration-color:var(--line)}
     </div>
 
     <div id="summary" class="fig" data-view="abs"></div>
+    <details class="card" id="how-future"><summary>How can a map know the future?</summary><div><p>It does not predict the future. It answers a narrower question: <em>where will the climate be like the climate this organism lives in today?</em></p>
+      <p>The model learns from real records which temperatures and rainfall the organism is found in. Then climate models project what each place will be like around 2050 or 2100 under the chosen scenario. Think of it as moving today&rsquo;s climate around the map: places that will feel like the organism&rsquo;s current homes are shaded as suitable.</p>
+      <p>Whether the organism actually gets there depends on things the model does not know, such as whether it can travel that far, find food, or share the place with competitors. That is why the dispersal setting exists, and why every map says &ldquo;suitable climate, not a forecast&rdquo;.</p></div></details>
     <details class="card" id="place-det"><summary>Which organisms lose or gain climate where you are</summary><div id="place-body"></div></details>
     <details class="card" id="about-det"><summary>About this model: tier, skill, records and DOIs</summary><div id="about"></div></details>
     <details><summary>Text description of the map</summary><p id="textdesc"></p></details>

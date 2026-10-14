@@ -1,0 +1,38 @@
+# Moves finished fits from a run's artifacts into a release when the in-job upload failed (for example GitHub's API rate limit with many parallel jobs).
+# Trigger: push to .github/run/recover-fits, content "<run id> <release> <prefix>", for example "38199829843 species-data-batch3 s3". Uploads only what the release lacks,
+# one species at a time, with retries and pauses. Safe to repeat.
+name: recover-fits
+on:
+  push:
+    paths: [".github/run/recover-fits"]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+env:
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download missing results from the artifacts and upload them
+        run: |
+          read RUN REL PFX < .github/run/recover-fits
+          gh release view "$REL" >/dev/null 2>&1 || gh release create "$REL" --title "$REL" --notes "Species fit outputs."
+          gh release view "$REL" --json assets --jq '.assets[].name' > have.txt || true
+          mkdir -p work/art out
+          gh run download "$RUN" -p "${PFX}w3-*" -D work/art
+          n=0
+          for d in work/art/${PFX}w3-*; do
+            key=${d#work/art/${PFX}w3-}
+            grep -qx "${PFX}_w3_${key}_summary.json" have.txt && continue
+            test -f "$d/summary.json" || { echo "skip $key (no summary)"; continue; }
+            cp "$d/summary.json" "out/${PFX}_w3_${key}_summary.json"
+            files=("out/${PFX}_w3_${key}_summary.json")
+            if [ -d "$d/cts" ]; then (cd "$d/cts" && zip -qr "../../../../out/${PFX}_w3_${key}_cts.zip" .); files+=("out/${PFX}_w3_${key}_cts.zip"); fi
+            for i in 1 2 3 4 5 6; do gh release upload "$REL" "${files[@]}" --clobber && break; echo "retry $i for $key"; sleep $((20*i)); done
+            n=$((n+1)); sleep 3
+          done
+          echo "$n species recovered"

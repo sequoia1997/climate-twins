@@ -1,0 +1,22 @@
+{
+ "failed": {},
+ "not_stored": [],
+ "downloads": {
+  "batch:b1": {
+   "key": "0026527-260928105237408",
+   "doi": "10.15468/dl.hesurg",
+   "records": 18362445,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-14T15:57:54Z",
+   "unmatched_records": 1411016
+  },
+  "batch:b2": {
+   "key": "0026528-260928105237408",
+   "doi": "10.15468/dl.exuju6",
+   "records": 4683228,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-14T16:37:44Z",
+   "unmatched_records": 4405
+  }
+ }
+}

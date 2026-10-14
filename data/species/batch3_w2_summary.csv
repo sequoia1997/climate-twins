@@ -1,0 +1,96 @@
+id,scientific_name,group,dl_batch,season,records,cells,cells_kept,cells_removed,mask_source,breeding_cells,doi,ok
+sus_scrofa,Sus scrofa,mammal,b1,,417986,45289,41810,3479,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+sciurus_carolinensis,Sciurus carolinensis,mammal,b1,,268423,15421,6077,9344,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+panthera_onca,Panthera onca,mammal,b1,,137172,1813,1813,0,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+equus_quagga,Equus quagga,mammal,b1,,3201,1031,1018,13,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+syncerus_caffer,Syncerus caffer,mammal,b1,,3569,1205,1205,0,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+crocuta_crocuta,Crocuta crocuta,mammal,b1,,1212,595,590,5,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+procavia_capensis,Procavia capensis,mammal,b1,,1547,588,587,1,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+didelphis_marsupialis,Didelphis marsupialis,mammal,b1,,6721,1627,1627,0,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+lycalopex_culpaeus,Lycalopex culpaeus,mammal,b1,,5398,370,370,0,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+capreolus_pygargus,Capreolus pygargus,mammal,b1,,2551,581,484,97,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+pteropus_medius,Pteropus medius,mammal,b1,,626,264,264,0,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+axis_axis,Axis axis,mammal,b1,,1295,483,323,160,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+callosciurus_finlaysonii,Callosciurus finlaysonii,mammal,b1,,556,131,121,10,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+lithobates_catesbeianus,Lithobates catesbeianus,amphibian,b1,,37777,5583,5045,538,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+varanus_salvator,Varanus salvator,reptile,b1,,2556,682,642,40,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+gekko_gecko,Gekko gecko,reptile,b1,,1779,653,599,54,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+varanus_varius,Varanus varius,reptile,b1,,17965,4590,4590,0,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+duttaphrynus_melanostictus,Duttaphrynus melanostictus,amphibian,b1,,9417,2022,1976,46,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+crocodylus_niloticus,Crocodylus niloticus,reptile,b1,,1505,594,593,1,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+varanus_niloticus,Varanus niloticus,reptile,b1,,1188,755,753,2,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+boa_constrictor,Boa constrictor,reptile,b1,,1729,916,906,10,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+ameiva_ameiva,Ameiva ameiva,reptile,b1,,4014,1372,1319,53,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+nephila_pilipes,Nephila pilipes,insect_arachnid,b1,,3913,1598,1359,239,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+vespula_vulgaris,Vespula vulgaris,insect_arachnid,b1,,46784,13358,12930,428,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+leptinotarsa_decemlineata,Leptinotarsa decemlineata,insect_arachnid,b1,,6729,3771,503,3268,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+dermacentor_variabilis,Dermacentor variabilis,insect_arachnid,b1,,5554,2344,2341,3,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+bombus_lucorum,Bombus lucorum,insect_arachnid,b1,,125469,19383,19209,174,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+apis_cerana,Apis cerana,insect_arachnid,b1,,3306,1414,1370,44,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+papilio_demoleus,Papilio demoleus,insect_arachnid,b1,,3388,1472,1437,35,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+eurema_hecabe,Eurema hecabe,insect_arachnid,b1,,5751,1989,1970,19,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+belenois_aurota,Belenois aurota,insect_arachnid,b1,,2769,990,737,253,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+anartia_amathea,Anartia amathea,insect_arachnid,b1,,2611,987,986,1,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+tetragonisca_angustula,Tetragonisca angustula,insect_arachnid,b1,,5081,653,652,1,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+trigona_spinipes,Trigona spinipes,insect_arachnid,b1,,9339,645,645,0,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+lymantria_dispar,Lymantria dispar,insect_arachnid,b1,,25560,8766,6806,1960,"curated (our judgement, Natural Earth su",,10.15468/dl.uqgwvh,True
+fraxinus_excelsior,Fraxinus excelsior,tree,b1,,1037495,77204,75758,1446,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+acer_platanoides,Acer platanoides,tree,b1,,544860,52760,45665,7095,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+robinia_pseudoacacia,Robinia pseudoacacia,tree,b1,,289765,43248,958,42290,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+prunus_serotina,Prunus serotina,tree,b1,,130724,21129,8348,12781,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+gleditsia_triacanthos,Gleditsia triacanthos,tree,b1,,99804,7786,2533,5253,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+prunus_virginiana,Prunus virginiana,tree,b1,,18654,6576,5971,605,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+acer_palmatum,Acer palmatum,tree,b1,,9974,2627,1933,694,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+morus_alba,Morus alba,tree,b1,,14558,6705,33,6672,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+cryptomeria_japonica,Cryptomeria japonica,tree,b1,,6703,1712,1015,697,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+cedrus_deodara,Cedrus deodara,tree,b1,,6501,3495,148,3347,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+eucalyptus_globulus,Eucalyptus globulus,tree,b1,,16152,4089,2087,2002,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+casuarina_equisetifolia,Casuarina equisetifolia,tree,b1,,4233,1645,613,1032,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+grevillea_robusta,Grevillea robusta,tree,b1,,10734,2749,1081,1668,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+anacardium_occidentale,Anacardium occidentale,tree,b1,,7177,3615,2214,1401,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+tabebuia_rosea,Tabebuia rosea,tree,b1,,7059,1407,1010,397,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+ochroma_pyramidale,Ochroma pyramidale,tree,b1,,7797,716,623,93,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+ficus_sycomorus,Ficus sycomorus,tree,b1,,1684,921,774,147,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+vachellia_erioloba,Vachellia erioloba,tree,b1,,782,561,560,1,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+alnus_acuminata,Alnus acuminata,tree,b1,,3020,1248,1230,18,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+salix_humboldtiana,Salix humboldtiana,tree,b1,,1851,900,890,10,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+cordyline_australis,Cordyline australis,tree,b1,,5144,1337,974,363,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+acacia_mearnsii,Acacia mearnsii,tree,b1,,25604,5941,4742,1199,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+rosa_multiflora,Rosa multiflora,wild_plant,b1,,23812,11270,1184,10086,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+euphorbia_hirta,Euphorbia hirta,wild_plant,b1,,12648,5681,2214,3467,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+chromolaena_odorata,Chromolaena odorata,wild_plant,b1,,38382,5827,2487,3340,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+tridax_procumbens,Tridax procumbens,wild_plant,b1,,12473,5814,1562,4252,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+clitoria_ternatea,Clitoria ternatea,wild_plant,b1,,4506,2700,327,2373,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+celosia_argentea,Celosia argentea,wild_plant,b1,,3932,2530,274,2256,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+pittosporum_undulatum,Pittosporum undulatum,wild_plant,b1,,34155,4467,3753,714,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+thunbergia_alata,Thunbergia alata,wild_plant,b1,,6719,3133,431,2702,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+solanum_mauritianum,Solanum mauritianum,wild_plant,b1,,16486,3131,855,2276,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+cyanthillium_cinereum,Cyanthillium cinereum,wild_plant,b1,,14074,5089,3655,1434,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+impatiens_walleriana,Impatiens walleriana,wild_plant,b1,,2257,1120,68,1052,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+tecomaria_capensis,Tecomaria capensis,wild_plant,b1,,1569,686,269,417,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+heliconia_psittacorum,Heliconia psittacorum,wild_plant,b1,,2778,1589,1226,363,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+oxalis_purpurea,Oxalis purpurea,wild_plant,b1,,3672,903,314,589,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+baccharis_latifolia,Baccharis latifolia,wild_plant,b1,,1698,687,686,1,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+protea_repens,Protea repens,wild_plant,b1,,956,337,331,6,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+leucadendron_salignum,Leucadendron salignum,wild_plant,b1,,1974,517,513,4,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+sphagneticola_trilobata,Sphagneticola trilobata,wild_plant,b1,,13275,6444,2569,3875,"WCVP (data, TDWG level 3)",,10.15468/dl.uqgwvh,True
+cocos_nucifera,Cocos nucifera,crop,b1,,41066,3736,3736,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+daucus_carota,Daucus carota,crop,b1,,504619,64518,64518,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+prunus_avium,Prunus avium,crop,b1,,409353,56527,56527,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+trifolium_repens,Trifolium repens,crop,b1,,916443,125441,125441,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+colocasia_esculenta,Colocasia esculenta,crop,b1,,5862,2470,2470,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+humulus_lupulus,Humulus lupulus,crop,b1,,248367,52284,52284,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+rubus_idaeus,Rubus idaeus,crop,b1,,455185,74919,74919,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+fagopyrum_esculentum,Fagopyrum esculentum,crop,b1,,39092,21190,21190,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+ribes_nigrum,Ribes nigrum,crop,b1,,57973,24156,24156,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+capsicum_annuum,Capsicum annuum,crop,b1,,6575,2588,2588,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+linum_usitatissimum,Linum usitatissimum,crop,b1,,16565,8229,8229,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+ananas_comosus,Ananas comosus,crop,b1,,2474,1301,1301,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+citrullus_lanatus,Citrullus lanatus,crop,b1,,7186,5064,5064,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+arachis_hypogaea,Arachis hypogaea,crop,b1,,1847,914,914,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+cucumis_melo,Cucumis melo,crop,b1,,6108,3151,3151,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+vaccinium_corymbosum,Vaccinium corymbosum,crop,b1,,3970,2139,2139,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+cucurbita_pepo,Cucurbita pepo,crop,b1,,4572,2242,2242,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+chenopodium_quinoa,Chenopodium quinoa,crop,b1,,225,137,137,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+vigna_unguiculata,Vigna unguiculata,crop,b1,,1703,922,922,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True
+saccharum_officinarum,Saccharum officinarum,crop,b1,,913,513,513,0,none: crop modelled where recorded (no w,,10.15468/dl.uqgwvh,True

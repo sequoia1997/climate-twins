@@ -119,7 +119,7 @@ async def main():
             # kookaburra SSP5-8.5 2081-2100 has withheld numbers
             t = await pg.inner_text("#summary")
             if "withheld" not in t.lower(): fails.append(f"{name}: withheld numbers not shown for the kookaburra: {t[:120]!r}")
-            elif "novel climate" not in t.lower(): fails.append(f"{name}: withheld reason missing")
+            elif "unlike anything" not in t.lower(): fails.append(f"{name}: withheld reason missing")
             if "withheld" not in (await pg.inner_text("#sp-head")).lower(): fails.append(f"{name}: withheld banner missing from the header")
             if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-kookaburra-withheld.png"))
             # picking an organism frames its range; the map repeats the world (no wall at the date line) and draws the data in every copy
@@ -178,7 +178,7 @@ async def main():
             st = await pg2.inner_text("#summary")
             if "not meaningful" not in st: fails.append(f"{name}: no 'not meaningful' centre text {st[:100]!r}")
             if "moves about" in st: fails.append(f"{name}: centre arrow shown for a centre outside the range")
-            if (await pg2.evaluate("location.hash")) != "#acer_saccharum": fails.append(f"{name}: hash not kept")
+            if not (await pg2.evaluate("location.hash")).startswith("#acer_saccharum&ssp="): fails.append(f"{name}: hash not kept")
             if e2: fails.append(f"{name}: JS errors (stub page) {e2[:2]}")
             await pg2.close()
             # methods page: loads, DOI table filled from the index, no overflow
