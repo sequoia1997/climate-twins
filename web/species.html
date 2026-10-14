@@ -181,15 +181,19 @@ details p{font-size:.9rem}
 .modes[data-pos="0"] a:first-child,.modes[data-pos="1"] a:last-child{color:var(--chipOnInk)}
 .modes a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.modes::before,.modes a{transition:none}}
-.sunwrap{display:flex;justify-content:center;margin:6px 0 8px}
-.sun{width:min(100%,340px);height:auto;display:block}
-.sun .wd{cursor:pointer}.sun .wd path{stroke:var(--card,#fff);stroke-width:.8;transition:filter .15s}
-.sun .wd:hover path{filter:brightness(1.12)}
-.sun .wd text{font:600 5.2px system-ui,sans-serif;fill:#1b1b1b;pointer-events:none}
-.sun .sub{stroke:var(--card,#fff);stroke-width:.5;opacity:.9}
-.sun .hub circle{fill:var(--chip);stroke:var(--line)}.sun .hub[data-up]{cursor:pointer}
-.sun .hub text{fill:var(--ink);pointer-events:none}.sun .h1{font:700 5.6px system-ui,sans-serif}.sun .h2{font:4.4px system-ui,sans-serif;opacity:.75}.sun .h3{font:600 4.2px system-ui,sans-serif;opacity:.9}
-@media (prefers-reduced-motion:no-preference){.sun .wd,.sun .sub{animation:wdin .35s both;animation-delay:var(--d,0ms);transform-origin:0 0}@keyframes wdin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}}
+.treewrap{overflow:auto;margin:6px -4px 8px;padding:2px 4px;border-radius:14px;background:linear-gradient(180deg,var(--chip),transparent);max-height:62vh}
+.tree{display:block;margin:0 auto;max-width:none}
+.tree .lk{fill:none;stroke-width:1.6;opacity:.55}
+.tree .nd{cursor:pointer;outline:none}
+.tree .nd rect{transition:filter .15s,transform .15s}
+.tree .nd:hover rect,.tree .nd:focus-visible rect{filter:brightness(1.1) drop-shadow(0 1px 3px rgba(0,0,0,.25))}
+.tree .nd:focus-visible rect{stroke:var(--accent);stroke-width:3}
+.tree .nd text{font:600 12px system-ui,sans-serif;fill:#1b1b1b;pointer-events:none}
+.tree .nd.lf text{font-weight:500}
+.tree .nd:not(.lf):not([style*="chip"]) text{letter-spacing:.01em}
+.tree .nd.fc rect{stroke-dasharray:3 2}
+.tree .nd.sel rect{filter:drop-shadow(0 0 0 var(--ink)) brightness(1.05)}
+@media (prefers-reduced-motion:no-preference){.tree .nd{animation:ndin .38s both;animation-delay:var(--d,0ms)}.tree .lk{animation:lkin .5s both}@keyframes ndin{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}@keyframes lkin{from{opacity:0}to{opacity:.55}}}
 .crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;margin:10px 0 4px;font-size:.86rem}
 .crumbs .crumb{font:inherit;border:0;background:none;padding:3px 2px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .crumbs .crumb:last-child{font-weight:700;text-decoration:none;cursor:default}

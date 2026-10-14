@@ -104,7 +104,7 @@ def test_taxonomy_fields_in_the_index(built):
     from ctw.species_site import taxonomy_of
     t = taxonomy_of("Acer saccharum")
     assert t["kingdom"] == "Plantae" and t["family"] == "Sapindaceae" and t["order"] == "Sapindales"
-    assert taxonomy_of("Not a species") == {"kingdom": "", "cls": "", "order": "", "family": ""}
+    assert taxonomy_of("Not a species") == {"kingdom": "", "phylum": "", "cls": "", "order": "", "family": ""}
 
 
 def test_publication_rule():
