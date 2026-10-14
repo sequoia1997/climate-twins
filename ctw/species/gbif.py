@@ -7,6 +7,7 @@ import requests
 
 API = "https://api.gbif.org/v1"
 LICENCES_OK = ["CC0_1_0", "CC_BY_4_0"]
+LICENCES_NC = ("CC_BY_NC_4_0",)          # non-commercial records: used for the noncommercial educational site only (see methods and credits)
 BASIS_OK = ["HUMAN_OBSERVATION", "PRESERVED_SPECIMEN", "OBSERVATION", "MACHINE_OBSERVATION"]
 PILOT = [("Acer saccharum", "sugar maple", "tree"), ("Quercus robur", "English oak", "tree"),
          ("Danaus plexippus", "monarch", "animal"), ("Turdus migratorius", "American robin", "animal"),
