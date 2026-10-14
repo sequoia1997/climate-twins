@@ -19,7 +19,8 @@ from . import gbif, native as N, tg, w2cells
 
 ROOT = Path(__file__).resolve().parents[2]
 WORK = Path(os.environ.get("W2_WORK", ROOT / "work" / "w2"))
-TAG = "species-pilot-data"
+TAG = os.environ.get("W2_TAG", "species-pilot-data")                       # release that this run writes to
+EXTRA_TAGS = [t for t in os.environ.get("W2_EXTRA_TAGS", "").split(",") if t]   # releases it may also read from (shared inputs)
 NO_REL = os.environ.get("W2_NO_RELEASE") == "1"
 VERSION = "v1"
 YEAR_Q = os.environ.get("W2_YEAR_Q", '"year"')
@@ -58,10 +59,12 @@ def ensure_release():
 def rel_assets() -> dict:
     if NO_REL:
         return {p.name: p.stat().st_size for p in (WORK / "release").glob("*")} if (WORK / "release").exists() else {}
-    r = sh(["gh", "release", "view", TAG, "--json", "assets"], check=False)
-    if r.returncode != 0:
-        return {}
-    return {a["name"]: a["size"] for a in json.loads(r.stdout)["assets"]}
+    out = {}
+    for t in EXTRA_TAGS + [TAG]:
+        r = sh(["gh", "release", "view", t, "--json", "assets"], check=False)
+        if r.returncode == 0:
+            out.update({a["name"]: a["size"] for a in json.loads(r.stdout)["assets"]})
+    return out
 
 
 def rel_get(name: str, dest: Path) -> Path | None:
@@ -72,12 +75,13 @@ def rel_get(name: str, dest: Path) -> Path | None:
             dest.write_bytes(f.read_bytes())
             return dest
         return None
-    r = sh(["gh", "release", "download", TAG, "-p", name, "-D", str(dest.parent), "--clobber"], check=False)
-    got = dest.parent / name
-    if r.returncode == 0 and got.exists():
-        if got != dest:
-            got.replace(dest)
-        return dest
+    for t in [TAG] + EXTRA_TAGS:
+        r = sh(["gh", "release", "download", t, "-p", name, "-D", str(dest.parent), "--clobber"], check=False)
+        got = dest.parent / name
+        if r.returncode == 0 and got.exists():
+            if got != dest:
+                got.replace(dest)
+            return dest
     return None
 
 

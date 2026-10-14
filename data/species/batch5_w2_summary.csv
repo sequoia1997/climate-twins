@@ -1,0 +1,22 @@
+id,scientific_name,group,dl_batch,season,records,cells,cells_kept,cells_removed,mask_source,breeding_cells,doi,ok
+pseudacris_regilla,Pseudacris regilla,amphibian,b1,,13865,3616,3611,5,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+anaxyrus_boreas,Anaxyrus boreas,amphibian,b1,,7189,2554,2550,4,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+dryophytes_versicolor,Dryophytes versicolor,amphibian,b1,,6845,2260,2260,0,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+notophthalmus_viridescens,Notophthalmus viridescens,amphibian,b1,,15524,3669,3667,2,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+ambystoma_maculatum,Ambystoma maculatum,amphibian,b1,,10311,2019,2018,1,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+crinia_parinsignifera,Crinia parinsignifera,amphibian,b1,,9039,1936,1936,0,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+sceloporus_undulatus,Sceloporus undulatus,reptile,b1,,6459,1983,1982,1,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+plestiodon_fasciatus,Plestiodon fasciatus,reptile,b1,,4380,1913,1913,0,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+pantherophis_alleghaniensis,Pantherophis alleghaniensis,reptile,b1,,3156,1775,1773,2,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+storeria_dekayi,Storeria dekayi,reptile,b1,,5599,2698,2696,2,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+coluber_constrictor,Coluber constrictor,reptile,b1,,6278,3850,3843,7,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+lampropholis_delicata,Lampropholis delicata,reptile,b1,,22136,4108,3898,210,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+pseudonaja_textilis,Pseudonaja textilis,reptile,b1,,14115,4477,4475,2,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+crotalus_atrox,Crotalus atrox,reptile,b1,,4234,2173,2170,3,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+myotis_daubentonii,Myotis daubentonii,mammal,b1,,234710,14518,14467,51,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+nyctalus_noctula,Nyctalus noctula,mammal,b1,,217386,11635,11603,32,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+capra_ibex,Capra ibex,mammal,b1,,170172,1732,1727,5,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+coenagrion_puella,Coenagrion puella,insect_arachnid,b1,,443438,36427,36343,84,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+orthetrum_cancellatum,Orthetrum cancellatum,insect_arachnid,b1,,266417,31206,31066,140,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+libellula_quadrimaculata,Libellula quadrimaculata,insect_arachnid,b1,,277336,32859,32715,144,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True
+tettigonia_viridissima,Tettigonia viridissima,insect_arachnid,b1,,214905,35420,35290,130,"curated (our judgement, Natural Earth su",,10.15468/dl.j9gn2b,True

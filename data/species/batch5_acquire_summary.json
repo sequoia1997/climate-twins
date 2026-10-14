@@ -1,0 +1,14 @@
+{
+ "failed": {},
+ "not_stored": [],
+ "downloads": {
+  "batch:b1": {
+   "key": "0021258-260928105237408",
+   "doi": "10.15468/dl.j9gn2b",
+   "records": 1989120,
+   "status": "SUCCEEDED",
+   "processed": "2026-10-12T10:23:34Z",
+   "unmatched_records": 35626
+  }
+ }
+}

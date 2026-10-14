@@ -206,7 +206,9 @@ const fmtA = k => k >= 1e6 ? (k / 1e6).toFixed(k >= 1e7 ? 0 : 1) + " M km²" : k
 const pct = (a, b) => b > 0 ? Math.round((a - b) / b * 100) : null;
 const sgn = n => (n > 0 ? "+" : n < 0 ? MIN : "") + Math.abs(n);
 const compass = b => ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"][Math.round(b / 45) % 8];
-const PERLAB = () => ST.periods[S.per];
+const PERLAB = () => "around " + S.per;
+const PERFULL = () => `around ${S.per} (${ST.periods[S.per]})`;
+const SSPD = { ssp126: "Emissions fall quickly. Global warming about 1.8 \u00B0C by 2100.", ssp245: "A middle road: emissions peak mid-century, then fall. About 2.7 \u00B0C by 2100.", ssp370: "Emissions keep rising slowly. About 3.6 \u00B0C by 2100.", ssp585: "Emissions keep rising fast. About 4.4 \u00B0C by 2100." };
 const sspLabel = () => ST.ssps[S.ssp];
 const FLAG = "Climate suitability, not a forecast.";
 const KINDS = { bbs: "the North American Breeding Bird Survey", fia: "US Forest Inventory plots" };
@@ -227,9 +229,11 @@ function renderControls() {
   seg("view", [["now", "Now"], ["future", "Future"], ["change", "Change"]], () => S.view, v => { S.view = v; update(); });
   const i = INFO[S.sp];
   seg("ssp", Object.entries(ST.ssps).filter(([k]) => !i || i.ssps.includes(k)), () => S.ssp, v => { S.ssp = v; update(true); });
-  seg("per", Object.entries(ST.periods), () => S.per, v => { S.per = v; update(); });
+  seg("per", Object.keys(ST.periods).map(k => [k, "Around " + k]), () => S.per, v => { S.per = v; update(); });
   seg("disp", [["unlimited", "Unlimited"], ["limited", "Limited"], ["none", "None"]], () => S.disp, v => { S.disp = v; update(); });
   $("disp-d").textContent = i ? dispText() : "";
+  $("ssp-d").textContent = (SSPD[S.ssp] || "") + " SSP is the name climate scientists give to a possible future path of emissions.";
+  $("per-d").textContent = "\u201CAround " + S.per + "\u201D means the 20-year average " + (ST.periods[S.per] || "") + ", so one unusual year does not skew it.";
   $("o-agree").checked = S.agree; $("o-novel").checked = S.novel;
 }
 const TLEVELS = ["kingdom", "group", "order", "family"], TNAME = { kingdom: "kingdom", group: "group", order: "order", family: "family" };
@@ -238,6 +242,45 @@ const tget = (s, lv) => lv === "group" ? gname(s.group) : (s[lv] || "");
 const tlab = (lv, v) => !v ? "Other" : lv === "kingdom" ? (KING[v] || v) : v;
 const inScope = () => ST.species.filter(s => S.path.every(p => tget(s, p.lv) === p.v));
 function nextLevel(list) { for (const lv of TLEVELS) { if (S.path.some(p => p.lv === lv)) continue; if (new Set(list.map(s => tget(s, lv))).size > 1) return lv; } return null; }
+/* ---- tree-of-life sunburst: a colourful, tappable way into the same drill-down (the chips below it are the keyboard / screen-reader route) */
+const HUES = { bird: 42, mammal: 18, reptile: 100, amphibian: 172, insect_arachnid: 268, wild_plant: 135, tree: 150, crop: 32 };
+const EMO = { bird: "\uD83E\uDEB6", mammal: "\uD83D\uDC3E", reptile: "\uD83E\uDD8E", amphibian: "\uD83D\uDC38", insect_arachnid: "\uD83E\uDD8B", wild_plant: "\uD83C\uDF3F", tree: "\uD83C\uDF33", crop: "\uD83C\uDF3E" };
+const hueOf = list => HUES[list[0].group] != null ? HUES[list[0].group] : 200;
+function arc(r0, r1, a0, a1) {
+  if (a1 - a0 >= Math.PI * 2 - 1e-6) a1 = a0 + Math.PI * 2 - 1e-4;
+  const c = (r, a) => [(r * Math.sin(a)).toFixed(2), (-r * Math.cos(a)).toFixed(2)], big = a1 - a0 > Math.PI ? 1 : 0;
+  const [x0, y0] = c(r1, a0), [x1, y1] = c(r1, a1), [x2, y2] = c(r0, a1), [x3, y3] = c(r0, a0);
+  return `M${x0} ${y0}A${r1} ${r1} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${big} 0 ${x3} ${y3}Z`;
+}
+function groupBy(list, lv) { const m = new Map(); list.forEach(s => { const v = tget(s, lv); (m.get(v) || m.set(v, []).get(v)).push(s); }); return [...m].sort((a, b) => (a[0] === "") - (b[0] === "") || b[1].length - a[1].length || String(a[0]).localeCompare(String(b[0]))); }
+function sunburst(scope, nl) {
+  let kids, leaf = false;
+  if (nl) kids = groupBy(scope, nl).map(([v, l]) => ({ v, l, lv: nl }));
+  else if (scope.length > 1 && scope.length <= 30) { leaf = true; kids = scope.slice().sort((a, b) => a.name.localeCompare(b.name)).map(sp => ({ v: sp.name, l: [sp], sp })); }
+  else return "";
+  const tot = scope.length, TAU = Math.PI * 2, gap = 0.012;
+  const nl2 = nl ? (TLEVELS.slice(TLEVELS.indexOf(nl) + 1).find(lv => new Set(scope.map(s => tget(s, lv))).size > 1) || null) : null;
+  let a = 0, out = "";
+  kids.forEach((k, i) => {
+    const w = (nl === "kingdom" || nl === "group" ? 1 / kids.length : k.l.length / tot) * TAU, a0 = a + gap / 2, a1 = a + w - gap / 2; a += w;
+    const hue = hueOf(k.l), mid = (a0 + a1) / 2, sat = nl === "kingdom" ? 55 : 62;
+    const fill = `hsl(${hue + (nl === "family" || leaf ? (i % 5) * 6 : 0)} ${sat}% ${58 + (i % 3) * 5}%)`;
+    const lab = (nl ? tlab(nl, k.v) : k.v), show = (a1 - a0) > (leaf ? 0.2 : 0.3);
+    const tx = (41 * Math.sin(mid)).toFixed(1), ty = (-41 * Math.cos(mid)).toFixed(1);
+    const ic = nl === "group" ? (EMO[k.l[0].group] || "") : "";
+    const nm = lab.length > 12 ? lab.slice(0, 11) + "\u2026" : lab;
+    out += `<g class="wd" style="--d:${Math.min(i * 25, 400)}ms" ${leaf ? `data-sp="${esc(k.sp.id)}"` : `data-lv="${k.lv}" data-v="${esc(k.v)}"`}><title>${esc(lab)} (${k.l.length})</title><path d="${arc(22, 60, a0, a1)}" fill="${fill}"/>`
+      + (show ? `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle">${ic ? `<tspan x="${tx}" dy="-2.5" font-size="8">${ic}</tspan><tspan x="${tx}" dy="7.5">${esc(nm)}</tspan>` : esc(nm)}</text>` : "") + "</g>";
+    if (nl2 && !leaf) {                                                       // outer ring: what is inside each wedge, for a glimpse of the next level
+      let b = a0; const subs = groupBy(k.l, nl2);
+      subs.forEach(([v, l], j) => { const w2 = l.length / k.l.length * (a1 - a0), c0 = b, c1 = b + w2; b = c1;
+        out += `<path class="sub" d="${arc(62, 92, c0 + 0.004, Math.max(c0 + 0.006, c1 - 0.004))}" fill="hsl(${hue} ${sat - 8}% ${74 + (j % 3) * 4}%)"><title>${esc(tlab(nl2, v))} (${l.length})</title></path>`; });
+    }
+  });
+  const here = S.path.length ? tlab(S.path[S.path.length - 1].lv, S.path[S.path.length - 1].v) : "Tree of life";
+  return `<svg class="sun" viewBox="-96 -96 192 192" role="img" aria-label="Tree of life: tap a coloured wedge to zoom in"><g class="rings">${out}</g>
+    <g class="hub" ${S.path.length ? 'data-up="1" tabindex="-1"' : ""}><circle r="21"/><text y="-3" text-anchor="middle" class="h1">${esc(here.length > 14 ? here.slice(0, 13) + "\u2026" : here)}</text><text y="7" text-anchor="middle" class="h2">${tot} organisms</text>${S.path.length ? '<text y="15" text-anchor="middle" class="h3">\u21A9 back</text>' : ""}</g></svg>`;
+}
 function renderBrowse(scope) {                  // drill down by taxonomy: kingdom, group, order, family
   const br = $("browse"); if (S.q.trim()) { br.innerHTML = ""; return; }
   const crumbs = [`<button type="button" class="crumb" data-i="-1">All organisms</button>`, ...S.path.map((p, i) => `<span aria-hidden="true">›</span><button type="button" class="crumb" data-i="${i}">${esc(tlab(p.lv, p.v))}</button>`)].join("");
@@ -245,7 +288,10 @@ function renderBrowse(scope) {                  // drill down by taxonomy: kingd
   if (nl) { const m = new Map(); scope.forEach(s => { const v = tget(s, nl); m.set(v, (m.get(v) || 0) + 1); });
     const items = [...m].sort((a, b) => (a[0] === "") - (b[0] === "") || b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
     kids = `<div class="small">Browse by ${TNAME[nl]}</div><div class="chips">` + items.map(([v, n]) => `<button type="button" data-lv="${nl}" data-v="${esc(v)}">${esc(tlab(nl, v))}<span class="n">${n}</span></button>`).join("") + "</div>"; }
-  br.innerHTML = `<div class="crumbs" aria-label="Where you are in the tree of life">${crumbs}</div>${kids}`;
+  br.innerHTML = `<div class="crumbs" aria-label="Where you are in the tree of life">${crumbs}</div><div class="sunwrap">${sunburst(scope, nl)}</div>${kids}`;
+  br.querySelectorAll(".sun [data-lv]").forEach(g => g.addEventListener("click", () => { S.path = [...S.path, { lv: g.dataset.lv, v: g.dataset.v }]; renderResults(); }));
+  br.querySelectorAll(".sun [data-sp]").forEach(g => g.addEventListener("click", () => { pick(g.dataset.sp); const pd = $("pickdet"); if (pd) pd.open = false; }));
+  const hub = br.querySelector(".sun [data-up]"); if (hub) hub.addEventListener("click", () => { S.path = S.path.slice(0, -1); renderResults(); });
   br.querySelectorAll(".crumb").forEach(b => b.addEventListener("click", () => { S.path = S.path.slice(0, +b.dataset.i + 1); renderResults(); }));
   br.querySelectorAll("[data-lv]").forEach(b => b.addEventListener("click", () => { S.path = [...S.path, { lv: b.dataset.lv, v: b.dataset.v }]; renderResults(); }));
 }
@@ -302,7 +348,8 @@ function head() {
   $("sh-badges").innerHTML = bd;                                              // always visible in the phone sheet header
   $("sp-head").innerHTML = `<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 6px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
   <p class="badges">${bd}</p>
-  <dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd></dl>
+  <dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd><dt>Records used</dt><dd>${esc(i.kind === "crop" ? "Places where the crop is recorded." : i.range_basis === "native" ? "Records inside the organism\u2019s known native range." : "Every recorded location, including places it has been introduced to.")}</dd></dl>
+  <p class="small"><button type="button" class="linkbtn" id="copylink">Copy link to this view</button> <span id="copied" role="status"></span></p>
   ${isWithheld() ? `<p class="note withheld"><strong>Numbers withheld for ${esc(PERLAB())} under ${esc(sspLabel())}:</strong> ${esc(i.withheld[S.ssp + "|" + S.per])}.</p>` : ""}
   <p class="disc">${FLAG}</p><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
   $("sh-title").textContent = i.name;
@@ -321,6 +368,10 @@ function bars(rows, max, signed) {
     return `<div class="crow"><div class="lab">${esc(lab)}</div><div class="trk">${signed ? '<span class="zero" style="left:50%"></span>' : ""}<span class="bar ${signed && v < 0 ? "end" : ""}" style="${pos};--c:${col}"><b>${esc(txt)}</b></span></div></div>`;
   }).join("");
 }
+function withheldWhy(i, c) {
+  const nv = c && c.novel != null ? Math.round(c.novel * 100) : null;
+  return `${nv ? "About " + nv + "% of the area where this organism could live by " + PERLAB() + " would have a climate unlike anything in its present-day records" : "Much of the projected area would have a climate unlike anything in this organism's present-day records"} (for example hotter than anywhere it has been recorded). The model has nothing to compare that with, so any number would be a guess, and we would rather show no number than a made-up one.`;
+}
 function summary() {
   const i = I(), c = cur(), per = PERLAB(), el = $("summary");
   el.dataset.view = S.figview;
@@ -329,7 +380,7 @@ function summary() {
     el.innerHTML = `<div class="stats"><div class="st s-now"><div class="k">Suitable now</div><div class="v">${fmtA(i.area_now_km2)}</div><div class="d">1991–2020</div></div>
       <div class="st s-fut"><div class="k">Suitable by ${per}</div><div class="v">Withheld</div><div class="d">${esc(sspLabel())}</div></div>
       <div class="st s-mat"><div class="k">Change</div><div class="v">Withheld</div><div class="d">&nbsp;</div></div></div>
-      <p class="note withheld"><strong>Numbers withheld.</strong> ${esc(why[0].toUpperCase() + why.slice(1))}. Too much of the projected area has a climate that nothing in the training data resembles, so the model would be extrapolating. The map is still drawn, with those areas marked by diagonal lines.</p>`;
+      <p class="note withheld"><strong>Numbers withheld.</strong> ${withheldWhy(i, c)} The map is still drawn, and the hatched (diagonal-line) areas show where the model would be guessing.</p>`;
     const txt = `${i.name}: suitable climate now covers ${fmtA(i.area_now_km2)}. The numbers for ${per} under ${sspLabel()} are withheld: ${why}. ${FLAG}`;
     $("textdesc").textContent = txt; $("live").textContent = txt; return;
   }
@@ -408,7 +459,7 @@ const SW = {
 };
 function legend() {
   if (!legend.init) { legend.init = 1; $("legend").open = !phone(); }
-  const per = PERLAB(), k = [];
+  const per = PERFULL(), k = [];
   if (S.view === "change") k.push([SW.lost, `Lost: suitable now, not by ${per}`], [SW.kept, "Kept: suitable now and later"], [SW.gain, `Gained: suitable by ${per} only`]);
   else k.push([SW.ramp, `${S.view === "now" ? "Now" : "By " + per}: suitability, lower to higher (3 classes)`]);
   if (S.agree && S.view !== "now") k.push([SW.agree, `Dotted: fewer than 3 in 4 of the ${S.sp ? I().n_models : 14} climate models agree`]);
@@ -444,7 +495,7 @@ function update(reload, refit) {
     }
     shiftLayer(); map.triggerRepaint();
   }
-  try { history.replaceState(null, "", "#" + S.sp); } catch (e) { }
+  writeHash();
 }
 async function loadInfo(id) {
   if (INFO[id]) return INFO[id];
@@ -452,11 +503,29 @@ async function loadInfo(id) {
   if (!r.ok) throw new Error("info " + r.status);
   INFO[id] = await r.json(); T.info = Math.round(performance.now() - t0); return INFO[id];
 }
+function hashStr() { return "#" + S.sp + "&ssp=" + S.ssp + "&per=" + S.per + "&view=" + S.view + "&disp=" + S.disp; }
+function writeHash() { try { history.replaceState(null, "", hashStr()); } catch (e) { } }
+function parseHash() {
+  const [id, ...kv] = decodeURIComponent(location.hash.slice(1)).split("&"), o = { id };
+  kv.forEach(x => { const [k, v] = x.split("="); o[k] = v; });
+  return o;
+}
+function applyHash(o) {
+  if (o.ssp && ST.ssps[o.ssp]) S.ssp = o.ssp;
+  if (o.per && ST.periods[o.per]) S.per = o.per;
+  if (["now", "future", "change"].includes(o.view)) S.view = o.view;
+  if (["unlimited", "limited", "none"].includes(o.disp)) S.disp = o.disp;
+}
+document.addEventListener("click", e => {
+  if (e.target.id !== "copylink") return;
+  const url = location.origin + location.pathname + hashStr(), done = () => { $("copied").textContent = "Link copied."; setTimeout(() => { const c = $("copied"); if (c) c.textContent = ""; }, 2500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => prompt("Copy this link:", url)); else prompt("Copy this link:", url);
+});
 async function pick(id) {
   if (!ST.byId[id]) return;
   S.sp = id; const pc = $("pick-cur"); if (pc) pc.textContent = rec(id).name; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
   if (!INFO[id]) $("sp-head").innerHTML = `<h2>${esc(rec(id).name)}</h2><p class="small" role="status">Loading\u2026</p>`;
-  try { history.replaceState(null, "", "#" + id); } catch (e) { }
+  writeHash();
   try { await loadInfo(id); } catch (e) { $("sp-head").innerHTML = '<p role="alert">This organism could not be loaded. Check your connection and try again.</p>'; return; }
   $("sp-head").removeAttribute("aria-busy");
   if (!INFO[id].ssps.includes(S.ssp)) S.ssp = INFO[id].ssps[0];
@@ -503,7 +572,7 @@ $("o-agree").addEventListener("change", e => { S.agree = e.target.checked; updat
 $("o-novel").addEventListener("change", e => { S.novel = e.target.checked; legend(); map && map.triggerRepaint(); });
 $("place-det").addEventListener("toggle", () => { placeCard(); placeMarker(); });
 $("search").addEventListener("input", e => { S.q = e.target.value; renderResults(); });
-addEventListener("hashchange", () => { const h = decodeURIComponent(location.hash.slice(1)); if (ST && ST.byId[h] && h !== S.sp) pick(h); });
+addEventListener("hashchange", () => { const o = parseHash(); if (ST && ST.byId[o.id]) { applyHash(o); if (o.id !== S.sp) pick(o.id); else update(true); } });
 $("retry").addEventListener("click", () => location.reload());
 $("search").addEventListener("keydown", e => {
   const opts = [...$("results").querySelectorAll("[data-id]")]; if (!opts.length) return; let i = opts.findIndex(o => o.getAttribute("aria-selected") === "true");
@@ -548,8 +617,9 @@ async function boot() {
   $("count").textContent = ST.species.length;
   applyTheme(false); renderResults(); renderControls();
   startMap();
-  const h = decodeURIComponent(location.hash.slice(1)), id = ST.byId[h] ? h : (ST.byId.acer_saccharum ? "acer_saccharum" : ST.species[0].id);
+  const ho = parseHash(), h = ho.id, id = ST.byId[h] ? h : (ST.byId.acer_saccharum ? "acer_saccharum" : ST.species[0].id);
   const b = rec(id).bbox; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: padFor(), duration: 0, maxZoom: 5 });
+  if (ST.byId[h]) applyHash(ho);
   S.sp = id; $("pick-cur").textContent = rec(id).name; renderResults();
   await loadInfo(id);
   window.__S = S; window.__T = T;

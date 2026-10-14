@@ -1,0 +1,88 @@
+id,scientific_name,group,dl_batch,season,records,cells,cells_kept,cells_removed,mask_source,breeding_cells,doi,ok
+lepus_europaeus,Lepus europaeus,mammal,b2,,559612,50970,49798,1172,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+erinaceus_europaeus,Erinaceus europaeus,mammal,b3,,404282,53733,53229,504,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+cervus_elaphus,Cervus elaphus,mammal,b3,,284364,26198,25867,331,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+meles_meles,Meles meles,mammal,b3,,362179,45228,45202,26,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+rupicapra_rupicapra,Rupicapra rupicapra,mammal,b2,,462330,5345,5320,25,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+castor_fiber,Castor fiber,mammal,b3,,296763,18438,18384,54,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+talpa_europaea,Talpa europaea,mammal,b3,,100048,29483,29457,26,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+lutra_lutra,Lutra lutra,mammal,b3,,185226,44144,43586,558,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+apodemus_sylvaticus,Apodemus sylvaticus,mammal,b4,,70028,17323,17250,73,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+myodes_glareolus,Myodes glareolus,mammal,b3,,84226,15190,15162,28,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+pipistrellus_pipistrellus,Pipistrellus pipistrellus,mammal,b1,,2469941,20697,20650,47,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+peromyscus_maniculatus,Peromyscus maniculatus,mammal,b3,,167881,9024,9014,10,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+phascolarctos_cinereus,Phascolarctos cinereus,mammal,b3,,307105,7131,7114,17,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+martes_foina,Martes foina,mammal,b3,,141803,20992,20982,10,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+lissotriton_vulgaris,Lissotriton vulgaris,amphibian,b3,,138103,19109,19024,85,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+crinia_signifera,Crinia signifera,amphibian,b3,,60812,8444,8441,3,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+salamandra_salamandra,Salamandra salamandra,amphibian,b3,,155545,20997,20993,4,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+triturus_cristatus,Triturus cristatus,amphibian,b4,,124292,15610,15562,48,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+plethodon_cinereus,Plethodon cinereus,amphibian,b4,,43149,4119,4118,1,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+epidalea_calamita,Epidalea calamita,amphibian,b4,,86895,8995,8947,48,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+hyla_arborea,Hyla arborea,amphibian,b4,,96445,8904,8893,11,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+rana_dalmatina,Rana dalmatina,amphibian,b4,,79401,13839,13833,6,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+limnodynastes_tasmaniensis,Limnodynastes tasmaniensis,amphibian,b4,,28817,5747,5744,3,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+pseudacris_crucifer,Pseudacris crucifer,amphibian,b4,,14813,4120,4118,2,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+podarcis_muralis,Podarcis muralis,reptile,b3,,220872,25579,25423,156,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+zootoca_vivipara,Zootoca vivipara,reptile,b3,,83178,25632,25572,60,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+lacerta_agilis,Lacerta agilis,reptile,b3,,45838,11311,11295,16,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+sceloporus_occidentalis,Sceloporus occidentalis,reptile,b4,,23694,3812,3812,0,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+natrix_natrix,Natrix natrix,reptile,b4,,67174,23762,23582,180,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+vipera_berus,Vipera berus,reptile,b4,,47269,15364,15184,180,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+anolis_carolinensis,Anolis carolinensis,reptile,b4,,12481,3151,3065,86,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+coronella_austriaca,Coronella austriaca,reptile,b4,,22154,7573,7537,36,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+tiliqua_scincoides,Tiliqua scincoides,reptile,b4,,47779,4004,4001,3,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+thamnophis_elegans,Thamnophis elegans,reptile,b4,,27032,2395,2377,18,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+hierophis_viridiflavus,Hierophis viridiflavus,reptile,b4,,35871,9556,9542,14,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+pituophis_catenifer,Pituophis catenifer,reptile,b4,,8855,5057,5057,0,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+intellagama_lesueurii,Intellagama lesueurii,reptile,b1,,18881,2651,2648,3,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+pseudechis_porphyriacus,Pseudechis porphyriacus,reptile,b4,,28552,4071,4070,1,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+maniola_jurtina,Maniola jurtina,insect_arachnid,b1,,2538100,61324,60959,365,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+pararge_aegeria,Pararge aegeria,insect_arachnid,b1,,1568087,54023,53751,272,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+aglais_io,Aglais io,insect_arachnid,b1,,1233344,70298,69866,432,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+pieris_napi,Pieris napi,insect_arachnid,b1,,1404112,63631,63275,356,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+aglais_urticae,Aglais urticae,insect_arachnid,b1,,1080245,67934,67478,456,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+pieris_brassicae,Pieris brassicae,insect_arachnid,b1,,1045251,52023,51545,478,"curated (our judgement, Natural Earth su",,10.15468/dl.cpyvk5,True
+polyommatus_icarus,Polyommatus icarus,insect_arachnid,b2,,1228170,56785,56289,496,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+gonepteryx_rhamni,Gonepteryx rhamni,insect_arachnid,b2,,1174223,68939,68624,315,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+coenonympha_pamphilus,Coenonympha pamphilus,insect_arachnid,b2,,1069865,52556,52275,281,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+aphantopus_hyperantus,Aphantopus hyperantus,insect_arachnid,b2,,1052492,44530,44296,234,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+anthocharis_cardamines,Anthocharis cardamines,insect_arachnid,b2,,637494,53471,53303,168,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+lycaena_phlaeas,Lycaena phlaeas,insect_arachnid,b2,,483527,48956,48514,442,"curated (our judgement, Natural Earth su",,10.15468/dl.p6p767,True
+ischnura_elegans,Ischnura elegans,insect_arachnid,b3,,524814,43437,43209,228,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+anax_imperator,Anax imperator,insect_arachnid,b3,,339743,33579,33474,105,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+araneus_diadematus,Araneus diadematus,insect_arachnid,b3,,52874,20433,18800,1633,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+argiope_bruennichi,Argiope bruennichi,insect_arachnid,b3,,41518,17470,17378,92,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+pisaura_mirabilis,Pisaura mirabilis,insect_arachnid,b4,,48861,15978,15928,50,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+phidippus_audax,Phidippus audax,insect_arachnid,b4,,10142,3460,3453,7,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+argiope_aurantia,Argiope aurantia,insect_arachnid,b4,,6626,3316,3314,2,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+phalangium_opilio,Phalangium opilio,insect_arachnid,b4,,19862,8083,7889,194,"curated (our judgement, Natural Earth su",,10.15468/dl.w6982k,True
+plantago_lanceolata,Plantago lanceolata,wild_plant,b2,,1066094,91411,81573,9838,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+dactylis_glomerata,Dactylis glomerata,wild_plant,b2,,1068092,99506,92381,7125,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+hedera_helix,Hedera helix,wild_plant,b2,,726471,68735,66090,2645,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+calluna_vulgaris,Calluna vulgaris,wild_plant,b2,,676933,92303,91428,875,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+vaccinium_myrtillus,Vaccinium myrtillus,wild_plant,b2,,650241,88994,88406,588,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+hypericum_perforatum,Hypericum perforatum,wild_plant,b3,,568349,71977,66268,5709,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+lythrum_salicaria,Lythrum salicaria,wild_plant,b3,,459047,67409,62653,4756,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+chamaenerion_angustifolium,Chamaenerion angustifolium,wild_plant,b3,,343693,89560,88833,727,"curated (our judgement, Natural Earth su",,10.15468/dl.z4p37q,True
+juniperus_communis,Juniperus communis,wild_plant,b3,,505387,87893,86612,1281,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+anemone_nemorosa,Anemone nemorosa,wild_plant,b3,,416676,60418,59717,701,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+oxalis_acetosella,Oxalis acetosella,wild_plant,b3,,361285,66492,66273,219,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+dryopteris_filix_mas,Dryopteris filix-mas,wild_plant,b3,,434952,65114,64275,839,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+equisetum_arvense,Equisetum arvense,wild_plant,b3,,462649,93583,93010,573,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+iris_pseudacorus,Iris pseudacorus,wild_plant,b3,,415843,60789,57357,3432,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+leucanthemum_vulgare,Leucanthemum vulgare,wild_plant,b3,,425581,82541,75754,6787,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+epilobium_hirsutum,Epilobium hirsutum,wild_plant,b3,,404625,56584,55420,1164,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+tussilago_farfara,Tussilago farfara,wild_plant,b3,,383351,85677,80376,5301,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+primula_veris,Primula veris,wild_plant,b3,,385672,57130,56826,304,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+lonicera_periclymenum,Lonicera periclymenum,wild_plant,b3,,399896,45270,44917,353,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+ilex_aquifolium,Ilex aquifolium,wild_plant,b3,,373705,49749,47817,1932,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+cornus_sanguinea,Cornus sanguinea,wild_plant,b3,,553187,58065,57998,67,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+silene_dioica,Silene dioica,wild_plant,b3,,297229,65565,64679,886,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+filipendula_ulmaria,Filipendula ulmaria,wild_plant,b1,,804656,109020,107947,1073,"WCVP (data, TDWG level 3)",,10.15468/dl.cpyvk5,True
+hypochaeris_radicata,Hypochaeris radicata,wild_plant,b3,,545998,54269,48461,5808,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+corylus_avellana,Corylus avellana,tree,b2,,868604,91074,90754,320,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+quercus_rotundifolia,Quercus rotundifolia,tree,b2,,133809,2623,2614,9,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+alnus_glutinosa,Alnus glutinosa,tree,b2,,608020,75387,74296,1091,"WCVP (data, TDWG level 3)",,10.15468/dl.p6p767,True
+populus_tremula,Populus tremula,tree,b3,,523208,94689,93994,695,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True
+quercus_suber,Quercus suber,tree,b3,,263349,5136,5014,122,"WCVP (data, TDWG level 3)",,10.15468/dl.z4p37q,True

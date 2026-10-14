@@ -1,0 +1,521 @@
+{
+"Loxodonta africana": {
+"key": 2435350,
+"n": 25839,
+"common": "African Bush Elephant",
+"shares": "AFRICA:0.999;EUROPE:0.001;NORTH_AMERICA:0.0",
+"canon": "Loxodonta africana"
+},
+"Panthera leo": {
+"key": 5219404,
+"n": 16987,
+"common": "African Lion",
+"shares": "AFRICA:0.964;EUROPE:0.016;ASIA:0.013;NORTH_AMERICA:0.005;SOUTH_AMERICA:0.001;OCEANIA:0.0",
+"canon": "Panthera leo"
+},
+"Giraffa camelopardalis": {
+"key": 2441205,
+"n": 5655,
+"common": "Giraffa",
+"shares": "AFRICA:0.992;NORTH_AMERICA:0.004;SOUTH_AMERICA:0.003;EUROPE:0.001;ASIA:0.0",
+"canon": "Giraffa camelopardalis"
+},
+"Papio ursinus": {
+"key": 7262029,
+"n": 12055,
+"common": "Chacma Baboon",
+"shares": "AFRICA:1.0",
+"canon": "Papio ursinus"
+},
+"Hippopotamus amphibius": {
+"key": 2441247,
+"n": 14367,
+"common": "Cape Hippopotamus",
+"shares": "AFRICA:0.959;EUROPE:0.015;SOUTH_AMERICA:0.012;NORTH_AMERICA:0.01;ASIA:0.005",
+"canon": "Hippopotamus amphibius"
+},
+"Connochaetes taurinus": {
+"key": 2441105,
+"n": 14905,
+"common": "Blouwildebees",
+"shares": "AFRICA:1.0;NORTH_AMERICA:0.0",
+"canon": "Connochaetes taurinus"
+},
+"Elephas maximus": {
+"key": 5219461,
+"n": 11766,
+"common": "Asian Elephant",
+"shares": "ASIA:0.619;NORTH_AMERICA:0.379;EUROPE:0.002;AFRICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Elephas maximus"
+},
+"Panthera tigris": {
+"key": 5219416,
+"n": 5734,
+"common": "Bagh",
+"shares": "ASIA:0.982;NORTH_AMERICA:0.012;SOUTH_AMERICA:0.002;EUROPE:0.002;AFRICA:0.001;OCEANIA:0.0",
+"canon": "Panthera tigris"
+},
+"Rusa unicolor": {
+"key": 7261386,
+"n": 67745,
+"common": "Indian Sambar",
+"shares": "ASIA:0.513;OCEANIA:0.485;NORTH_AMERICA:0.001;AFRICA:0.0;SOUTH_AMERICA:0.0;EUROPE:0.0",
+"canon": "Rusa unicolor"
+},
+"Muntiacus muntjak": {
+"key": 2440943,
+"n": 6146,
+"common": "Barking Deer",
+"shares": "ASIA:0.995;EUROPE:0.004;NORTH_AMERICA:0.001;AFRICA:0.0",
+"canon": "Muntiacus muntjak"
+},
+"Tapirus terrestris": {
+"key": 2440898,
+"n": 21769,
+"common": "Brazilian Tapir",
+"shares": "SOUTH_AMERICA:0.999;NORTH_AMERICA:0.001",
+"canon": "Tapirus terrestris"
+},
+"Kobus ellipsiprymnus": {
+"key": 5220160,
+"n": 13277,
+"common": "Common Waterbuck",
+"shares": "AFRICA:0.999;EUROPE:0.0;NORTH_AMERICA:0.0;OCEANIA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Kobus ellipsiprymnus"
+},
+"Ursus arctos": {
+"key": 2433433,
+"n": 55181,
+"common": "Brown Bear",
+"shares": "EUROPE:0.714;NORTH_AMERICA:0.189;ASIA:0.097;SOUTH_AMERICA:0.0;AFRICA:0.0",
+"canon": "Ursus arctos"
+},
+"Lynx lynx": {
+"key": 2435240,
+"n": 95169,
+"common": "Eurasian Lynx",
+"shares": "EUROPE:0.988;ASIA:0.012;NORTH_AMERICA:0.0",
+"canon": "Lynx lynx"
+},
+"Ovis aries musimon": null,
+"Hemidactylus frenatus": {
+"key": 9537238,
+"n": 46490,
+"common": "Bridled house gecko",
+"shares": "ASIA:0.418;OCEANIA:0.253;NORTH_AMERICA:0.21;SOUTH_AMERICA:0.099;AFRICA:0.021;EUROPE:0.0",
+"canon": "Hemidactylus frenatus"
+},
+"Calotes versicolor": {
+"key": 9125207,
+"n": 26137,
+"common": "Bloodsucker",
+"shares": "ASIA:0.935;AFRICA:0.064;NORTH_AMERICA:0.001;OCEANIA:0.0;EUROPE:0.0",
+"canon": "Calotes versicolor"
+},
+"Naja naja": {
+"key": 2470351,
+"n": 2053,
+"common": "Central Asian Cobra",
+"shares": "ASIA:0.984;AFRICA:0.013;EUROPE:0.001;NORTH_AMERICA:0.0;OCEANIA:0.0",
+"canon": "Naja naja"
+},
+"Python bivittatus": {
+"key": 4820533,
+"n": 10455,
+"common": "Banana Snake",
+"shares": "NORTH_AMERICA:0.922;ASIA:0.078;AFRICA:0.0",
+"canon": "Python bivittatus"
+},
+"Chamaeleo chamaeleon": {
+"key": 2449051,
+"n": 7869,
+"common": "Common Chameleon",
+"shares": "EUROPE:0.608;ASIA:0.316;AFRICA:0.076",
+"canon": "Chamaeleo chamaeleon"
+},
+"Agama agama": {
+"key": 5226308,
+"n": 3975,
+"common": "Bocourt's Agama",
+"shares": "AFRICA:0.993;EUROPE:0.004;NORTH_AMERICA:0.002;OCEANIA:0.001;SOUTH_AMERICA:0.0",
+"canon": "Agama agama"
+},
+"Lacerta viridis": {
+"key": 6159273,
+"n": 25875,
+"common": "Eastern Green Lizard",
+"shares": "EUROPE:0.993;ASIA:0.007;NORTH_AMERICA:0.0",
+"canon": "Lacerta viridis"
+},
+"Hemidactylus turcicus": {
+"key": 5221528,
+"n": 55504,
+"common": "Mediterranean Gecko",
+"shares": "NORTH_AMERICA:0.66;EUROPE:0.271;ASIA:0.061;AFRICA:0.007;SOUTH_AMERICA:0.001",
+"canon": "Hemidactylus turcicus"
+},
+"Testudo hermanni": {
+"key": 2441454,
+"n": 41343,
+"common": "Eastern Hermann\u2019s Tortoise [boettgeri]",
+"shares": "EUROPE:0.999;ASIA:0.001;NORTH_AMERICA:0.0;AFRICA:0.0",
+"canon": "Testudo hermanni"
+},
+"Pelophylax ridibundus": {
+"key": 2426661,
+"n": 102349,
+"common": "Eurasian Marsh Frog",
+"shares": "EUROPE:0.882;ASIA:0.117;AFRICA:0.001",
+"canon": "Pelophylax ridibundus"
+},
+"Xenopus laevis": {
+"key": 5217334,
+"n": 9308,
+"common": "African Clawed Frog",
+"shares": "AFRICA:0.366;EUROPE:0.341;NORTH_AMERICA:0.273;SOUTH_AMERICA:0.016;ASIA:0.003",
+"canon": "Xenopus laevis"
+},
+"Hoplobatrachus tigerinus": {
+"key": 2430380,
+"n": 2349,
+"common": "Bull Frog",
+"shares": "ASIA:0.95;SOUTH_AMERICA:0.025;AFRICA:0.024;NORTH_AMERICA:0.0",
+"canon": "Hoplobatrachus tigerinus"
+},
+"Sclerophrys regularis": {
+"key": 10698146,
+"n": 3740,
+"common": "African Common Toad",
+"shares": "AFRICA:0.999;ASIA:0.001",
+"canon": "Sclerophrys regularis"
+},
+"Kassina senegalensis": {
+"key": 5217753,
+"n": 3206,
+"common": "Bubbling Kassina",
+"shares": "AFRICA:1.0",
+"canon": "Kassina senegalensis"
+},
+"Corvus macrorhynchos": {
+"key": 2482487,
+"n": 1542041,
+"common": "Jungle Crow",
+"shares": "ASIA:1.0;SOUTH_AMERICA:0.0;EUROPE:0.0;NORTH_AMERICA:0.0",
+"canon": "Corvus macrorhynchos"
+},
+"Passer montanus": {
+"key": 5231198,
+"n": 4315212,
+"common": "Eurasian Sparrow",
+"shares": "EUROPE:0.666;ASIA:0.304;NORTH_AMERICA:0.024;OCEANIA:0.006;AFRICA:0.0",
+"canon": "Passer montanus"
+},
+"Streptopelia senegalensis": {
+"key": 6101223,
+"n": 1502233,
+"common": "LADO",
+"shares": "ASIA:0.481;AFRICA:0.469;OCEANIA:0.043;EUROPE:0.007;NORTH_AMERICA:0.0",
+"canon": "Streptopelia senegalensis"
+},
+"Pycnonotus jocosus": {
+"key": 2486151,
+"n": 958061,
+"common": "RWBU",
+"shares": "ASIA:0.845;OCEANIA:0.094;NORTH_AMERICA:0.045;AFRICA:0.013;EUROPE:0.002",
+"canon": "Pycnonotus jocosus"
+},
+"Acridotheres tristis": {
+"key": 2489005,
+"n": 3567209,
+"common": "Bhat shalik",
+"shares": "ASIA:0.601;OCEANIA:0.324;AFRICA:0.069;NORTH_AMERICA:0.005;EUROPE:0.001;ANTARCTICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Acridotheres tristis"
+},
+"Struthio camelus": {
+"key": 2495150,
+"n": 142719,
+"common": "African Ostrich",
+"shares": "AFRICA:0.994;OCEANIA:0.003;ASIA:0.001;NORTH_AMERICA:0.001;EUROPE:0.0;SOUTH_AMERICA:0.0",
+"canon": "Struthio camelus"
+},
+"Garrulus glandarius": {
+"key": 5229493,
+"n": 4315332,
+"common": "Acorn Jay",
+"shares": "EUROPE:0.95;ASIA:0.05;AFRICA:0.0;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Garrulus glandarius"
+},
+"Dendrocopos major": {
+"key": 2477968,
+"n": 5409348,
+"common": "GSWO",
+"shares": "EUROPE:0.982;ASIA:0.017;AFRICA:0.001;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Dendrocopos major"
+},
+"Cinnyris asiaticus": {
+"key": 7340608,
+"n": 767626,
+"common": "Purple Sunbird",
+"shares": "ASIA:1.0;NORTH_AMERICA:0.0",
+"canon": "Cinnyris asiaticus"
+},
+"Ploceus cucullatus": {
+"key": 2494058,
+"n": 235186,
+"common": "Black-headed Weaver",
+"shares": "AFRICA:0.966;NORTH_AMERICA:0.025;SOUTH_AMERICA:0.006;ASIA:0.002;EUROPE:0.0",
+"canon": "Ploceus cucullatus"
+},
+"Lamprotornis superbus": {
+"key": 2489075,
+"n": 82639,
+"common": "SUST",
+"shares": "AFRICA:0.994;ASIA:0.005;EUROPE:0.001;NORTH_AMERICA:0.0",
+"canon": "Lamprotornis superbus"
+},
+"Bubo bubo": {
+"key": 5959092,
+"n": 167331,
+"common": "B\u00faho real.",
+"shares": "EUROPE:0.949;ASIA:0.045;NORTH_AMERICA:0.006;AFRICA:0.0",
+"canon": "Bubo bubo"
+},
+"Strix aluco": {
+"key": 9282206,
+"n": 1017189,
+"common": "Eurasian tawny owl",
+"shares": "EUROPE:0.994;ASIA:0.004;AFRICA:0.001;NORTH_AMERICA:0.0",
+"canon": "Strix aluco"
+},
+"Turdoides striata": {
+"key": 7340537,
+"n": 493406,
+"common": "Jungle Babbler",
+"shares": "ASIA:1.0",
+"canon": "Turdoides striata"
+},
+"Sympetrum striolatum": {
+"key": 1428345,
+"n": 634835,
+"common": "Black-Legged Sympetrum",
+"shares": "EUROPE:0.996;ASIA:0.004;AFRICA:0.0;NORTH_AMERICA:0.0",
+"canon": "Sympetrum striolatum"
+},
+"Aeshna cyanea": {
+"key": 1425240,
+"n": 372905,
+"common": "Blue Darner",
+"shares": "EUROPE:0.999;ASIA:0.001;AFRICA:0.0;NORTH_AMERICA:0.0",
+"canon": "Aeshna cyanea"
+},
+"Mantis religiosa": {
+"key": 6258028,
+"n": 147826,
+"common": "European Mantid",
+"shares": "EUROPE:0.764;NORTH_AMERICA:0.215;ASIA:0.016;AFRICA:0.005;OCEANIA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Mantis religiosa"
+},
+"Locusta migratoria": {
+"key": 1713418,
+"n": 17414,
+"common": "Locust",
+"shares": "EUROPE:0.748;ASIA:0.145;OCEANIA:0.082;AFRICA:0.025;ANTARCTICA:0.0",
+"canon": "Locusta migratoria"
+},
+"Schistocerca gregaria": {
+"key": 1707320,
+"n": 5140,
+"common": "Desert Locust",
+"shares": "AFRICA:0.825;EUROPE:0.124;ASIA:0.051;NORTH_AMERICA:0.0",
+"canon": "Schistocerca gregaria"
+},
+"Lucanus cervus": {
+"key": 5743122,
+"n": 278064,
+"common": "European Stag Beetle",
+"shares": "EUROPE:0.999;ASIA:0.001;OCEANIA:0.0;NORTH_AMERICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Lucanus cervus"
+},
+"Cetonia aurata": {
+"key": 1077829,
+"n": 125560,
+"common": "Common Rose Chafer",
+"shares": "EUROPE:0.986;ASIA:0.014;AFRICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Cetonia aurata"
+},
+"Hypolimnas misippus": {
+"key": 1910628,
+"n": 13406,
+"common": "Common Diadem",
+"shares": "AFRICA:0.543;ASIA:0.412;OCEANIA:0.024;NORTH_AMERICA:0.01;SOUTH_AMERICA:0.01;EUROPE:0.001;ANTARCTICA:0.0",
+"canon": "Hypolimnas misippus"
+},
+"Catopsilia pomona": {
+"key": 1919340,
+"n": 25798,
+"common": "Common Emigrant",
+"shares": "ASIA:0.777;OCEANIA:0.222;SOUTH_AMERICA:0.0;AFRICA:0.0;EUROPE:0.0",
+"canon": "Catopsilia pomona"
+},
+"Gryllus bimaculatus": {
+"key": 1713034,
+"n": 11269,
+"common": "Field cricket",
+"shares": "EUROPE:0.762;ASIA:0.126;AFRICA:0.11;NORTH_AMERICA:0.001;OCEANIA:0.001",
+"canon": "Gryllus bimaculatus"
+},
+"Anopheles gambiae": {
+"key": 1650518,
+"n": 115071,
+"common": "Anopheles gambiae",
+"shares": "AFRICA:1.0;SOUTH_AMERICA:0.0",
+"canon": "Anopheles gambiae"
+},
+"Aedes aegypti": {
+"key": 1651891,
+"n": 121287,
+"common": "Dengue Fever Mosquito",
+"shares": "AFRICA:0.53;NORTH_AMERICA:0.28;ASIA:0.111;SOUTH_AMERICA:0.069;OCEANIA:0.009;EUROPE:0.0",
+"canon": "Aedes aegypti"
+},
+"Pteridium aquilinum": {
+"key": 5275012,
+"n": 1016592,
+"common": "Bracken",
+"shares": "EUROPE:0.877;NORTH_AMERICA:0.093;ASIA:0.017;AFRICA:0.011;SOUTH_AMERICA:0.002;OCEANIA:0.001;ANTARCTICA:0.0",
+"canon": "Pteridium aquilinum"
+},
+"Phragmites australis": {
+"key": 5290149,
+"n": 1139167,
+"common": "Common Reed",
+"shares": "EUROPE:0.918;NORTH_AMERICA:0.045;ASIA:0.017;OCEANIA:0.017;AFRICA:0.003;SOUTH_AMERICA:0.0;ANTARCTICA:0.0",
+"canon": "Phragmites australis"
+},
+"Typha latifolia": {
+"key": 5289423,
+"n": 502417,
+"common": "Broad-leaf Cattail",
+"shares": "EUROPE:0.944;NORTH_AMERICA:0.044;ASIA:0.009;OCEANIA:0.002;SOUTH_AMERICA:0.001;AFRICA:0.0",
+"canon": "Typha latifolia"
+},
+"Ricinus communis": {
+"key": 5380041,
+"n": 94803,
+"common": "Castor",
+"shares": "NORTH_AMERICA:0.351;EUROPE:0.169;ASIA:0.165;AFRICA:0.141;SOUTH_AMERICA:0.101;OCEANIA:0.073",
+"canon": "Ricinus communis"
+},
+"Lantana camara": {
+"key": 2925303,
+"n": 125334,
+"common": "Bird's Brandy",
+"shares": "OCEANIA:0.483;AFRICA:0.172;ASIA:0.143;NORTH_AMERICA:0.081;SOUTH_AMERICA:0.075;EUROPE:0.046",
+"canon": "Lantana camara"
+},
+"Calotropis procera": {
+"key": 5414566,
+"n": 31288,
+"common": "Apple of Sodom",
+"shares": "OCEANIA:0.441;AFRICA:0.248;ASIA:0.144;NORTH_AMERICA:0.086;SOUTH_AMERICA:0.078;EUROPE:0.003",
+"canon": "Calotropis procera"
+},
+"Rhododendron ponticum": {
+"key": 7327990,
+"n": 128722,
+"common": "Pontian rhododendron",
+"shares": "EUROPE:0.994;ASIA:0.004;OCEANIA:0.001;NORTH_AMERICA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Rhododendron ponticum"
+},
+"Cyperus papyrus": {
+"key": 2716311,
+"n": 4021,
+"common": "Egyptian paperplant",
+"shares": "AFRICA:0.467;ASIA:0.167;NORTH_AMERICA:0.123;OCEANIA:0.095;SOUTH_AMERICA:0.086;EUROPE:0.063",
+"canon": "Cyperus papyrus"
+},
+"Imperata cylindrica": {
+"key": 8424006,
+"n": 50414,
+"common": "Alang-alang, Blady grass, Cogon grass, Japgrass, Satintail, Speargrass",
+"shares": "OCEANIA:0.561;ASIA:0.196;EUROPE:0.103;AFRICA:0.091;NORTH_AMERICA:0.049;SOUTH_AMERICA:0.001",
+"canon": "Imperata cylindrica"
+},
+"Themeda triandra": {
+"key": 2703467,
+"n": 93400,
+"common": "Angle Grass",
+"shares": "OCEANIA:0.91;AFRICA:0.054;ASIA:0.036;NORTH_AMERICA:0.0;EUROPE:0.0;SOUTH_AMERICA:0.0",
+"canon": "Themeda triandra"
+},
+"Cynodon dactylon": {
+"key": 6109637,
+"n": 152644,
+"common": "Bahama Grass",
+"shares": "EUROPE:0.529;OCEANIA:0.275;NORTH_AMERICA:0.084;ASIA:0.061;AFRICA:0.035;SOUTH_AMERICA:0.016;ANTARCTICA:0.0",
+"canon": "Cynodon dactylon"
+},
+"Protea cynaroides": {
+"key": 5637947,
+"n": 7832,
+"common": "Arctic Ice",
+"shares": "AFRICA:0.998;EUROPE:0.001;OCEANIA:0.001",
+"canon": "Protea cynaroides"
+},
+"Banksia serrata": {
+"key": 8144360,
+"n": 15785,
+"common": "Banksia serrata",
+"shares": "OCEANIA:0.999;AFRICA:0.001;EUROPE:0.0;NORTH_AMERICA:0.0",
+"canon": "Banksia serrata"
+},
+"Larix decidua": {
+"key": 2686212,
+"n": 248175,
+"common": "European Larch",
+"shares": "EUROPE:0.995;NORTH_AMERICA:0.003;OCEANIA:0.001;ASIA:0.0;AFRICA:0.0;SOUTH_AMERICA:0.0",
+"canon": "Larix decidua"
+},
+"Tectona grandis": {
+"key": 2925649,
+"n": 53383,
+"common": "Bankok teak",
+"shares": "ASIA:0.854;AFRICA:0.094;SOUTH_AMERICA:0.039;NORTH_AMERICA:0.012;OCEANIA:0.001;EUROPE:0.0",
+"canon": "Tectona grandis"
+},
+"Phoenix dactylifera": {
+"key": 6109699,
+"n": 6051,
+"common": "Date",
+"shares": "OCEANIA:0.263;EUROPE:0.23;AFRICA:0.205;ASIA:0.162;NORTH_AMERICA:0.128;SOUTH_AMERICA:0.013",
+"canon": "Phoenix dactylifera"
+},
+"Elaeis guineensis": {
+"key": 2731882,
+"n": 8514,
+"common": "African Oil Palm",
+"shares": "AFRICA:0.818;SOUTH_AMERICA:0.132;ASIA:0.034;NORTH_AMERICA:0.014;OCEANIA:0.001;EUROPE:0.001",
+"canon": "Elaeis guineensis"
+},
+"Nothofagus pumilio": {
+"key": 2874907,
+"n": 1844,
+"common": "Lenga Beech",
+"shares": "SOUTH_AMERICA:0.997;OCEANIA:0.003",
+"canon": "Nothofagus pumilio"
+},
+"Araucaria araucana": {
+"key": 2684984,
+"n": 7533,
+"common": "Chile pine",
+"shares": "EUROPE:0.69;SOUTH_AMERICA:0.296;NORTH_AMERICA:0.008;OCEANIA:0.005;AFRICA:0.0;ASIA:0.0",
+"canon": "Araucaria araucana"
+},
+"Bambusa vulgaris": {
+"key": 7661971,
+"n": 4249,
+"common": "Bamboo",
+"shares": "AFRICA:0.344;NORTH_AMERICA:0.329;ASIA:0.154;SOUTH_AMERICA:0.095;OCEANIA:0.063;EUROPE:0.014",
+"canon": "Bambusa vulgaris"
+}
+}

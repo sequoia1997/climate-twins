@@ -1,0 +1,37 @@
+scientific_name,group,native_spec,season_scheme,breeding_native_spec,winter_native_spec,gbif_continent_shares,share_outside_mask,outside_continents,introduced_or_migration_note,second_pass
+Sus scrofa,mammal,EUROPE;ASIA;AFRICA(N),,,,EUROPE:0.89;ASIA:0.06;OCEANIA:0.03,0.03,OCEANIA:0.03,"native Eurasia and North Africa; introduced in the Americas, Australia and elsewhere (excluded)",outside share 0.03: OCEANIA:0.03
+Sciurus carolinensis,mammal,NORTH_AMERICA,,,,EUROPE:0.60;NORTH_AMERICA:0.40,0.6,EUROPE:0.6,"native eastern North America; introduced Britain, Ireland, Italy, South Africa (excluded)",outside share 0.6: EUROPE:0.6
+Panthera onca,mammal,SOUTH_AMERICA;NORTH_AMERICA,,,,SOUTH_AMERICA:0.91;NORTH_AMERICA:0.09,0,,"native Mexico to Argentina, formerly south-western US",consistent: record shares by continent all inside the curated continents
+Equus quagga,mammal,AFRICA,,,,AFRICA:0.99,0,,native eastern and southern Africa,consistent: record shares by continent all inside the curated continents
+Syncerus caffer,mammal,AFRICA,,,,AFRICA:1.00,0,,native sub-Saharan Africa,consistent: record shares by continent all inside the curated continents
+Crocuta crocuta,mammal,AFRICA,,,,AFRICA:0.96,0,,native sub-Saharan Africa,consistent: record shares by continent all inside the curated continents
+Procavia capensis,mammal,AFRICA;ASIA(W),,,,AFRICA:0.57;ASIA:0.43,0,,native Africa and the Levant / Arabia,consistent: record shares by continent all inside the curated continents
+Didelphis marsupialis,mammal,SOUTH_AMERICA;NORTH_AMERICA,,,,SOUTH_AMERICA:0.89;NORTH_AMERICA:0.11,0,,native Mexico to northern South America,consistent: record shares by continent all inside the curated continents
+Lycalopex culpaeus,mammal,SOUTH_AMERICA,,,,SOUTH_AMERICA:1.00,0,,native Andes and Patagonia,consistent: record shares by continent all inside the curated continents
+Eutamias sibiricus,mammal,ASIA,,,,ASIA:0.59;EUROPE:0.41,0.41,EUROPE:0.41,native northern Asia; pet-trade populations in western Europe (excluded),outside share 0.41: EUROPE:0.41
+Capreolus pygargus,mammal,ASIA,,,,ASIA:0.95;EUROPE:0.05,0.05,EUROPE:0.05,"native Siberia, Russian Far East, Korea, north-east China",outside share 0.05: EUROPE:0.05
+Pteropus medius,mammal,ASIA,,,,ASIA:1.00,0,,native Indian subcontinent,consistent: record shares by continent all inside the curated continents
+Axis axis,mammal,ASIA,,,,ASIA:0.75;NORTH_AMERICA:0.12;SOUTH_AMERICA:0.09;OCEANIA:0.03,0.24,NORTH_AMERICA:0.12;SOUTH_AMERICA:0.09;OCEANIA:0.03,"native Indian subcontinent; introduced Hawaii, Australia, Americas (excluded)",outside share 0.24: NORTH_AMERICA:0.12;SOUTH_AMERICA:0.09;OCEANIA:0.03
+Callosciurus finlaysonii,mammal,ASIA,,,,ASIA:0.98,0,,native mainland south-east Asia; small introduced populations in Italy (excluded),consistent: record shares by continent all inside the curated continents
+Lithobates catesbeianus,amphibian,NORTH_AMERICA,,,,NORTH_AMERICA:0.80;EUROPE:0.15;ASIA:0.04,0.19,EUROPE:0.15;ASIA:0.04,"native eastern North America; introduced western US, Europe, Asia, South America (excluded)",outside share 0.19: EUROPE:0.15;ASIA:0.04
+Varanus salvator,reptile,ASIA,,,,ASIA:0.99,0,,native south and south-east Asia,consistent: record shares by continent all inside the curated continents
+Gekko gecko,reptile,ASIA,,,,ASIA:0.94;NORTH_AMERICA:0.06,0.06,NORTH_AMERICA:0.06,"native south and south-east Asia; introduced Florida, Hawaii (excluded)",outside share 0.06: NORTH_AMERICA:0.06
+Varanus varius,reptile,OCEANIA(AU),,,,OCEANIA:1.00,0,,native eastern Australia,consistent: record shares by continent all inside the curated continents
+Duttaphrynus melanostictus,amphibian,ASIA,,,,ASIA:1.00,0,,native south and south-east Asia; introduced Madagascar and Wallacea (excluded),consistent: record shares by continent all inside the curated continents
+Crocodylus niloticus,reptile,AFRICA,,,,AFRICA:1.00,0,,native sub-Saharan Africa and Madagascar,consistent: record shares by continent all inside the curated continents
+Varanus niloticus,reptile,AFRICA,,,,AFRICA:0.80;NORTH_AMERICA:0.20,0.2,NORTH_AMERICA:0.2,native sub-Saharan Africa; introduced Florida (excluded),outside share 0.2: NORTH_AMERICA:0.2
+Boa constrictor,reptile,SOUTH_AMERICA;NORTH_AMERICA,,,,SOUTH_AMERICA:0.82;NORTH_AMERICA:0.18,0,,native Mexico to Argentina,consistent: record shares by continent all inside the curated continents
+Ameiva ameiva,reptile,SOUTH_AMERICA,,,,SOUTH_AMERICA:0.90;NORTH_AMERICA:0.10,0.1,NORTH_AMERICA:0.1,native South America east of the Andes; introduced Florida (excluded),outside share 0.1: NORTH_AMERICA:0.1
+Nephila pilipes,insect_arachnid,ASIA;OCEANIA(N),,,,ASIA:0.80;OCEANIA:0.20,0,,native south-east Asia to northern Australia,consistent: record shares by continent all inside the curated continents
+Vespula vulgaris,insect_arachnid,EUROPE;ASIA,,,,EUROPE:0.92;OCEANIA:0.04,0.04,OCEANIA:0.04,"native Eurasia; introduced Australia, New Zealand, the Americas, South Africa (excluded)",outside share 0.04: OCEANIA:0.04
+Leptinotarsa decemlineata,insect_arachnid,NORTH_AMERICA,,,,EUROPE:0.89;NORTH_AMERICA:0.10,0.89,EUROPE:0.89,"native Mexico and the southern US plains, spread across North America; introduced Europe and Asia (excluded)",outside share 0.89: EUROPE:0.89
+Dermacentor variabilis,insect_arachnid,NORTH_AMERICA,,,,NORTH_AMERICA:1.00,0,,native eastern and central North America,consistent: record shares by continent all inside the curated continents
+Bombus lucorum,insect_arachnid,EUROPE;ASIA,,,,EUROPE:0.99,0,,native Europe to Siberia,consistent: record shares by continent all inside the curated continents
+Apis cerana,insect_arachnid,ASIA,,,,ASIA:0.99,0,,native Asia; introduced New Guinea and Australia locally (excluded),consistent: record shares by continent all inside the curated continents
+Papilio demoleus,insect_arachnid,ASIA;AFRICA;OCEANIA(AU),,,,ASIA:0.78;OCEANIA:0.20,0,,"native Africa, Asia, Australia; introduced Caribbean (excluded)",consistent: record shares by continent all inside the curated continents
+Eurema hecabe,insect_arachnid,ASIA;AFRICA;OCEANIA,,,,ASIA:0.62;OCEANIA:0.27;AFRICA:0.10,0,,"native Africa, Asia, Australasia; local movements",consistent: record shares by continent all inside the curated continents
+Belenois aurota,insect_arachnid,AFRICA;ASIA(W),,,,AFRICA:0.58;ASIA:0.41,0,,native Africa and Arabia; migratory swarms inside the mask,consistent: record shares by continent all inside the curated continents
+Anartia amathea,insect_arachnid,SOUTH_AMERICA;NORTH_AMERICA,,,,SOUTH_AMERICA:0.95;NORTH_AMERICA:0.05,0,,native Central and South America,consistent: record shares by continent all inside the curated continents
+Tetragonisca angustula,insect_arachnid,SOUTH_AMERICA;NORTH_AMERICA,,,,SOUTH_AMERICA:0.73;NORTH_AMERICA:0.27,0,,"native Neotropics, Mexico to Argentina",consistent: record shares by continent all inside the curated continents
+Trigona spinipes,insect_arachnid,SOUTH_AMERICA,,,,SOUTH_AMERICA:1.00,0,,native South America,consistent: record shares by continent all inside the curated continents
+Lymantria dispar,insect_arachnid,EUROPE;ASIA;AFRICA(N),,,,EUROPE:0.70;NORTH_AMERICA:0.27;ASIA:0.03,0.27,NORTH_AMERICA:0.27,"native Europe, Asia, North Africa; introduced North America 1869 (excluded)",outside share 0.27: NORTH_AMERICA:0.27

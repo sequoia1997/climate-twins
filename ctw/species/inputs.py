@@ -295,7 +295,7 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     tag = meta["scientific_name"].replace(" ", "_")
     kind = (meta.get("kind") or ("crop" if meta.get("group") == "crop" else "wild")).lower()
     prod = os.environ.get("W3_PRODUCT", "pilot")
-    s1 = prod in ("s1", "s2")                                                       # S1 / S3 assets (names s1_* / s2_*), same layout as the pilot's
+    s1 = prod in ("s1", "s2", "s3", "s4", "s5", "s6")                                                       # S1 / S3 assets (names s1_* / s2_*), same layout as the pilot's
     pre = prod + "_" if s1 else ""
     f_crop = os.path.join(root, pre + "occ_cells_crops_v1.parquet" if s1 else "occ_cells_crops_cultivated_pilot_v1.parquet")
     f_wild = os.path.join(root, pre + "occ_cells_v1.parquet" if s1 else "occ_cells_pilot_v1.parquet")                      # W2 final: native cells only, 24 wild species
@@ -304,17 +304,35 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     df = pd.read_parquet(src_file)
     if "species" in df.columns:
         df = df[df["species"] == meta["scientific_name"]]
+    all_range = os.environ.get("W3_RANGE") == "all" and season != "breeding"
+    if all_range:                       # every wild record, native and introduced: add back the cells the native mask removed (saved by every assemble stage)
+        ex_name = (pre + "occ_cells_v1_excluded_non_native.parquet") if s1 else "occ_cells_pilot_v1_excluded_non_native.parquet"
+        ex_f = os.path.join(root, ex_name)
+        it_f = os.path.join(root, "intro_occ_cells_v1.parquet")          # records tagged introduced / naturalised / invasive (ctw.species.introrun), a few organisms only
+        if os.path.exists(it_f):
+            it = pd.read_parquet(it_f)
+            it = it[it["species"] == meta["scientific_name"]]
+            if len(it):
+                sh = [c for c in df.columns if c in it.columns]
+                df = pd.concat([df, it[sh]], ignore_index=True).drop_duplicates(["row", "col"])
+        if os.path.exists(ex_f):
+            ex = pd.read_parquet(ex_f)
+            if "species" in ex.columns:
+                ex = ex[ex["species"] == meta["scientific_name"]]
+            if len(ex):
+                cols = [c for c in df.columns if c in ex.columns]
+                df = pd.concat([df[cols], ex[cols]], ignore_index=True).drop_duplicates(subset=["row", "col"]) if {"row", "col"} <= set(cols) else df
     seasonal_native = None
     if season == "breeding":
         # W2 seasonal product: breeding cell = in the seasonal breeding mask and with breeding-month records (May-Jul north, Nov-Jan south).
         # Records without a month (m00) count for nothing here; a cell whose records all lack a month is not a breeding cell.
-        sf = os.path.join(root, (pre + "occ_cells_seasonal_v1.parquet") if prod == "s2" else "occ_cells_pilot_v1_seasonal.parquet")
+        sf = os.path.join(root, (pre + "occ_cells_seasonal_v1.parquet") if prod in ("s2", "s3", "s4", "s5", "s6") else "occ_cells_pilot_v1_seasonal.parquet")
         sd = pd.read_parquet(sf)
         sd = sd[(sd["species"] == meta["scientific_name"]) & sd["breeding_cell"]]
         if not len(sd):
             raise ValueError(f"no breeding cells for {meta['scientific_name']}")
         df = sd.merge(df[["row", "col", "year_max"]], on=["row", "col"], how="left").fillna({"year_max": 0})
-        rep = json.load(open(os.path.join(root, (pre + "w2_seasonal_report_v1.json") if prod == "s2" else "w2_seasonal_report_v1.json")))[meta["scientific_name"]]
+        rep = json.load(open(os.path.join(root, (pre + "w2_seasonal_report_v1.json") if prod in ("s2", "s3", "s4", "s5", "s6") else "w2_seasonal_report_v1.json")))[meta["scientific_name"]]
         meta["season_report"] = {k: rep[k] for k in ("season_scheme", "breeding_native_spec", "cells_all", "breeding_cells", "records_breeding_months", "records_without_month")}
         seasonal_native = seasonal_mask(rep["breeding_native_spec"], root)
     if not len(df):
@@ -322,18 +340,18 @@ def species_inputs(meta: dict, spec: GridSpec, root: str = None, season: str = N
     occ = Occurrences(df["row"].to_numpy(int), df["col"].to_numpy(int), years=df["year_max"].to_numpy(int))
     native = density = None
     nm = os.path.join(root, pre + "native_masks_v1.npz" if s1 else "native_masks_pilot_v1.npz")             # packed with np.packbits(axis=1); key <Genus_species>__final
-    if os.path.exists(nm):
+    if os.path.exists(nm) and not all_range:
         z = np.load(nm)
         if f"{tag}__final" in z.files:
             native = np.unpackbits(z[f"{tag}__final"], axis=1)[:, :spec.W].astype(bool)
     for pat in (f"w2-native-{tag}.*",):
         f = sorted(glob.glob(os.path.join(root, pat)))
-        if f and native is None:
+        if f and native is None and not all_range:
             native = _load_grid(f[0]).astype(bool)
     tg = {"tree": "plant", "crop": "plant"}.get(meta.get("group"), meta.get("group"))
     if len(df) and "tg_group" in df.columns:
         tg = df["tg_group"].iloc[0]
-    for pat in ((f"s2_tg_density_{tg}_v1.npz",) if prod == "s2" else ()) + (f"tg_density_{tg}_v1.npz", f"w2-tg-{tg}.npz", f"tg_density_{meta.get('group')}_v1.npz", f"tg_density_{meta.get('tg_group', '')}_v1.npz", f"w2-tg-{meta.get('group')}.npz"):
+    for pat in ((f"s2_tg_density_{tg}_v1.npz",) if prod in ("s2", "s3", "s4", "s5", "s6") else ()) + (f"tg_density_{tg}_v1.npz", f"w2-tg-{tg}.npz", f"tg_density_{meta.get('group')}_v1.npz", f"tg_density_{meta.get('tg_group', '')}_v1.npz", f"w2-tg-{meta.get('group')}.npz"):
         f = os.path.join(root, pat)
         if os.path.exists(f):
             g = _load_grid(f, "all").astype(np.float32)

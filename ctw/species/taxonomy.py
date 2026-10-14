@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-TABLES = ["data/species/pilot_v1.csv", "data/species/batch1.csv", "data/species/batch2.csv"]
+TABLES = ["data/species/pilot_v1.csv", "data/species/batch1.csv", "data/species/batch2.csv", "data/species/batch3.csv", "data/species/batch4.csv", "data/species/batch5.csv", "data/species/batch6.csv"]
 OUT = ROOT / "data/species/taxonomy.csv"
 COLS = ["scientific_name", "kingdom", "phylum", "class", "order", "family", "match"]
 
@@ -36,8 +36,14 @@ def lookup(name: str) -> dict:
 
 def main() -> int:
     ns = names()
-    with ThreadPoolExecutor(8) as ex:
-        rows = list(ex.map(lookup, ns))
+    old = {r["scientific_name"]: r for r in csv.DictReader(open(OUT, encoding="utf-8"))} if OUT.exists() else {}
+    todo = [n for n in ns if not old.get(n, {}).get("family")]       # the match API is flaky: keep earlier good rows, look up only the gaps, retry the gaps
+    got = {}
+    for _ in range(4):
+        with ThreadPoolExecutor(4) as ex:
+            for r in ex.map(lookup, [n for n in todo if not got.get(n, {}).get("family")]):
+                got[r["scientific_name"]] = r
+    rows = [got[n] if n in got and got[n].get("family") else old.get(n) or got.get(n) for n in ns]
     with open(OUT, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=COLS)
         w.writeheader()

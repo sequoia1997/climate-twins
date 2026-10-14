@@ -1,0 +1,31 @@
+# Introduced / naturalised / invasive records for the organisms where they are at least 5 percent of the records (data/species/intro_species.csv).
+# Trigger: push to .github/run/intro. One small GBIF download; output intro_occ_cells_v1.parquet on the release species-data-allrange.
+name: intro
+on:
+  push:
+    paths: [".github/run/intro"]
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  intro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pyarrow
+      - name: Request, wait, fetch, clean
+        env:
+          GBIF_USER: ${{ secrets.GBIF_USER }}
+          GBIF_PWD: ${{ secrets.GBIF_PWD }}
+          GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+          W2_TAG: species-data-allrange
+          W2_EXTRA_TAGS: species-pilot-data
+        run: python -m ctw.species.introrun
+      - name: Upload
+        run: |
+          for i in 1 2 3 4; do gh release upload species-data-allrange intro_occ_cells_v1.parquet --clobber && break; sleep 15; done

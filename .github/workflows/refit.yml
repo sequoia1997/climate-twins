@@ -1,0 +1,114 @@
+# All-records refit: re-fit organisms from every observed record (gardens/managed/cultivated still excluded), with no native-range restriction (W3_RANGE=all).
+# Trigger: push to .github/run/refit (content: species ids separated by spaces/commas; "force" refits). Each species is looked up in the batch tables
+# (pilot, batch1..batch5); migrant/seasonal fits are skipped. W3_GATE_FIRST=1 stops before the 14-model projection when the skill is below the publication threshold.
+# Outputs: rg_<prefix>w3_<id>_summary.json and _cts.zip on the release species-data-allrange (the publisher prefers an rg_ fit when it is defensible).
+name: refit
+on:
+  push:
+    paths: [".github/run/refit"]
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: "1"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      species: ${{ steps.p.outputs.species }}
+      force: ${{ steps.p.outputs.force }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: p
+        run: |
+          gh release view species-data-allrange >/dev/null 2>&1 || gh release create species-data-allrange --title "All-records fits" --notes "Organism fits from every observed record (no native-range restriction)."
+          python3 - "$(tr '\n,' '  ' < .github/run/refit)" >> "$GITHUB_OUTPUT" <<'PY'
+          import csv, json, re, sys
+          words = re.split(r"[\s,]+", sys.argv[1].strip())
+          force = "force" in words
+          tabs = [("pilot", "pilot_v1.csv", "species-pilot-data"), ("s1", "batch1.csv", "species-pilot-data"), ("s2", "batch2.csv", "species-pilot-data"),
+                  ("s3", "batch3.csv", "species-data-batch3"), ("s4", "batch4.csv", "species-data-batch4"), ("s5", "batch5.csv", "species-data-batch5"), ("s6", "batch6.csv", "species-data-batch6")]
+          found = {}
+          for prod, t, rel in tabs:
+              for r in csv.DictReader(open("data/species/" + t, encoding="utf-8")):
+                  i = r.get("id") or re.sub(r"[^a-z0-9]+", "_", r["scientific_name"].lower()).strip("_")
+                  if r.get("status", "selected") == "selected" and not r.get("season"):
+                      found[i] = dict(id=i, prod=prod, table="data/species/" + t, rel=rel, pre="" if prod == "pilot" else prod + "_")
+          pick = [found[w] for w in words if w in found]
+          print("unknown:", [w for w in words if w not in found and w != "force"], file=sys.stderr)
+          print("species=" + json.dumps(pick))
+          print("force=" + ("true" if force else "false"))
+          PY
+  fit:
+    needs: plan
+    if: needs.plan.outputs.species != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        item: ${{ fromJson(needs.plan.outputs.species) }}
+    env:
+      W3_PRODUCT: ${{ matrix.item.prod }}
+      W3_CLIM: work/clim
+      W3_OCC: work/occ
+      W3_RANGE: all
+      W3_GATE_FIRST: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
+      - name: Restore previous attempt
+        uses: actions/cache/restore@v4
+        with:
+          path: work/w3
+          key: rgw3-${{ matrix.item.id }}-none
+          restore-keys: rgw3-${{ matrix.item.id }}-
+      - name: Skip if the release already has this species
+        id: skip
+        if: needs.plan.outputs.force != 'true'
+        run: |
+          if gh release view species-data-allrange --json assets -q '.assets[].name' | grep -qx "rg_${{ matrix.item.pre }}w3_${{ matrix.item.id }}_summary.json"; then echo "done=true" >> "$GITHUB_OUTPUT"; else echo "done=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Download climate stack (W1)
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          mkdir -p work/clim
+          tiles="$(python -m ctw.species.run_pilot tiles --species ${{ matrix.item.id }} --table ${{ matrix.item.table }})"
+          args=()
+          for m in $(python -m ctw.species.run_pilot models); do args+=(-p "deltas_${m}.npz"); done
+          for t in $tiles; do args+=(-p "pred_base_1991-2020_${t}.npz" -p "basem_${t}.npz"); done
+          gh release download species-pilot-data -D work/clim "${args[@]}" --clobber
+          for t in $tiles; do gh release download species-pilot-data -D work/clim -p "pred_hind_2005-2024_${t}.npz" --clobber 2>/dev/null || true; done
+      - name: Download occurrence products
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          mkdir -p work/occ work/bbs
+          p="${{ matrix.item.pre }}"
+          gh release download ${{ matrix.item.rel }} -D work/occ -p "${p}occ_cells_v1.parquet" -p "${p}occ_cells_pilot_v1.parquet" -p "${p}occ_cells_v1_excluded_non_native.parquet" -p "occ_cells_pilot_v1_excluded_non_native.parquet" -p "${p}occ_cells_crops_v1.parquet" -p "occ_cells_crops_cultivated_pilot_v1.parquet" -p "${p}w2_report_v1.json" -p "w2_report_pilot_v1.json" --clobber || true
+          gh release download species-pilot-data -D work/occ -p "tg_density_*_v1.npz" -p "s2_tg_density_*_v1.npz" --clobber
+          gh release download species-data-allrange -D work/occ -p "intro_occ_cells_v1.parquet" --clobber || echo "no introduced-records table"
+          ls -la work/occ
+      - name: Fit (all records)
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          flags=""
+          if [ "${{ needs.plan.outputs.force }}" = "true" ]; then flags="--force"; fi
+          python -u -m ctw.species.run_pilot fit --species "${{ matrix.item.id }}" --table ${{ matrix.item.table }} --out work/w3 $flags --jobs 4
+      - name: Save working directory for resume
+        if: always() && steps.skip.outputs.done != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: work/w3
+          key: rgw3-${{ matrix.item.id }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload to the release
+        if: steps.skip.outputs.done != 'true'
+        run: |
+          d=work/w3/${{ matrix.item.id }}
+          test -f $d/summary.json || exit 0
+          n=rg_${{ matrix.item.pre }}w3_${{ matrix.item.id }}
+          cp $d/summary.json ${n}_summary.json
+          files=(${n}_summary.json)
+          if [ -d $d/cts ]; then (cd $d/cts && zip -qr ../../../../${n}_cts.zip .); files+=(${n}_cts.zip); fi
+          for i in 1 2 3 4; do gh release upload species-data-allrange "${files[@]}" --clobber && break; sleep $((RANDOM % 20 + 10)); done

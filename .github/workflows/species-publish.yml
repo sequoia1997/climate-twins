@@ -30,6 +30,9 @@ jobs:
             --pattern '*_summary.json' --pattern '*_cts.zip' --clobber
           gh release download species-fits-batch2 --dir work/species-assets \
             --pattern '*_summary.json' --pattern '*_cts.zip' --clobber || echo "no batch 2 release yet"
+          for r in species-data-batch3 species-data-batch4 species-data-batch5 species-data-batch6 species-data-allrange; do
+            gh release download $r --dir work/species-assets --pattern '*_summary.json' --pattern '*_cts.zip' --clobber || echo "no $r release yet"
+          done
           python -m ctw.species_site build --src work/species-assets --out work/r2
           du -sh work/r2; find work/r2 -type f | wc -l
           python - <<'PY'

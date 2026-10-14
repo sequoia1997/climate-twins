@@ -4,6 +4,14 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 14 October 2026: models use every recorded location
+
+- **No more "native range" restriction.** Organism maps now learn from everywhere the organism has been recorded (gardens, farms and stocked populations are still left out), so species that have spread, such as multiflora rose, black locust and the grey squirrel, show the climate they actually live in. About 100 organisms were refitted; each page says which records it used.
+- **Plainer wording.** Scenarios are explained in plain language, periods read "around 2050" and "around 2100", withheld numbers say why, and there is a short note on how a map can know the future.
+- **Copy link to this view** on every organism page keeps the scenario, period and map view.
+- **Browse the tree of life.** The organism picker has a colourful, tappable wheel: choose a group, zoom into orders and families, then pick a species. Search still works.
+- More organisms: about 40 more, chosen to spread across Africa, Asia, Europe, Oceania and South America and across plants, mammals, birds, reptiles, amphibians and insects.
+
 ## 12 October 2026: organisms and one methods page
 
 - **Organisms.** A second half of the site shows where the climate suits a few hundred plants, animals and fungi now and later, as projected climate suitability (never a forecast). Switch between Places and Organisms at the top of the panel, and browse by group, order and family.

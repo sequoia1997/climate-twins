@@ -117,3 +117,15 @@ def test_publication_rule():
     assert not defensible(mk("B", 0.80, 0.9, "fail"))[0]
     assert defensible(mk("B", 0.8, 0.9, "exempt_crop"))[0]
     assert not defensible(mk("B", 0.58, 0.95))[0]
+
+
+def test_pick_runs_prefers_defensible_all_records_fit(tmp_path):
+    import json
+    from ctw import species_site as SS
+    def mk(name, tier="B", auc=0.75, boyce=0.9):
+        d = {"species": {"id": "x", "group": "mammal", "scientific_name": "X y"}, "tier": tier, "published": True,
+             "skill": {"cv_auc": auc, "cv_boyce": boyce}, "gates": {"range_check": {"status": "records_only"}}}
+        (tmp_path / f"{name}_summary.json").write_text(json.dumps(d)); (tmp_path / f"{name}_cts.zip").write_bytes(b"z")
+    mk("s3_w3_xy"); mk("rg_s3_w3_xy")
+    chosen, _ = SS.pick_runs(tmp_path)
+    assert chosen["xy"][0].name.startswith("rg_")
