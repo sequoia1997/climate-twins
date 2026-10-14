@@ -317,7 +317,7 @@ function treeSvg(focus, W, H) {
     const txt = (o.lab.length > 3 && textW(o.lab, FONT) > o.w - 14) ? o.lab.slice(0, Math.max(3, Math.floor((o.w - 22) / 6.6))) + "…" : o.lab;
     const attr = leaf ? `data-sp="${esc(o.n.id)}"` : `data-focus="${esc(o.n.key)}"`;
     const tip = leaf ? `${o.n.name} (${o.n.sci})` : `${fname(o.n.name)}${FRIEND[o.n.name] ? " · " + o.n.name : ""} · ${RANK[o.n.rank] || ""} · ${o.n.n} organisms`;
-    svg += `<g class="nd${leaf ? " lf" : ""}${sel ? " sel" : ""}${isFocus ? " fc" : ""}" ${attr} role="treeitem" tabindex="0" aria-label="${esc(tip)}" style="--d:${Math.min(i * 16, 300)}ms"><title>${esc(tip)}</title>
+    svg += `<g class="nd${leaf ? " lf" : ""}${sel ? " sel" : ""}${isFocus ? " fc" : ""}${h == null ? " neu" : ""}" ${attr} role="treeitem" tabindex="0" aria-label="${esc(tip)}" style="--d:${Math.min(i * 16, 300)}ms"><title>${esc(tip)}</title>
       <rect x="${o.x}" y="${o.y - ph / 2}" width="${o.w}" height="${ph}" rx="${ph / 2}" fill="${fill}" stroke="${stroke}" stroke-width="${sel ? 2 : 1}"/>
       <text x="${o.x + 12}" y="${o.y}" dominant-baseline="central">${esc(txt)}</text></g>`;
   });
