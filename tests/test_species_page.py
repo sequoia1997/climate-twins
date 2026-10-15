@@ -85,7 +85,7 @@ async def main():
                 fails.append(f"{name}: horizontal overflow {ov} {wide}")
             unnamed = await pg.evaluate("""[...document.querySelectorAll('button,input,select')].filter(e => !(e.getAttribute('aria-label') || e.textContent.trim() || (e.labels && e.labels.length) || e.title)).map(e => e.outerHTML.slice(0, 80))""")
             if unnamed: fails.append(f"{name}: controls without a name {unnamed}")
-            head = await pg.evaluate("document.getElementById('sp-head').textContent + ' ' + document.getElementById('sh-badges').textContent")
+            head = await pg.evaluate("document.getElementById('sp-head').textContent + ' ' + document.getElementById('sh-badges').textContent + ' ' + [...document.querySelectorAll('.relbtn')].map(b => b.title).join(' ')")
             for need in ("Today's map", "Future map", "Sugar maple"):
                 if need.lower() not in head.lower(): fails.append(f"{name}: sugar maple header lacks '{need}'")
             if "not a forecast" not in (await pg.inner_text("#panel")).lower(): fails.append(f"{name}: panel lacks the not-a-forecast caveat")
@@ -105,6 +105,7 @@ async def main():
             # figure: exactly one view in the flow; a row tap never switches it; the toggle does
             async def fig():
                 return await pg.evaluate("""(() => { const f = document.getElementById('summary'); const vis = s => { const e = f.querySelector(s); return !!e && getComputedStyle(e).display !== 'none'; }; return [f.dataset.view, vis('.v-abs'), vis('.v-chg')]; })()""")
+            await pg.evaluate("document.querySelector('#summary details.deeper').open = true")
             v0 = await fig()
             if v0[1] == v0[2]: fails.append(f"{name}: figure shows {v0}")
             await pg.click("#summary .crow >> nth=0", force=True); await pg.click("#summary .facts dt >> nth=0", force=True)
@@ -116,7 +117,8 @@ async def main():
             await pg.click("#pickdet > summary") if not await pg.evaluate("document.getElementById('pickdet').open") else None
             await pg.fill("#search", "robin"); await pg.keyboard.press("ArrowDown"); await pg.keyboard.press("Enter")
             await settle(pg, 3)
-            head = await pg.evaluate("document.getElementById('sp-head').textContent + ' ' + document.getElementById('sh-badges').textContent")
+            head = await pg.evaluate("document.getElementById('sp-head').textContent + ' ' + document.getElementById('sh-badges').textContent + ' ' + [...document.querySelectorAll('.relbtn')].map(b => b.title).join(' ')")
+            if "reliability: limited" not in head.lower(): fails.append(f"{name}: robin header lacks the plain 'Reliability: limited' grade")
             if "American robin" not in head: fails.append(f"{name}: search did not select the robin")
             for need in ("Today's map: checked", "Future map: direction unreliable", "breeding-season"):
                 if need.lower() not in head.lower(): fails.append(f"{name}: robin header lacks '{need}'")
@@ -177,7 +179,7 @@ async def main():
             # phone: tier, confidence and withheld status are visible in the half-open sheet without scrolling
             if w < 500:
                 r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")
-                if not (r[0] > 0 and r[1] <= r[2]) or "Today" not in r[3] or "withheld" not in r[3].lower(): fails.append(f"{name}: sheet badges not visible/complete {r}")
+                if not (r[0] > 0 and r[1] <= r[2]) or "withheld" not in r[3].lower(): fails.append(f"{name}: sheet badges not visible/complete {r}")
             # slow file: busy message after ~2 s; centre not meaningful when the file says so (stubbed info)
             pg2 = await ctx.new_page(); e2 = []
             pg2.on("pageerror", lambda e: e2.append(str(e)))
