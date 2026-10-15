@@ -54,6 +54,7 @@ async def main():
         b = await p.chromium.launch(**kw)
         for name, w, h, scheme, dpr in [("desktop-light", 1440, 900, "light", 1), ("desktop-dark", 1440, 900, "dark", 1), ("mobile-light", 390, 844, "light", 2), ("mobile-dark", 390, 844, "dark", 2)]:
             ctx = await b.new_context(viewport={"width": w, "height": h}, color_scheme=scheme, device_scale_factor=dpr, reduced_motion="reduce", has_touch=(w < 500), is_mobile=(w < 500))
+            await ctx.add_init_script("try{localStorage.setItem('ct_welcome_places','1');localStorage.setItem('ct_welcome_organisms','1')}catch(e){}")
             d = os.environ.get("PW_MAPLIBRE_DIR")
             if d:
                 async def lib(r): await r.fulfill(path=os.path.join(d, r.request.url.split("/dist/")[-1]))
@@ -181,6 +182,23 @@ async def main():
                 r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")
                 if not (r[0] > 0 and r[1] <= r[2]) or "withheld" not in r[3].lower(): fails.append(f"{name}: sheet badges not visible/complete {r}")
             # slow file: busy message after ~2 s; centre not meaningful when the file says so (stubbed info)
+            # first visit: the welcome popup shows once, stays away after it is closed, and the footer link brings it back
+            if name == "desktop-light":
+                fresh = await b.new_context(viewport={"width": w, "height": h}, color_scheme=scheme)
+                dlib = os.environ.get("PW_MAPLIBRE_DIR")
+                if dlib:
+                    async def lib2(r): await r.fulfill(path=os.path.join(dlib, r.request.url.split("/dist/")[-1]))
+                    await fresh.route("https://cdn.jsdelivr.net/npm/maplibre-gl@*/dist/*", lib2)
+                for u in ("https://fonts.googleapis.com/**", "https://fonts.gstatic.com/**", "https://tiles.openfreemap.org/**"):
+                    await fresh.route(u, lambda r: r.abort())
+                wp = await fresh.new_page(); await wp.goto(f"http://127.0.0.1:{port}/species.html"); await wp.wait_for_timeout(1500)
+                if not await wp.evaluate("document.getElementById('welcomedlg').open"): fails.append("welcome popup not shown on a first visit")
+                await wp.click("#welcomego");
+                await wp.reload(); await wp.wait_for_timeout(1500)
+                if await wp.evaluate("document.getElementById('welcomedlg').open"): fails.append("welcome popup shown again after it was closed")
+                await wp.evaluate("document.querySelector('[data-welcome]').click()")
+                if not await wp.evaluate("document.getElementById('welcomedlg').open"): fails.append("'What is this site?' did not reopen the welcome")
+                await fresh.close()
             pg2 = await ctx.new_page(); e2 = []
             pg2.on("pageerror", lambda e: e2.append(str(e)))
             async def info(r):
