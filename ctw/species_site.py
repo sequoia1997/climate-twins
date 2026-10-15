@@ -162,7 +162,14 @@ def image_of(sci: str):
     if _IMG is None:
         f = Path(__file__).resolve().parent.parent / "data" / "species" / "images.json"
         _IMG = json.load(open(f, encoding="utf-8")) if f.exists() else {}
-    return _IMG.get(sci)
+    r = _IMG.get(sci)
+    if not r:
+        return None
+    r = dict(r)
+    u = (r.get("licence_url") or "").strip()
+    u = re.sub(r"^http://", "https://", u) if u.startswith(("http://", "https://")) else ""
+    r["licence_url"] = u or r.get("page", "")
+    return r
 
 
 def info_json(S: dict, season: str, scen_keys: list, bbox: list, files: dict) -> dict:

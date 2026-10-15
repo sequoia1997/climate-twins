@@ -52,7 +52,7 @@ def test_batch2_table_is_consistent():
 def test_every_animal_has_a_curated_row_with_second_pass():
     cur = {r["scientific_name"]: r for r in csv.DictReader(open(ROOT / "data" / "species" / "native" / "curated_native_v2.csv", encoding="utf-8"))}
     animals = [r for r in SEL if r["native_source"] == "curated"]
-    assert animals and {r["scientific_name"] for r in animals} == set(cur)
+    assert animals and {r["scientific_name"] for r in animals} <= set(cur)        # the table also keeps rows for organisms dropped later (the fish)
     for r in animals:
         c = cur[r["scientific_name"]]
         assert c["native_spec"] == r["native_continents_curated"] and c["second_pass"] and c["second_pass"] != "CHECK" and c["introduced_or_migration_note"]
