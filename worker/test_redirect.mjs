@@ -7,3 +7,10 @@ for (const [m, u] of [["GET","http://climatetwins.org/"],["GET","http://climatet
   const r = canonical(new URL(u), m, env);
   console.log(`${m.padEnd(4)} ${u.padEnd(64)} -> ${r ? r.status + " " + r.headers.get("location") : "served as is"}`);
 }
+
+// hardening headers: every response gets them, only pages get the policy
+import { withHeaders, CSP } from "./index.js";
+const page = withHeaders(new Response("<html>", { headers: { "content-type": "text/html; charset=utf-8" } }));
+const data = withHeaders(new Response("{}", { headers: { "content-type": "application/json" } }));
+console.log("page has CSP and nosniff:", page.headers.get("content-security-policy") === CSP && page.headers.get("x-content-type-options") === "nosniff");
+console.log("data has nosniff, no CSP:", data.headers.get("x-content-type-options") === "nosniff" && !data.headers.get("content-security-policy"));
