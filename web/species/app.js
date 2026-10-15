@@ -246,13 +246,16 @@ const FRIEND = { Animalia: "Animals", Plantae: "Plants", Fungi: "Fungi", Chordat
   Perissodactyla: "Odd-toed hoofed mammals", Chiroptera: "Bats", Hymenoptera: "Bees, wasps, ants", Coleoptera: "Beetles", Orthoptera: "Grasshoppers and crickets", Diptera: "Flies", Hemiptera: "True bugs", Testudines: "Turtles", Crocodylia: "Crocodiles", Lagomorpha: "Hares and rabbits",
   Eulipotyphla: "Hedgehogs and moles", Proboscidea: "Elephants", Araneae: "Spiders", Accipitriformes: "Hawks and eagles", Columbiformes: "Pigeons and doves", Strigiformes: "Owls", Piciformes: "Woodpeckers", Fagales: "Oaks, beeches, birches", Rosales: "Roses and relatives", Poales: "Grasses and sedges",
   Fabales: "Legumes", Sapindales: "Maples and soapberries", Lamiales: "Mints and olives", Asterales: "Daisies and relatives", Pinales: "Pines and firs", Myrtales: "Eucalypts and myrtles", Arecales: "Palms" };
+const REPTILE_CLASSES = new Set(["Squamata", "Testudines", "Crocodylia", "Sphenodontia", "Reptilia"]);
 const fname = n => FRIEND[n] || n;
 let TREE = null, tmeasure = null;
 function buildTree() {
   const root = { key: "", name: "Life", rank: "root", kids: [], depth: 0, species: [] };
   ST.species.forEach(sp => {
     let node = root; node.species.push(sp);
-    const vals = TLEVELS.map(lv => lv === "genus" ? sp.sci.split(" ")[0] : (sp[lv] || ""));
+    let cls = sp.cls || "", ord = sp.order || "";
+    if (REPTILE_CLASSES.has(cls)) { ord = ord || cls; cls = "Reptilia"; }                   // GBIF has no class Reptilia: its lizards, turtles and crocodiles are classes of their own
+    const vals = TLEVELS.map(lv => lv === "genus" ? sp.sci.split(" ")[0] : lv === "cls" ? cls : lv === "order" ? ord : (sp[lv] || ""));
     vals.forEach((v, i) => {
       if (!v) return;
       let c = node.kids.find(k => k.name === v && k.rank === TLEVELS[i]);
@@ -653,7 +656,6 @@ function startMap() {
     styleOk = true;
     if (!started) tryStart(); else if (S.sp && INFO[S.sp]) loadScene(S.sp, S.ssp);
   });
-  map.on("click", mapClick);
   map.on("moveend", () => { if (!S.sp || !SHOWN.sp) return; const sc = sceneFiles(SHOWN.sp, SHOWN.ssp), f = levelFor(); for (const x of [useLand ? sc.land : null, sc.base, sc.scen]) if (x) visibleAll(f).forEach(([bx, by]) => entry(x, f, bx, by)); });
 }
 async function boot() {
