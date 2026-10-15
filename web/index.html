@@ -116,6 +116,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #attrib.dark{background:rgba(23,32,40,.85);color:#e7ecef}
 #attrib a{color:inherit;text-decoration:none} #attrib a:hover,#attrib a:focus-visible{text-decoration:underline}
 @media (max-width:820px){#attrib{font-size:10px}}
+.sigscale{margin:8px 0;padding-left:18px;font-size:.9rem} .sigscale li{margin:3px 0} #sigdlg{border:1px solid var(--rule);border-radius:14px;background:var(--panel);color:var(--ink);padding:18px 20px;width:min(380px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.3)} #sigdlg::backdrop{background:rgba(0,0,0,.35)} #sigdlg h2{font-size:1.15rem;margin:0 0 6px}
 .sigma-note{font-size:.88rem;background:var(--chip);border-radius:10px;padding:8px 12px;margin:0 0 14px}
 details.intro>summary,details.settings>summary,details.more>summary,details.moresites>summary{font-size:.86rem;color:var(--muted);cursor:pointer;padding:2px 0;font-weight:400}
 .modes{position:relative;display:grid;grid-template-columns:1fr 1fr;margin:10px 0 6px;padding:3px;border:1px solid var(--rule);border-radius:999px;background:var(--chip)}
@@ -385,13 +386,15 @@ aside a:hover{text-decoration-thickness:2px}
     </div>
     <h1>Climate twins</h1>
     <nav class="modes" data-pos="0" aria-label="Site sections"><a href="./" aria-current="page">Places</a><a href="species.html">Organisms</a></nav>
-    <p class="caveat"><strong>Projections, not forecasts.</strong> Read each arrow as a way to picture a scenario, not a prediction for a specific town.</p>
-    <details id="intro" class="intro"><summary>About this map and σ</summary>
-    <p class="lede">Pick a place anywhere in North America, or one of 800 major cities around the world. The arrow points to where today's climate is the closest match to the climate that place is projected to have around 2050 or 2100.</p>
-    <div class="sigma-note">
-      <p><strong>What σ means.</strong> σ (sigma) measures how different two climates are, in units of a place's normal year-to-year swings. 0σ is identical.</p>
-      <p>Under 1σ, the climates are as alike as two ordinary years at the same place. 1–2σ is a reasonable match, 2–4σ only partial, and over 4σ no real match.</p>
-    </div></details>
+    <p class="caveat"><strong>Projections, not forecasts.</strong> Read each arrow as a way to picture a scenario, not a prediction for a specific town. <a href="methods.html" target="_blank" rel="noopener">How it works</a></p>
+    <p class="lede" id="intro">Pick a place. The arrow points to where today's climate best matches that place's projected climate around 2050 or 2100.
+      <button type="button" class="linkbtn" id="sigopen" aria-haspopup="dialog">What does σ mean?</button></p>
+    <dialog id="sigdlg" aria-labelledby="sigh">
+      <h2 id="sigh">What σ (sigma) means</h2>
+      <p>σ measures how different two climates are, in units of a place's normal year-to-year swings. The lower the number, the closer the match.</p>
+      <ul class="sigscale"><li><strong>Under 1σ</strong> as alike as two ordinary years at the same place</li><li><strong>1–2σ</strong> a reasonable match</li><li><strong>2–4σ</strong> only a partial match</li><li><strong>Over 4σ</strong> no real match; the arrow shows the least-bad one</li></ul>
+      <div class="reqbtns"><button type="button" id="sigclose">Close</button></div>
+    </dialog>
     <div class="row">
       <div class="combo"><input id="search" placeholder="Search for a city or town" autocomplete="off" spellcheck="false" aria-label="Search for a place" role="combobox" aria-expanded="false" aria-controls="plist" aria-autocomplete="list"><ul id="plist" role="listbox" aria-label="Places" hidden></ul></div>
       <div class="small" id="wstat" role="status" style="margin-top:4px"></div>
@@ -1383,6 +1386,7 @@ function segs(){
   document.getElementById("optHot").onchange=ev=>{S.ens=ev.target.checked?"all":"tcr_likely";refresh();};
   const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");refocus();}else reqMiss(sr.value.trim(),false);};
   document.addEventListener("click",e=>{const b=e.target.closest("[data-fb]");if(b){e.preventDefault();openFeedback(b.dataset.fb);}});
+  document.getElementById("sigopen").onclick=()=>document.getElementById("sigdlg").showModal();document.getElementById("sigclose").onclick=()=>document.getElementById("sigdlg").close();
   document.getElementById("fbform").addEventListener("submit",sendFeedback);document.getElementById("fbcancel").onclick=()=>document.getElementById("fbdlg").close();
   document.getElementById("fbform").message.addEventListener("input",()=>{const m=document.getElementById("fbmsg");if(m.classList.contains("err")){m.textContent="";m.className="small";}});
   document.getElementById("fbform").ctx.addEventListener("change",e=>{document.getElementById("fbctxview").hidden=!e.target.checked;});
@@ -1425,7 +1429,7 @@ function setBaseStyle(){mapReady=false;setAttrib();if(usingFallback){map.setStyl
   map.setStyle(STYLES.light,{diff:false});clearTimeout(styleTimer);
   styleTimer=setTimeout(()=>{if(!map.isStyleLoaded()||!map.getStyle().layers.length){usingFallback=true;setBaseStyle();}},8000);}
 function makeMap(){
-  if(SHEET.on){const it=document.getElementById("intro");if(it)it.open=false;}
+
   map=new maplibregl.Map({container:"map",style:STYLES.light,bounds:[[-124.8,24.4],[-66.9,49.4]],fitBoundsOptions:{padding:24},
     minZoom:innerWidth<600?0.8:1.5,maxZoom:10,dragRotate:false,pitchWithRotate:false,touchPitch:false,attributionControl:false});
   map.touchZoomRotate.disableRotation();
