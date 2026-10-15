@@ -14,7 +14,20 @@ export default {
   },
 };
 
-// Plain hardening headers on every page and file. No CSP yet: the pages use inline scripts and third-party tiles, and a wrong CSP would break the map.
+// The pages use inline scripts and styles, so "unsafe-inline" stays; the policy still allows scripts only from this site, the pinned map
+// library on jsDelivr and Cloudflare's analytics, and blocks plugins, foreign forms, a changed base address and framing by other sites.
+// Tested against the live pages (map, tiles, fonts, Wikimedia photos incl. their thumb.wikimedia.org redirect, the feedback form).
+export const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com",
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://thumb.wikimedia.org https://tiles.openfreemap.org",
+  "connect-src 'self' https://species.climatetwins.org https://tiles.openfreemap.org https://cloudflareinsights.com",
+  "worker-src 'self' blob:", "child-src 'self' blob:", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'self'",
+].join("; ");
+
+// Plain hardening headers on every page and file; the policy on pages only.
 export function withHeaders(res) {
   const h = new Headers(res.headers);
   h.set("x-content-type-options", "nosniff");
@@ -22,6 +35,7 @@ export function withHeaders(res) {
   h.set("x-frame-options", "SAMEORIGIN");
   h.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
   h.set("strict-transport-security", "max-age=15552000");
+  if ((h.get("content-type") || "").includes("text/html")) h.set("content-security-policy", CSP);
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
 }
 

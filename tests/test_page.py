@@ -131,4 +131,5 @@ async def main():
     print(f"page test passed ({len(found)} places, 2 viewports)" + (f"; not in this build: {sorted(missing)}" if missing else ""))
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
