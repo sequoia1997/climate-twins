@@ -31,6 +31,7 @@ async def main():
         b = await p.chromium.launch(**kw)
         for w, h, scheme in [(1440, 900, "light"), (390, 844, "dark")]:
             ctx = await b.new_context(viewport={"width": w, "height": h}, color_scheme=scheme, reduced_motion="reduce")
+            await ctx.add_init_script("try{localStorage.setItem('ct_welcome_places','1');localStorage.setItem('ct_welcome_organisms','1')}catch(e){}")
             if os.environ.get("PW_MAPLIBRE_DIR"):
                 d = os.environ["PW_MAPLIBRE_DIR"]
                 async def lib(r): await r.fulfill(path=os.path.join(d, r.request.url.split("/dist/")[-1]))
