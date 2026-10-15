@@ -96,6 +96,11 @@ async def main():
             await pg.click("#per button:nth-child(2)"); await pg.click("#disp button:nth-child(2)")
             await pg.check("#o-agree"); await pg.check("#o-novel"); await pg.wait_for_timeout(1000)
             if "km" not in await pg.inner_text("#disp-d"): fails.append(f"{name}: limited-dispersal text has no distance")
+            # the two centre dots carry "Now" / "Around <year>" tags when the centre moves; the feedback form opens from this page too
+            if await pg.locator("#sp-body .headline, #panel .headline").count() and await pg.locator(".ctag").count() != 2: fails.append(f"{name}: centre-of-range dots lack their two tags")
+            await pg.evaluate("document.querySelector('.fbbtn').click()")
+            if not await pg.evaluate("document.getElementById('fbdlg').open"): fails.append(f"{name}: feedback form did not open")
+            await pg.evaluate("document.getElementById('fbdlg').close()")
             if SHOTS: await pg.screenshot(path=str(OUT / f"{name}-maple-ssp585-2100-limited-overlays.png"))
             # figure: exactly one view in the flow; a row tap never switches it; the toggle does
             async def fig():

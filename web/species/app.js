@@ -435,7 +435,7 @@ function summary() {
   if (c.fut <= 0) shift = `<p class="answer">No suitable climate remains under this scenario${S.disp === "none" ? "" : ", even with spreading allowed"}.</p>`;
   else if (c.cok === false) shift = `<p class="answer"><strong>Centre of the range: not meaningful</strong> for a range spread over several regions (the average position falls outside the area where the organism has suitable climate).</p>`;
   else if (c.shift_km < 40) shift = `<div class="shift"><div><strong>The centre of the range hardly moves</strong> (${Math.round(c.shift_km)} km).</div></div>`;
-  else shift = `<div class="shift">${arrowSvg(c.bearing)}<div><strong>Centre of the range moves about ${Math.round(c.shift_km / 10) * 10} km ${compass(c.bearing)}.</strong><p class="kicker">From ${c.c0[0].toFixed(1)}°, ${c.c0[1].toFixed(1)}° to ${c.c1[0].toFixed(1)}°, ${c.c1[1].toFixed(1)}° (area-weighted centre of the suitable climate).</p></div></div>`;
+  else shift = `<div class="shift">${arrowSvg(c.bearing)}<div><strong class="headline">Centre of the range moves about ${Math.round(c.shift_km / 10) * 10} km ${compass(c.bearing)}.</strong><p class="kicker">On the map: the white dot is the centre now, the black dot is the centre ${PERFULL()}. From ${c.c0[0].toFixed(1)}°, ${c.c0[1].toFixed(1)}° to ${c.c1[0].toFixed(1)}°, ${c.c1[1].toFixed(1)}° (area-weighted centre of the suitable climate).</p></div></div>`;
   const maxA = Math.max(c.now, c.fut, 1), maxC = Math.max(c.lost, c.gained, 1);
   el.innerHTML = `<div class="stats">
       <div class="st s-now"><div class="k">Suitable now</div><div class="v">${fmtA(c.now)}</div><div class="d">1991–2020</div></div>
@@ -493,6 +493,7 @@ function placeMarker() {
   if (!map || !PL || !$("place-det").open) { if (pm) { pm.remove(); pm = null; } return; }
   const P = PL.places[S.place];
   if (!pm) { const el = document.createElement("div"); el.className = "pmark"; el.setAttribute("aria-hidden", "true"); pm = new maplibregl.Marker({ element: el }); pm.setLngLat([P[2], P[1]]).addTo(map); } else pm.setLngLat([P[2], P[1]]);
+  pm.getElement().title = P[0]; pm.getElement().removeAttribute("aria-hidden");
 }
 const SW = {
   lost: `<svg width="28" height="14" aria-hidden="true"><defs><pattern id="pl" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.4" height="6" fill="var(--lost)"/></pattern></defs><rect width="28" height="14" rx="2" fill="url(#pl)" stroke="var(--lost)"/></svg>`,
@@ -521,6 +522,26 @@ function shiftLayer() {
       { type: "Feature", properties: { k: "a" }, geometry: { type: "Point", coordinates: [c.c0[1], c.c0[0]] } }, { type: "Feature", properties: { k: "b" }, geometry: { type: "Point", coordinates: [c.c1[1], c.c1[0]] } });
   }
   src.setData({ type: "FeatureCollection", features: f });
+  shiftLabels(f.length ? c : null);
+}
+// "Now" / "around 2100" tags beside the two centre dots, so the line explains itself without opening the legend.
+let SL = [];
+function shiftLabels(c) {
+  SL.forEach(m => m.remove()); SL = [];
+  if (!c) return;
+  [["Now", c.c0], [`Around ${S.per}`, c.c1]].forEach(([t, p], i) => {
+    const el = document.createElement("div"); el.className = "ctag " + (i ? "later" : "now"); el.textContent = t; el.setAttribute("aria-hidden", "true");
+    SL.push(new maplibregl.Marker({ element: el, anchor: "bottom", offset: [0, -11] }).setLngLat([p[1], p[0]]).addTo(map));
+  });
+}
+function shiftTips() {
+  const tip = (id, txt) => {
+    map.on("mouseenter", id, () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", id, () => { map.getCanvas().style.cursor = ""; });
+    map.on("click", id, e => new maplibregl.Popup({ closeButton: false, offset: 12 }).setLngLat(e.lngLat).setText(txt()).addTo(map));
+  };
+  tip("shift-a", () => "Centre of the suitable climate now (1991–2020)");
+  tip("shift-b", () => `Centre of the suitable climate ${PERFULL()}`);
 }
 function styleShift() {
   if (!map.getLayer("shift-case")) return;
@@ -639,8 +660,10 @@ function addLayers() {
   add({ id: "shift-line", type: "line", source: "shift", filter: ["==", "k", "l"], paint: { "line-width": 3, "line-color": "#000" }, layout: { "line-cap": "round" } });
   add({ id: "shift-a", type: "circle", source: "shift", filter: ["==", "k", "a"], paint: { "circle-radius": 7, "circle-stroke-width": 3, "circle-color": "#fff", "circle-stroke-color": "#000" } });
   add({ id: "shift-b", type: "circle", source: "shift", filter: ["==", "k", "b"], paint: { "circle-radius": 7, "circle-stroke-width": 2, "circle-color": "#000", "circle-stroke-color": "#fff" } });
+  if (!shiftTipsOn) { shiftTipsOn = true; shiftTips(); }
   styleShift(); shiftLayer();
 }
+let shiftTipsOn = false;
 let styleOk = false, started = false;
 function tryStart() { if (started || !styleOk || !S.sp || !INFO[S.sp]) return; started = true; if (!INFO[S.sp].ssps.includes(S.ssp)) S.ssp = INFO[S.sp].ssps[0]; update(true, false); }
 function startMap() {
@@ -674,3 +697,33 @@ async function boot() {
   tryStart();
 }
 boot().catch(e => { $("fatal").hidden = false; $("fatal-msg").textContent = e.message; console.error(e); });
+
+// ---- feedback: the same private note form as the Places page (POST /api/feedback, emailed to the site's author)
+let fbOpened = 0;
+function fbContext() {
+  const p = ["Page: Organisms"];
+  if (S.sp && ST.byId[S.sp]) {
+    const r = ST.byId[S.sp]; p.push(`Organism: ${r.name} (${r.sci})`, `Scenario: ${SSPN[S.ssp] || S.ssp}`, `Period: ${PERFULL()}`, `View: ${S.view}`);
+  } else p.push("No organism selected");
+  p.push(`Screen: ${innerWidth < 900 ? "small screen" : "desktop"}`, `Data version: ${ST.v || "?"}`);
+  return p.join("\n");
+}
+function openFeedback(kind) {
+  const d = $("fbdlg"), f = $("fbform"), m = $("fbmsg"), b = $("fbsend");
+  f.reset(); m.textContent = ""; m.className = "small"; b.disabled = false; b.textContent = "Send";
+  f.querySelector(`input[name=kind][value="${kind || "other"}"]`).checked = true;
+  $("fbctxview").textContent = fbContext(); fbOpened = Date.now(); d.showModal(); f.message.focus();
+}
+async function sendFeedback(e) {
+  e.preventDefault(); const f = $("fbform"), m = $("fbmsg"), b = $("fbsend"), msg = f.message.value.trim();
+  if (msg.length < 3) { m.textContent = "Please write a few words."; m.className = "small err"; f.message.focus(); return; }
+  b.disabled = true; m.className = "small"; m.textContent = "Sending…";
+  try {
+    const r = await fetch("/api/feedback", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: f.kind.value, message: msg, email: f.email.value.trim(), context: f.ctx.checked ? fbContext() : "", website: f.website.value, elapsed: Date.now() - fbOpened }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.ok) { m.className = "small ok"; m.textContent = f.email.value.trim() ? "Thank you! Your note is on its way, and you may hear back." : "Thank you! Your note is on its way."; b.textContent = "Sent"; setTimeout(() => $("fbdlg").close(), 2400); }
+    else { m.className = "small err"; m.innerHTML = esc(j.error || "Feedback isn't available on this copy of the site.") + (j.alt ? ` You can also <a href="${esc(j.alt)}" target="_blank" rel="noopener">open an issue on GitHub</a>.` : ""); b.disabled = false; }
+  } catch (err) { m.className = "small err"; m.textContent = "Couldn't reach the server. Please try again later."; b.disabled = false; }
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-fb]"); if (b) { e.preventDefault(); openFeedback(b.dataset.fb); } });
+$("fbform").addEventListener("submit", sendFeedback); $("fbcancel").onclick = () => $("fbdlg").close();
