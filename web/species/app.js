@@ -400,11 +400,12 @@ function head() {
   $("sh-badges").innerHTML = bd;                                              // always visible in the phone sheet header
   const leaf = TREE && TREE.byId[i.id], chain = []; for (let n = leaf && leaf.parent; n && n.rank !== "root"; n = n.parent) chain.unshift(n);
   const lineage = leaf ? `<nav class="lineage" aria-label="Where this organism sits in the tree of life"><button type="button" class="lg" data-k="">Tree of life</button>${chain.map(n => `<span aria-hidden="true">\u203A</span><button type="button" class="lg" data-k="${esc(n.key)}" title="${esc(n.name + " \u00B7 " + (RANK[n.rank] || ""))}">${esc(fname(n.name))}</button>`).join("")}</nav>` : "";
-  const im = i.image, photo = im ? `<figure class="photo"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(im.file)}?width=520" alt="${esc(i.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()"><figcaption>${esc(im.artist)} &middot; <a href="${esc(im.licence_url || im.page)}" rel="noopener">${esc(im.licence)}</a> &middot; <a href="${esc(im.page)}" rel="noopener">Commons</a></figcaption></figure>` : "";
+  const im = i.image, photo = im ? `<figure class="photo"><button type="button" class="zoom" data-photo="${esc(im.file)}" aria-label="Enlarge the photo of ${esc(i.name)}"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(im.file)}?width=520" alt="${esc(i.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()"></button><figcaption>${esc(im.artist)} &middot; <a href="${esc(im.licence_url || im.page)}" rel="noopener">${esc(im.licence)}</a> &middot; <a href="${esc(im.page)}" rel="noopener">Commons</a></figcaption></figure>` : "";
   $("sp-head").innerHTML = `${photo}<h2>${esc(i.name)}</h2><p class="small" style="margin:0 0 4px"><i>${esc(i.sci)}</i> &middot; ${esc(gname(i.group))}${i.season ? " &middot; breeding-season fit" : ""}${i.kind === "crop" ? " &middot; crop" : ""}</p>
   ${lineage}<p class="badges">${bd}</p>`;
   $("reliab").innerHTML = `<dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd><dt>Records used</dt><dd>${esc(i.kind === "crop" ? "Places where the crop is recorded." : i.range_basis === "native" ? "Records inside the organism\u2019s known native range." : "Every recorded location, including places it has been introduced to.")}</dd></dl><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
   $("sh-title").textContent = i.name;
+  $("sp-head").querySelectorAll(".zoom").forEach(b => b.addEventListener("click", () => openPhoto(i, im)));
   document.querySelectorAll(".relbtn").forEach(b => b.addEventListener("click", () => { const d = $("learn-det"); d.open = true; if (SHEETAPI && SHEETAPI.on && SHEETAPI.state !== "full") SHEETAPI.set("full"); setTimeout(() => $("reliab").scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" }), 60); }));
   $("sp-head").querySelectorAll(".lineage .lg").forEach(b => b.addEventListener("click", () => { S.focus = b.dataset.k; const pd = $("pickdet"); if (pd) pd.open = true; renderResults(); if (pd) pd.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" }); }));
   const dl = i.dois.map(d => `<a href="${esc(d)}" rel="noopener">${esc(d.replace("https://doi.org/", "doi:"))}</a>`).join(", ") || "none recorded";
@@ -742,3 +743,13 @@ async function sendFeedback(e) {
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-fb]"); if (b) { e.preventDefault(); openFeedback(b.dataset.fb); } });
 $("fbform").addEventListener("submit", sendFeedback); $("fbcancel").onclick = () => $("fbdlg").close();
+
+// ---- photo: tap the picture to see it larger, tap again (or Esc) to put it back
+function openPhoto(i, im) {
+  const d = $("photodlg"), img = $("photoimg");
+  img.alt = i.name; img.src = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(im.file)}?width=1400`;
+  $("photocap").innerHTML = `${esc(i.name)} &middot; ${esc(im.artist)} &middot; <a href="${esc(im.licence_url || im.page)}" rel="noopener">${esc(im.licence)}</a> &middot; <a href="${esc(im.page)}" rel="noopener">Commons</a>`;
+  d.showModal(); d.tabIndex = -1; d.focus({ preventScroll: true });
+}
+$("photodlg").addEventListener("click", e => { if (!e.target.closest("a")) $("photodlg").close(); });
+$("photodlg").addEventListener("close", () => { $("photoimg").removeAttribute("src"); });
