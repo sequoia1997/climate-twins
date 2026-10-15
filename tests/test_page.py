@@ -75,7 +75,7 @@ async def main():
                 sel = await pg.evaluate("S.sel")
                 if sel != i:
                     fails.append(f"{place}: not selected after select() ({sel})")
-                txt = await pg.inner_text("#result")
+                txt = await pg.evaluate("document.getElementById('result').textContent")     # includes folded details such as the confidence reasons
                 if "How the climates compare" not in txt:
                     fails.append(f"{place}: no comparison")
                 # era5-agreement: a shown confidence line carries the ERA5 sentence, and a poor agreement lowers the badge

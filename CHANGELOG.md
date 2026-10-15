@@ -4,6 +4,13 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 15 October 2026: a calmer first look
+
+- **Plain answers first, details one tap away.** Places opens with one question, a search box and four places to try. After you pick a place, the result reads like a sentence ("By around 2100, with middle emissions, Raleigh's climate is projected to feel most like Conway, SC does today"), and the confidence reasons fold behind "Why?".
+- **Organisms** open straight on the result when you follow a link. The full list of organisms only appears while searching or inside a branch of the tree, each organism has one plain reliability grade with the two checks behind "Why?", and the lost/kept/gained figure folds away.
+- **Labelled map dots.** The two centre-of-range dots say "Now" and "Around 2050" (or 2100), and the headline about the move stands out.
+- **Send feedback** now works from the Organisms page too, and the methods page lists related climate maps worth exploring.
+
 ## 14 October 2026: models use every recorded location
 
 - **No more "native range" restriction.** Organism maps now learn from everywhere the organism has been recorded (gardens, farms and stocked populations are still left out), so species that have spread, such as multiflora rose, black locust and the grey squirrel, show the climate they actually live in. About 100 organisms were refitted; each page says which records it used.

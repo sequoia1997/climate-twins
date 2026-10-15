@@ -346,6 +346,7 @@ function renderResults() {
   const list = (q ? ST.species.filter(s => (s.name + " " + s.sci + " " + gname(s.group) + " " + (s.family || "") + " " + (s.order || "")).toLowerCase().includes(q)) : scope)
     .slice().sort((a, b) => a.name.localeCompare(b.name));
   renderBrowse(scope);
+  ul.hidden = !q && !S.focus; $("search").setAttribute("aria-expanded", String(!ul.hidden));
   const prev = S.sp;
   list.forEach(s => { const li = document.createElement("li"); li.setAttribute("role", "option"); li.id = "opt-" + s.id; li.tabIndex = -1; li.dataset.id = s.id; li.setAttribute("aria-selected", String(s.id === S.sp));
     li.innerHTML = `<span class="nm">${esc(s.name)}</span><span class="sci">${esc(s.sci)}</span><span class="tg">${esc(s.family || gname(s.group))}</span>`; li.addEventListener("click", () => { pick(s.id); const pd = $("pickdet"); if (pd && s.id !== prev) pd.open = false; }); ul.appendChild(li); });
@@ -369,6 +370,12 @@ function futureCheck(i) {
   return { cls: "q-ok", ic: "\u25CB", short: "Future map: change untested", long: shiftsText(i) + extra };
 }
 const chip = c => `<span class="badge ${c.cls}"><span aria-hidden="true">${c.ic}</span> ${esc(c.short)}</span>`;
+function overall(T, F) {                       // one plain-language grade for the header; the two checks are spelled out under "How reliable is it?"
+  if (isWithheld()) return { cls: "q-partial", ic: "\u25D0", short: "Future numbers withheld" };
+  if (T.cls === "q-good" && F.cls === "q-good") return { cls: "q-good", ic: "\u25CF", short: "Reliability: good" };
+  if (T.cls === "q-partial" || F.cls === "q-partial") return { cls: "q-partial", ic: "\u25D0", short: "Reliability: limited" };
+  return { cls: "q-ok", ic: "\u25CB", short: "Reliability: fair" };
+}
 function tierText(i) {
   const v = i.validation;
   if (i.tier === "A") return `Checked against an independent survey (${KINDS[v && v.kind] || "an independent survey"}${v && v.auc != null ? `; AUC ${v.auc.toFixed(2)}, TSS ${v.tss == null ? "n/a" : v.tss.toFixed(2)}${v.n_presence ? `, ${v.n_presence} presence and ${v.n_absence} absence sites` : ""}` : ""}).`;
@@ -389,7 +396,7 @@ function flagText(f) {                          // plain words for the engine's 
 function head() {
   const i = I();
   const wh = isWithheld();
-  const T = todayCheck(i), F = futureCheck(i), bd = chip(T) + " " + chip(F);
+  const T = todayCheck(i), F = futureCheck(i), O = overall(T, F), bd = `<button type="button" class="relbtn" title="${esc(T.short + "; " + F.short)}">${chip(O)}<span class="why">Why?</span></button>`;
   $("sh-badges").innerHTML = bd;                                              // always visible in the phone sheet header
   const leaf = TREE && TREE.byId[i.id], chain = []; for (let n = leaf && leaf.parent; n && n.rank !== "root"; n = n.parent) chain.unshift(n);
   const lineage = leaf ? `<nav class="lineage" aria-label="Where this organism sits in the tree of life"><button type="button" class="lg" data-k="">Tree of life</button>${chain.map(n => `<span aria-hidden="true">\u203A</span><button type="button" class="lg" data-k="${esc(n.key)}" title="${esc(n.name + " \u00B7 " + (RANK[n.rank] || ""))}">${esc(fname(n.name))}</button>`).join("")}</nav>` : "";
@@ -398,6 +405,7 @@ function head() {
   ${lineage}<p class="badges">${bd}</p>`;
   $("reliab").innerHTML = `<dl class="checks"><dt>${esc(T.short.split(": ")[0])}</dt><dd>${esc(T.long)}</dd><dt>Future map</dt><dd>${esc(F.long)}</dd><dt>Records used</dt><dd>${esc(i.kind === "crop" ? "Places where the crop is recorded." : i.range_basis === "native" ? "Records inside the organism\u2019s known native range." : "Every recorded location, including places it has been introduced to.")}</dd></dl><p class="small">${esc(i.wording[0].toUpperCase() + i.wording.slice(1))}.</p>`;
   $("sh-title").textContent = i.name;
+  document.querySelectorAll(".relbtn").forEach(b => b.addEventListener("click", () => { const d = $("learn-det"); d.open = true; if (SHEETAPI && SHEETAPI.on && SHEETAPI.state !== "full") SHEETAPI.set("full"); setTimeout(() => $("reliab").scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" }), 60); }));
   $("sp-head").querySelectorAll(".lineage .lg").forEach(b => b.addEventListener("click", () => { S.focus = b.dataset.k; const pd = $("pickdet"); if (pd) pd.open = true; renderResults(); if (pd) pd.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" }); }));
   const dl = i.dois.map(d => `<a href="${esc(d)}" rel="noopener">${esc(d.replace("https://doi.org/", "doi:"))}</a>`).join(", ") || "none recorded";
   $("about").innerHTML = `<dl class="facts"><dt>Internal grade</dt><dd>Tier ${i.tier}, ${esc(i.confidence)} confidence</dd><dt>Cross-validation</dt><dd>${esc(CVK[i.cv_kind] || i.cv_kind || "n/a")}</dd>
@@ -437,16 +445,19 @@ function summary() {
   else if (c.shift_km < 40) shift = `<div class="shift"><div><strong>The centre of the range hardly moves</strong> (${Math.round(c.shift_km)} km).</div></div>`;
   else shift = `<div class="shift">${arrowSvg(c.bearing)}<div><strong class="headline">Centre of the range moves about ${Math.round(c.shift_km / 10) * 10} km ${compass(c.bearing)}.</strong><p class="kicker">On the map: the white dot is the centre now, the black dot is the centre ${PERFULL()}. From ${c.c0[0].toFixed(1)}°, ${c.c0[1].toFixed(1)}° to ${c.c1[0].toFixed(1)}°, ${c.c1[1].toFixed(1)}° (area-weighted centre of the suitable climate).</p></div></div>`;
   const maxA = Math.max(c.now, c.fut, 1), maxC = Math.max(c.lost, c.gained, 1);
-  el.innerHTML = `<div class="stats">
+  const nm = i.name, grow = ch == null ? "" : ch >= 5 ? `grows by about ${ch}%` : ch <= -5 ? `shrinks by about ${-ch}%` : "stays about the same";
+  const lead = ch == null ? "" : `<p class="answer">${per[0].toUpperCase() + per.slice(1)}, with ${(SSPN[S.ssp] || "").toLowerCase()} emissions, the area with a suitable climate for <strong>${esc(nm)}</strong> ${grow}.</p>`;
+  el.innerHTML = `${lead}<div class="stats">
       <div class="st s-now"><div class="k">Suitable now</div><div class="v">${fmtA(c.now)}</div><div class="d">1991–2020</div></div>
       <div class="st s-fut"><div class="k">Suitable by ${per}</div><div class="v">${fmtA(c.fut)}</div><div class="d">${esc(sspLabel())}</div></div>
       <div class="st s-mat"><div class="k">Change</div><div class="v">${ch == null ? "n/a" : sgn(ch) + "%"}</div><div class="d">${ch == null ? "" : sgn(Math.round((c.fut - c.now) / 1e3)) + " k km²"}</div></div></div>
     ${shift}
+    <details class="deeper"><summary>Where it is lost, kept and gained</summary>
     <div class="figbar"><h4>Where the suitable climate changes</h4><div class="vt" role="group" aria-label="Figure view"><button type="button" data-v="abs" aria-pressed="${S.figview === "abs"}">Values</button><button type="button" data-v="chg" aria-pressed="${S.figview === "chg"}">Change</button></div></div>
     <div class="v-abs" role="group" aria-label="Suitable area now and by ${per}">${bars([["Now", c.now, "var(--kept)", fmtA(c.now)], [per, c.fut, "var(--ink)", fmtA(c.fut)]], maxA, false)}</div>
     <div class="v-chg" role="group" aria-label="Area lost and gained by ${per}">${bars([["Lost", -c.lost, "var(--lost)", MIN + fmtA(c.lost)], ["Gained", c.gained, "var(--gained)", "+" + fmtA(c.gained)], ["Net", c.gained - c.lost, "var(--ink)", (c.gained >= c.lost ? "+" : MIN) + fmtA(Math.abs(c.gained - c.lost))]], maxC, true)}</div>
     <dl class="facts"><dt>Lost (suitable now, not later)</dt><dd>${fmtA(c.lost)}</dd><dt>Kept</dt><dd>${fmtA(c.kept)}</dd><dt>Gained</dt><dd>${fmtA(c.gained)}</dd>
-      <dt>Climate models agreeing on the future area</dt><dd>${c.agree == null ? "n/a" : Math.round(c.agree * 100) + "%"}</dd><dt>Area with novel climate</dt><dd>${c.novel == null ? "n/a" : (c.novel * 100 < 1 ? "<1" : Math.round(c.novel * 100)) + "%"}</dd></dl>`;
+      <dt>Climate models agreeing on the future area</dt><dd>${c.agree == null ? "n/a" : Math.round(c.agree * 100) + "%"}</dd><dt>Area with novel climate</dt><dd>${c.novel == null ? "n/a" : (c.novel * 100 < 1 ? "<1" : Math.round(c.novel * 100)) + "%"}</dd></dl></details>`;
   el.querySelectorAll(".vt button").forEach(b => b.addEventListener("click", () => { S.figview = b.dataset.v; summary(); }));
   const txt = `${i.name}: suitable climate now covers ${fmtA(c.now)}. By ${per} under ${sspLabel()} with ${S.disp} dispersal it covers ${fmtA(c.fut)} (${ch == null ? "n/a" : sgn(ch) + "%"}): ${fmtA(c.lost)} lost, ${fmtA(c.kept)} kept, ${fmtA(c.gained)} gained. ` +
     (c.fut > 0 ? (c.cok === false ? "The centre of the range is not meaningful for a range spread over several regions. " : `The centre moves ${Math.round(c.shift_km)} km ${compass(c.bearing)}. `) : "") + FLAG;
@@ -591,7 +602,7 @@ document.addEventListener("click", e => {
 async function pick(id) {
   if (!ST.byId[id]) return;
   if (TREE && TREE.byId[id]) S.focus = TREE.byId[id].parent.key;
-  S.sp = id; const pc = $("pick-cur"); if (pc) pc.textContent = rec(id).name; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
+  S.sp = id; $("panel").classList.add("picked"); const pc = $("pick-cur"); if (pc) pc.textContent = rec(id).name; renderResults(); $("sp-head").setAttribute("aria-busy", "true");
   if (!INFO[id]) $("sp-head").innerHTML = `<h2>${esc(rec(id).name)}</h2><p class="small" role="status">Loading\u2026</p>`;
   writeHash();
   try { await loadInfo(id); } catch (e) { $("sp-head").innerHTML = '<p role="alert">This organism could not be loaded. Check your connection and try again.</p>'; return; }
@@ -615,7 +626,9 @@ const sheet = (() => {
   head.addEventListener("pointerup", end); head.addEventListener("pointercancel", end);
   mq.addEventListener("change", () => { set(st); map && map.resize(); }); addEventListener("resize", () => { if (mq.matches) set(st); });
   set("half");
+  return { set, get on() { return mq.matches; }, get state() { return st; } };
 })();
+const SHEETAPI = sheet;
 
 /* ------------------------------------------------------------ boot */
 const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>';
@@ -691,7 +704,9 @@ async function boot() {
   const ho = parseHash(), h = ho.id, id = ST.byId[h] ? h : (ST.byId.acer_saccharum ? "acer_saccharum" : ST.species[0].id);
   const b = rec(id).bbox; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: padFor(), duration: 0, maxZoom: 5 });
   if (ST.byId[h]) applyHash(ho);
-  S.sp = id; $("pick-cur").textContent = rec(id).name; renderResults();
+  S.sp = id; $("pick-cur").textContent = rec(id).name;
+  if (ST.byId[h]) { if (TREE && TREE.byId[id]) S.focus = TREE.byId[id].parent.key; $("pickdet").open = false; $("panel").classList.add("picked"); }
+  renderResults();
   await loadInfo(id);
   window.__S = S; window.__T = T;
   tryStart();

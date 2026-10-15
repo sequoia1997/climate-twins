@@ -65,6 +65,13 @@ body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.45 v
 aside{width:var(--aside-w,400px);max-width:100%;background:var(--panel);border-left:1px solid var(--rule);overflow-y:auto;padding:20px 22px 40px}
 h1{font:700 1.55rem/1.1 var(--font-head);margin:0 0 6px;letter-spacing:-.01em}
 .lede{color:var(--muted);margin:0 0 16px;font-size:.95rem}
+.hook{font:700 1.18rem/1.3 var(--font-head);margin:6px 0 6px;color:var(--ink)}
+aside.picked .hook,aside.picked #intro,aside.picked .tryline{display:none}
+.tryline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 2px;font-size:.86rem;color:var(--muted)}
+.trybtn{font:600 .84rem var(--font-body);color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:999px;padding:5px 11px;cursor:pointer;min-height:32px}
+.trybtn:hover{border-color:var(--ink)} .trybtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+details.conf{font-size:.9rem;margin:10px 0} details.conf>summary{cursor:pointer;list-style:none} details.conf>summary::-webkit-details-marker{display:none}
+details.conf>summary .muted{text-decoration:underline;text-decoration-color:var(--line);margin-left:4px;font-size:.84rem} details.conf p{margin:6px 0 0}
 label.small,.small{font-size:.85rem;color:var(--muted)}
 .row{margin:12px 0}
 .seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -380,15 +387,14 @@ aside a:hover{text-decoration-thickness:2px}
         <span id="sh-title">Climate twins</span>
         <select id="mper" aria-label="Time period"></select>
         <select id="mssp" aria-label="Emissions scenario"></select>
-        <!-- GWL-BEGIN --><select class="pk-mode gw-off" aria-label="View: year and scenario, or warming level"></select><select class="pk-gwl gw-off" aria-label="Global warming level"></select><!-- GWL-END -->
+        <!-- GWL-BEGIN --><select class="pk-gwl gw-off" aria-label="Global warming level"></select><!-- GWL-END -->
         <button id="sh-tog" type="button" aria-label="Hide the panel" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 9l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
     <h1>Climate twins</h1>
     <nav class="modes" data-pos="0" aria-label="Site sections"><a href="./" aria-current="page">Places</a><a href="species.html">Organisms</a></nav>
-    <p class="caveat"><strong>Projections, not forecasts.</strong> Read each arrow as a way to picture a scenario, not a prediction for a specific town. <a href="methods.html" target="_blank" rel="noopener">How it works</a></p>
-    <p class="lede" id="intro">Pick a place. The arrow points to where today's climate best matches that place's projected climate around 2050 or 2100.
-      <button type="button" class="linkbtn" id="sigopen" aria-haspopup="dialog">What does σ mean?</button></p>
+    <p class="hook">What will your town's climate feel like later this century?</p>
+    <p class="lede" id="intro">Search for a place. An arrow points to a town whose climate today is like your place's projected climate. <button type="button" class="linkbtn" id="sigopen" aria-haspopup="dialog">How close is close?</button></p>
     <dialog id="sigdlg" aria-labelledby="sigh">
       <h2 id="sigh">What σ (sigma) means</h2>
       <p>σ measures how different two climates are, in units of a place's normal year-to-year swings. The lower the number, the closer the match.</p>
@@ -398,6 +404,7 @@ aside a:hover{text-decoration-thickness:2px}
     <div class="row">
       <div class="combo"><input id="search" placeholder="Search for a city or town" autocomplete="off" spellcheck="false" aria-label="Search for a place" role="combobox" aria-expanded="false" aria-controls="plist" aria-autocomplete="list"><ul id="plist" role="listbox" aria-label="Places" hidden></ul></div>
       <div class="small" id="wstat" role="status" style="margin-top:4px"></div>
+      <p class="tryline" id="tryline">Try <button type="button" class="trybtn" data-try="Raleigh, NC">Raleigh</button><button type="button" class="trybtn" data-try="Chicago, IL">Chicago</button><button type="button" class="trybtn" data-try="Phoenix, AZ">Phoenix</button><button type="button" class="trybtn" data-try="London, UK">London</button></p>
       <p class="small reqline" id="reqline">Don't see your place? <button type="button" class="linkbtn" id="reqopen">Request it</button></p>
       <dialog id="reqdlg" aria-labelledby="reqh">
         <form id="reqform" method="dialog">
@@ -414,9 +421,9 @@ aside a:hover{text-decoration-thickness:2px}
       </dialog>
       <datalist id="places"></datalist>
     </div>
+    <p class="caveat"><strong>Projections, not forecasts:</strong> a way to picture a scenario, not a prediction for a specific town. <a href="methods.html" target="_blank" rel="noopener">How it works</a></p>
     <div id="ctlbar">
       <!-- GWL-BEGIN: view toggle and warming-level buttons (filled and shown by gwlInit() when the data has them) -->
-      <div class="ctl gw-off" id="gwl-mode-ctl"><div class="small" id="mode-label">View</div><div class="seg" id="gwl-mode" role="group" aria-labelledby="mode-label"></div></div>
       <div class="ctl gw-off" id="gwl-ctl"><div class="small" id="gwl-label">Warming</div><div class="seg" id="gwl-seg" role="group" aria-labelledby="gwl-label"></div></div>
       <!-- GWL-END -->
       <div class="ctl" id="per-ctl"><div class="small" id="per-label">Period</div><div class="seg" id="per" role="group" aria-labelledby="per-label"></div></div>
@@ -424,6 +431,8 @@ aside a:hover{text-decoration-thickness:2px}
     </div>
     <div class="small" id="ssp-desc"></div>
     <details class="settings" data-k="settings"><summary>More options</summary>
+      <div class="ctl gw-off" id="gwl-mode-ctl"><div class="small" id="mode-label">View</div><div class="seg" id="gwl-mode" role="group" aria-labelledby="mode-label"></div></div>
+      <p class="small">“Warming level” shows a world a set number of degrees warmer, whenever that happens, instead of a year and scenario.</p>
     <div class="opts">
       <label><input type="checkbox" id="optModels" checked> Individual models</label>
       <label><input type="checkbox" id="optAll" checked> All arrows</label>
@@ -433,7 +442,7 @@ aside a:hover{text-decoration-thickness:2px}
       <p class="small">By default the map uses 15 climate models whose transient warming response to CO₂ lies in the IPCC's likely range. Of the other nine, seven warm faster than the evidence supports, one warms more slowly, and one has no published value. Including them mostly shows a hotter outcome that is possible but less likely.</p>
     </details>
     <hr>
-    <section id="result" aria-live="polite"><p class="muted">Tap a dot on the map or search for a place. With “All arrows” on, the map shows every place's best match for the chosen scenario, colored by how good the match is.</p></section>
+    <section id="result" aria-live="polite"><p class="muted">Or tap any dot on the map. Each arrow runs from a place to where its future climate can be found today.</p></section>
     <hr>
     <details class="settings about"><summary>About this map and method</summary>
 <h3>How this works</h3>
@@ -750,9 +759,10 @@ const gwlNum=L=>Number.isInteger(L)?String(L):L.toFixed(1);
 function gwlLab(i=S.gi){return "+"+gwlNum(D.gwl.levels[i])+" °C";}
 function gwlPer(){return{label:gwlLab(),years:gwlNum(D.gwl.levels[S.gi])+" °C above 1850–1900"};}
 function PL(){return gwlOn()?"at "+gwlLab():"~"+PER().label;}
+function WHENP(){return gwlOn()?`In a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900`:`By around ${PER().label}, with ${sspName(D.ssps[S.ssp]).toLowerCase()} emissions`;}
 function WHEN(){return gwlOn()?`a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900`:`${PER().years} under ${D.ssps[S.ssp]}`;}
 function UNDER(){return gwlOn()?` at ${gwlLab()} of global warming`:` under ${D.ssps[S.ssp]}`;}
-function BY(){return gwlOn()?`In a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900,`:`By ~${PER().label} under ${D.ssps[S.ssp]},`;}
+function BY(){return gwlOn()?`In a world ${gwlNum(D.gwl.levels[S.gi])} °C warmer than 1850–1900,`:`By around ${PER().label}, with ${sspName(D.ssps[S.ssp]).toLowerCase()} emissions,`;}
 function gwlDesc(){const g=D.gwl,ei=S.ens==="tcr_likely"?1:0,L=g.levels[S.gi],w=g.when[ei][S.gi].map((y,s)=>y?{y,s:D.ssps[s]}:null).filter(Boolean).sort((a,b)=>a.y-b.y);
   return `Global warming of ${gwlNum(L)} °C above the 1850–1900 average (1991–2020 is already about +${(+g.now).toFixed(1)} °C). ${g.n[ei][S.gi]} of ${D.ens[S.ens].length} models reach it`+(w.length?`, around ${w[0].y} (${w[0].s}) to ${w[w.length-1].y} (${w[w.length-1].s}).`:".")+" Results pool every scenario that gets there.";}
 function gwlSync(){if(!D||!D.gwl||!gFut)return;const g=D.gwl,ei=S.ens==="tcr_likely"?1:0,on=gwlOn();
@@ -914,14 +924,14 @@ function diffs(c){const t=cur.t,q=cur.ev;const out=[];
   return txt.length?"differs most in "+txt.join(", "):`close on all ${K} measures`;}
 function panel(){
   const el=document.getElementById("result");
-  if(!cur){el.innerHTML=`<p class="muted">Tap a dot on the map or search for a place. With “All arrows” on, the map shows every place's best match for the chosen scenario, colored by how good the match is.</p>`;return;}
+  if(!cur){el.innerHTML=`<p class="muted">Or tap any dot on the map. Each arrow runs from a place to where its future climate can be found today.</p>`;return;}
   const tt=D.targets[cur.t],c=cur.best,bs=cur.sig[c];const [ql,qc]=quality(bs);
   const km=hav(tt.lat,tt.lon,plat[c],plon[c]),br=compass(bearing(tt.lat,tt.lon,plat[c],plon[c]));
   const nn=nearName(c),city=cityName(c);
   const ensN=ensModels().length;
   const agree=cur.models.filter(m=>hav(plat[m.c],plon[m.c],plat[c],plon[c])<500).length;
   const oc=cur.other.c,od=oc>=0?hav(plat[oc],plon[oc],plat[c],plon[c]):0;
-  const where=nn.km<12?esc(nn.name):`${Math.round(kmU(nn.km))} ${distU()} from ${esc(nn.name)}`;
+  const where=nn.km<12?esc(nn.name):`${Math.round(kmU(nn.km))} ${distU()} from ${esc(nn.name)}`,whereP=nn.km<12?esc(nn.name):`the area ${where}`;
   const selfMatch=km<60,noMatch=bs>=4||(selfMatch&&bs>=2),partial=!noMatch&&bs>=2;
   const dirTxt=`${Math.round(kmU(km))} ${distU()} ${br}`;
   let h=`<h2>${esc(tt.n)}</h2>`;
@@ -934,8 +944,8 @@ function panel(){
   }else{
     h+=partial?`<p class="answer">In ${WHEN()}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
       :selfMatch?`<p class="answer">In ${WHEN()}, <strong>no place today is a closer match than ${esc(tt.n)} itself.</strong> It will warm, but its weather already varies so much from year to year that the projected change is small by comparison.</p>`
-      :`<p class="answer">In ${WHEN()}, its climate most resembles today's climate <strong>${where}</strong>, ${dirTxt}.</p>`;
-    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}, ${bs.toFixed(2)}σ</span>`+tropNote(bs);
+      :`<p class="answer">${WHENP()}, ${esc(tt.n)}'s climate is projected to feel most like <strong>${whereP}</strong> does today, ${dirTxt}.</p>`;
+    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}</span> <span class="small muted">${bs.toFixed(2)}σ</span>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
     let lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
     /* BEGIN baseline-agreement: independent datasets (ERA5 on all measures, CHIRPS on precipitation, CHELSA on temperature and precipitation)
@@ -960,7 +970,7 @@ function panel(){
     let why=`${agree} of ${ensN} models point to this area`;
     why+=mAgree?(lvl==="high"?", and a second statistical method agrees.":". A second statistical method agrees."):`. A second statistical method picks ${esc(describeCell(oc))}, ${Math.round(kmU(od))} ${distU()} away.`;
     if(lvl==="low")why+=" Treat the arrow as one of several plausible answers, and see the other matches below.";
-    h+=`<p class="conf"><strong>Confidence: ${lvl}.</strong> ${why}${e5line}</p>`;
+    h+=`<details class="conf" data-k="conf"${op("conf")}><summary><strong>Confidence: ${lvl}</strong> <span class="muted">Why?</span></summary><p>${why}${e5line}</p><p class="small">Period and scenario: ${WHEN()}.</p></details>`;
   }
   h+=nexHTML(tt);
   h+=`<details class="more" data-k="facts"${op("facts")}><summary>More about this result</summary><dl class="facts">
@@ -1349,7 +1359,7 @@ let selTok=0;
 function select(t,focus){const tok=++selTok;
   if(t<0||placeReady(t)){selectNow(t,focus);return Promise.resolve();}
   return ensurePlace(t).then(()=>{if(tok===selTok)selectNow(t,focus);},e=>{if(tok===selTok)setWStat("The data for "+D.targets[t].n+" could not load. Check your connection and try again. ("+e.message+")");});}
-function selectNow(t,focus){S.sel=t;{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
+function selectNow(t,focus){S.sel=t;document.querySelector("aside").classList.toggle("picked",t>=0);{const nm=t>=0?D.targets[t].n:"Climate twins";for(const id of ["sh-title","mb-title"]){const st=document.getElementById(id);if(st)st.textContent=nm;}}if(t>=0){const it=document.getElementById("intro");if(it)it.open=false;}if(t>=0&&matchMedia("(orientation:landscape) and (max-height:520px)").matches){const as=document.querySelector("aside"),bar=document.getElementById("ctlbar");setTimeout(()=>{const r=document.getElementById("result");if(r)as.scrollTo({top:Math.max(0,r.offsetTop-(bar?bar.offsetHeight:0)-8),behavior:RM?"auto":"smooth"});},60);}
   if(SHEET.on&&SHEET.state!=="hidden"){if(t>=0){if(SHEET.state!=="half")SHEET.set("half");setTimeout(SHEET.toResult,60);}else SHEET.set("peek");}if(t>=0)usePool(D.targets[t].g);document.getElementById("legend").classList.remove("open");document.getElementById("search").value=t>=0?D.targets[t].n:"";refresh();
   if(focus&&t>=0)focusOn();}
 /* after a search the soft keyboard closes and the sheet settles, which resizes the map: frame the match again once it has */
@@ -1376,7 +1386,7 @@ function segs(){
   document.getElementById("ssp-desc").textContent=SSP_DESC[S.ssp];
   gwlInit();
   const mp=document.getElementById("mper"),ms=document.getElementById("mssp");
-  mp.innerHTML=D.periods.map((q,i)=>`<option value="${i}">~${q.label}</option>`).join("");ms.innerHTML=D.ssps.map((n,i)=>`<option value="${i}">${sspName(n)} (${n})</option>`).join("");
+  mp.innerHTML=D.periods.map((q,i)=>`<option value="${i}">~${q.label}</option>`).join("");ms.innerHTML=D.ssps.map((n,i)=>`<option value="${i}">${sspName(n)}</option>`).join("");
   mp.value=S.per;ms.value=S.ssp;mp.onchange=()=>pe.children[+mp.value].click();ms.onchange=()=>s.children[+ms.value].click();
   document.querySelectorAll(".pk-per").forEach(x=>{x.innerHTML=mp.innerHTML;x.value=S.per;x.onchange=()=>pe.children[+x.value].click();});
   document.querySelectorAll(".pk-ssp").forEach(x=>{x.innerHTML=ms.innerHTML;x.value=S.ssp;x.onchange=()=>s.children[+x.value].click();});
@@ -1386,6 +1396,7 @@ function segs(){
   document.getElementById("optHot").onchange=ev=>{S.ens=ev.target.checked?"all":"tcr_likely";refresh();};
   const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");refocus();}else reqMiss(sr.value.trim(),false);};
   document.addEventListener("click",e=>{const b=e.target.closest("[data-fb]");if(b){e.preventDefault();openFeedback(b.dataset.fb);}});
+  document.querySelectorAll("[data-try]").forEach(b=>b.addEventListener("click",()=>{const i=D.targets.findIndex(t=>t.n===b.dataset.try);if(i>=0){document.getElementById("search").value=D.targets[i].n;select(i,true);}}));
   document.getElementById("sigopen").onclick=()=>document.getElementById("sigdlg").showModal();document.getElementById("sigclose").onclick=()=>document.getElementById("sigdlg").close();
   document.getElementById("fbform").addEventListener("submit",sendFeedback);document.getElementById("fbcancel").onclick=()=>document.getElementById("fbdlg").close();
   document.getElementById("fbform").message.addEventListener("input",()=>{const m=document.getElementById("fbmsg");if(m.classList.contains("err")){m.textContent="";m.className="small";}});
