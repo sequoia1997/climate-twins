@@ -14,3 +14,8 @@ const page = withHeaders(new Response("<html>", { headers: { "content-type": "te
 const data = withHeaders(new Response("{}", { headers: { "content-type": "application/json" } }));
 console.log("page has CSP and nosniff:", page.headers.get("content-security-policy") === CSP && page.headers.get("x-content-type-options") === "nosniff");
 console.log("data has nosniff, no CSP:", data.headers.get("x-content-type-options") === "nosniff" && !data.headers.get("content-security-policy"));
+
+// the _headers file served with the static assets must carry the same policy as the worker
+import { readFileSync } from "node:fs";
+const hf = readFileSync(new URL("../web/assets/_headers", import.meta.url), "utf8");
+console.log("_headers has the same policy:", hf.includes("Content-Security-Policy: " + CSP) && hf.includes("X-Content-Type-Options: nosniff"));
