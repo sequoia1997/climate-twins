@@ -10,9 +10,20 @@ export default {
     if (r) return r;
     if (url.pathname === "/api/request") return handleRequest(request, env);
     if (url.pathname === "/api/feedback") return handleFeedback(request, env);
-    return env.ASSETS.fetch(request);
+    return withHeaders(await env.ASSETS.fetch(request));
   },
 };
+
+// Plain hardening headers on every page and file. No CSP yet: the pages use inline scripts and third-party tiles, and a wrong CSP would break the map.
+export function withHeaders(res) {
+  const h = new Headers(res.headers);
+  h.set("x-content-type-options", "nosniff");
+  h.set("referrer-policy", "strict-origin-when-cross-origin");
+  h.set("x-frame-options", "SAMEORIGIN");
+  h.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  h.set("strict-transport-security", "max-age=15552000");
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+}
 
 // One address for everyone: https, no "www", and the old workers.dev address forwards to the domain.
 // Only page loads (GET/HEAD) are redirected; form submissions are answered wherever they arrive.
