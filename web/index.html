@@ -945,7 +945,7 @@ function panel(){
     h+=partial?`<p class="answer">In ${WHEN()}, only a partial match exists today. The closest is <strong>${where}</strong>, ${dirTxt}.</p>`
       :selfMatch?`<p class="answer">In ${WHEN()}, <strong>no place today is a closer match than ${esc(tt.n)} itself.</strong> It will warm, but its weather already varies so much from year to year that the projected change is small by comparison.</p>`
       :`<p class="answer">${WHENP()}, ${esc(tt.n)}'s climate is projected to feel most like <strong>${whereP}</strong> does today, ${dirTxt}.</p>`;
-    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}</span> <span class="small muted">${bs.toFixed(2)}σ</span>`+tropNote(bs);
+    h+=`<span class="badge ${qc}" title="σ (sigma): difference in units of normal year-to-year swings; under 1σ is as alike as two ordinary years">${ql}</span> <button type="button" class="linkbtn small muted" data-sig title="What does σ mean?">${bs.toFixed(2)}σ, what's that?</button>`+tropNote(bs);
     const af=agree/ensN,mAgree=oc<0||od<500;
     let lvl=(af>=0.6&&mAgree)?"high":(af<0.4||(!mAgree&&af<0.6))?"low":"medium";
     /* BEGIN baseline-agreement: independent datasets (ERA5 on all measures, CHIRPS on precipitation, CHELSA on temperature and precipitation)
@@ -1397,6 +1397,7 @@ function segs(){
   const sr=document.getElementById("search");const pick=()=>{const v=sr.value.trim().toLowerCase();if(!v)return;let i=D.targets.findIndex(t=>t.n.toLowerCase()===v);if(i<0)i=D.targets.findIndex(t=>t.n.toLowerCase().startsWith(v));if(i>=0){select(i,true);sr.blur();reqMiss("");refocus();}else reqMiss(sr.value.trim(),false);};
   document.addEventListener("click",e=>{const b=e.target.closest("[data-fb]");if(b){e.preventDefault();openFeedback(b.dataset.fb);}});
   document.querySelectorAll("[data-try]").forEach(b=>b.addEventListener("click",()=>{const i=D.targets.findIndex(t=>t.n===b.dataset.try);if(i>=0){document.getElementById("search").value=D.targets[i].n;select(i,true);}}));
+  document.addEventListener("click",e=>{if(e.target.closest("[data-sig]"))document.getElementById("sigdlg").showModal();});
   document.getElementById("sigopen").onclick=()=>document.getElementById("sigdlg").showModal();document.getElementById("sigclose").onclick=()=>document.getElementById("sigdlg").close();
   document.getElementById("fbform").addEventListener("submit",sendFeedback);document.getElementById("fbcancel").onclick=()=>document.getElementById("fbdlg").close();
   document.getElementById("fbform").message.addEventListener("input",()=>{const m=document.getElementById("fbmsg");if(m.classList.contains("err")){m.textContent="";m.className="small";}});
