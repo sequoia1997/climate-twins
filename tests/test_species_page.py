@@ -182,6 +182,12 @@ async def main():
                 r = await pg.evaluate("(() => { const b = document.getElementById('sh-badges').getBoundingClientRect(); return [b.top, b.bottom, innerHeight, document.getElementById('sh-badges').innerText]; })()")
                 if not (r[0] > 0 and r[1] <= r[2]) or "withheld" not in r[3].lower(): fails.append(f"{name}: sheet badges not visible/complete {r}")
             # slow file: busy message after ~2 s; centre not meaningful when the file says so (stubbed info)
+            # photo: a tap enlarges it, another tap puts it back (when this organism has a photo)
+            if await pg.locator("#sp-head .zoom").count():
+                await pg.evaluate("document.querySelector('#sp-head .zoom').click()")
+                if not await pg.evaluate("document.getElementById('photodlg').open"): fails.append(f"{name}: photo did not enlarge")
+                await pg.evaluate("document.getElementById('photodlg').click()")
+                if await pg.evaluate("document.getElementById('photodlg').open"): fails.append(f"{name}: photo did not close on a second tap")
             # first visit: the welcome popup shows once, stays away after it is closed, and the footer link brings it back
             if name == "desktop-light":
                 fresh = await b.new_context(viewport={"width": w, "height": h}, color_scheme=scheme)
