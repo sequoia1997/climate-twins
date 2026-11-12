@@ -129,3 +129,17 @@ def test_pick_runs_prefers_defensible_all_records_fit(tmp_path):
     mk("s3_w3_xy"); mk("rg_s3_w3_xy")
     chosen, _ = SS.pick_runs(tmp_path)
     assert chosen["xy"][0].name.startswith("rg_")
+
+
+def test_pick_runs_birds_breeding_first_then_all_records(tmp_path):
+    import json
+    from ctw import species_site as SS
+    def mk(name, sid):
+        d = {"species": {"id": sid, "group": "bird", "scientific_name": "X y"}, "tier": "B", "published": True,
+             "skill": {"cv_auc": 0.75, "cv_boyce": 0.9}, "gates": {"range_check": {"status": "records_only"}}}
+        (tmp_path / f"{name}_summary.json").write_text(json.dumps(d)); (tmp_path / f"{name}_cts.zip").write_bytes(b"z")
+    mk("s3_w3_resident", "resident"); mk("rg_s3_w3_resident", "resident")                 # a resident bird: the all-records fit wins
+    mk("s3_w3_migrant_breeding", "migrant"); mk("rg_s3_w3_migrant", "migrant")             # a migrant: the breeding-season fit wins
+    chosen, _ = SS.pick_runs(tmp_path)
+    assert chosen["resident"][2] == "rg_all"
+    assert chosen["migrant"][2] == "breeding"

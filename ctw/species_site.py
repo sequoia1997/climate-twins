@@ -73,7 +73,10 @@ def pick_runs(src: Path) -> tuple[dict, list]:
     chosen, skipped = {}, []
     for sid, v in runs.items():
         first = next(iter(v.values()))
-        order = ("breeding", "all") if (json.load(open((v.get("breeding") or v.get("all") or first)[0]))["species"].get("group") == "bird") else ("rg_all", "all", "breeding")
+        # Migratory birds keep their breeding-season fit; every other organism, resident birds included, prefers the
+        # all-records fit (rg_) when it meets the publication rule, then the earlier native-range fit.
+        bird = json.load(open(first[0]))["species"].get("group") == "bird"
+        order = ("breeding", "rg_all", "all") if bird else ("rg_all", "all", "breeding")
         for k in order:
             if k not in v:
                 continue
