@@ -77,6 +77,7 @@ def pick_runs(src: Path) -> tuple[dict, list]:
         # all-records fit (rg_) when it meets the publication rule, then the earlier native-range fit.
         bird = json.load(open(first[0]))["species"].get("group") == "bird"
         order = ("breeding", "rg_all", "all") if bird else ("rg_all", "all", "breeding")
+        ok_runs = []                                     # every fit that may be published, in order of preference
         for k in order:
             if k not in v:
                 continue
@@ -89,8 +90,11 @@ def pick_runs(src: Path) -> tuple[dict, list]:
             if not ok:
                 skipped.append((f"{sid} ({k})", why))
                 continue
+            ok_runs.append((f, z, k, S.get("tier")))
+        if ok_runs:
+            # A fit checked against an independent survey (Tier A) beats one that was not, whatever records it used.
+            f, z, k, _ = next((r for r in ok_runs if r[3] == "A"), ok_runs[0])
             chosen[sid] = (f, z, k)
-            break
     return chosen, skipped
 
 

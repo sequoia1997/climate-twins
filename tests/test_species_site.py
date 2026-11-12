@@ -143,3 +143,15 @@ def test_pick_runs_birds_breeding_first_then_all_records(tmp_path):
     chosen, _ = SS.pick_runs(tmp_path)
     assert chosen["resident"][2] == "rg_all"
     assert chosen["migrant"][2] == "breeding"
+
+
+def test_pick_runs_keeps_a_survey_checked_fit(tmp_path):
+    import json
+    from ctw import species_site as SS
+    def mk(name, tier):
+        d = {"species": {"id": "w", "group": "bird", "scientific_name": "X y"}, "tier": tier, "published": True,
+             "skill": {"cv_auc": 0.75, "cv_boyce": 0.9}, "gates": {"range_check": {"status": "records_only"}}}
+        (tmp_path / f"{name}_summary.json").write_text(json.dumps(d)); (tmp_path / f"{name}_cts.zip").write_bytes(b"z")
+    mk("s1_w3_wren", "A"); mk("rg_s1_w3_wren", "B")          # the survey-checked native-range fit stays
+    chosen, _ = SS.pick_runs(tmp_path)
+    assert chosen["wren"][2] == "all"
