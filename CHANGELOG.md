@@ -4,6 +4,14 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 
 <!-- entries -->
 
+## 12 November 2026: more organisms from every recorded location
+
+- **About 90 more organisms now learn from every place they have been recorded**, not just a published native range. They had been left on the older fit; nine in ten organisms now use all records. Maps change most for species planted or naturalised far from home, such as honey locust and black cherry in Europe.
+- **Two new birds:** hooded crow and masked lapwing, whose all-records fits pass the publication rule (381 organisms in all).
+- Resident birds now use all their records too; migratory birds keep their breeding-season fit, and a map checked against an independent survey is kept over one that was not.
+- **One address:** www.climatetwins.org and the old workers.dev address now forward to climatetwins.org.
+- The map library is updated to MapLibre 5.24.1, which fixes how map credits are cleaned before display.
+
 ## 15 October 2026: a calmer first look
 
 - **Plain answers first, details one tap away.** Places opens with one question, a search box and four places to try. After you pick a place, the result reads like a sentence ("By around 2100, with middle emissions, Raleigh's climate is projected to feel most like Conway, SC does today"), and the confidence reasons fold behind "Why?".
