@@ -72,7 +72,7 @@ jobs:
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
       - name: Restore previous attempt
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: work/w3
           key: s6w3-${{ matrix.item.key }}-none
@@ -111,7 +111,7 @@ jobs:
           python -u -m ctw.species.run_pilot fit --species "${{ matrix.item.id }}" --table data/species/batch6.csv --out work/w3 $flags --jobs 4 --bbs-dir work/bbs --shift-dir data/species/batch6_evidence/shift
       - name: Save working directory for resume
         if: always() && steps.skip.outputs.done != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: work/w3
           key: s6w3-${{ matrix.item.key }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -124,7 +124,7 @@ jobs:
           files=(s6_w3_${{ matrix.item.key }}_summary.json)
           if [ -d $d/cts ]; then (cd $d/cts && zip -qr ../../../../s6_w3_${{ matrix.item.key }}_cts.zip .); files+=(s6_w3_${{ matrix.item.key }}_cts.zip); fi
           gh release upload species-data-batch6 "${files[@]}" --clobber
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: s6w3-${{ matrix.item.key }}
@@ -167,7 +167,7 @@ jobs:
           print(len(man["species"]), "species with CTS files")
           PY
           gh release upload species-data-batch6 s6_manifest_cts_v1.json work/batch6_results.csv --clobber
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: s6-report, path: "work/batch6_results.csv\nwork/S3b5-fit-report.md" }
       - name: Commit the results table
         run: |
