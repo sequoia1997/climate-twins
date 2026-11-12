@@ -1,11 +1,11 @@
-"""Writer and reader for the CTS delivery format chosen in spike G (docs/spikes/G-delivery-ui.md, prototypes/species/encode.py).
+"""Writer and reader for the CTS delivery format chosen in spike G (docs/spikes/G-delivery-ui.md, archive/prototypes/species/encode.py).
 
 CTS1 layout (little endian):  'CTS1' | u32 n | JSON header (n bytes) | per level: (u32 offset, u32 length) per block | block payloads.
 A block is BS x BS cells (256), planar bands, each band delta-coded along the row (mod 256) and raw-deflated, so a browser can inflate
 it with DecompressionStream('deflate-raw'). Level f is the grid pooled by f (1, 2, 4, 8): max of the 7 bit value (class for the lite
 product) and OR of the reach bit ('S' bands), max of each agreement nibble ('A' bands), bitwise OR ('N' bands). Empty blocks have
 length 0. Payloads are stored coarsest level first. The writer here produces byte-identical files to the prototype's encoder for the
-same bands (checked in tests/test_species_pipeline.py against prototypes/species/data when present).
+same bands (checked in tests/test_species_pipeline.py against archive/prototypes/species/data when present).
 
 Files per species (names as the prototype expects):
   <id>_base.cts        band S0: present suitability (lite classes 0..3; full product: 7 bit)
@@ -139,7 +139,7 @@ def species_files(proj: Projection, sid: str, product: str = "lite", meta: dict 
 
 
 def prototype_stats_entry(summary: dict, bbox: list = None) -> dict:
-    """Record in the shape of prototypes/species/data/stats.json['species'][id] built from a summary JSON (areas in km2). The
+    """Record in the shape of archive/prototypes/species/data/stats.json['species'][id] built from a summary JSON (areas in km2). The
     'place' table is not produced here (it needs the place list); scenario / period combinations that were withheld are omitted."""
     sp = summary["species"]
     info = dict(id=sp["id"], name=sp.get("common_name") or sp["scientific_name"], sci=sp["scientific_name"], group=sp.get("group"),

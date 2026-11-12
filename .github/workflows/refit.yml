@@ -61,7 +61,7 @@ jobs:
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt lightgbm scikit-learn pyarrow
       - name: Restore previous attempt
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: work/w3
           key: rgw3-${{ matrix.item.id }}-none
@@ -98,7 +98,7 @@ jobs:
           python -u -m ctw.species.run_pilot fit --species "${{ matrix.item.id }}" --table ${{ matrix.item.table }} --out work/w3 $flags --jobs 4
       - name: Save working directory for resume
         if: always() && steps.skip.outputs.done != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: work/w3
           key: rgw3-${{ matrix.item.id }}-${{ github.run_id }}-${{ github.run_attempt }}

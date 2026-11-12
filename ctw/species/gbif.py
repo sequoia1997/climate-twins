@@ -1,6 +1,6 @@
 """Minimal GBIF API client for the occurrence spike: species match, facet counts, download requests, polling and fetching.
 Credentials come only from the environment (GBIF_USER, GBIF_PWD, GBIF_EMAIL) and are never printed or logged. Run it only where
-api.gbif.org is reachable (GitHub Actions). Used by ctw/species/spike_a.py."""
+api.gbif.org is reachable (GitHub Actions). First used by the occurrence spike (now archive/ctw-species-experiments/spike_a.py)."""
 from __future__ import annotations
 import os, time
 import requests

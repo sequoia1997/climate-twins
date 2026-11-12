@@ -43,8 +43,9 @@ The long-form design notes are in `docs/SPECIES_ROADMAP.md`.
 5. **Publish.** *Publish organisms to R2* (`species-publish.yml`) builds the files and syncs them to R2. Photos come from Wikimedia Commons
    (public domain, CC0, CC BY and CC BY-SA only) and are credited on each page.
 
-Fitting runs as staged GitHub Actions workflows (`s*-w2.yml`, `s*-w3-fit.yml`, `refit.yml`, `nc.yml`, `intro.yml`, `images.yml`),
-started by pushing a file under `.github/run/`.
+Fitting runs as staged GitHub Actions workflows (`s6-w2.yml` and `s6-w3-fit.yml` are the template for a new batch; `refit.yml`,
+`nc.yml`, `intro.yml`, `images.yml`), started by pushing a file under `.github/run/`. Finished one-off workflows and experiments are
+kept in `archive/` for the record.
 
 ## How updating works
 
@@ -176,6 +177,7 @@ web/                   page and methods templates (index.html, species.html, spe
 site/                  what is published (built by the pipeline; do not edit by hand)
 worker/                the Cloudflare Worker: place requests, feedback email, redirects, security headers
 docs/                  design notes: SPECIES_ROADMAP.md and the earlier handoff
+archive/               finished one-off workflows, their trigger files, experiment scripts and the first prototype (not run)
 tests/                 test_page.py and test_species_page.py (browser), plus unit tests for each module
 ```
 

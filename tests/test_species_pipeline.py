@@ -324,13 +324,13 @@ def test_cts_roundtrip_all_levels():
 
 
 def test_cts_is_byte_identical_to_the_prototype_encoder():
-    f = ROOT / "prototypes" / "species" / "data" / "s01_base.cts"
+    f = ROOT / "archive" / "prototypes" / "species" / "data" / "s01_base.cts"
     if not f.exists():
         pytest.skip("prototype data not present")
     raw = f.read_bytes()
     dec = cts.decode(raw)
     assert cts.encode(dec, ["S0"]) == raw
-    f2 = ROOT / "prototypes" / "species" / "data" / "s01_ssp245.cts"
+    f2 = ROOT / "archive" / "prototypes" / "species" / "data" / "s01_ssp245.cts"
     d2 = cts.decode(f2.read_bytes())
     assert cts.encode(d2, ["S1", "S2", "A"]) == f2.read_bytes()
 
