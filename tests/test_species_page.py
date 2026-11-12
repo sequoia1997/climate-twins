@@ -1,6 +1,6 @@
 """Browser test of the species page (web/species.html + web/species/app.js) on REAL pilot outputs (tests/fixtures/species: sugar maple,
 laughing kookaburra with withheld numbers, American robin breeding-season fit). Offline: map style, fonts and CDN are stubbed.
-Usage: python tests/test_species_page.py [outdir]   (SHOTS=0 skips screenshots)   Environment: PW_CHROMIUM, PW_MAPLIBRE_DIR (dist folder of maplibre-gl 5.24.0).
+Usage: python tests/test_species_page.py [outdir]   (SHOTS=0 skips screenshots)   Environment: PW_CHROMIUM, PW_MAPLIBRE_DIR (dist folder of maplibre-gl 5.24.1).
 Builds the data with ctw.species_site into a temporary site folder laid out like site/, serves it, and runs at 1440x900 and 390x844, light and dark.
 Fails (exit 1) on a JS error, a blank map, horizontal overflow, an unnamed control, a figure showing both views, a row tap changing the view,
 missing tier / not-a-forecast / withheld text, or a keyboard search that does not select."""

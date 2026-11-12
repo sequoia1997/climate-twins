@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 work/
 site/species/data/
+.wrangler/
+node_modules/

@@ -131,7 +131,7 @@ def triage(place: str, region: str, note: str, cfg=None) -> int:
     open("request.md", "w").write("\n".join(lines) + "\n")
     if os.environ.get("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-            f.write(f"title={title.replace(chr(10), ' ')}\nverdict={verdict}\n")
+            f.write(f"title={' '.join(title.split())}\nverdict={' '.join(str(verdict).split())}\n")   # one line each: no newline or CR can start a new output
     print(title, "|", verdict)
     return 0
 

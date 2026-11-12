@@ -1,0 +1,41 @@
+# Runs the tests on every pull request (and on main), so a broken page or pipeline step shows up before it is deployed.
+# Python unit tests, the Worker tests, and the two browser tests (Places on a freshly built site/, Organisms on the
+# fixture outputs in tests/fixtures/species). Nothing is published from here.
+name: Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths: ["ctw/**", "web/**", "worker/**", "tests/**", "site/**", "config.toml", "requirements*.txt", ".github/workflows/checks.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.12", cache: pip }
+      - name: Install
+        run: |
+          pip install --retries 10 --timeout 60 -r requirements.txt pytest playwright lightgbm scikit-learn pyarrow pillow
+          python -m playwright install --with-deps chromium
+          mkdir -p /tmp/maplibre && cd /tmp/maplibre && npm pack maplibre-gl@5.24.1 --silent && tar xzf maplibre-gl-5.24.1.tgz
+      - name: Python tests
+        run: python -m pytest -q
+      - name: Worker tests
+        run: for t in worker/test*.mjs; do echo "== $t"; node "$t"; done
+      - name: Organisms page (browser)
+        env: { PW_MAPLIBRE_DIR: /tmp/maplibre/package/dist, SHOTS: "0" }
+        run: python tests/test_species_page.py /tmp/shots
+      - name: Places page (browser, on the page built from web/)
+        env: { PW_MAPLIBRE_DIR: /tmp/maplibre/package/dist }
+        run: |
+          pip install -r requirements-site.txt
+          python -m ctw site
+          python tests/test_page.py site
