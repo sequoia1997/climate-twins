@@ -152,7 +152,7 @@ python tests/test_species_page.py           # Organisms browser test, on real fi
 python -m pytest                            # the rest of the Python tests
 node worker/test_redirect.mjs               # Worker: redirects, security headers and the policy in web/assets/_headers
 ```
-Browser tests use `PW_CHROMIUM` (browser binary) and `PW_MAPLIBRE_DIR` (a local MapLibre 5.24.0 `dist` folder) to run offline.
+Browser tests use `PW_CHROMIUM` (browser binary) and `PW_MAPLIBRE_DIR` (a local MapLibre 5.24.1 `dist` folder) to run offline.
 Steps write to `work/` (set `CTW_WORK` to move it). A full local build needs about 25 GB of downloads.
 
 ## Layout

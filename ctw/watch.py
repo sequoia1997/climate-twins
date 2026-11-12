@@ -62,7 +62,7 @@ def _probe(url, timeout=60):
     try:
         r = C.http().get(url, headers={"Range": "bytes=0-0"}, timeout=timeout, stream=True)
         r.close()
-        return r.status_code in (200, 206)
+        return r.status_code in (200, 206, 429)        # 429: the server is up and only asking us to slow down (CHIRPS does this)
     except Exception:  # noqa: BLE001
         return False
 

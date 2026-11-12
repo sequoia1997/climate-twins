@@ -1,11 +1,17 @@
 {
-  // The site is a Cloudflare Worker: files in ./site are served as they are; worker/index.js only handles
-  // POST /api/request (the "Don't see your place?" form). "name" must match the existing Worker so the address
-  // stays https://climate-twins.forest4science.workers.dev
+  // The site is a Cloudflare Worker: files in ./site are served as they are; worker/index.js handles the place-request
+  // and feedback forms (/api/request, /api/feedback), security headers, and forwarding www and workers.dev to
+  // climatetwins.org. "name" must match the existing Worker (it also owns climate-twins.forest4science.workers.dev).
   "name": "climate-twins",
   "main": "worker/index.js",
   "compatibility_date": "2026-09-01",
-  "assets": { "directory": "./site", "binding": "ASSETS" },
+  "assets": {
+    "directory": "./site", "binding": "ASSETS",
+    // Page loads go through the Worker first, so www.climatetwins.org and the old workers.dev address forward to
+    // climatetwins.org (without this, static files are answered directly and the redirect in worker/index.js never runs).
+    // Data and script files are still served straight from the asset store.
+    "run_worker_first": ["/", "/index.html", "/species", "/species.html", "/methods", "/methods.html", "/changelog", "/changelog.html", "/species-methods", "/species-methods.html"]
+  },
   // The public address. Cloudflare sets up the domain and its certificate on deploy; the workers.dev address
   // keeps working so links already shared still open.
   "routes": [
