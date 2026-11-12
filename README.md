@@ -185,7 +185,9 @@ tests/                 test_page.py and test_species_page.py (browser), plus uni
 
 - **The page's look or text:** edit `web/index.html`, `web/species.html`, `web/species/app.js` or `web/methods.html`, then run
   `python -m ctw site` (or the next rebuild does it). Pushing to `main` deploys. The security headers live in
-  `web/assets/_headers` and must match the policy in `worker/index.js` (a test checks this).
+  `web/assets/_headers` and must match the policy in `worker/policy.js` (a test checks this). The policy allows no inline
+  scripts: page code lives in files (`web/assets/places.js`, `shared.js`, `theme.js`, `methods.js`, `web/species/app.js`), and
+  `tests/test_no_inline_scripts.py` fails if an inline `<script>` or an `onclick=`-style handler appears.
 - **An organism:** add it to a batch CSV, run the staged fit workflows, then *Publish organisms to R2*.
 - **The world place list:** `python -m ctw.expand` prints a proposed expansion of `data/world_targets.csv` from the committed
   GeoNames snapshot (`--write` appends it); review the diff, commit, run *Rebuild data*.
