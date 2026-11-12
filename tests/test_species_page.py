@@ -20,6 +20,8 @@ def make_site(dst: Path):
     (dst / "species" / "basemap.js").write_bytes((ROOT / "web" / "species" / "basemap.js").read_bytes())
     (dst / "species" / "land.cts").write_bytes((ROOT / "web" / "species" / "land.cts").read_bytes())
     (dst / "species" / "app.js").write_text((ROOT / "web" / "species" / "app.js").read_text())
+    for f in (ROOT / "web" / "assets").glob("*.js"):                                     # theme.js, shared.js, methods.js, ...
+        (dst / f.name).write_text(f.read_text())
     R2 = "https://species.climatetwins.org/"
     import re as _re
     (dst / "methods.html").write_text(_re.sub(r"\{\{[A-Z_0-9]+\}\}", "0", (ROOT / "web" / "methods.html").read_text()).replace("__SITE_URL__", "").replace('content="https://species.climatetwins.org/"', 'content="species/data/"'))

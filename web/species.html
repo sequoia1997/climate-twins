@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.1/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.1/dist/maplibre-gl.js" integrity="sha384-nXMl9YiLoSG5KBPTFgvxVuIqQQcqIvo0bFrvoEaGJC6r7IibIzF1S36Zbf/sKBtL" crossorigin="anonymous"></script>
-<script>try{var t=localStorage.getItem("ct-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script src="theme.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
@@ -374,8 +374,8 @@ a{color:inherit;text-decoration-color:var(--line)}
 <script src="species/basemap.js"></script>
 <script src="species/app.js"></script>
 <script type="speculationrules">{"prerender":[{"urls":["./"],"eagerness":"moderate"}]}</script>
-<script>document.querySelectorAll(".modes a").forEach(a=>a.addEventListener("click",()=>{const n=a.parentNode;if(!a.hasAttribute("aria-current"))n.dataset.pos=a===n.lastElementChild?"1":"0"}))</script>
-<dialog id="welcomedlg" aria-labelledby="welcomeh">
+
+<dialog id="welcomedlg" aria-labelledby="welcomeh" data-key="ct_welcome_organisms">
   <h2 id="welcomeh">Where could plants and animals find the climate they need?</h2>
   <p>Every organism lives in a certain range of temperature and rainfall. This map shows where that climate is projected to be later this century.</p>
   <ol>
@@ -386,13 +386,6 @@ a{color:inherit;text-decoration-color:var(--line)}
   <p class="wnote">This shows where the climate may suit an organism, not where it will actually live.</p>
   <button type="button" class="wgo" id="welcomego">Start exploring</button>
 </dialog>
-<script>
-(function(){var K="ct_welcome_organisms",d=document.getElementById("welcomedlg");if(!d||!d.showModal)return;
-  var seen=function(){try{return localStorage.getItem(K)==="1";}catch(e){return false;}};
-  d.addEventListener("close",function(){try{localStorage.setItem(K,"1");}catch(e){}});
-  document.getElementById("welcomego").addEventListener("click",function(){try{localStorage.setItem(K,"1");}catch(e){}d.close();});
-  document.addEventListener("click",function(e){if(e.target.closest("[data-welcome]")){e.preventDefault();d.showModal();d.querySelector("h2").focus({preventScroll:true});}});
-  var h=d.querySelector("h2");h.tabIndex=-1;if(!seen()){d.showModal();h.focus({preventScroll:true});}})();
-</script>
+<script src="shared.js"></script>
 </body>
 </html>

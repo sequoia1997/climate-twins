@@ -11,6 +11,7 @@ Changes to Climate Twins, newest first. Data updates are added automatically eac
 - Resident birds now use all their records too; migratory birds keep their breeding-season fit, and a map checked against an independent survey is kept over one that was not.
 - **One address:** www.climatetwins.org and the old workers.dev address now forward to climatetwins.org.
 - The map library is updated to MapLibre 5.24.1, which fixes how map credits are cleaned before display.
+- **Stricter security:** the pages now run no inline code at all, so the site's security policy can refuse any script that is not one of its own files. Nothing looks different.
 
 ## 15 October 2026: a calmer first look
 
